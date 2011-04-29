@@ -332,6 +332,19 @@ void Shader_Space::dropEvent(QGraphicsSceneDragDropEvent *event)
                 break;
             case 25:
                 BuildIn::ContWhileNode(this);
+                break;
+            case 26:
+                BuildIn::CLilluminate(this);
+                break;
+            case 27:
+                BuildIn::CLilluminance(this);
+                break;
+            case 28:
+                BuildIn::CLsolar(this);
+                break;
+            case 29:
+                BuildIn::CLgather(this);
+                break;
             }
         }
 

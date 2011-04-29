@@ -151,11 +151,7 @@ QString ShaderWriter::writeVarName(NSocket *insocket)
     NSocket *mapsocket;
     Node *node = (Node*)prevsocket->Socket.node;
     ContainerNode *cnode = (ContainerNode*)node;
-    if(node->NodeType == CONTAINER
-       ||node->NodeType == FOR
-       ||node->NodeType == WHILE
-       ||node->NodeType == RSLLOOP
-       ||node->NodeType == CONDITIONCONTAINER)
+    if(node->isContainer())
 
     {
         mapsocket = cnode->socket_map.key(prevsocket);
@@ -382,16 +378,7 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         break;
     case WHILE:
         break;
-    case RSLLOOP:
-        break;
-    case SURFACEINPUT:
-        break;
-    case DISPLACEMENTINPUT:
-        break;
-    case VOLUMEINPUT:
-        break;
-    case LIGHTINPUT:
-        break;
+
     case INSOCKETS:
         initVar(socket);
         output.append(socket->Socket.varname);
@@ -468,3 +455,26 @@ QString ShaderWriter::getCode()
     returncode.append("}");
     return returncode;
 }
+
+void ShaderWriter::addToCode(QString c)
+{
+    QString tab("    ");
+    for(int i = 1; i<tabLevel; i++)
+        code.append(tab);
+    code.append(c);
+}
+void ShaderWriter::addToShaderHeader(QString s)
+{
+    ShaderHeader.append(s);
+}
+
+void ShaderWriter::addToOutputVars(QString ov)
+{
+    OutputVars.append(ov);
+}
+
+void ShaderWriter::addToVarDeclares(QString vd)
+{
+    VarDeclares.append(vd);
+}
+

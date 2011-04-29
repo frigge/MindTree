@@ -217,7 +217,7 @@ void BuildIn::ContIfNode(QGraphicsScene *scene)
 void BuildIn::ContForNode(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
-    ContainerNode *node = new ContainerNode(FOR);
+    ForNode *node = new ForNode(false);
     node->setNodeName("For");
     node->setPos(space->mousePos);
     space->addNode(node);
@@ -226,10 +226,44 @@ void BuildIn::ContForNode(QGraphicsScene *scene)
 void BuildIn::ContWhileNode(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
-    ContainerNode *node = new ContainerNode(WHILE);
+    WhileNode *node = new WhileNode(false);
     node->setNodeName("While");
     node->setPos(space->mousePos);
     space->addNode(node);
 }
 
+void BuildIn::CLilluminate(QGraphicsScene *scene)
+{
+    Shader_Space *space = (Shader_Space*)scene;
+    IlluminateNode *node = new IlluminateNode(false);
+    node->setNodeName("Illuminate");
+    node->setPos(space->mousePos);
+    space->addNode(node);
+}
 
+void BuildIn::CLgather(QGraphicsScene *scene)
+{
+    Shader_Space *space = (Shader_Space*)scene;
+    GatherNode *node = new GatherNode(false);
+    node->setNodeName("Gather");
+    node->setPos(space->mousePos);
+    space->addNode(node);
+}
+
+void BuildIn::CLilluminance(QGraphicsScene *scene)
+{
+    Shader_Space *space = (Shader_Space*)scene;
+    IlluminanceNode *node = new IlluminanceNode(false);
+    node->setNodeName("Illuminance");
+    node->setPos(space->mousePos);
+    space->addNode(node);
+}
+
+void BuildIn::CLsolar(QGraphicsScene *scene)
+{
+    Shader_Space *space = (Shader_Space*)scene;
+    SolarNode *node = new SolarNode(false);
+    node->setNodeName("Solar");
+    node->setPos(space->mousePos);
+    space->addNode(node);
+}

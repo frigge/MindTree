@@ -34,6 +34,13 @@ private:
     QString ShaderHeader;
     QString OutputVars;
 
+    void addToCode(QString);
+    void addToVarDeclares(QString);
+    void addToShaderHeader(QString);
+    void addToOutputVars(QString);
+
+    int tabLevel;
+
     void evalSocketValue(NSocket *socket);
     void initVar(NSocket *socket);
     void outputVar(NSocket *socket);

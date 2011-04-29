@@ -62,5 +62,11 @@ namespace BuildIn
     void ContForNode(QGraphicsScene *scene);
     void ContWhileNode(QGraphicsScene *scene);
     //void ContRSLLoopNode(QGraphicsScene *scene);
+
+    //RSL Loop Container
+    void CLilluminate(QGraphicsScene *scene);
+    void CLilluminance(QGraphicsScene *scene);
+    void CLsolar(QGraphicsScene *scene);
+    void CLgather(QGraphicsScene *scene);
 }
 #endif // BUILDIN_NODES_H

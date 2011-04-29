@@ -112,17 +112,23 @@ enum NType
     MULTIPLY,           DIVIDE,
     ADD,                SUBTRACT,
     DOTPRODUCT,
+
     GREATERTHAN,        SMALLERTHAN,
     EQUAL,              AND,OR,
     CONDITIONCONTAINER, NOT,
-    FOR,WHILE,          RSLLOOP,
+
+    FOR, WHILE, GATHER, ILLUMINANCE,
+    ILLUMINATE, SOLAR,
 
     SURFACEINPUT,       SURFACEOUTPUT,
     DISPLACEMENTINPUT,  DISPLACEMENTOUTPUT,
     VOLUMEINPUT,        VOLUMEOUTPUT,
     LIGHTINPUT,         LIGHTOUTPUT,
+    ILLUMINANCEINPUT,   ILLUMINATEINPUT,
+    SOLARINPUT,
 
     INSOCKETS,          OUTSOCKETS,
+
     COLORNODE,          FLOATNODE,
     STRINGNODE,         VECTORNODE
 };
@@ -152,6 +158,8 @@ public:
     void setDynamicSocketsNode(socket_dir dir, socket_type t = VARIABLE);
     void clearSocketLinks(bool keep);
 
+    bool isContainer();
+
     NSocket *varsocket;
     NSocket *lastsocket;
     int varcnt;
@@ -159,7 +167,6 @@ public:
     Node();
     Node(QString name);
     ~Node();
-    virtual void initNode();
     virtual Node *copyNode(QHash<NSocket *, NSocket *> *socketmapping = 0);
 
     QRectF boundingRect() const;
@@ -168,7 +175,7 @@ public:
     void setNodeName(QString name);
     void setNodeType(NType t);
     void setSockets(V_NSockets inSockets, socket_dir dir);
-    void addSocket(NSocket *socket, socket_dir dir);
+    virtual void addSocket(NSocket *socket, socket_dir dir);
     void removeSocket(NSocket *socket);
     virtual void dec_var_socket(NSocket *socket);
     virtual void inc_var_socket();
@@ -181,8 +188,10 @@ public:
     void setdisplacementInput();
     void setlightInput();
     void setvolumeInput();
+    void setIlluminanceInput();
+    void setIlluminateInput();
 
-    static Node *newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize);
+    static Node *newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize, bool isLoopSocket = false);
     static QHash<int, Node*>loadIDMapper;
 
     static bool isInput(Node *node);
@@ -195,6 +204,7 @@ protected:
     virtual int NodeWidth() const;
     virtual int NodeHeight(int numSockets) const;
     virtual void setSocketVarName(NSocket *socket);
+    virtual void initNode();
 };
 
 QDataStream &operator<<(QDataStream &stream, Node *node);
@@ -215,11 +225,15 @@ public:
     ContainerNode(NType t = CONTAINER);
     ContainerNode(QString name, NType t = CONTAINER);
     virtual Node *copyNode(QHash<NSocket *, NSocket *> *socketmapping);
-    virtual void initNode();
+
+    NSocket *getMappedSNSocket(NSocket*);
+    NSocket *getMappedCntNSocket(NSocket*);
 
     QGraphicsScene *ContainerData;
     void setContainerData(QGraphicsScene *space){ContainerData = space;}
     void C_addItems(QList<Node*> nodes);
+
+    void addMappedSocket(NSocket *socket, socket_dir dir);
 
     Node *inSocketNode, *outSocketNode;
     void setInputs(Node *inputNode);
@@ -243,6 +257,13 @@ protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     virtual void setSocketVarName(NSocket *socket);
+    virtual void initNode();
+};
+
+class ConditionContainerNode : public ContainerNode
+{
+public:
+    ConditionContainerNode();
 };
 
 class SocketNode : public Node
@@ -252,12 +273,18 @@ public:
     SocketNode(socket_dir dir, ContainerNode *contnode);
 
     void setInSocketNode(ContainerNode *contnode);
-    void setOutSocketNode(ContainerNode *contnode);
+    virtual void setOutSocketNode(ContainerNode *contnode);
 
     virtual void inc_var_socket();
     virtual void dec_var_socket(NSocket *socket);
 
     void connectToContainer(ContainerNode*);
+    bool loopSocket();
+    void setLoopSocket(bool);
+
+protected:
+    NSocket *getLastSocket();
+    bool isLoopSocket;
 
 public slots:
     void add_socket(NSocket *socket);
@@ -269,12 +296,33 @@ signals:
 
 };
 
+class LoopSocketNode : public SocketNode
+{
+public:
+    LoopSocketNode(socket_dir dir, ContainerNode *contnode);
+
+    virtual void dec_var_socket(NSocket *socket);
+    void createPartnerSocket(NSocket *);
+    void deletePartnerSocket(NSocket *);
+
+    void setPartner(LoopSocketNode* p);
+    NSocket *getPartnerSocket(NSocket *);
+    QHash<NSocket*, NSocket*> loopSocketMap;
+
+    virtual void addSocket(NSocket *socket, socket_dir dir);
+    virtual void inc_var_socket();
+
+private:
+    LoopSocketNode *partner;
+};
+
 class ConditionNode : public Node
 {
 public:
     ConditionNode(NType t);
     ConditionNode(ConditionNode *node);
 
+protected:
     virtual void initNode();
 };
 
@@ -314,7 +362,6 @@ public slots:
     void setShaderInput(bool isInput);
 
 public:
-    virtual void initNode();
     bool isShaderInput;
 
     void setValueEditor(QWidget *editor);
@@ -323,6 +370,7 @@ protected:
     QGraphicsProxyWidget *proxy;
     virtual int NodeWidth() const;
     virtual int NodeHeight(int numSockets) const;
+    virtual void initNode();
     QWidget *widget;
     QWidget *base_widget;
     QCheckBox *shader_parameter;
@@ -386,13 +434,49 @@ public:
     vector vectorvalue;
 };
 
-class RSLLoopNode : public ContainerNode
+class LoopNode : public ContainerNode
 {
 public:
-    RSLLoopNode();
-    virtual void initNode();
-    QString function_name;
-    void setFunctionName(QString name) {function_name = name;}
+    static bool isLoopNode(Node *);
+
+protected:
+    virtual void initNode(bool raw);
+};
+
+class ForNode : public LoopNode
+{
+public:
+    ForNode(bool raw);
+};
+
+class WhileNode : public LoopNode
+{
+public:
+    WhileNode(bool raw);
+};
+
+class GatherNode : public LoopNode
+{
+public:
+    GatherNode(bool raw);
+};
+
+class IlluminanceNode : public  LoopNode
+{
+public:
+    IlluminanceNode(bool raw);
+};
+
+class IlluminateNode : public LoopNode
+{
+public:
+    IlluminateNode(bool raw);
+};
+
+class SolarNode : public LoopNode
+{
+public:
+    SolarNode(bool raw);
 };
 
 class OutputNode : public Node

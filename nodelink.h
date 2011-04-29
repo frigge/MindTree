@@ -39,7 +39,7 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     void setlink(QPointF endP);
-    void setlink(NSocket *in, NSocket *out);
+    void setlink(NSocket *, NSocket *);
     void updateLink();
 
     static bool isCompatible(NSocket *first, NSocket *last);

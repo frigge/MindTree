@@ -20,7 +20,7 @@
 #include "QPainter"
 #include "QStyleOption"
 #include "QHashIterator"
-#include "QGraphicsSceneMouseEvent"
+#include "QGraphicsSceneMouseEvent"i
 #include "QGraphicsEffect"
 #include "QVariant"
 #include "QLabel"
@@ -328,11 +328,7 @@ NodeName::NodeName(QString name, QGraphicsItem *parent)
 void NodeName::focusOutEvent(QFocusEvent *event)
 {
     Node *pNode = (Node*)parentItem();
-    if(!(pNode->NodeType == CONTAINER
-         || pNode->NodeType == CONDITIONCONTAINER
-         || pNode->NodeType == FOR
-         || pNode->NodeType == WHILE
-         || pNode->NodeType == RSLLOOP))
+    if(!(pNode->isContainer()))
         return;
     ContainerNode *cNode = (ContainerNode*)pNode;
     if(cNode->ContainerData)
@@ -409,6 +405,20 @@ Node* Node::copyNode(QHash<NSocket *, NSocket *> *socketmapping)
     return newNode;
 }
 
+bool Node::isContainer()
+{
+    if(NodeType == CONTAINER
+            ||NodeType == CONDITIONCONTAINER
+            ||NodeType == FOR
+            ||NodeType == WHILE
+            ||NodeType == GATHER
+            ||NodeType == ILLUMINANCE
+            ||NodeType == ILLUMINATE
+            ||NodeType == SOLAR)
+        return true;
+    else return false;
+}
+
 QDataStream &operator <<(QDataStream &stream, Node  *node)
 {
     stream<<node->node_name->toPlainText()<<(qint16)node->ID<<node->NodeType<<node->pos();
@@ -424,17 +434,7 @@ QDataStream &operator <<(QDataStream &stream, Node  *node)
         stream<<fnode->function_name;
     }
 
-    if(node->NodeType == RSLLOOP)
-    {
-        RSLLoopNode *rslnode = (RSLLoopNode*)node;
-        stream<<rslnode->function_name;
-    }
-
-    if(node->NodeType == CONTAINER
-       || node->NodeType == CONDITIONCONTAINER
-       || node->NodeType == FOR
-       || node->NodeType == WHILE
-       || node->NodeType == RSLLOOP)
+    if(node->isContainer())
     {
         ContainerNode *cnode =(ContainerNode*) node;
         stream<<cnode->inSocketNode->ID<<cnode->outSocketNode->ID;
@@ -443,6 +443,23 @@ QDataStream &operator <<(QDataStream &stream, Node  *node)
             stream<<socket->ID<<cnode->socket_map[socket]->ID;
         Shader_Space *cdata = (Shader_Space*) cnode->ContainerData;
         stream<<cdata;
+    }
+
+    if(node->NodeType == INSOCKETS
+            ||node->NodeType == OUTSOCKETS)
+    {
+        SocketNode *snode = (SocketNode*)snode;
+        stream<<(int)snode->loopSocket();
+        if(snode->loopSocket())
+        {
+            LoopSocketNode *lsnode = (LoopSocketNode*)node;
+            stream<<lsnode->loopSocketMap.size();
+            foreach(NSocket *socket, lsnode->loopSocketMap)
+            {
+                stream<<socket->ID<<lsnode->loopSocketMap.value(socket)->ID;
+            }
+        }
+
     }
 
     if(node->NodeType == COLORNODE)
@@ -472,14 +489,25 @@ QDataStream &operator <<(QDataStream &stream, Node  *node)
     return stream;
 }
 
-Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize)
+Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize, bool isLoopSocket)
 {
     Node *node;
-    if(t==CONTAINER
-       ||t == CONDITIONCONTAINER
-       ||t == FOR
-       ||t == WHILE)
-        node = new ContainerNode(t);
+    if(t==CONTAINER)
+        node = new ContainerNode;
+    else if (t == FOR)
+        node = new ForNode(true);
+    else if (t == WHILE)
+        node = new WhileNode(true);
+    else if (t == GATHER)
+        node = new GatherNode(true);
+    else if (t == SOLAR)
+        node = new SolarNode(true);
+    else if (t == ILLUMINATE)
+        node = new IlluminateNode(true);
+    else if (t == ILLUMINANCE)
+        node = new IlluminanceNode(true);
+    else if (t == CONDITIONCONTAINER)
+        node = new ConditionContainerNode;
     else if(t == FUNCTION)
         node = new FunctionNode();
     else if(t == MULTIPLY
@@ -503,11 +531,14 @@ Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int 
         node = new StringValueNode();
     else if(t == VECTORNODE)
         node = new VectorValueNode();
-    else if(t == RSLLOOP)
-        node = new RSLLoopNode();
     else if(t == INSOCKETS
             ||t == OUTSOCKETS)
-        node = new SocketNode(insize == 0 ? OUT : IN, 0);
+    {
+        if(isLoopSocket)
+            node = new SocketNode(insize == 0 ? OUT : IN, 0);
+        else
+            node = new LoopSocketNode(insize == 0 ? OUT : IN, 0);
+    }
     else if(t == SURFACEOUTPUT
             ||t == DISPLACEMENTOUTPUT
             ||t == VOLUMEOUTPUT
@@ -536,9 +567,13 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
     QPointF nodepos;
     stream>>name>>ID>>nodetype>>nodepos;
     stream>>insocketsize>>outsocketsize;
+    bool isloopsocket = false;
+    if(nodetype == INSOCKETS
+            ||nodetype == OUTSOCKETS)
+        stream>>isloopsocket;
 
     Node *newnode;
-    newnode = Node::newNode(name, (NType)nodetype, ID, nodepos, insocketsize, outsocketsize);
+    newnode = Node::newNode(name, (NType)nodetype, ID, nodepos, insocketsize, outsocketsize, isloopsocket);
     *node = newnode;
 
     NSocket *socket;
@@ -561,20 +596,10 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
         stream>>fnode->function_name;
     }
 
-    if(newnode->NodeType == RSLLOOP)
-    {
-        RSLLoopNode *rslnode = (RSLLoopNode*)newnode;
-        stream>>rslnode->function_name;
-    }
-
     int inSocketID;
     int outSocketID;
     int smapsize, keyID, valueID;
-    if(nodetype == CONTAINER
-       ||nodetype == CONDITIONCONTAINER
-       ||nodetype == FOR
-       ||nodetype == WHILE
-       ||nodetype == RSLLOOP)
+    if(newnode->isContainer())
     {
         ContainerNode *contnode = (ContainerNode*)newnode;
         stream>>inSocketID>>outSocketID;
@@ -601,6 +626,12 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
             valueID = cont_socket_map_ID_mapper[j].second;
             contnode->socket_map.insert(NSocket::loadIDMapper[keyID], NSocket::loadIDMapper[valueID]);
         }
+        if(LoopNode::isLoopNode(newnode))
+        {
+            LoopSocketNode *loutnode = (LoopSocketNode*) outnode;
+            LoopSocketNode *linnode = (LoopSocketNode*) innode;
+            loutnode->setPartner(linnode);
+        }
     }
 
     if(newnode->NodeType == COLORNODE)
@@ -626,6 +657,27 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
         VectorValueNode *vectornode = (VectorValueNode*)newnode;
         stream>>vectornode->vectorvalue.x>>vectornode->vectorvalue.y>>vectornode->vectorvalue.z;
     }
+
+    if(newnode->NodeType == INSOCKETS
+            ||newnode->NodeType == OUTSOCKETS)
+    {
+        SocketNode *snode = (SocketNode*) newnode;
+        snode->setLoopSocket(isloopsocket);
+        if(isloopsocket)
+        {
+            LoopSocketNode *lsnode = (LoopSocketNode*)snode;
+            int partnerSockets, socketID, partnerID;
+            stream>>partnerSockets;
+            for(int i = 0; i < partnerSockets; i++)
+            {
+                stream>>socketID>>partnerID;
+                NSocket *socket = NSocket::loadIDMapper[socketID];
+                NSocket *partner = NSocket::loadIDMapper[partnerID];
+                lsnode->loopSocketMap.insert(socket, partner);
+            }
+        }
+    }
+
     return stream;
 }
 
@@ -1088,6 +1140,18 @@ ContainerNode::ContainerNode(QString name, NType t)
     initNode();
 }
 
+void ContainerNode::addMappedSocket(NSocket *socket, socket_dir dir)
+{
+    addSocket(socket, dir);
+    NSocket *mapped_socket = new NSocket(socket->Socket);
+    if(dir == IN)
+        inSocketNode->addSocket(mapped_socket, OUT);
+    else
+        outSocketNode->addSocket(mapped_socket, IN);
+
+    socket_map.insert(socket, mapped_socket);     
+}
+
 void ContainerNode::createContextMenu()
 {
     contextMenu = new QMenu;
@@ -1116,41 +1180,6 @@ void ContainerNode::initNode()
         createContextMenu();
 
     setContainerData(new Shader_Space);
-    V_NSocket start, end, step, in, cond;
-
-    switch(NodeType)
-    {
-    case CONDITIONCONTAINER:
-        in.type = CONDITION;
-        in.name = "Condition";
-        addSocket(new NSocket(in), IN);
-        break;
-    case FOR:
-        start.type = FLOAT;
-        start.name = "Start";
-        end.type = FLOAT;
-        end.name = "End";
-        step.type = FLOAT;
-        step.name = "Step";
-        addSocket(new NSocket(start), IN);
-        addSocket(new NSocket(end), IN);
-        addSocket(new NSocket(step), IN);
-        break;
-    case WHILE:
-        cond.type = CONDITION;
-        cond.name = "Condition";
-        addSocket(new NSocket(cond), IN);
-        break;
-    }
-
-    SocketNode *inNode = new SocketNode(IN, this);
-    SocketNode *outNode = new SocketNode(OUT, this);
-
-    if(NodeType == FOR || NodeType == WHILE || NodeType == RSLLOOP)
-    {
-        connect(inNode, SIGNAL(socket_added(NSocket*)), outNode, SLOT(add_socket(NSocket*)));
-        connect(inNode, SIGNAL(socket_removed(NSocket*)), outNode, SLOT(remove_socket(NSocket*)));
-    }
 }
 
 Node* ContainerNode::copyNode(QHash<NSocket *, NSocket *> *socketmapping)
@@ -1240,18 +1269,51 @@ void ContainerNode::setSocketVarName(NSocket *socket)
 
 void ContainerNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
-    contextMenu->exec(event->screenPos());
+    if(NodeType == CONTAINER)
+        contextMenu->exec(event->screenPos());
+}
+
+NSocket *ContainerNode::getMappedSNSocket(NSocket *socket)
+{
+    return socket_map.value(socket);
+}
+
+NSocket *ContainerNode::getMappedCntNSocket(NSocket *socket)
+{
+    return socket_map.key(socket);
+}
+
+ConditionContainerNode::ConditionContainerNode()
+{
+    initNode();
+    V_NSocket in;
+    in.type = CONDITION;
+    in.name = "Condition";
+    SocketNode *inNode = new SocketNode(IN, this);
+    SocketNode *outNode = new SocketNode(OUT, this);
+    addMappedSocket(new NSocket(in), IN);
 }
 
 SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode)
 {
     initNode();
+    isLoopSocket = false;
     if(contnode == 0)
         return;
     if (dir == IN)
         setInSocketNode(contnode);
     else
         setOutSocketNode(contnode);
+}
+
+bool SocketNode::loopSocket()
+{
+    return isLoopSocket;
+}
+
+void SocketNode::setLoopSocket(bool isLoop)
+{
+    isLoopSocket = isLoop;
 }
 
 void SocketNode::setInSocketNode(ContainerNode *contnode)
@@ -1308,6 +1370,63 @@ void SocketNode::remove_socket(NSocket *socket)
     dec_var_socket(socket);
 }
 
+NSocket *SocketNode::getLastSocket()
+{
+    return lastsocket;
+}
+
+
+LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode)
+    : SocketNode(dir, contnode)
+{
+    isLoopSocket = true;
+    partner = 0;
+}
+
+void LoopSocketNode::dec_var_socket(NSocket *socket)
+{
+    SocketNode::dec_var_socket(socket);
+    if(partner != 0)
+    {
+        deletePartnerSocket(socket);
+    }
+}
+
+void LoopSocketNode::createPartnerSocket(NSocket *socket)
+{
+    NSocket *partnerSocket = new NSocket(socket->Socket);
+    partner->addSocket(partnerSocket, OUT);
+    loopSocketMap.insert(socket, partnerSocket);
+}
+
+void LoopSocketNode::deletePartnerSocket(NSocket *socket)
+{
+    NSocket *partnerSocket = getPartnerSocket(socket);
+    partner->removeSocket(partnerSocket);
+    loopSocketMap.remove(socket);
+}
+
+void LoopSocketNode::setPartner(LoopSocketNode *p)
+{
+    partner = p;
+}
+
+NSocket *LoopSocketNode::getPartnerSocket(NSocket *socket)
+{
+    return loopSocketMap.value(socket);
+}
+
+void LoopSocketNode::addSocket(NSocket *socket, socket_dir dir)
+{
+    Node::addSocket(socket, dir);
+}
+
+void LoopSocketNode::inc_var_socket()
+{
+    SocketNode::inc_var_socket();
+    if(partner) createPartnerSocket(lastsocket);
+}
+
 ConditionNode::ConditionNode(NType t)
 {
     setNodeType(t);
@@ -1324,7 +1443,7 @@ void ConditionNode::initNode()
     if(NodeType != AND && NodeType != OR)
     {
         V_NSocket in;
-        in.type = NodeType == NOT ? CONDITION : VARIABLE;
+        in.type = NodeType == NOT ? CONDITION : VARIABLE; //TODO: WTF?!?!
         in.name = "Input";
         addSocket(new NSocket(in), IN);
         if(NodeType != NOT)
@@ -1584,7 +1703,6 @@ FloatValueNode::FloatValueNode()
     NSocket *out = new NSocket(sdata);
     addSocket(out, OUT);
 }
-
 void FloatValueNode::setValue(double newval)
 {
     floatvalue = newval;
@@ -1602,19 +1720,183 @@ void VectorValueNode::setValue()
 
 }
 
-RSLLoopNode::RSLLoopNode()
+WhileNode::WhileNode(bool raw)
 {
-    initNode();
-    setNodeType(RSLLOOP);
+    LoopNode::initNode(raw);
+    if(!raw)
+    {
+        V_NSocket cond;
+        cond.type = CONDITION;
+        cond.name = "Condition";
+        NSocket *condition = new NSocket(cond);
+        outSocketNode->addSocket(condition, IN);
+    }
 }
 
-void RSLLoopNode::initNode()
+ForNode::ForNode(bool raw)
 {
+    LoopNode::initNode(raw);
+    if(!raw)
+    {
+        V_NSocket start, end, step;
+        start.type = FLOAT;
+        start.name = "Start";
+        end.type = FLOAT;
+        end.name = "End";
+        step.type = FLOAT;
+        step.name = "Step";
+        addMappedSocket(new NSocket(start), IN);
+        addMappedSocket(new NSocket(end), IN);
+        addMappedSocket(new NSocket(step), IN);
+    }
+}
+
+IlluminanceNode::IlluminanceNode(bool raw)
+{
+    LoopNode::initNode(raw);
+    if(!raw)
+    {
+        V_NSocket point, direction, angle, category, mpassing;
+        category.type = STRING;
+        category.name = "Category";
+        category.isToken = false;
+        point.type = POINT;
+        point.name = "Point";
+        point.isToken = false;
+        direction.type = VECTOR;
+        direction.name = "Direction";
+        direction.isToken = false;
+        angle.type = FLOAT;
+        angle.name = "Angle";
+        angle.isToken = false;
+        mpassing.name = "Message Passing";
+        mpassing.isToken = false;
+        mpassing.type = STRING;
+
+        NSocket *MPassing = new NSocket(mpassing);
+        NSocket *Category = new NSocket(category);
+        NSocket *Point = new NSocket(point);
+        NSocket *Direction = new NSocket(direction);
+        NSocket *Angle = new NSocket(angle);
+
+        addMappedSocket(Category, IN);
+        addMappedSocket(Point, IN);
+        addMappedSocket(Direction, IN);
+        addMappedSocket(Angle, IN);
+        addMappedSocket(MPassing, IN);
+    }
+}
+
+IlluminateNode::IlluminateNode(bool raw)
+{
+    LoopNode::initNode(raw);
+    if(!raw)
+    {
+        V_NSocket point, direction, angle;
+        point.type = POINT;
+        point.name = "Point";
+        point.isToken = false;
+        direction.type = VECTOR;
+        direction.name = "Direction";
+        direction.isToken = false;
+        angle.type = FLOAT;
+        angle.name = "Angle";
+        angle.isToken = false;
+
+        NSocket *Point = new NSocket(point);
+        NSocket *Direction = new NSocket(direction);
+        NSocket *Angle = new NSocket(angle);
+
+        addMappedSocket(Point, IN);
+        addMappedSocket(Direction, IN);
+        addMappedSocket(Angle, IN);
+    }
+}
+
+GatherNode::GatherNode(bool raw)
+{
+    LoopNode::initNode(raw);
+    if(!raw)
+    {
+        V_NSocket point, direction, angle, category, mpassing, samples;
+        category.type = STRING;
+        category.name = "Category";
+        category.isToken = false;
+        point.type = POINT;
+        point.name = "Point";
+        point.isToken = false;
+        direction.type = VECTOR;
+        direction.name = "Direction";
+        direction.isToken = false;
+        angle.type = FLOAT;
+        angle.name = "Angle";
+        angle.isToken = false;
+        mpassing.name = "Message Passing";
+        mpassing.isToken = false;
+        mpassing.type = STRING;
+        samples.name = "Samples";
+        samples.type = FLOAT;
+        samples.isToken = false;
+
+        NSocket *MPassing = new NSocket(mpassing);
+        NSocket *Category = new NSocket(category);
+        NSocket *Point = new NSocket(point);
+        NSocket *Direction = new NSocket(direction);
+        NSocket *Angle = new NSocket(angle);
+        NSocket *Samples = new NSocket(samples);
+
+        addMappedSocket(Category, IN);
+        addMappedSocket(Point, IN);
+        addMappedSocket(Direction, IN);
+        addMappedSocket(Angle, IN);
+        addMappedSocket(MPassing, IN);
+        addMappedSocket(Samples, IN);
+    }
+}
+
+SolarNode::SolarNode(bool raw)
+{
+    LoopNode::initNode(raw);
+    if(!raw)
+    {
+        V_NSocket axis, angle;
+        axis.type = VECTOR;
+        axis.name = "Axis";
+        axis.isToken = false;
+        angle.type = FLOAT;
+        angle.name = "Angle";
+        angle.isToken = false;
+
+        NSocket *Axis = new NSocket(axis);
+        NSocket *Angle = new NSocket(angle);
+
+        addMappedSocket(Axis, IN);
+        addMappedSocket(Angle, IN);
+    }
+}
+
+void LoopNode::initNode(bool raw)
+{
+    Node::initNode();
     setContainerData(new Shader_Space);
-    SocketNode *inNode = new SocketNode(IN, this);
-    SocketNode *outNode = new SocketNode(OUT, this);
-    connect(inNode, SIGNAL(socket_added(NSocket*)), outNode, SLOT(add_socket(NSocket*)));
-    connect(inNode, SIGNAL(socket_removed(NSocket*)), outNode, SLOT(remove_socket(NSocket*)));
+    if(!raw)
+    {
+        LoopSocketNode *loutNode, *linNode;
+
+        linNode = new LoopSocketNode(IN, this);
+        loutNode = new LoopSocketNode(OUT, this);
+        loutNode->setPartner(linNode);
+    }
+}
+
+bool LoopNode::isLoopNode(Node *node)
+{
+    return (node->NodeType == FOR
+            ||node->NodeType == WHILE
+            ||node->NodeType == ILLUMINANCE
+            ||node->NodeType == ILLUMINATE
+            ||node->NodeType == SOLAR
+            ||node->NodeType == GATHER);
 }
 
 OutputNode::OutputNode()

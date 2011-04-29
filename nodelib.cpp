@@ -174,6 +174,10 @@ void NodeLib::addBuildInNodes()
     QTreeWidgetItem *loop = new QTreeWidgetItem(QStringList("Loop"));
     QTreeWidgetItem *forloop = new QTreeWidgetItem(QStringList() << "For" << "24");
     QTreeWidgetItem *whileloop = new QTreeWidgetItem(QStringList() << "While" << "25");
+    QTreeWidgetItem *illuminateloop = new QTreeWidgetItem(QStringList() << "Illuminate" << "26");
+    QTreeWidgetItem *illuminanceloop = new QTreeWidgetItem(QStringList() << "Illuminance" << "27");
+    QTreeWidgetItem *solarloop = new QTreeWidgetItem(QStringList() << "Solar" << "28");
+    QTreeWidgetItem *gatherloop = new QTreeWidgetItem(QStringList() << "Gather" << "29");
 
     QList<QTreeWidgetItem*> hardgrps, ins, outs, maths, conditionals, values, loops;
     hardgrps<<inputs<<outputs<<math<<cond<<value<<loop;
@@ -182,7 +186,7 @@ void NodeLib::addBuildInNodes()
     maths<<madd<<msub<<mmult<<mdiv<<mdot;
     conditionals<<ifcont<<cgr<<csm<<ceq<<cnot<<cand<<cor;
     values<<color<<string<<float_;
-    loops<<forloop<<whileloop;
+    loops<<forloop<<whileloop<<illuminateloop<<illuminanceloop<<solarloop<<gatherloop;
 
     hardnodes->addChildren(hardgrps);
     inputs->addChildren(ins);

@@ -109,20 +109,20 @@ void NodeLink::setlink(QPointF endP)
     c1 = QPointF((in.x()+out.x()/2), in.y());
 };
 
-void NodeLink::setlink(NSocket *in, NSocket *out)
+void NodeLink::setlink(NSocket *first, NSocket *last)
 {
-    if (in->Socket.dir == IN)
+    if (first->Socket.dir == IN)
     {
-        inSocket = in;
-        outSocket = out;
+        inSocket = first;
+        outSocket = last;
     }
     else
     {
-        inSocket = out;
-        outSocket = in;
+        inSocket = last;
+        outSocket = first;
     }
-    in->addLink(this);
-    out->addLink(this);
+    inSocket->addLink(this);
+    outSocket->addLink(this);
     updateLink();
 };
 
