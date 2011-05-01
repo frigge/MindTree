@@ -203,13 +203,29 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
             if(nsocket->Socket.isToken)
             {
                 output.append("\"");
-                output.append(nsocket->Socket.varname);
+                output.append(nsocket->Socket.name);
                 output.append("\", ");
             }
             output.append(writeVarName(nsocket));
             gotoNextNode(nsocket);
             if(!node->N_inSockets->endsWith(nsocket))
                 output.append(", ");
+        }
+
+        if(node->N_outSockets->size() > 1)
+        {
+            foreach(nsocket, *node->N_outSockets)
+            {
+                if(nsocket->Socket.isToken)
+                {
+                    output.append("\"");
+                    output.append(nsocket->Socket.name);
+                    output.append("\", ");
+                }
+                output.append(writeVarName(nsocket));
+                if(!node->N_inSockets->endsWith(nsocket))
+                    output.append(", ");
+            }
         }
         output.append(");\n");
         break;
@@ -298,10 +314,12 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         output.append("(");
         foreach(nsocket, *node->N_inSockets)
         {
-            nlink = (NodeLink*)nsocket->Socket.links.first();
-            evalSocketValue(nlink->outSocket);
-            if(!node->N_inSockets->endsWith(nsocket))
-                output.append(">");
+            i++;
+            if(nsocket->Socket.cntdSockets.size()>0)
+                output.append(nsocket->Socket.cntdSockets.first()->varname);
+            gotoNextNode(nsocket);
+            if(i < node->N_inSockets->size())
+                output.append(" > ");
         }
         output.append(")");
         break;
@@ -310,10 +328,12 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         output.append("(");
         foreach(nsocket, *node->N_inSockets)
         {
-            nlink = (NodeLink*)nsocket->Socket.links.first();
-            evalSocketValue(nlink->outSocket);
-            if(!node->N_inSockets->endsWith(nsocket))
-                output.append("<");
+            i++;
+            if(nsocket->Socket.cntdSockets.size()>0)
+                output.append(nsocket->Socket.cntdSockets.first()->varname);
+            gotoNextNode(nsocket);
+            if(i < node->N_inSockets->size())
+                output.append(" < ");
         }
         output.append(")");
         break;
@@ -322,10 +342,12 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         output.append("(");
         foreach(nsocket, *node->N_inSockets)
         {
-            nlink = (NodeLink*)nsocket->Socket.links.first();
-            evalSocketValue(nlink->outSocket);
-            if(!node->N_inSockets->endsWith(nsocket))
-                output.append("==");
+            i++;
+            if(nsocket->Socket.cntdSockets.size()>0)
+                output.append(nsocket->Socket.cntdSockets.first()->varname);
+            gotoNextNode(nsocket);
+            if(i < node->N_inSockets->size())
+                output.append(" == ");
         }
         output.append(")");
         break;
@@ -335,10 +357,12 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         output.append("(");
         foreach(nsocket, *node->N_inSockets)
         {
-            nlink = (NodeLink*)nsocket->Socket.links.first();
-            evalSocketValue(nlink->outSocket);
-            if(!node->N_inSockets->endsWith(nsocket))
-                output.append("&&");
+            i++;
+            if(nsocket->Socket.cntdSockets.size()>0)
+                output.append(nsocket->Socket.cntdSockets.first()->varname);
+            gotoNextNode(nsocket);
+            if(i < node->N_inSockets->size())
+                output.append(" && ");
         }
         output.append(")");
         break;
@@ -347,10 +371,12 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         output.append("(");
         foreach(nsocket, *node->N_inSockets)
         {
-            nlink = (NodeLink*)nsocket->Socket.links.first();
-            evalSocketValue(nlink->outSocket);
-            if(!node->N_inSockets->endsWith(nsocket))
-                output.append("||");
+            i++;
+            if(nsocket->Socket.cntdSockets.size()>0)
+                output.append(nsocket->Socket.cntdSockets.first()->varname);
+            gotoNextNode(nsocket);
+            if(i < node->N_inSockets->size())
+                output.append(" || ");
         }
         output.append(")");
         break;
@@ -358,8 +384,7 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
     case CONDITIONCONTAINER:
         output.append("if(");
         condition = node->N_inSockets->first();
-        nlink = (NodeLink*)condition->Socket.links.first();
-        evalSocketValue(nlink->outSocket);
+        gotoNextNode(condition);
         output.append(")\n{");
         cnode = (ContainerNode*)node;
         mapped_socket = cnode->socket_map.key(socket);
@@ -369,14 +394,41 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
 
     case NOT:
         condition = node->N_inSockets->first();
-        nlink = (NodeLink*)condition->Socket.links.first();
         output.append("!");
-        evalSocketValue(nlink->outSocket);
+        gotoNextNode(condition);
         break;
 
     case FOR:
+        NSocket *start, *end, *step;
+        start = node->N_inSockets->at(0);
+        end = node->N_inSockets->at(1);
+        step = node->N_inSockets->at(2);
+
+        output.append("for(");
+        output.append(start->Socket.varname);
+        output.append(" = ");
+        output.append(writeVarName(start));
+        gotoNextNode(start);
+        output.append(";");
+        output.append(start->Socket.varname);
+        output.append(" != ");
+        output.append(writeVarName(end));
+        gotoNextNode(end);
+        output.append(";");
+        output.append(start->Socket.varname);
+        output.append("++");
+        output.append(")\n");
+        output.append("{\n");
+        cnode = (ContainerNode*)node;
+        mapped_socket = cnode->socket_map.key(socket);
+        cnode_depth.append(cnode);
+        gotoNextNode(mapped_socket);
+        cnode_depth.removeAll(cnode);
+        output.append("}\n");
         break;
+
     case WHILE:
+        output.append("while(");
         break;
 
     case INSOCKETS:

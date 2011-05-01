@@ -111,7 +111,7 @@ void SocketEditor::refreshIndices()
     QTreeWidgetItem *item = topLevelItem(0);
     for(int i = 0; item; i++)
     {
-        RemoveButton *button = (RemoveButton*)itemWidget(item, 5);
+        RemoveButton *button = (RemoveButton*)itemWidget(item, 4);
         button->setIndex(i);
         item = itemBelow(item);
     }

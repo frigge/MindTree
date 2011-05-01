@@ -31,6 +31,7 @@
 #include "QCoreApplication"
 #include "QFileDialog"
 #include "QTextStream"
+#include "QTextCursor"
 
 #include "node.h"
 #include "nodelink.h"
@@ -327,14 +328,16 @@ NodeName::NodeName(QString name, QGraphicsItem *parent)
 
 void NodeName::focusOutEvent(QFocusEvent *event)
 {
+    QGraphicsTextItem::focusOutEvent(event);
     Node *pNode = (Node*)parentItem();
-    if(!(pNode->isContainer()))
-        return;
-    ContainerNode *cNode = (ContainerNode*)pNode;
-    if(cNode->ContainerData)
+    if((pNode->isContainer()))
     {
-        Shader_Space *contspace = (Shader_Space*)cNode->ContainerData;
-        contspace->setName(toPlainText());
+        ContainerNode *cNode = (ContainerNode*)pNode;
+        if(cNode->ContainerData)
+        {
+            Shader_Space *contspace = (Shader_Space*)cNode->ContainerData;
+            contspace->setName(toPlainText());
+        }
     }
     if(scene())
     {
@@ -342,7 +345,7 @@ void NodeName::focusOutEvent(QFocusEvent *event)
         space->leaveEditNameMode();
     }
     setTextInteractionFlags(Qt::NoTextInteraction);
-    QGraphicsTextItem::focusOutEvent(event);
+    textCursor().clearSelection();
 }
 
 void NodeName::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -1131,6 +1134,8 @@ ContainerNode::ContainerNode(NType t)
 {
     setNodeType(t);
     initNode();
+    SocketNode *inNode = new SocketNode(IN, this);
+    SocketNode *outNode = new SocketNode(OUT, this);
 }
 
 ContainerNode::ContainerNode(QString name, NType t)
@@ -1138,6 +1143,8 @@ ContainerNode::ContainerNode(QString name, NType t)
     setNodeName(name);
     setNodeType(t);
     initNode();
+    SocketNode *inNode = new SocketNode(IN, this);
+    SocketNode *outNode = new SocketNode(OUT, this);
 }
 
 void ContainerNode::addMappedSocket(NSocket *socket, socket_dir dir)
@@ -1319,18 +1326,12 @@ void SocketNode::setLoopSocket(bool isLoop)
 void SocketNode::setInSocketNode(ContainerNode *contnode)
 {
     setNodeType(INSOCKETS);
-    if(contnode->NodeType == FOR)
-    {
-        V_NSocket current_step;
-        current_step.type = FLOAT;
-        current_step.name = "Current Step";
-        addSocket(new NSocket(current_step), OUT);
-    }
 
     setDynamicSocketsNode(OUT);
     setNodeName("Input");
     contnode->setInputs(this);
 
+    connectToContainer(contnode);
 }
 
 void SocketNode::setOutSocketNode(ContainerNode *contnode)

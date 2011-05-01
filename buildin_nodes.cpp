@@ -208,7 +208,7 @@ void BuildIn::VFlNode(QGraphicsScene *scene)
 void BuildIn::ContIfNode(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
-    ContainerNode *node = new ContainerNode(CONDITIONCONTAINER);
+    ConditionContainerNode *node = new ConditionContainerNode;
     node->setNodeName("Boolean");
     node->setPos(space->mousePos);
     space->addNode(node);
