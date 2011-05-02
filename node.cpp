@@ -1130,8 +1130,9 @@ FunctionNode::FunctionNode()
     initNode();
 }
 
-ContainerNode::ContainerNode(bool raw)
+    ContainerNode::ContainerNode(bool raw)
 {
+    setNodeType(CONTAINER);
     initNode();
     if(!raw)
     {
@@ -1724,6 +1725,7 @@ void VectorValueNode::setValue()
 
 WhileNode::WhileNode(bool raw)
 {
+    setNodeType(WHILE);
     LoopNode::initNode(raw);
     if(!raw)
     {
@@ -1737,6 +1739,7 @@ WhileNode::WhileNode(bool raw)
 
 ForNode::ForNode(bool raw)
 {
+    setNodeType(FOR);
     LoopNode::initNode(raw);
     if(!raw)
     {
@@ -1755,6 +1758,7 @@ ForNode::ForNode(bool raw)
 
 IlluminanceNode::IlluminanceNode(bool raw)
 {
+    setNodeType(ILLUMINANCE);
     LoopNode::initNode(raw);
     if(!raw)
     {
@@ -1791,6 +1795,7 @@ IlluminanceNode::IlluminanceNode(bool raw)
 
 IlluminateNode::IlluminateNode(bool raw)
 {
+    setNodeType(ILLUMINATE);
     LoopNode::initNode(raw);
     if(!raw)
     {
@@ -1817,6 +1822,7 @@ IlluminateNode::IlluminateNode(bool raw)
 
 GatherNode::GatherNode(bool raw)
 {
+    setNodeType(GATHER);
     LoopNode::initNode(raw);
     if(!raw)
     {
@@ -1858,6 +1864,7 @@ GatherNode::GatherNode(bool raw)
 
 SolarNode::SolarNode(bool raw)
 {
+    setNodeType(SOLAR);
     LoopNode::initNode(raw);
     if(!raw)
     {
