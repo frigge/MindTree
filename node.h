@@ -222,8 +222,8 @@ class ContainerNode : public Node
 {
     Q_OBJECT
 public:
-    ContainerNode(NType t = CONTAINER);
-    ContainerNode(QString name, NType t = CONTAINER);
+    ContainerNode(bool raw=false);
+    ContainerNode(QString name, bool raw=false);
     virtual Node *copyNode(QHash<NSocket *, NSocket *> *socketmapping);
 
     NSocket *getMappedSNSocket(NSocket*);

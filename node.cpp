@@ -496,7 +496,7 @@ Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int 
 {
     Node *node;
     if(t==CONTAINER)
-        node = new ContainerNode;
+        node = new ContainerNode(true);
     else if (t == FOR)
         node = new ForNode(true);
     else if (t == WHILE)
@@ -572,7 +572,7 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
     stream>>insocketsize>>outsocketsize;
     bool isloopsocket = false;
     if(nodetype == INSOCKETS
-            ||nodetype == OUTSOCKETS)
+            || nodetype == OUTSOCKETS)
         stream>>isloopsocket;
 
     Node *newnode;
@@ -1130,18 +1130,19 @@ FunctionNode::FunctionNode()
     initNode();
 }
 
-ContainerNode::ContainerNode(NType t)
+ContainerNode::ContainerNode(bool raw)
 {
-    setNodeType(t);
     initNode();
-    SocketNode *inNode = new SocketNode(IN, this);
-    SocketNode *outNode = new SocketNode(OUT, this);
+    if(!raw)
+    {
+        SocketNode *inNode = new SocketNode(IN, this);
+        SocketNode *outNode = new SocketNode(OUT, this);
+    }
 }
 
-ContainerNode::ContainerNode(QString name, NType t)
+ContainerNode::ContainerNode(QString name, bool raw)
 {
     setNodeName(name);
-    setNodeType(t);
     initNode();
     SocketNode *inNode = new SocketNode(IN, this);
     SocketNode *outNode = new SocketNode(OUT, this);
