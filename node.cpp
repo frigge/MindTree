@@ -448,22 +448,22 @@ QDataStream &operator <<(QDataStream &stream, Node  *node)
         stream<<cdata;
     }
 
-    if(node->NodeType == INSOCKETS
-            ||node->NodeType == OUTSOCKETS)
-    {
-        SocketNode *snode = (SocketNode*)snode;
-        stream<<(int)snode->loopSocket();
-        if(snode->loopSocket())
-        {
-            LoopSocketNode *lsnode = (LoopSocketNode*)node;
-            stream<<lsnode->loopSocketMap.size();
-            foreach(NSocket *socket, lsnode->loopSocketMap)
-            {
-                stream<<socket->ID<<lsnode->loopSocketMap.value(socket)->ID;
-            }
-        }
+//    if(node->NodeType == INSOCKETS
+//            ||node->NodeType == OUTSOCKETS)
+//    {
+//        SocketNode *snode = (SocketNode*)snode;
+//        stream<<(int)snode->loopSocket();
+//        if(snode->loopSocket())
+//        {
+//            LoopSocketNode *lsnode = (LoopSocketNode*)node;
+//            stream<<lsnode->loopSocketMap.size();
+//            foreach(NSocket *socket, lsnode->loopSocketMap)
+//            {
+//                stream<<socket->ID<<lsnode->loopSocketMap.value(socket)->ID;
+//            }
+//        }
 
-    }
+//    }
 
     if(node->NodeType == COLORNODE)
     {
@@ -510,48 +510,48 @@ Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int 
     else if (t == ILLUMINANCE)
         node = new IlluminanceNode(true);
     else if (t == CONDITIONCONTAINER)
-        node = new ConditionContainerNode;
+        node = new ConditionContainerNode(true);
     else if(t == FUNCTION)
-        node = new FunctionNode();
+        node = new FunctionNode(true);
     else if(t == MULTIPLY
             ||t == DIVIDE
             ||t == ADD
             ||t == SUBTRACT
             ||t == DOTPRODUCT)
-        node = new MathNode(t);
+        node = new MathNode(t, true);
     else if(t == GREATERTHAN
             ||t == SMALLERTHAN
             ||t == EQUAL
             ||t == AND
             ||t == OR
             ||t == NOT)
-        node = new ConditionNode(t);
+        node = new ConditionNode(t, true);
     else if(t == COLORNODE)
-        node = new ColorValueNode();
+        node = new ColorValueNode(true);
     else if(t == FLOATNODE)
-        node = new FloatValueNode();
+        node = new FloatValueNode(true);
     else if(t == STRINGNODE)
-        node = new StringValueNode();
+        node = new StringValueNode(true);
     else if(t == VECTORNODE)
-        node = new VectorValueNode();
+        node = new VectorValueNode(true);
     else if(t == INSOCKETS
             ||t == OUTSOCKETS)
     {
         if(isLoopSocket)
-            node = new SocketNode(insize == 0 ? OUT : IN, 0);
+            node = new SocketNode(insize == 0 ? OUT : IN, 0, true);
         else
-            node = new LoopSocketNode(insize == 0 ? OUT : IN, 0);
+            node = new LoopSocketNode(insize == 0 ? OUT : IN, 0, true);
     }
     else if(t == SURFACEOUTPUT
             ||t == DISPLACEMENTOUTPUT
             ||t == VOLUMEOUTPUT
             ||t == LIGHTOUTPUT)
-        node = new OutputNode();
+        node = new OutputNode(true);
     else if(t == SURFACEINPUT
             ||t == DISPLACEMENTINPUT
             ||t == VOLUMEINPUT
             ||t == LIGHTINPUT)
-        node = new InputNode();
+        node = new InputNode(true);
     else
         node = new Node();
 
@@ -571,9 +571,6 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
     stream>>name>>ID>>nodetype>>nodepos;
     stream>>insocketsize>>outsocketsize;
     bool isloopsocket = false;
-    if(nodetype == INSOCKETS
-            || nodetype == OUTSOCKETS)
-        stream>>isloopsocket;
 
     Node *newnode;
     newnode = Node::newNode(name, (NType)nodetype, ID, nodepos, insocketsize, outsocketsize, isloopsocket);
@@ -661,25 +658,27 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
         stream>>vectornode->vectorvalue.x>>vectornode->vectorvalue.y>>vectornode->vectorvalue.z;
     }
 
-    if(newnode->NodeType == INSOCKETS
-            ||newnode->NodeType == OUTSOCKETS)
-    {
-        SocketNode *snode = (SocketNode*) newnode;
-        snode->setLoopSocket(isloopsocket);
-        if(isloopsocket)
-        {
-            LoopSocketNode *lsnode = (LoopSocketNode*)snode;
-            int partnerSockets, socketID, partnerID;
-            stream>>partnerSockets;
-            for(int i = 0; i < partnerSockets; i++)
-            {
-                stream>>socketID>>partnerID;
-                NSocket *socket = NSocket::loadIDMapper[socketID];
-                NSocket *partner = NSocket::loadIDMapper[partnerID];
-                lsnode->loopSocketMap.insert(socket, partner);
-            }
-        }
-    }
+
+//    if(newnode->NodeType == INSOCKETS
+//            ||newnode->NodeType == OUTSOCKETS)
+//    {
+//        SocketNode *snode = (SocketNode*) newnode;
+//        stream>>isloopsocket;
+//        snode->setLoopSocket(isloopsocket);
+//        if(isloopsocket)
+//        {
+//            LoopSocketNode *lsnode = (LoopSocketNode*)snode;
+//            int partnerSockets, socketID, partnerID;
+//            stream>>partnerSockets;
+//            for(int i = 0; i < partnerSockets; i++)
+//            {
+//                stream>>socketID>>partnerID;
+//                NSocket *socket = NSocket::loadIDMapper[socketID];
+//                NSocket *partner = NSocket::loadIDMapper[partnerID];
+//                lsnode->loopSocketMap.insert(socket, partner);
+//            }
+//        }
+//    }
 
     return stream;
 }
@@ -912,6 +911,7 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
         painter->drawText(outtextrect, out->Socket.name, QTextOption(Qt::AlignRight));
         outSocket_pos += socket_size + space;
     }
+    drawName();
 };
 
 void Node::setsurfaceInput()
@@ -1130,7 +1130,7 @@ FunctionNode::FunctionNode()
     initNode();
 }
 
-    ContainerNode::ContainerNode(bool raw)
+ContainerNode::ContainerNode(bool raw)
 {
     setNodeType(CONTAINER);
     initNode();
@@ -1143,10 +1143,14 @@ FunctionNode::FunctionNode()
 
 ContainerNode::ContainerNode(QString name, bool raw)
 {
-    setNodeName(name);
+    setNodeType(CONTAINER);
     initNode();
-    SocketNode *inNode = new SocketNode(IN, this);
-    SocketNode *outNode = new SocketNode(OUT, this);
+    if(!raw)
+    {
+        SocketNode *inNode = new SocketNode(IN, this);
+        SocketNode *outNode = new SocketNode(OUT, this);
+    }
+    setNodeName(name);
 }
 
 void ContainerNode::addMappedSocket(NSocket *socket, socket_dir dir)
@@ -1295,12 +1299,15 @@ NSocket *ContainerNode::getMappedCntNSocket(NSocket *socket)
 ConditionContainerNode::ConditionContainerNode()
 {
     initNode();
-    V_NSocket in;
-    in.type = CONDITION;
-    in.name = "Condition";
-    SocketNode *inNode = new SocketNode(IN, this);
-    SocketNode *outNode = new SocketNode(OUT, this);
-    addMappedSocket(new NSocket(in), IN);
+    if(!raw)
+    {
+        V_NSocket in;
+        in.type = CONDITION;
+        in.name = "Condition";
+        SocketNode *inNode = new SocketNode(IN, this);
+        SocketNode *outNode = new SocketNode(OUT, this);
+        addMappedSocket(new NSocket(in), IN);
+    }
 }
 
 SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode)
@@ -1310,9 +1317,15 @@ SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode)
     if(contnode == 0)
         return;
     if (dir == IN)
-        setInSocketNode(contnode);
+    {
+        setNodeType(INSOCKETS);
+        if(!raw)setInSocketNode(contnode);
+    }
     else
-        setOutSocketNode(contnode);
+    {
+        setNodeType(OUTSOCKETS);
+        if(!raw)setOutSocketNode(contnode);
+    }
 }
 
 bool SocketNode::loopSocket()
@@ -1327,8 +1340,6 @@ void SocketNode::setLoopSocket(bool isLoop)
 
 void SocketNode::setInSocketNode(ContainerNode *contnode)
 {
-    setNodeType(INSOCKETS);
-
     setDynamicSocketsNode(OUT);
     setNodeName("Input");
     contnode->setInputs(this);
@@ -1338,7 +1349,6 @@ void SocketNode::setInSocketNode(ContainerNode *contnode)
 
 void SocketNode::setOutSocketNode(ContainerNode *contnode)
 {
-    setNodeType(OUTSOCKETS);
     setDynamicSocketsNode(IN);
     setNodeName("Output");
     contnode->setOutputs(this);

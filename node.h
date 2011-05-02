@@ -263,14 +263,14 @@ protected:
 class ConditionContainerNode : public ContainerNode
 {
 public:
-    ConditionContainerNode();
+    ConditionContainerNode(bool raw=false);
 };
 
 class SocketNode : public Node
 {
     Q_OBJECT
 public:
-    SocketNode(socket_dir dir, ContainerNode *contnode);
+    SocketNode(socket_dir dir, ContainerNode *contnode, bool raw=false);
 
     void setInSocketNode(ContainerNode *contnode);
     virtual void setOutSocketNode(ContainerNode *contnode);

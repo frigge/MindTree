@@ -400,9 +400,8 @@ QList<Node *> Shader_Space::copySelectedNodes(bool centered, QHash<NSocket *, NS
 
 void Shader_Space::buildContainerNode()
 {
-    ContainerNode *contnode = new ContainerNode("");
+    ContainerNode *contnode = new ContainerNode("New Node", false);
     Shader_Space *cont_space = (Shader_Space*)contnode->ContainerData;
-    contnode->setNodeName("New Node");
 
     addNode(contnode);
     contnode->setPos(getSelectedItemsCenter());
