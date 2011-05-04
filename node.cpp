@@ -426,6 +426,7 @@ QDataStream &operator <<(QDataStream &stream, Node  *node)
 {
     stream<<node->node_name->toPlainText()<<(qint16)node->ID<<node->NodeType<<node->pos();
     stream<<(qint16)node->N_inSockets->size()<<(qint16)node->N_outSockets->size();
+
     foreach(NSocket *socket, *node->N_inSockets)
         stream<<socket;
     foreach(NSocket *socket, *node->N_outSockets)
@@ -448,22 +449,18 @@ QDataStream &operator <<(QDataStream &stream, Node  *node)
         stream<<cdata;
     }
 
-//    if(node->NodeType == INSOCKETS
-//            ||node->NodeType == OUTSOCKETS)
-//    {
-//        SocketNode *snode = (SocketNode*)snode;
-//        stream<<(int)snode->loopSocket();
-//        if(snode->loopSocket())
-//        {
-//            LoopSocketNode *lsnode = (LoopSocketNode*)node;
-//            stream<<lsnode->loopSocketMap.size();
-//            foreach(NSocket *socket, lsnode->loopSocketMap)
-//            {
-//                stream<<socket->ID<<lsnode->loopSocketMap.value(socket)->ID;
-//            }
-//        }
+    if(     node->NodeType == LOOPINSOCKETS
+          ||node->NodeType == LOOPOUTSOCKETS)
+    {
 
-//    }
+        LoopSocketNode *lsnode = (LoopSocketNode*)node;
+        stream<<lsnode->loopSocketMap.size();
+        foreach(NSocket *socket, lsnode->loopSocketMap)
+        {
+            stream<<socket->ID<<lsnode->loopSocketMap.value(socket)->ID;
+        }
+
+    }
 
     if(node->NodeType == COLORNODE)
     {
@@ -492,7 +489,7 @@ QDataStream &operator <<(QDataStream &stream, Node  *node)
     return stream;
 }
 
-Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize, bool isLoopSocket)
+Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize)
 {
     Node *node;
     if(t==CONTAINER)
@@ -536,12 +533,10 @@ Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int 
         node = new VectorValueNode(true);
     else if(t == INSOCKETS
             ||t == OUTSOCKETS)
-    {
-        if(isLoopSocket)
-            node = new SocketNode(insize == 0 ? OUT : IN, 0, true);
-        else
-            node = new LoopSocketNode(insize == 0 ? OUT : IN, 0, true);
-    }
+        node = new SocketNode(insize == 0 ? OUT : IN, 0, true);
+    else if(t == LOOPINSOCKETS
+            ||t == LOOPOUTSOCKETS)
+        node = new LoopSocketNode(insize == 0 ? OUT : IN, 0, true);
     else if(t == SURFACEOUTPUT
             ||t == DISPLACEMENTOUTPUT
             ||t == VOLUMEOUTPUT
@@ -568,12 +563,12 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
     qint16 ID, insocketsize, outsocketsize;
     int nodetype;
     QPointF nodepos;
+    bool isloopsocket = false;
     stream>>name>>ID>>nodetype>>nodepos;
     stream>>insocketsize>>outsocketsize;
-    bool isloopsocket = false;
 
     Node *newnode;
-    newnode = Node::newNode(name, (NType)nodetype, ID, nodepos, insocketsize, outsocketsize, isloopsocket);
+    newnode = Node::newNode(name, (NType)nodetype, ID, nodepos, insocketsize, outsocketsize);
     *node = newnode;
 
     NSocket *socket;
@@ -659,26 +654,20 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
     }
 
 
-//    if(newnode->NodeType == INSOCKETS
-//            ||newnode->NodeType == OUTSOCKETS)
-//    {
-//        SocketNode *snode = (SocketNode*) newnode;
-//        stream>>isloopsocket;
-//        snode->setLoopSocket(isloopsocket);
-//        if(isloopsocket)
-//        {
-//            LoopSocketNode *lsnode = (LoopSocketNode*)snode;
-//            int partnerSockets, socketID, partnerID;
-//            stream>>partnerSockets;
-//            for(int i = 0; i < partnerSockets; i++)
-//            {
-//                stream>>socketID>>partnerID;
-//                NSocket *socket = NSocket::loadIDMapper[socketID];
-//                NSocket *partner = NSocket::loadIDMapper[partnerID];
-//                lsnode->loopSocketMap.insert(socket, partner);
-//            }
-//        }
-//    }
+    if(newnode->NodeType == LOOPINSOCKETS
+            ||newnode->NodeType == LOOPOUTSOCKETS)
+    {
+        LoopSocketNode *lsnode = (LoopSocketNode*)newnode;
+        int partnerSockets, socketID, partnerID;
+        stream>>partnerSockets;
+        for(int i = 0; i < partnerSockets; i++)
+        {
+            stream>>socketID>>partnerID;
+            NSocket *socket = NSocket::loadIDMapper[socketID];
+            NSocket *partner = NSocket::loadIDMapper[partnerID];
+            lsnode->loopSocketMap.insert(socket, partner);
+        }
+    }
 
     return stream;
 }
@@ -777,6 +766,7 @@ void Node::inc_var_socket()
     socketdata.type = VARIABLE;
     socketdata.dir = varsocket->Socket.dir;
     lastsocket = varsocket;
+    lastsocket->isVariable = false;
     varsocket = new NSocket(socketdata);
     varsocket->isVariable = true;
     addSocket(varsocket, socketdata.dir);
@@ -1313,29 +1303,16 @@ ConditionContainerNode::ConditionContainerNode(bool raw)
 SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
 {
     initNode();
-    isLoopSocket = false;
-    if(contnode == 0)
-        return;
     if (dir == IN)
     {
         setNodeType(INSOCKETS);
-        if(!raw)setInSocketNode(contnode);
+        if(!raw && contnode)setInSocketNode(contnode);
     }
     else
     {
         setNodeType(OUTSOCKETS);
-        if(!raw)setOutSocketNode(contnode);
+        if(!raw && contnode)setOutSocketNode(contnode);
     }
-}
-
-bool SocketNode::loopSocket()
-{
-    return isLoopSocket;
-}
-
-void SocketNode::setLoopSocket(bool isLoop)
-{
-    isLoopSocket = isLoop;
 }
 
 void SocketNode::setInSocketNode(ContainerNode *contnode)
@@ -1390,10 +1367,17 @@ NSocket *SocketNode::getLastSocket()
 
 
 LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
-    : SocketNode(dir, contnode, raw)
+    :SocketNode(dir, contnode, true)
 {
-    isLoopSocket = true;
-    partner = 0;
+    if (dir == IN)
+    {
+        setNodeType(LOOPINSOCKETS);
+    }
+    else
+    {
+        setNodeType(LOOPOUTSOCKETS);
+    }
+
 }
 
 void LoopSocketNode::dec_var_socket(NSocket *socket)

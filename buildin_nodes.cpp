@@ -21,7 +21,7 @@
 #include "buildin_nodes.h"
 #include "shader_space.h"
 
-void    BuildIn::surfaceInput(QGraphicsScene *scene)
+void BuildIn::surfaceInput(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
     InputNode *surfnode = new InputNode();

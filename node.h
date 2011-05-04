@@ -128,6 +128,7 @@ enum NType
     SOLARINPUT,
 
     INSOCKETS,          OUTSOCKETS,
+    LOOPINSOCKETS,      LOOPOUTSOCKETS,
 
     COLORNODE,          FLOATNODE,
     STRINGNODE,         VECTORNODE
@@ -191,7 +192,7 @@ public:
     static void setIlluminanceInput(Node *node);
     static void setIlluminateInput(Node *node);
 
-    static Node *newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize, bool isLoopSocket = false);
+    static Node *newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize);
     static QHash<int, Node*>loadIDMapper;
 
     static bool isInput(Node *node);
@@ -279,12 +280,9 @@ public:
     virtual void dec_var_socket(NSocket *socket);
 
     void connectToContainer(ContainerNode*);
-    bool loopSocket();
-    void setLoopSocket(bool);
 
 protected:
     NSocket *getLastSocket();
-    bool isLoopSocket;
 
 public slots:
     void add_socket(NSocket *socket);
