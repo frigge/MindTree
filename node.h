@@ -180,16 +180,16 @@ public:
     virtual void dec_var_socket(NSocket *socket);
     virtual void inc_var_socket();
 
-    void setsurfaceOutput();
-    void setdisplacementOutput();
-    void setvolumeOutput();
-    void setlightOutput();
-    void setsurfaceInput();
-    void setdisplacementInput();
-    void setlightInput();
-    void setvolumeInput();
-    void setIlluminanceInput();
-    void setIlluminateInput();
+    static void setsurfaceOutput(Node *node);
+    static void setdisplacementOutput(Node *node);
+    static void setvolumeOutput(Node *node);
+    static void setlightOutput(Node *node);
+    static void setsurfaceInput(Node *node);
+    static void setdisplacementInput(Node *node);
+    static void setlightInput(Node *node);
+    static void setvolumeInput(Node *node);
+    static void setIlluminanceInput(Node *node);
+    static void setIlluminateInput(Node *node);
 
     static Node *newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize, bool isLoopSocket = false);
     static QHash<int, Node*>loadIDMapper;
@@ -299,7 +299,7 @@ signals:
 class LoopSocketNode : public SocketNode
 {
 public:
-    LoopSocketNode(socket_dir dir, ContainerNode *contnode);
+    LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw=false);
 
     virtual void dec_var_socket(NSocket *socket);
     void createPartnerSocket(NSocket *);
@@ -319,7 +319,7 @@ private:
 class ConditionNode : public Node
 {
 public:
-    ConditionNode(NType t);
+    ConditionNode(NType t, bool raw=false);
     ConditionNode(ConditionNode *node);
 
 protected:
@@ -330,7 +330,7 @@ class MathNode : public Node
 {
     Q_OBJECT
 public:
-    MathNode(NType t);
+    MathNode(NType t, bool raw=false);
     MathNode(NType t, MathNode *node);
 
     virtual void inc_var_socket();
@@ -387,7 +387,7 @@ public slots:
     void setValue(QColor);
 
 public:
-    ColorValueNode();
+    ColorValueNode(bool raw=false);
     QColor colorvalue;
 
 protected:
@@ -401,7 +401,7 @@ public slots:
     void setValue(QString);
 
 public:
-    StringValueNode();
+    StringValueNode(bool raw=false);
     QString stringvalue;
 };
 
@@ -412,7 +412,7 @@ public slots:
     void setValue(double);
 
 public:
-    FloatValueNode();
+    FloatValueNode(bool raw=false);
     float floatvalue;
 };
 
@@ -430,7 +430,7 @@ public slots:
     void setValue();
 
 public:
-    VectorValueNode();
+    VectorValueNode(bool raw=false);
     vector vectorvalue;
 };
 
@@ -446,37 +446,37 @@ protected:
 class ForNode : public LoopNode
 {
 public:
-    ForNode(bool raw);
+    ForNode(bool raw=false);
 };
 
 class WhileNode : public LoopNode
 {
 public:
-    WhileNode(bool raw);
+    WhileNode(bool raw=false);
 };
 
 class GatherNode : public LoopNode
 {
 public:
-    GatherNode(bool raw);
+    GatherNode(bool raw=false);
 };
 
 class IlluminanceNode : public  LoopNode
 {
 public:
-    IlluminanceNode(bool raw);
+    IlluminanceNode(bool raw=false);
 };
 
 class IlluminateNode : public LoopNode
 {
 public:
-    IlluminateNode(bool raw);
+    IlluminateNode(bool raw=false);
 };
 
 class SolarNode : public LoopNode
 {
 public:
-    SolarNode(bool raw);
+    SolarNode(bool raw=false);
 };
 
 class OutputNode : public Node

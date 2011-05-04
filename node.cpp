@@ -512,7 +512,7 @@ Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int 
     else if (t == CONDITIONCONTAINER)
         node = new ConditionContainerNode(true);
     else if(t == FUNCTION)
-        node = new FunctionNode(true);
+        node = new FunctionNode();
     else if(t == MULTIPLY
             ||t == DIVIDE
             ||t == ADD
@@ -546,12 +546,12 @@ Node *Node::newNode(QString name, NType t, int ID, QPointF pos, int insize, int 
             ||t == DISPLACEMENTOUTPUT
             ||t == VOLUMEOUTPUT
             ||t == LIGHTOUTPUT)
-        node = new OutputNode(true);
+        node = new OutputNode();
     else if(t == SURFACEINPUT
             ||t == DISPLACEMENTINPUT
             ||t == VOLUMEINPUT
             ||t == LIGHTINPUT)
-        node = new InputNode(true);
+        node = new InputNode();
     else
         node = new Node();
 
@@ -914,7 +914,7 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     drawName();
 };
 
-void Node::setsurfaceInput()
+void Node::setsurfaceInput(Node *node)
 {
     V_NSockets in, out;
     V_NSocket P, N, Cs, Os, u, v, du, dv, s, t, I;
@@ -951,13 +951,13 @@ void Node::setsurfaceInput()
     out.append(s);
     out.append(t);
     out.append(I);
-    setNodeName("Surface Input");
-    setNodeType(SURFACEINPUT);
-    setSockets(in, IN);
-    setSockets(out, OUT);
+    node->setNodeName("Surface Input");
+    node->setNodeType(SURFACEINPUT);
+    node->setSockets(in, IN);
+    node->setSockets(out, OUT);
 }
 
-void Node::setdisplacementInput()
+void Node::setdisplacementInput(Node *node)
 {
     V_NSockets in, out;
     V_NSocket P, N, u, v, du, dv, s, t;
@@ -985,13 +985,13 @@ void Node::setdisplacementInput()
     out.append(dv);
     out.append(s);
     out.append(t);
-    setNodeName("Displacement Input");
-    setNodeType(DISPLACEMENTINPUT);
-    setSockets(in, IN);
-    setSockets(out, OUT);
+    node->setNodeName("Displacement Input");
+    node->setNodeType(DISPLACEMENTINPUT);
+    node->setSockets(in, IN);
+    node->setSockets(out, OUT);
 }
 
-void Node::setvolumeInput()
+void Node::setvolumeInput(Node *node)
 {
     V_NSockets in, out;
     V_NSocket P, I, Ci, Oi, L, Cl;
@@ -1013,13 +1013,13 @@ void Node::setvolumeInput()
     out.append(Oi);
     out.append(L);
     out.append(Cl);
-    setNodeName("Volume Input");
-    setNodeType(VOLUMEINPUT);
-    setSockets(in,  IN);
-    setSockets(out,  OUT);
+    node->setNodeName("Volume Input");
+    node->setNodeType(VOLUMEINPUT);
+    node->setSockets(in,  IN);
+    node->setSockets(out,  OUT);
 }
 
-void Node::setlightInput()
+void Node::setlightInput(Node *node)
 {
     V_NSockets in, out;
     V_NSocket P, Ps, L;
@@ -1032,13 +1032,13 @@ void Node::setlightInput()
     out.append(P);
     out.append(Ps);
     out.append(L);
-    setNodeName("Light Input");
-    setNodeType(LIGHTINPUT);
-    setSockets(in,  IN);
-    setSockets(out,  OUT);
+    node->setNodeName("Light Input");
+    node->setNodeType(LIGHTINPUT);
+    node->setSockets(in,  IN);
+    node->setSockets(out,  OUT);
 }
 
-void Node::setsurfaceOutput()
+void Node::setsurfaceOutput(Node *node)
 {
     V_NSockets in, out;
     V_NSocket Ci, Oi;
@@ -1048,14 +1048,14 @@ void Node::setsurfaceOutput()
     Oi.name = "Oi";
     in.append(Ci);
     in.append(Oi);
-    setNodeName("Surface Output");
-    setNodeType(SURFACEOUTPUT);
-    setSockets(in,  IN);
-    setSockets(out,  OUT);
-    setDynamicSocketsNode(IN);
+    node->setNodeName("Surface Output");
+    node->setNodeType(SURFACEOUTPUT);
+    node->setSockets(in,  IN);
+    node->setSockets(out,  OUT);
+    node->setDynamicSocketsNode(IN);
 }
 
-void Node::setdisplacementOutput()
+void Node::setdisplacementOutput(Node *node)
 {
     V_NSockets in, out;
     V_NSocket P, N;
@@ -1065,14 +1065,14 @@ void Node::setdisplacementOutput()
     N.name = "N";
     in.append(P);
     in.append(N);
-    setNodeName("Displacement Output");
-    setNodeType(DISPLACEMENTOUTPUT);
-    setSockets(in,  IN);
-    setSockets(out,  OUT);
-    setDynamicSocketsNode(IN);
+    node->setNodeName("Displacement Output");
+    node->setNodeType(DISPLACEMENTOUTPUT);
+    node->setSockets(in,  IN);
+    node->setSockets(out,  OUT);
+    node->setDynamicSocketsNode(IN);
 }
 
-void Node::setvolumeOutput()
+void Node::setvolumeOutput(Node *node)
 {
     V_NSockets in, out;
     V_NSocket Ci, Oi;
@@ -1082,25 +1082,25 @@ void Node::setvolumeOutput()
     Oi.name = "Oi";
     in.append(Ci);
     in.append(Oi);
-    setNodeName("Volume Output");
-    setNodeType(VOLUMEOUTPUT);
-    setSockets(in,  IN);
-    setSockets(out,  OUT);
-    setDynamicSocketsNode(IN);
+    node->setNodeName("Volume Output");
+    node->setNodeType(VOLUMEOUTPUT);
+    node->setSockets(in,  IN);
+    node->setSockets(out,  OUT);
+    node->setDynamicSocketsNode(IN);
 }
 
-void Node::setlightOutput()
+void Node::setlightOutput(Node *node)
 {
     V_NSockets in, out;
     V_NSocket Cl;
     Cl.type = COLOR;
     Cl.name = "Cl";
     in.append(Cl);
-    setNodeName("Light Output");
-    setNodeType(LIGHTOUTPUT);
-    setSockets(in,  IN);
-    setSockets(out,  OUT);
-    setDynamicSocketsNode(IN);
+    node->setNodeName("Light Output");
+    node->setNodeType(LIGHTOUTPUT);
+    node->setSockets(in,  IN);
+    node->setSockets(out,  OUT);
+    node->setDynamicSocketsNode(IN);
 }
 
 void Node::setDynamicSocketsNode(socket_dir dir, socket_type t)
@@ -1296,7 +1296,7 @@ NSocket *ContainerNode::getMappedCntNSocket(NSocket *socket)
     return socket_map.key(socket);
 }
 
-ConditionContainerNode::ConditionContainerNode()
+ConditionContainerNode::ConditionContainerNode(bool raw)
 {
     initNode();
     if(!raw)
@@ -1310,7 +1310,7 @@ ConditionContainerNode::ConditionContainerNode()
     }
 }
 
-SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode)
+SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
 {
     initNode();
     isLoopSocket = false;
@@ -1389,8 +1389,8 @@ NSocket *SocketNode::getLastSocket()
 }
 
 
-LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode)
-    : SocketNode(dir, contnode)
+LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
+    : SocketNode(dir, contnode, raw)
 {
     isLoopSocket = true;
     partner = 0;
@@ -1440,63 +1440,67 @@ void LoopSocketNode::inc_var_socket()
     if(partner) createPartnerSocket(lastsocket);
 }
 
-ConditionNode::ConditionNode(NType t)
+ConditionNode::ConditionNode(NType t, bool raw)
 {
     setNodeType(t);
     initNode();
+
+    if(!raw)
+    {
+        V_NSocket out;
+        out.type = CONDITION;
+        out.name = "Output";
+        addSocket(new NSocket(out), OUT);
+        if(NodeType != AND && NodeType != OR)
+        {
+            V_NSocket in;
+            in.type = NodeType == NOT ? CONDITION : VARIABLE; //TODO: WTF?!?!
+            in.name = "Input";
+            addSocket(new NSocket(in), IN);
+            if(NodeType != NOT)
+            {
+                V_NSocket in2;
+                in2.type = VARIABLE;
+                in2.name = "Input";
+                addSocket(new NSocket(in2), IN);
+            }
+        }
+        switch(NodeType)
+        {
+        case GREATERTHAN:
+            setNodeName("Greater Than");
+            break;
+        case SMALLERTHAN:
+            setNodeName("Smaller Than");
+            break;
+        case EQUAL:
+            setNodeName("Equal");
+            break;
+        case NOT:
+            setNodeName("Not");
+            break;
+        case AND:
+            setNodeName("And");
+            setDynamicSocketsNode(IN, CONDITION);
+            break;
+        case OR:
+            setNodeName("Or");
+            setDynamicSocketsNode(IN, CONDITION);
+            break;
+        }
+    }
 }
 
 void ConditionNode::initNode()
 {
     Node::initNode();
-    V_NSocket out;
-    out.type = CONDITION;
-    out.name = "Output";
-    addSocket(new NSocket(out), OUT);
-    if(NodeType != AND && NodeType != OR)
-    {
-        V_NSocket in;
-        in.type = NodeType == NOT ? CONDITION : VARIABLE; //TODO: WTF?!?!
-        in.name = "Input";
-        addSocket(new NSocket(in), IN);
-        if(NodeType != NOT)
-        {
-            V_NSocket in2;
-            in2.type = VARIABLE;
-            in2.name = "Input";
-            addSocket(new NSocket(in2), IN);
-        }
-    }
-    switch(NodeType)
-    {
-    case GREATERTHAN:
-        setNodeName("Greater Than");
-        break;
-    case SMALLERTHAN:
-        setNodeName("Smaller Than");
-        break;
-    case EQUAL:
-        setNodeName("Equal");
-        break;
-    case NOT:
-        setNodeName("Not");
-        break;
-    case AND:
-        setNodeName("And");
-        setDynamicSocketsNode(IN, CONDITION);
-        break;
-    case OR:
-        setNodeName("Or");
-        setDynamicSocketsNode(IN, CONDITION);
-        break;
-    }
+
 }
 
-MathNode::MathNode(NType t)
+MathNode::MathNode(NType t, bool raw)
 {
     initNode();
     setNodeType(t);
-    setDynamicSocketsNode(IN);
     switch(t)
     {
     case ADD:
@@ -1516,11 +1520,15 @@ MathNode::MathNode(NType t)
         break;
     }
 
-    V_NSocket resultd;
-    resultd.name = "Result";
-    resultd.type = VARIABLE;
-    NSocket *result = new NSocket(resultd);
-    addSocket(result, OUT);
+    if(!raw)
+    {
+        setDynamicSocketsNode(IN);
+        V_NSocket resultd;
+        resultd.name = "Result";
+        resultd.type = VARIABLE;
+        NSocket *result = new NSocket(resultd);
+        addSocket(result, OUT);
+    }
 }
 
 void MathNode::inc_var_socket()
@@ -1657,7 +1665,7 @@ void ColorButton::setColor()
     update();
 }
 
-ColorValueNode::ColorValueNode()
+ColorValueNode::ColorValueNode(bool raw)
 {
     initNode();
     setNodeType(COLORNODE);
@@ -1667,11 +1675,14 @@ ColorValueNode::ColorValueNode()
     connect(cbutton, SIGNAL(clicked(QColor)), this, SLOT(setValue(QColor)));
     setValueEditor(cbutton);
 
-    V_NSocket sdata;
-    sdata.type = COLOR;
-    sdata.name = "Color";
-    NSocket *out = new NSocket(sdata);
-    addSocket(out, OUT);
+    if(!raw)
+    {
+        V_NSocket sdata;
+        sdata.type = COLOR;
+        sdata.name = "Color";
+        NSocket *out = new NSocket(sdata);
+        addSocket(out, OUT);
+    }
 }
 
 void ColorValueNode::setValue(QColor newvalue)
@@ -1679,7 +1690,7 @@ void ColorValueNode::setValue(QColor newvalue)
     colorvalue = newvalue;
 }
 
-StringValueNode::StringValueNode()
+StringValueNode::StringValueNode(bool raw)
 {
     initNode();
     setNodeType(STRINGNODE);
@@ -1688,11 +1699,14 @@ StringValueNode::StringValueNode()
     connect(lineedit, SIGNAL(textChanged(QString)), this, SLOT(setValue(QString)));
     setValueEditor(lineedit);
 
-    V_NSocket sdata;
-    sdata.type = STRING;
-    sdata.name = "String";
-    NSocket *out = new NSocket(sdata);
-    addSocket(out, OUT);
+    if(!raw)
+    {
+        V_NSocket sdata;
+        sdata.type = STRING;
+        sdata.name = "String";
+        NSocket *out = new NSocket(sdata);
+        addSocket(out, OUT);
+    }
 }
 
 void StringValueNode::setValue(QString newstring)
@@ -1700,7 +1714,7 @@ void StringValueNode::setValue(QString newstring)
     stringvalue = newstring;
 }
 
-FloatValueNode::FloatValueNode()
+FloatValueNode::FloatValueNode(bool raw)
 {
     initNode();
     setNodeType(FLOATNODE);
@@ -1710,18 +1724,21 @@ FloatValueNode::FloatValueNode()
     connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(setValue(double)));
     setValueEditor(spinbox);
 
-    V_NSocket sdata;
-    sdata.type = FLOAT;
-    sdata.name = "Float";
-    NSocket *out = new NSocket(sdata);
-    addSocket(out, OUT);
+    if(!raw)
+    {
+        V_NSocket sdata;
+        sdata.type = FLOAT;
+        sdata.name = "Float";
+        NSocket *out = new NSocket(sdata);
+        addSocket(out, OUT);
+    }
 }
 void FloatValueNode::setValue(double newval)
 {
     floatvalue = newval;
 }
 
-VectorValueNode::VectorValueNode()
+VectorValueNode::VectorValueNode(bool raw)
 {
     initNode();
     setNodeType(VECTORNODE);

@@ -25,7 +25,7 @@ void    BuildIn::surfaceInput(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
     InputNode *surfnode = new InputNode();
-    surfnode->setsurfaceInput();
+    Node::setsurfaceInput(surfnode);
     surfnode->setPos(space->mousePos);
     space->addNode(surfnode);
 };
@@ -34,7 +34,7 @@ void BuildIn::displacementInput(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
     InputNode *dispnode = new InputNode();
-    dispnode->setdisplacementInput();
+    Node::setdisplacementInput(dispnode);
     dispnode->setPos(space->mousePos);
     space->addNode(dispnode);
 };
@@ -43,7 +43,7 @@ void BuildIn::volumeInput(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
     InputNode *volnode = new InputNode();
-    volnode->setvolumeInput();
+    Node::setvolumeInput(volnode);
     volnode->setPos(space->mousePos);
     space->addNode(volnode);
 };
@@ -52,7 +52,7 @@ void BuildIn::lightInput(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
     InputNode *lnode = new InputNode();
-    lnode->setlightInput();
+    Node::setlightInput(lnode);
     lnode->setPos(space->mousePos);
     space->addNode(lnode);
 };
@@ -61,7 +61,7 @@ void BuildIn::surfaceOutput(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
     OutputNode *surfnode = new OutputNode();
-    surfnode->setsurfaceOutput();
+    Node::setsurfaceOutput(surfnode);
     surfnode->setPos(space->mousePos);
     space->addNode(surfnode);
 };
@@ -70,7 +70,7 @@ void BuildIn::displacementOutput(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
     OutputNode *dispnode = new OutputNode();
-    dispnode->setdisplacementOutput();
+    Node::setdisplacementOutput(dispnode);
     dispnode->setPos(space->mousePos);
     space->addNode(dispnode);
 }
@@ -79,7 +79,7 @@ void BuildIn::volumeOutput(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
     OutputNode *volnode = new OutputNode();
-    volnode->setvolumeOutput();
+    Node::setvolumeOutput(volnode);
     volnode->setPos(space->mousePos);
     space->addNode(volnode);
 }
@@ -88,7 +88,7 @@ void BuildIn::lightOutput(QGraphicsScene *scene)
 {
     Shader_Space *space = (Shader_Space*)scene;
     OutputNode *lnode = new OutputNode();
-    lnode->setlightOutput();
+    Node::setlightOutput(lnode);
     lnode->setPos(space->mousePos);
     space->addNode(lnode);
 }
