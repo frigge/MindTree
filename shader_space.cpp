@@ -416,6 +416,7 @@ void Shader_Space::buildContainerNode()
         {
             nodecnt--;
             Node *node = (Node*)item;
+            removeItem(node);
             cont_space->addNode(node);
         }
     }

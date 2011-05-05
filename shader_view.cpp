@@ -28,7 +28,7 @@ Shader_View::Shader_View(QMainWindow *parent)
 {
     frgauthor = parent;
     QGLWidget *qgl = new QGLWidget(QGLFormat(QGL::SampleBuffers));
-    setRenderHint(QPainter::Antialiasing);
+    //setRenderHint(QPainter::Antialiasing);
     setViewport(qgl);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

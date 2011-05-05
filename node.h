@@ -242,6 +242,8 @@ public:
 
     QHash<NSocket*, NSocket*> socket_map;
 
+    void setNodeName(QString name);
+
 public slots:
     void newSocket(NSocket *socket);
     void killSocket(NSocket *socket);

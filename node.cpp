@@ -684,11 +684,11 @@ void Node::initNode()
     setAcceptHoverEvents(true);
     setAcceptsHoverEvents(true);
 
-    QGraphicsDropShadowEffect *dropshad = new QGraphicsDropShadowEffect;
-    dropshad->setBlurRadius(10);
-    dropshad->setOffset(5);
-    dropshad->setColor(QColor(10, 10, 10, 200));
-    setGraphicsEffect(dropshad);
+    //QGraphicsDropShadowEffect *dropshad = new QGraphicsDropShadowEffect;
+    //dropshad->setBlurRadius(10);
+    //dropshad->setOffset(5);
+    //dropshad->setColor(QColor(10, 10, 10, 200));
+    //setGraphicsEffect(dropshad);
 
     N_inSockets = new V_NSocket_ptrs;
     N_outSockets = new V_NSocket_ptrs;
@@ -826,7 +826,11 @@ int Node::NodeWidth() const
 
 int Node::NodeHeight(int numSockets) const
 {
-    int node_height = 30 + (17*numSockets);
+    int node_height = 0;
+    if(!numSockets)
+        node_height = 25;
+    else
+        node_height = 7 + (17*numSockets);
     return node_height;
 };
 
@@ -843,7 +847,6 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
 {
     int node_width = NodeWidth();
     int node_height = NodeHeight(N_inSockets->size() + N_outSockets->size());
-    int header_height = 20;
     int space = 2;
     int socket_size = 15;
     int nodePen = 4;
@@ -855,7 +858,6 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     if (isSelected())
     {
         nodeBGColor = QColor(100, 100, 100);
-        nodeHColor = QColor(120, 120, 120);
         textColor = QColor(255, 255, 255);
         node_outline.setColor(QColor(255, 145, 0, 100));
         node_outline.setWidth(nodePen);
@@ -863,7 +865,6 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     else
     {
         nodeBGColor = QColor(100, 100, 100);
-        nodeHColor = QColor(100, 100, 100);
         textColor = QColor(255, 255, 255, 255);
         node_outline.setColor(QColor(80, 80, 80, 100));
         node_outline.setWidth(nodePen);
@@ -872,13 +873,8 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWid
     painter->setBrush(QBrush(nodeBGColor, Qt::SolidPattern));
     painter->drawRect(-(node_width/2), 0-(node_height/2), node_width, node_height);
 
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(QBrush(nodeHColor, Qt::SolidPattern));
-    QRectF hrect((0-(node_width/2))+6, 0-(node_height/2)+2, node_width-12, header_height);
-    painter->drawRect(hrect);
-
     int inSocket_pos;
-    inSocket_pos = 0 - (node_height/2) + header_height + 2*space;
+    inSocket_pos = 0 - (node_height/2) + 2*space;
 
     foreach(NSocket *in, *N_inSockets)
     {
@@ -1284,6 +1280,13 @@ NSocket *ContainerNode::getMappedSNSocket(NSocket *socket)
 NSocket *ContainerNode::getMappedCntNSocket(NSocket *socket)
 {
     return socket_map.key(socket);
+}
+
+void ContainerNode::setNodeName(QString name)
+{
+    Node::setNodeName(name);
+    Shader_Space *cspace = (Shader_Space*)ContainerData;
+    cspace->setName(name);
 }
 
 ConditionContainerNode::ConditionContainerNode(bool raw)
@@ -1940,7 +1943,7 @@ void OutputNode::createMenu()
 void OutputNode::writeCode()
 {
     if(filename=="")
-        filename = QFileDialog::getSaveFileName();
+        filename = QFileDialog::getSaveFileName(0, QString(), QString(), "RSL Code File (*.sl)");
 
     QFile file(filename);
     file.open(QIODevice::WriteOnly);

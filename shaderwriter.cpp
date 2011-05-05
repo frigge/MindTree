@@ -52,8 +52,8 @@ ShaderWriter::ShaderWriter(OutputNode *start)
 
         outputvar = socket->Socket.varname;
         outputvar.append(" = ");
+        outputvar.append(writeVarName(socket));
         NodeLink *nlink = (NodeLink*)socket->Socket.links.first();
-        outputvar.append(nlink->outSocket->Socket.varname);
         evalSocketValue(nlink->outSocket);
         code.append(outputvar);
         code.append(";\n");
@@ -155,16 +155,16 @@ QString ShaderWriter::writeVarName(NSocket *insocket)
 
     {
         mapsocket = cnode->socket_map.key(prevsocket);
-        return mapsocket->Socket.cntdSockets.first()->varname;
+        return writeVarName(mapsocket);
     }
     else if(node->NodeType == INSOCKETS)
     {
         cnode = (ContainerNode*)cnode_depth.takeLast();
         mapsocket = cnode->socket_map.value(prevsocket);
-        return mapsocket->Socket.cntdSockets.first()->varname;
+        return writeVarName(mapsocket);
     }
     else
-        return insocket->Socket.cntdSockets.first()->varname;
+        return prevsocket->Socket.varname;
 }
 
 void ShaderWriter::evalSocketValue(NSocket *socket)
@@ -238,7 +238,7 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         {
             i++;
             if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
+                output.append(writeVarName(nsocket));
             gotoNextNode(nsocket);
             if(i < node->N_inSockets->size())
                 output.append(" * ");
@@ -254,7 +254,7 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         {
             i++;
             if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
+                output.append(writeVarName(nsocket));
             gotoNextNode(nsocket);
             if(i < node->N_inSockets->size())
                 output.append(" / ");
@@ -270,7 +270,7 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         {
             i++;
             if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
+                output.append(writeVarName(nsocket));
             gotoNextNode(nsocket);
             if(i < node->N_inSockets->size())
                 output.append(" + ");
@@ -286,7 +286,7 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         {
             i++;
             if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
+                output.append(writeVarName(nsocket));
             gotoNextNode(nsocket);
             if(i < node->N_inSockets->size())
                 output.append(" - ");
@@ -302,7 +302,7 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         {
             i++;
             if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
+                output.append(writeVarName(nsocket));
             gotoNextNode(nsocket);
             if(i < node->N_inSockets->size())
                 output.append(" . ");
@@ -432,12 +432,6 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         break;
 
     case INSOCKETS:
-        initVar(socket);
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        writeVarName(socket);
-        output.append(";\n");
-        gotoNextNode(mapped_socket);
         break;
 
     case COLORNODE:

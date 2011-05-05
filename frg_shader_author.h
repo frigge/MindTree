@@ -75,6 +75,7 @@ private:
     QGraphicsScene *root_scene;
     QString filename;
     void change_window_title(QString);
+    QList<ChangeSpaceAction*>spaceActions;
 };
 
 #endif // FRG_SHADER_AUTHOR_H

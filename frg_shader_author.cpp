@@ -98,14 +98,16 @@ void frg_Shader_Author::updateToolBar()
 
     Shader_Space *space = dynamic_cast<Shader_Space *>(view->scene());
 
-    Shader_Space *curr_space = space;
     ChangeSpaceAction *chspace;
+    while(!spaceActions.isEmpty())
+        delete spaceActions.takeLast();
 
-    for(QList<QGraphicsScene*>::iterator i = spaces.begin(); i != spaces.end(); ++i)
+    foreach(QGraphicsScene *scene, spaces)
     {
-        Shader_Space *cs = (Shader_Space*)*i;
-        ChangeSpaceAction *chspace = new ChangeSpaceAction(cs, toolbar);
-        chspace->setText(cs->name);
+        Shader_Space *space =(Shader_Space*)scene;
+        ChangeSpaceAction *chspace = new ChangeSpaceAction(space, toolbar);
+        spaceActions.append(chspace);
+        chspace->setText(space->name);
         toolbar->addAction(chspace);
         connect(chspace, SIGNAL(triggered(QGraphicsScene*)), this, SLOT(setShader_Space(QGraphicsScene*)));
     }
@@ -114,15 +116,19 @@ void frg_Shader_Author::updateToolBar()
 void frg_Shader_Author::setShader_Space(QGraphicsScene *space)
 {
     view->setScene(space);
-    QGraphicsScene *tmp;
+    if(spaces.endsWith(space))
+        return;
+    QGraphicsScene *tmp = spaces.takeLast();
     while(tmp != space)
         tmp = spaces.takeLast();
+    spaces.append(tmp);
     updateToolBar();
 }
 
 void frg_Shader_Author::setRoot_Space()
 {
     view->setScene(root_scene);
+    spaces.clear();
     updateToolBar();
 }
 
