@@ -110,6 +110,9 @@ void NSocket::changeType()
 
 void NSocket::addLink(QGraphicsItem *nodeLink)
 {
+    Node *node = (Node*) Socket.node;
+    if (isVariable && Socket.links.isEmpty())
+        node->inc_var_socket();
     if(Socket.links.contains(nodeLink))
         return;
     Socket.links.append(nodeLink);
@@ -129,7 +132,6 @@ void NSocket::addLink(QGraphicsItem *nodeLink)
         Socket.cntdSockets.append(indata);
     }
 
-    Node *node = (Node*) Socket.node;
     if (Socket.type == VARIABLE)
     {
         Socket.type = Socket.cntdSockets.first()->type;
@@ -140,8 +142,6 @@ void NSocket::addLink(QGraphicsItem *nodeLink)
 //            mNode->setSocketType(Socket.type);
 //        }
     }
-    if (isVariable)
-        node->inc_var_socket();
 }
 
 QDataStream & operator<<(QDataStream &stream, NSocket *socket)
@@ -187,7 +187,7 @@ void NSocket::removeLink(QGraphicsItem *Link)
         Socket.cntdSockets.removeAll(&nl->inSocket->Socket);
     }
 
-    if(isVariable)
+    if(isVariable && Socket.links.isEmpty())
         pnode->dec_var_socket(this);
     if((pnode->NodeType == ADD
        || pnode->NodeType == SUBTRACT
@@ -766,7 +766,6 @@ void Node::inc_var_socket()
     socketdata.type = VARIABLE;
     socketdata.dir = varsocket->Socket.dir;
     lastsocket = varsocket;
-    lastsocket->isVariable = false;
     varsocket = new NSocket(socketdata);
     varsocket->isVariable = true;
     addSocket(varsocket, socketdata.dir);
