@@ -32,14 +32,18 @@ private:
     QString code;
     QString VarDeclares;
     QString ShaderHeader;
+    QString ShaderParameter;
     QString OutputVars;
 
     void addToCode(QString);
-    void addToVarDeclares(QString);
-    void addToShaderHeader(QString);
-    void addToOutputVars(QString);
+    void addToVarDeclares(QString, bool newline=true);
+    void addToShaderHeader(QString, bool newline=true);
+    void addToShaderParameter(QString, bool newline=true);
+    void addToOutputVars(QString, bool newline=true);
 
     int tabLevel;
+    void incTabLevel();
+    void decTabLevel();
 
     void evalSocketValue(NSocket *socket);
     void initVar(NSocket *socket);
@@ -47,6 +51,8 @@ private:
 
     void gotoNextNode(NSocket *socket);
     QString writeVarName(NSocket *socket);
+
+    QString newline();
 
     void writeFunction(NSocket *socket);
     void writeContainer(NSocket *socket);

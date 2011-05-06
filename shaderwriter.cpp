@@ -22,30 +22,33 @@
 
 ShaderWriter::ShaderWriter(OutputNode *start)
 {
+    tabLevel = 1;
     QString outputvar;
     switch(start->NodeType)
     {
     case SURFACEOUTPUT:
-        ShaderHeader.append("surface ");
+        addToShaderHeader("surface ");
         break;
     case DISPLACEMENTOUTPUT:
-        ShaderHeader.append("displacement ");
+        addToShaderHeader("displacement ");
         break;
     case VOLUMEOUTPUT:
-        ShaderHeader.append("volume ");
+        addToShaderHeader("volume ");
         break;
     case LIGHTOUTPUT:
-        ShaderHeader.append("light ");
+        addToShaderHeader("light ");
         break;
     }
 
-    ShaderHeader.append(start->ShaderName);
-    ShaderHeader.append("(");
+    addToShaderHeader(start->ShaderName);
+    addToShaderHeader("(");
 
     foreach(NSocket *socket, *start->N_inSockets)
     {
         if(socket->Socket.cntdSockets.size()==0)
             continue;
+        if(!start->N_inSockets->startsWith(socket))
+            code.append(newline());
 
         if(socket->isVariable)
             outputVar(socket);
@@ -55,75 +58,96 @@ ShaderWriter::ShaderWriter(OutputNode *start)
         outputvar.append(writeVarName(socket));
         NodeLink *nlink = (NodeLink*)socket->Socket.links.first();
         evalSocketValue(nlink->outSocket);
+        code.append("\n    ");
         code.append(outputvar);
-        code.append(";\n");
+        code.append(";");
     }
-    ShaderHeader.append(")");
+}
+
+QString ShaderWriter::newline()
+{
+    QString nl;
+    nl.fill(' ', 4 * tabLevel);
+    nl.prepend("\n");
+    return nl;
 }
 
 void ShaderWriter::initVar(NSocket *socket)
 {
+    QString VDstr;
     switch(socket->Socket.type)
     {
     case COLOR:
-        VarDeclares.append("color ");
+        VDstr.append("color ");
         break;
     case FLOAT:
-         VarDeclares.append("float ");
+         VDstr.append("float ");
         break;
     case STRING:
-         VarDeclares.append("string ");
+         VDstr.append("string ");
         break;
     case VECTOR:
-         VarDeclares.append("vector ");
+         VDstr.append("vector ");
         break;
     case POINT:
-         VarDeclares.append("point ");
+         VDstr.append("point ");
         break;
     case NORMAL:
-         VarDeclares.append("normal ");
+         VDstr.append("normal ");
         break;
     }
-    VarDeclares.append(socket->Socket.varname);
-    VarDeclares.append(";\n");
+    VDstr.append(socket->Socket.varname);
+    VDstr.append(";");
+    addToVarDeclares(VDstr);
+}
+
+void ShaderWriter::incTabLevel()
+{
+    tabLevel++;
+}
+
+void ShaderWriter::decTabLevel()
+{
+    tabLevel--;
 }
 
 void ShaderWriter::outputVar(NSocket *socket)
 {
-    QString ending;
-    OutputVars.append("output ");
+    QString ending, OVstr;
+    OVstr.append("output ");
     switch(socket->Socket.type)
     {
     case COLOR:
-        OutputVars.append("color ");
+        OVstr.append("color ");
         ending = "(0, 0, 0)";
         break;
     case FLOAT:
-         OutputVars.append("float ");
+         OVstr.append("float ");
          ending = "0";
         break;
     case STRING:
-         OutputVars.append("string ");
+         OVstr.append("string ");
          ending = "";
         break;
     case VECTOR:
-         OutputVars.append("vector ");
+         OVstr.append("vector ");
          ending = "(0, 0, 0)";
         break;
     case POINT:
-         OutputVars.append("point ");
+         OVstr.append("point ");
          ending = "(0, 0, 0)";
         break;
     case NORMAL:
-         OutputVars.append("normal ");
+         OVstr.append("normal ");
          ending = "(0, 0, 0)";
         break;
     }
 
-    OutputVars.append(socket->Socket.varname);
-    OutputVars.append(" = ");
-    OutputVars.append(ending);
-    OutputVars.append(";\n");
+    OVstr.append(socket->Socket.varname);
+    OVstr.append(" = ");
+    OVstr.append(ending);
+    OVstr.append(";");
+    addToOutputVars(OVstr);
 }
 
 void ShaderWriter::gotoNextNode(NSocket *socket)
@@ -220,6 +244,18 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
     case WHILE:
         writeWhileLoop(socket);
         break;
+    case GATHER:
+        writeRSLLoop(socket);
+        break;
+    case ILLUMINANCE:
+        writeRSLLoop(socket);
+        break;
+    case ILLUMINATE:
+        writeRSLLoop(socket);
+        break;
+    case SOLAR:
+        writeRSLLoop(socket);
+        break;
     case COLORNODE:
         writeColor(socket);
         break;
@@ -242,6 +278,7 @@ void ShaderWriter::writeFunction(NSocket *socket)
 {
     QString output;
     initVar(socket);
+    output.append(newline());
     output.append(socket->Socket.varname);
     output.append(" = ");
     FunctionNode *fnode = (FunctionNode*)socket->Socket.node;
@@ -276,7 +313,7 @@ void ShaderWriter::writeFunction(NSocket *socket)
                 output.append(", ");
         }
     }
-    output.append(");\n");
+    output.append(");");
     code.append(output);
 }
 
@@ -292,11 +329,12 @@ void ShaderWriter::writeContainer(NSocket *socket)
 void ShaderWriter::writeMath(NSocket *socket, QString mathOperator)
 {
     QString output;
-    int i = 0;
+    output.append(newline());
     Node *node = (Node*)socket->Socket.node;
     initVar(socket);
     output.append(socket->Socket.varname);
     output.append(" = ");
+    int i = 1;
     foreach(NSocket *nsocket, *node->N_inSockets)
     {
         i++;
@@ -310,7 +348,7 @@ void ShaderWriter::writeMath(NSocket *socket, QString mathOperator)
             output.append(" ");
         }
     }
-    output.append(";\n");
+    output.append(";");
     code.append(output);
 }
 
@@ -340,13 +378,20 @@ void ShaderWriter::writeConditionContainer(NSocket *socket)
     QString output;
     NSocket *mapped_socket, *condition;
     ConditionContainerNode *node = (ConditionContainerNode*)socket->Socket.node;
+    output.append(newline());
     output.append("if(");
     condition = node->N_inSockets->first();
     evalSocketValue(condition);
-    output.append(")\n{");
+    output.append(")");
+    incTabLevel();
+    output.append(newline());
+    output.append("{");
+    incTabLevel();
+    output.append(newline());
     mapped_socket = node->socket_map.key(socket);
     gotoNextNode(mapped_socket);
-    output.append("}\n");
+    output.append("}");
+    decTabLevel();
     code.append(output);
 }
 
@@ -370,6 +415,7 @@ void ShaderWriter::writeForLoop(NSocket *socket)
     end = node->N_inSockets->at(1);
     step = node->N_inSockets->at(2);
 
+    output.append(newline());
     output.append("for(");
     output.append(start->Socket.varname);
     output.append(" = ");
@@ -383,14 +429,18 @@ void ShaderWriter::writeForLoop(NSocket *socket)
     output.append(";");
     output.append(start->Socket.varname);
     output.append("++");
-    output.append(")\n");
-    output.append("{\n");
+    output.append(")");
+    output.append(newline());
+    output.append("{");
+    incTabLevel();
+    output.append(newline());
     ContainerNode *cnode = (ContainerNode*)node;
     mapped_socket = cnode->socket_map.key(socket);
     cnode_depth.append(cnode);
     gotoNextNode(mapped_socket);
     cnode_depth.removeAll(cnode);
-    output.append("}\n");
+    output.append("}");
+    decTabLevel();
     code.append(output);
 }
 
@@ -401,10 +451,17 @@ void ShaderWriter::writeWhileLoop(NSocket *socket)
     code.append(output);
 }
 
+void ShaderWriter::writeRSLLoop(NSocket *socket)
+{
+    QString output;
+    Node *node = (Node*)socket->Socket.node;
+}
+
 void ShaderWriter::writeColor(NSocket *socket)
 {
     QString output;
     ColorValueNode *colornode = (ColorValueNode*)socket->Socket.node;
+    if(!colornode->isShaderInput)output.append(newline());
     output.append("color ");
     output.append(socket->Socket.varname);
     output.append(" = ");
@@ -414,10 +471,10 @@ void ShaderWriter::writeColor(NSocket *socket)
     output.append(QString::number(colornode->colorvalue.greenF()));
     output.append(" ");
     output.append(QString::number(colornode->colorvalue.blueF()));
-    output.append(");\n");
+    output.append(");");
     if(colornode->isShaderInput)
     {
-        ShaderHeader.append(output);
+        addToShaderParameter(output);
         output = "";
     }
     code.append(output);
@@ -428,14 +485,15 @@ void ShaderWriter::writeString(NSocket *socket)
     QString output;
     output.append("string ");
     StringValueNode *stringnode = (StringValueNode*)socket->Socket.node;
+    if(!stringnode->isShaderInput)output.append(newline());
     output.append(socket->Socket.varname);
     output.append(" = ");
     output.append("\"");
     output.append(stringnode->stringvalue);
-    output.append("\";\n");
+    output.append("\";");
     if(stringnode->isShaderInput)
     {
-        ShaderHeader.append(output);
+        addToShaderParameter(output);
         output = "";
     }
     code.append(output);
@@ -445,51 +503,71 @@ void ShaderWriter::writeFloat(NSocket *socket)
 {
     QString output;
     FloatValueNode *floatnode = (FloatValueNode*)socket->Socket.node;
+    if(!floatnode->isShaderInput)output.append(newline());
     output.append("float ");
     output.append(socket->Socket.varname);
     output.append(" = ");
     output.append(QString::number(floatnode->floatvalue));
-    output.append(";\n");
+    output.append(";");
     if(floatnode->isShaderInput)
     {
-        ShaderHeader.append(output);
+        addToShaderParameter(output);
         output = "";
     }
-    code.append(output);
+    addToCode(output);
 }
 
 QString ShaderWriter::getCode()
 {
     QString returncode;
     returncode.append(ShaderHeader);
-    returncode.append("\n{\n");
-    returncode.append("/*Variable declarations*/\n");
+    returncode.append(ShaderParameter);
+    returncode.append(OutputVars);
+    returncode.append(")\n{\n");
+    returncode.append("    /*Variable declarations*/\n");
     returncode.append(VarDeclares);
-    returncode.append("\n/*Begin of the RSL Code*/\n");
+    returncode.append("\n\n    /*Begin of the RSL Code*/");
     returncode.append(code);
-    returncode.append("}");
+    returncode.append("\n}");
     return returncode;
 }
 
 void ShaderWriter::addToCode(QString c)
 {
-    QString tab("    ");
-    for(int i = 1; i<tabLevel; i++)
-        code.append(tab);
     code.append(c);
 }
-void ShaderWriter::addToShaderHeader(QString s)
+void ShaderWriter::addToShaderHeader(QString s, bool newline)
 {
     ShaderHeader.append(s);
 }
 
-void ShaderWriter::addToOutputVars(QString ov)
+void ShaderWriter::addToShaderParameter(QString s, bool newline)
 {
+    if(newline)
+    {
+        QString space(ShaderHeader);
+        space.fill(' ');
+        ShaderParameter.append("\n");
+        ShaderParameter.append(space);
+    }
+    ShaderParameter.append(s);
+}
+
+void ShaderWriter::addToOutputVars(QString ov, bool newline)
+{
+    if(newline)
+    {
+        QString space(ShaderHeader);
+        space.fill(' ');
+        OutputVars.append("\n");
+        OutputVars.append(space);
+    }
     OutputVars.append(ov);
 }
 
-void ShaderWriter::addToVarDeclares(QString vd)
+void ShaderWriter::addToVarDeclares(QString vd, bool newline)
 {
+    if(newline)VarDeclares.append("\n    ");
     VarDeclares.append(vd);
 }
 
