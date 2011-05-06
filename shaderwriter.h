@@ -48,6 +48,20 @@ private:
     void gotoNextNode(NSocket *socket);
     QString writeVarName(NSocket *socket);
 
+    void writeFunction(NSocket *socket);
+    void writeContainer(NSocket *socket);
+    void writeMath(NSocket *socket, QString mathOperator);
+    void writeCondition(NSocket *socket, QString conditionOperator);
+    void writeNot(NSocket *socket);
+    void writeConditionContainer(NSocket *socket);
+    void writeForLoop(NSocket *socket);
+    void writeWhileLoop(NSocket *socket);
+    void writeRSLLoop(NSocket *socket);
+    void writeString(NSocket *socket);
+    void writeFloat(NSocket *socket);
+    void writeVector(NSocket *socket);
+    void writeColor(NSocket *socket);
+
     QString var;
     QList<QString> socketnames;
 

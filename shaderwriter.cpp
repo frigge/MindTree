@@ -169,36 +169,101 @@ QString ShaderWriter::writeVarName(NSocket *insocket)
 
 void ShaderWriter::evalSocketValue(NSocket *socket)
 {
-    NodeLink *nlink;
-    QString output;
     Node *node = (Node*)socket->Socket.node;
-    NSocket *nsocket = 0, *mapped_socket = 0, *condition = 0;
-    ContainerNode *cnode;
-    FunctionNode *fnode;
-    SocketNode *snode;
-    ColorValueNode *colornode;
-    StringValueNode *stringnode;
-    FloatValueNode *floatnode;
-
-    int i = 1;
     switch(node->NodeType)
     {
     case CONTAINER:
-        cnode = (ContainerNode*)node;
-        mapped_socket = cnode->socket_map.key(socket);
-        cnode_depth.append(cnode);
-        gotoNextNode(mapped_socket);
-        cnode_depth.removeAll(cnode);
+        writeContainer(socket);
+        break;
+    case FUNCTION:
+        writeFunction(socket);
+        break;
+    case MULTIPLY:
+        writeMath(socket, "*");
+        break;
+    case DIVIDE:
+        writeMath(socket, "/");
+        break;
+    case ADD:
+        writeMath(socket, "+");
+        break;
+    case SUBTRACT:
+        writeMath(socket, "-");
+        break;
+    case DOTPRODUCT:
+        writeMath(socket, ".");
+        break;
+    case GREATERTHAN:
+        writeCondition(socket, ">");
+        break;
+    case SMALLERTHAN:
+        writeCondition(socket, "<");
+        break;
+    case EQUAL:
+        writeCondition(socket, "==");
+        break;
+    case AND:
+        writeCondition(socket, "&&");
+        break;
+    case OR:
+        writeCondition(socket, "||");
+        break;
+    case CONDITIONCONTAINER:
+        writeConditionContainer(socket);
+        break;
+    case NOT:
+        writeNot(socket);
+        break;
+    case FOR:
+        writeForLoop(socket);
+        break;
+    case WHILE:
+        writeWhileLoop(socket);
+        break;
+    case COLORNODE:
+        writeColor(socket);
         break;
 
-    case FUNCTION:
+    case STRINGNODE:
+        writeString(socket);
+        break;
+
+    case FLOATNODE:
+        writeFloat(socket);
+        break;
+
+    case VECTORNODE:
         initVar(socket);
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        fnode = (FunctionNode*)node;
-        output.append(fnode->function_name);
-        output.append("(");
-        foreach(nsocket, *node->N_inSockets)
+        break;
+    }
+}
+
+void ShaderWriter::writeFunction(NSocket *socket)
+{
+    QString output;
+    initVar(socket);
+    output.append(socket->Socket.varname);
+    output.append(" = ");
+    FunctionNode *fnode = (FunctionNode*)socket->Socket.node;
+    output.append(fnode->function_name);
+    output.append("(");
+    foreach(NSocket *nsocket, *fnode->N_inSockets)
+    {
+        if(nsocket->Socket.isToken)
+        {
+            output.append("\"");
+            output.append(nsocket->Socket.name);
+            output.append("\", ");
+        }
+        output.append(writeVarName(nsocket));
+        gotoNextNode(nsocket);
+        if(!fnode->N_inSockets->endsWith(nsocket))
+            output.append(", ");
+    }
+
+    if(fnode->N_outSockets->size() > 1)
+    {
+        foreach(NSocket *nsocket, *fnode->N_outSockets)
         {
             if(nsocket->Socket.isToken)
             {
@@ -207,284 +272,188 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
                 output.append("\", ");
             }
             output.append(writeVarName(nsocket));
-            gotoNextNode(nsocket);
-            if(!node->N_inSockets->endsWith(nsocket))
+            if(!fnode->N_inSockets->endsWith(nsocket))
                 output.append(", ");
         }
+    }
+    output.append(");\n");
+    code.append(output);
+}
 
-        if(node->N_outSockets->size() > 1)
+void ShaderWriter::writeContainer(NSocket *socket)
+{
+    ContainerNode *cnode = (ContainerNode*)socket->Socket.node;
+    NSocket *mapped_socket = cnode->socket_map.key(socket);
+    cnode_depth.append(cnode);
+    gotoNextNode(mapped_socket);
+    cnode_depth.removeAll(cnode);
+}
+
+void ShaderWriter::writeMath(NSocket *socket, QString mathOperator)
+{
+    QString output;
+    int i = 0;
+    Node *node = (Node*)socket->Socket.node;
+    initVar(socket);
+    output.append(socket->Socket.varname);
+    output.append(" = ");
+    foreach(NSocket *nsocket, *node->N_inSockets)
+    {
+        i++;
+        if(nsocket->Socket.cntdSockets.size()>0)
+            output.append(writeVarName(nsocket));
+        gotoNextNode(nsocket);
+        if(i < node->N_inSockets->size())
         {
-            foreach(nsocket, *node->N_outSockets)
-            {
-                if(nsocket->Socket.isToken)
-                {
-                    output.append("\"");
-                    output.append(nsocket->Socket.name);
-                    output.append("\", ");
-                }
-                output.append(writeVarName(nsocket));
-                if(!node->N_inSockets->endsWith(nsocket))
-                    output.append(", ");
-            }
+            output.append(" ");
+            output.append(mathOperator);
+            output.append(" ");
         }
-        output.append(");\n");
-        break;
+    }
+    output.append(";\n");
+    code.append(output);
+}
 
-    case MULTIPLY:
-        initVar(socket);
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        foreach(nsocket, *node->N_inSockets)
+void ShaderWriter::writeCondition(NSocket *socket, QString conditionOperator)
+{
+    Node *node = (Node*)socket->Socket.node;
+    QString output;
+    output.append("(");
+    int i = 0;
+    foreach(NSocket *nsocket, *node->N_inSockets)
+    {
+        i++;
+        evalSocketValue(nsocket);
+        if(i < node->N_inSockets->size())
         {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(writeVarName(nsocket));
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" * ");
+            output.append(" ");
+            output.append(conditionOperator);
+            output.append(" ");
         }
-        output.append(";\n");
-        break;
+    }
+    output.append(")");
+    code.append(output);
+}
 
-    case DIVIDE:
-        initVar(socket);
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        foreach(nsocket, *node->N_inSockets)
-        {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(writeVarName(nsocket));
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" / ");
-        }
-        output.append(";\n");
-        break;
+void ShaderWriter::writeConditionContainer(NSocket *socket)
+{
+    QString output;
+    NSocket *mapped_socket, *condition;
+    ConditionContainerNode *node = (ConditionContainerNode*)socket->Socket.node;
+    output.append("if(");
+    condition = node->N_inSockets->first();
+    evalSocketValue(condition);
+    output.append(")\n{");
+    mapped_socket = node->socket_map.key(socket);
+    gotoNextNode(mapped_socket);
+    output.append("}\n");
+    code.append(output);
+}
 
-    case ADD:
-        initVar(socket);
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        foreach(nsocket, *node->N_inSockets)
-        {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(writeVarName(nsocket));
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" + ");
-        }
-        output.append(";\n");
-        break;
+void ShaderWriter::writeNot(NSocket *socket)
+{
+    QString output;
+    NSocket *condition;
+    Node *node = (Node*)socket->Socket.node;
+    condition = node->N_inSockets->first();
+    output.append("!");
+    gotoNextNode(condition);
+    code.append(output);
+}
 
-    case SUBTRACT:
-        initVar(socket);
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        foreach(nsocket, *node->N_inSockets)
-        {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(writeVarName(nsocket));
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" - ");
-        }
-        output.append(";\n");
-        break;
+void ShaderWriter::writeForLoop(NSocket *socket)
+{
+    QString output;
+    Node *node = (Node*)socket->Socket.node;
+    NSocket *start, *end, *step, *mapped_socket;
+    start = node->N_inSockets->at(0);
+    end = node->N_inSockets->at(1);
+    step = node->N_inSockets->at(2);
 
-    case DOTPRODUCT:
-        initVar(socket);
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        foreach(nsocket, *node->N_inSockets)
-        {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(writeVarName(nsocket));
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" . ");
-        }
-        output.append(";\n");
-        break;
+    output.append("for(");
+    output.append(start->Socket.varname);
+    output.append(" = ");
+    output.append(writeVarName(start));
+    gotoNextNode(start);
+    output.append(";");
+    output.append(start->Socket.varname);
+    output.append(" != ");
+    output.append(writeVarName(end));
+    gotoNextNode(end);
+    output.append(";");
+    output.append(start->Socket.varname);
+    output.append("++");
+    output.append(")\n");
+    output.append("{\n");
+    ContainerNode *cnode = (ContainerNode*)node;
+    mapped_socket = cnode->socket_map.key(socket);
+    cnode_depth.append(cnode);
+    gotoNextNode(mapped_socket);
+    cnode_depth.removeAll(cnode);
+    output.append("}\n");
+    code.append(output);
+}
 
-    case GREATERTHAN:
-        output.append("(");
-        foreach(nsocket, *node->N_inSockets)
-        {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" > ");
-        }
-        output.append(")");
-        break;
+void ShaderWriter::writeWhileLoop(NSocket *socket)
+{
+    QString output;
+    Node *node = (Node*)socket->Socket.node;
+    code.append(output);
+}
 
-    case SMALLERTHAN:
-        output.append("(");
-        foreach(nsocket, *node->N_inSockets)
-        {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" < ");
-        }
-        output.append(")");
-        break;
+void ShaderWriter::writeColor(NSocket *socket)
+{
+    QString output;
+    ColorValueNode *colornode = (ColorValueNode*)socket->Socket.node;
+    output.append("color ");
+    output.append(socket->Socket.varname);
+    output.append(" = ");
+    output.append("(");
+    output.append(QString::number(colornode->colorvalue.redF()));
+    output.append(" ");
+    output.append(QString::number(colornode->colorvalue.greenF()));
+    output.append(" ");
+    output.append(QString::number(colornode->colorvalue.blueF()));
+    output.append(");\n");
+    if(colornode->isShaderInput)
+    {
+        ShaderHeader.append(output);
+        output = "";
+    }
+    code.append(output);
+}
 
-    case EQUAL:
-        output.append("(");
-        foreach(nsocket, *node->N_inSockets)
-        {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" == ");
-        }
-        output.append(")");
-        break;
+void ShaderWriter::writeString(NSocket *socket)
+{
+    QString output;
+    output.append("string ");
+    StringValueNode *stringnode = (StringValueNode*)socket->Socket.node;
+    output.append(socket->Socket.varname);
+    output.append(" = ");
+    output.append("\"");
+    output.append(stringnode->stringvalue);
+    output.append("\";\n");
+    if(stringnode->isShaderInput)
+    {
+        ShaderHeader.append(output);
+        output = "";
+    }
+    code.append(output);
+}
 
-    case AND:
-
-        output.append("(");
-        foreach(nsocket, *node->N_inSockets)
-        {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" && ");
-        }
-        output.append(")");
-        break;
-
-    case OR:
-        output.append("(");
-        foreach(nsocket, *node->N_inSockets)
-        {
-            i++;
-            if(nsocket->Socket.cntdSockets.size()>0)
-                output.append(nsocket->Socket.cntdSockets.first()->varname);
-            gotoNextNode(nsocket);
-            if(i < node->N_inSockets->size())
-                output.append(" || ");
-        }
-        output.append(")");
-        break;
-
-    case CONDITIONCONTAINER:
-        output.append("if(");
-        condition = node->N_inSockets->first();
-        gotoNextNode(condition);
-        output.append(")\n{");
-        cnode = (ContainerNode*)node;
-        mapped_socket = cnode->socket_map.key(socket);
-        gotoNextNode(mapped_socket);
-        output.append("}\n");
-        break;
-
-    case NOT:
-        condition = node->N_inSockets->first();
-        output.append("!");
-        gotoNextNode(condition);
-        break;
-
-    case FOR:
-        NSocket *start, *end, *step;
-        start = node->N_inSockets->at(0);
-        end = node->N_inSockets->at(1);
-        step = node->N_inSockets->at(2);
-
-        output.append("for(");
-        output.append(start->Socket.varname);
-        output.append(" = ");
-        output.append(writeVarName(start));
-        gotoNextNode(start);
-        output.append(";");
-        output.append(start->Socket.varname);
-        output.append(" != ");
-        output.append(writeVarName(end));
-        gotoNextNode(end);
-        output.append(";");
-        output.append(start->Socket.varname);
-        output.append("++");
-        output.append(")\n");
-        output.append("{\n");
-        cnode = (ContainerNode*)node;
-        mapped_socket = cnode->socket_map.key(socket);
-        cnode_depth.append(cnode);
-        gotoNextNode(mapped_socket);
-        cnode_depth.removeAll(cnode);
-        output.append("}\n");
-        break;
-
-    case WHILE:
-        output.append("while(");
-        break;
-
-    case INSOCKETS:
-        break;
-
-    case COLORNODE:
-        colornode = (ColorValueNode*)node;
-        output.append("color ");
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        output.append("(");
-        output.append(QString::number(colornode->colorvalue.redF()));
-        output.append(" ");
-        output.append(QString::number(colornode->colorvalue.greenF()));
-        output.append(" ");
-        output.append(QString::number(colornode->colorvalue.blueF()));
-        output.append(");\n");
-        if(colornode->isShaderInput)
-        {
-            ShaderHeader.append(output);
-            output = "";
-        }
-        break;
-
-    case STRINGNODE:
-        output.append("string ");
-        stringnode = (StringValueNode*)node;
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        output.append("\"");
-        output.append(stringnode->stringvalue);
-        output.append("\";\n");
-        if(stringnode->isShaderInput)
-        {
-            ShaderHeader.append(output);
-            output = "";
-        }
-        break;
-
-    case FLOATNODE:
-        floatnode = (FloatValueNode*)node;
-        output.append("float ");
-        output.append(socket->Socket.varname);
-        output.append(" = ");
-        output.append(QString::number(floatnode->floatvalue));
-        output.append(";\n");
-        if(floatnode->isShaderInput)
-        {
-            ShaderHeader.append(output);
-            output = "";
-        }
-        break;
-
-    case VECTORNODE:
-        initVar(socket);
-        break;
+void ShaderWriter::writeFloat(NSocket *socket)
+{
+    QString output;
+    FloatValueNode *floatnode = (FloatValueNode*)socket->Socket.node;
+    output.append("float ");
+    output.append(socket->Socket.varname);
+    output.append(" = ");
+    output.append(QString::number(floatnode->floatvalue));
+    output.append(";\n");
+    if(floatnode->isShaderInput)
+    {
+        ShaderHeader.append(output);
+        output = "";
     }
     code.append(output);
 }
