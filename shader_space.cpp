@@ -554,6 +554,7 @@ void Shader_Space::createNode()
 
 QDataStream & operator<<(QDataStream &stream, Shader_Space *space)
 {
+    stream<<space->name;
     int nodecnt = space->nodecnt;
     stream<<(qint16)space->nodecnt;
     foreach(QGraphicsItem *item, space->items())
@@ -574,6 +575,9 @@ QDataStream & operator>>(QDataStream &stream, Shader_Space **space)
     Shader_Space *newspace = new Shader_Space;
     *space = newspace;
     qint16 nodecnt, lnkcnt;
+    QString name;
+    stream>>name;
+    newspace->setName(name);
     stream>>nodecnt;
     Node *node = 0;
     for(int i = 0; i<nodecnt; i++)

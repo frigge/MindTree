@@ -48,17 +48,20 @@ private:
     void evalSocketValue(NSocket *socket);
     void initVar(NSocket *socket);
     void outputVar(NSocket *socket);
+    QString createCondition(NSocket *socket);
+    NSocket *getPreviousSocket(NSocket *socket);
 
     void gotoNextNode(NSocket *socket);
     QString writeVarName(NSocket *socket);
+    int cnode_depth_cnt;
 
     QString newline();
 
     void writeFunction(NSocket *socket);
     void writeContainer(NSocket *socket);
     void writeMath(NSocket *socket, QString mathOperator);
-    void writeCondition(NSocket *socket, QString conditionOperator);
-    void writeNot(NSocket *socket);
+    QString writeCondition(NSocket *socket, QString conditionOperator);
+    QString writeNot(NSocket *socket);
     void writeConditionContainer(NSocket *socket);
     void writeForLoop(NSocket *socket);
     void writeWhileLoop(NSocket *socket);
@@ -71,6 +74,9 @@ private:
     QString var;
     QList<QString> socketnames;
 
+    void incCNodeDepth(ContainerNode *cnode);
+    ContainerNode *takeCNodeDepth();
+    ContainerNode *getCNodeDepthbyCnt();
     QList<ContainerNode*> cnode_depth;
     QList<QString>written_sockets;
 };

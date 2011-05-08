@@ -111,8 +111,6 @@ void NSocket::changeType()
 void NSocket::addLink(QGraphicsItem *nodeLink)
 {
     Node *node = (Node*) Socket.node;
-    if (isVariable && Socket.links.isEmpty())
-        node->inc_var_socket();
     if(Socket.links.contains(nodeLink))
         return;
     Socket.links.append(nodeLink);
@@ -131,17 +129,14 @@ void NSocket::addLink(QGraphicsItem *nodeLink)
             return;
         Socket.cntdSockets.append(indata);
     }
-
     if (Socket.type == VARIABLE)
     {
         Socket.type = Socket.cntdSockets.first()->type;
         if(Socket.dir == IN)Socket.name = Socket.cntdSockets.first()->name;
-//        if(MathNode::isMathNode(node))
-//        {
-//            MathNode *mNode = (MathNode*)node;
-//            mNode->setSocketType(Socket.type);
-//        }
     }
+    if (isVariable && Socket.links.size() == 1)
+        node->inc_var_socket();
+
 }
 
 QDataStream & operator<<(QDataStream &stream, NSocket *socket)
@@ -1290,6 +1285,7 @@ void ContainerNode::setNodeName(QString name)
 
 ConditionContainerNode::ConditionContainerNode(bool raw)
 {
+    setNodeType(CONDITIONCONTAINER);
     initNode();
     if(!raw)
     {
@@ -1298,7 +1294,7 @@ ConditionContainerNode::ConditionContainerNode(bool raw)
         in.name = "Condition";
         SocketNode *inNode = new SocketNode(IN, this);
         SocketNode *outNode = new SocketNode(OUT, this);
-        addMappedSocket(new NSocket(in), IN);
+        addSocket(new NSocket(in), IN);
     }
 }
 
