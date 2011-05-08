@@ -74,10 +74,12 @@ private:
     QString var;
     QList<QString> socketnames;
 
+    NSocket *stepUp(NSocket *socket);
     void incCNodeDepth(ContainerNode *cnode);
     ContainerNode *takeCNodeDepth();
     ContainerNode *getCNodeDepthbyCnt();
     QList<ContainerNode*> cnode_depth;
+    void setCNodeDepthCnt();
     QList<QString>written_sockets;
 };
 

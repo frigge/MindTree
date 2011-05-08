@@ -22,7 +22,7 @@
 
 ShaderWriter::ShaderWriter(OutputNode *start)
 {
-    cnode_depth_cnt = 0;
+    setCNodeDepthCnt();
     tabLevel = 1;
     QString outputvar;
     switch(start->NodeType)
@@ -157,8 +157,7 @@ void ShaderWriter::gotoNextNode(NSocket *socket)
     if(socket->Socket.links.isEmpty())
         return;
 
-    nlink = (NodeLink*)socket->Socket.links.first();
-    NSocket *nextsocket = nlink->outSocket;
+    NSocket *nextsocket = getPreviousSocket(socket);
     if(!written_sockets.contains(nextsocket->Socket.varname))
     {
         evalSocketValue(nextsocket);
@@ -182,15 +181,25 @@ QString ShaderWriter::writeVarName(NSocket *insocket)
     }
     else if(node->NodeType == INSOCKETS)
     {
-        mapsocket = getCNodeDepthbyCnt()->socket_map.value(prevsocket);
-        cnode_depth_cnt--;
-        return writeVarName(mapsocket);
+        return writeVarName(stepUp(prevsocket));
     }
     else
     {
-        cnode_depth_cnt = cnode_depth.size();
+        setCNodeDepthCnt();
         return prevsocket->Socket.varname;
     }
+}
+
+void ShaderWriter::setCNodeDepthCnt()
+{
+    cnode_depth_cnt = cnode_depth.size();
+}
+
+NSocket *ShaderWriter::stepUp(NSocket *socket)
+{
+    NSocket *mapsocket = getCNodeDepthbyCnt()->socket_map.value(socket);
+    cnode_depth_cnt--;
+    return getPreviousSocket(mapsocket);
 }
 
 NSocket *ShaderWriter::getPreviousSocket(NSocket *socket)
@@ -293,13 +302,15 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
     case STRINGNODE:
         writeString(socket);
         break;
-
     case FLOATNODE:
         writeFloat(socket);
         break;
-
     case VECTORNODE:
         initVar(socket);
+        break;
+    case INSOCKETS:
+        evalSocketValue(stepUp(socket));
+        setCNodeDepthCnt();
         break;
     }
 }
@@ -393,11 +404,9 @@ QString ShaderWriter::writeCondition(NSocket *socket, QString conditionOperator)
     foreach(NSocket *nsocket, *node->N_inSockets)
     {
         i++;
-        if(nsocket->Socket.type == CONDITION)
-            output.append(createCondition(getPreviousSocket(nsocket)));
-        else if(nsocket->Socket.cntdSockets.size()>0)
+        if(nsocket->Socket.cntdSockets.size()>0)
         {
-            writeVarName(nsocket);
+            output.append(writeVarName(nsocket));
             gotoNextNode(nsocket);
         }
         if(i < node->N_inSockets->size())
@@ -419,10 +428,11 @@ void ShaderWriter::writeConditionContainer(NSocket *socket)
     output.append(newline());
     output.append("if(");
     condition = node->N_inSockets->first();
-    createCondition(getPreviousSocket(condition));
+    output.append(createCondition(getPreviousSocket(condition)));
     output.append(")");
     output.append(newline());
     output.append("{");
+    code.append(output);
     incTabLevel();
     output.append(newline());
     incCNodeDepth(node);
@@ -430,8 +440,8 @@ void ShaderWriter::writeConditionContainer(NSocket *socket)
     gotoNextNode(mapped_socket);
     takeCNodeDepth();
     decTabLevel();
-    output.append("}");
-    code.append(output);
+    code.append(newline());
+    code.append("}");
 }
 
 QString ShaderWriter::writeNot(NSocket *socket)
@@ -522,9 +532,9 @@ void ShaderWriter::writeColor(NSocket *socket)
 void ShaderWriter::writeString(NSocket *socket)
 {
     QString output;
-    output.append("string ");
     StringValueNode *stringnode = (StringValueNode*)socket->Socket.node;
     if(!stringnode->isShaderInput)output.append(newline());
+    output.append("string ");
     output.append(socket->Socket.varname);
     output.append(" = ");
     output.append("\"");
@@ -563,7 +573,7 @@ QString ShaderWriter::getCode()
     returncode.append(ShaderParameter);
     returncode.append(OutputVars);
     returncode.append(")\n{\n");
-    returncode.append("    /*Variable declarations*/\n");
+    returncode.append("    /*Variable declarations*/");
     returncode.append(VarDeclares);
     returncode.append("\n\n    /*Begin of the RSL Code*/");
     returncode.append(code);
