@@ -78,7 +78,11 @@ void NSocket::changeName()
     QString newname;
     newname = QInputDialog::getText(this->scene()->views().first(), "Change Socket Name", "New Name", QLineEdit::Normal, "", &ok);
     if(ok)
+    {
         Socket.name = newname;
+        Node *node = (Node*)Socket.node;
+        node->setSocketVarName(this);
+    }
 }
 
 void NSocket::changeType()
@@ -771,6 +775,7 @@ void Node::setSocketVarName(NSocket *socket)
 {
     if(socket->Socket.dir == IN)
         return;
+
     if(NodeType == SURFACEINPUT
        ||NodeType == DISPLACEMENTINPUT
        ||NodeType == VOLUMEINPUT
@@ -780,17 +785,23 @@ void Node::setSocketVarName(NSocket *socket)
         socket->setToolTip(socket->Socket.varname);
         return;
     }
-
     if((NodeType == CONTAINER
-       ||NodeType == CONDITIONCONTAINER)
-       && N_inSockets->isEmpty())
+       ||NodeType == CONDITIONCONTAINER))
     {
         socket->Socket.varname = socket->Socket.name;
         socket->setToolTip(socket->Socket.varname);
         return;
     }
 
-    QString varname_raw = socket->Socket.name.toLower().replace(" ", "_");
+    if((NodeType == INSOCKETS
+        ||NodeType == LOOPINSOCKETS))
+    {
+        socket->Socket.varname = socket->Socket.name;
+        socket->setToolTip(socket->Socket.varname);
+        return;
+    }
+
+    QString varname_raw = socket->Socket.name.replace(" ", "_");
     if(NSocket::SocketNameCnt.contains(varname_raw))
     {
         NSocket::SocketNameCnt[varname_raw]++;
@@ -799,7 +810,7 @@ void Node::setSocketVarName(NSocket *socket)
     else
     {
         NSocket::SocketNameCnt.insert(varname_raw, 1);
-        socket->Socket.varname = varname_raw + QString::number(1);
+        socket->Socket.varname = varname_raw;
     }
     socket->setToolTip(socket->Socket.varname);
 }
@@ -1249,17 +1260,6 @@ void ContainerNode::killSocket(NSocket *socket)
     removeSocket(contsocket);
 }
 
-void ContainerNode::setSocketVarName(NSocket *socket)
-{
-    if(N_inSockets->isEmpty())
-    {
-        socket->Socket.varname = socket->Socket.name.toLower().replace(" ", "_");
-        socket->setToolTip(socket->Socket.varname);
-    }
-    else
-        Node::setSocketVarName(socket);
-}
-
 void ContainerNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     if(NodeType == CONTAINER)
@@ -1282,6 +1282,11 @@ void ContainerNode::setNodeName(QString name)
     Shader_Space *cspace = (Shader_Space*)ContainerData;
     cspace->setName(name);
 }
+
+//void ContainerNode::setSocketVarName(NSocket *socket)
+//{
+//    socket->Socket.varname = ""; //is ignored in code creation4
+//}
 
 ConditionContainerNode::ConditionContainerNode(bool raw)
 {
@@ -1362,6 +1367,11 @@ NSocket *SocketNode::getLastSocket()
 {
     return lastsocket;
 }
+
+//void SocketNode::setSocketVarName(NSocket *socket)
+//{
+//    socket->Socket.varname = ""; //Is ignored in conde creation
+//}
 
 
 LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
@@ -2002,8 +2012,8 @@ InputNode::InputNode()
     initNode();
 }
 
-void InputNode::setSocketVarName(NSocket *socket)
-{
-    socket->setToolTip(socket->Socket.varname);
-    socket->Socket.varname = socket->Socket.name;
-}
+//void InputNode::setSocketVarName(NSocket *socket)
+//{
+//    socket->setToolTip(socket->Socket.varname);
+//    socket->Socket.varname = socket->Socket.name;
+//}

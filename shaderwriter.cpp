@@ -604,7 +604,7 @@ QString ShaderWriter::getCode()
 {
     QString returncode;
     returncode.append(ShaderHeader);
-    returncode.append(ShaderParameter);
+    returncode.append(createShaderParameterCode());
     returncode.append(OutputVars);
     returncode.append(")\n{\n");
     returncode.append("    /*Variable declarations*/");
@@ -624,16 +624,27 @@ void ShaderWriter::addToShaderHeader(QString s, bool newline)
     ShaderHeader.append(s);
 }
 
-void ShaderWriter::addToShaderParameter(QString s, bool newline)
+void ShaderWriter::addToShaderParameter(QString s)
 {
-    if(newline)
+    if(!ShaderParameter.contains(s))
+        ShaderParameter.append(s);
+}
+
+QString ShaderWriter::createShaderParameterCode()
+{
+    QString parameters;
+    foreach(QString parameter, ShaderParameter)
     {
-        QString space(ShaderHeader);
-        space.fill(' ');
-        ShaderParameter.append("\n");
-        ShaderParameter.append(space);
+        if(parameter != ShaderParameter.first())
+        {
+            QString space(ShaderHeader);
+            space.fill(' ');
+            parameters.append("\n");
+            parameters.append(space);
+        }
+        parameters.append(parameter);
     }
-    ShaderParameter.append(s);
+    return parameters;
 }
 
 void ShaderWriter::addToOutputVars(QString ov, bool newline)

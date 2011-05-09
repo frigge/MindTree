@@ -32,13 +32,14 @@ private:
     QString code;
     QString VarDeclares;
     QString ShaderHeader;
-    QString ShaderParameter;
+    QStringList ShaderParameter;
     QString OutputVars;
 
     void addToCode(QString);
     void addToVarDeclares(QString, bool newline=true);
     void addToShaderHeader(QString, bool newline=true);
-    void addToShaderParameter(QString, bool newline=true);
+    void addToShaderParameter(QString);
+    QString createShaderParameterCode();
     void addToOutputVars(QString, bool newline=true);
 
     int tabLevel;

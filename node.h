@@ -198,13 +198,13 @@ public:
     static bool isInput(Node *node);
     static bool isMathNode(Node *node);
     static bool isValueNode(Node *node);
+    virtual void setSocketVarName(NSocket *socket);
 
 protected:
     void drawName();
 
     virtual int NodeWidth() const;
     virtual int NodeHeight(int numSockets) const;
-    virtual void setSocketVarName(NSocket *socket);
     virtual void initNode();
 };
 
@@ -243,6 +243,7 @@ public:
     QHash<NSocket*, NSocket*> socket_map;
 
     void setNodeName(QString name);
+    //virtual void setSocketVarName(NSocket *socket);
 
 public slots:
     void newSocket(NSocket *socket);
@@ -259,7 +260,6 @@ private slots:
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
-    virtual void setSocketVarName(NSocket *socket);
     virtual void initNode();
 };
 
@@ -282,6 +282,8 @@ public:
     virtual void dec_var_socket(NSocket *socket);
 
     void connectToContainer(ContainerNode*);
+
+    //virtual void setSocketVarName(NSocket *socket);
 
 protected:
     NSocket *getLastSocket();
@@ -485,6 +487,7 @@ class OutputNode : public Node
 public:
     OutputNode();
     QString ShaderName;
+    virtual void setSocketVarName(NSocket *socket);
 
 private:
     void createMenu();
@@ -497,16 +500,15 @@ public slots:
 
 protected:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
-    virtual void setSocketVarName(NSocket *socket);
 };
 
 class InputNode : public Node
 {
 public:
     InputNode();
+    //virtual void setSocketVarName(NSocket *socket);
 
 protected:
-    virtual void setSocketVarName(NSocket *socket);
 };
 
 #endif // NODES_H
