@@ -183,6 +183,30 @@ QString ShaderWriter::writeVarName(NSocket *insocket)
     {
         return writeVarName(stepUp(prevsocket));
     }
+    else if(node->NodeType == COLORNODE)
+    {
+        /*
+          writeVarName() is recursive when it's used on parts of a sub network due to ignoring these in
+          code creation hence we need to reset the depth level here.
+          */
+        setCNodeDepthCnt();
+        return writeColor(prevsocket);
+    }
+    else if(node->NodeType == FLOATNODE)
+    {
+        setCNodeDepthCnt();
+        return writeFloat(prevsocket);
+    }
+    else if(node->NodeType == STRINGNODE)
+    {
+        setCNodeDepthCnt();
+        return writeString(prevsocket);
+    }
+    else if(node->NodeType == VECTORNODE)
+    {
+        setCNodeDepthCnt();
+        return writeVector(prevsocket);
+    }
     else
     {
         setCNodeDepthCnt();
@@ -298,7 +322,6 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
     case COLORNODE:
         writeColor(socket);
         break;
-
     case STRINGNODE:
         writeString(socket);
         break;
@@ -306,7 +329,7 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         writeFloat(socket);
         break;
     case VECTORNODE:
-        initVar(socket);
+        writeVector(socket);
         break;
     case INSOCKETS:
         evalSocketValue(stepUp(socket));
@@ -506,64 +529,75 @@ void ShaderWriter::writeRSLLoop(NSocket *socket)
     Node *node = (Node*)socket->Socket.node;
 }
 
-void ShaderWriter::writeColor(NSocket *socket)
+QString ShaderWriter::writeColor(NSocket *socket)
 {
     QString output;
+    QString value;
     ColorValueNode *colornode = (ColorValueNode*)socket->Socket.node;
-    if(!colornode->isShaderInput)output.append(newline());
-    output.append("color ");
-    output.append(socket->Socket.varname);
-    output.append(" = ");
-    output.append("(");
-    output.append(QString::number(colornode->colorvalue.redF()));
-    output.append(" ");
-    output.append(QString::number(colornode->colorvalue.greenF()));
-    output.append(" ");
-    output.append(QString::number(colornode->colorvalue.blueF()));
-    output.append(");");
+    value.append("(");
+    value.append(QString::number(colornode->colorvalue.redF()));
+    value.append(" ");
+    value.append(QString::number(colornode->colorvalue.greenF()));
+    value.append(" ");
+    value.append(QString::number(colornode->colorvalue.blueF()));
+    value.append(")");
     if(colornode->isShaderInput)
     {
+        output.append("color ");
+        output.append(socket->Socket.varname);
+        output.append(" = ");
+        output.append(value);
+        output.append(";");
         addToShaderParameter(output);
-        output = "";
+        output = socket->Socket.varname;
+        return output;
     }
-    code.append(output);
+    else
+        return value;
 }
 
-void ShaderWriter::writeString(NSocket *socket)
+QString ShaderWriter::writeString(NSocket *socket)
 {
-    QString output;
+    QString output, value;
     StringValueNode *stringnode = (StringValueNode*)socket->Socket.node;
-    if(!stringnode->isShaderInput)output.append(newline());
-    output.append("string ");
-    output.append(socket->Socket.varname);
-    output.append(" = ");
-    output.append("\"");
-    output.append(stringnode->stringvalue);
-    output.append("\";");
+    value.append("\"");
+    value.append(stringnode->stringvalue);
+    value.append("\"");
     if(stringnode->isShaderInput)
     {
+        output.append("string ");
+        output.append(socket->Socket.varname);
+        output.append(" = ");
+        output.append(value);
+        output.append(";");
         addToShaderParameter(output);
-        output = "";
+        return socket->Socket.varname;
     }
-    code.append(output);
+    else
+        return value;
 }
 
-void ShaderWriter::writeFloat(NSocket *socket)
+QString ShaderWriter::writeFloat(NSocket *socket)
 {
-    QString output;
+    QString output, value;
     FloatValueNode *floatnode = (FloatValueNode*)socket->Socket.node;
-    if(!floatnode->isShaderInput)output.append(newline());
-    output.append("float ");
-    output.append(socket->Socket.varname);
-    output.append(" = ");
-    output.append(QString::number(floatnode->floatvalue));
-    output.append(";");
+    value.append(QString::number(floatnode->floatvalue));
     if(floatnode->isShaderInput)
     {
+        output.append("float ");
+        output.append(socket->Socket.varname);
+        output.append(" = ");
+        output.append(value);
+        output.append(";");
         addToShaderParameter(output);
-        output = "";
+        return socket->Socket.varname;
     }
-    addToCode(output);
+    else return value;
+}
+
+QString ShaderWriter::writeVector(NSocket *socket)
+{
+
 }
 
 QString ShaderWriter::getCode()

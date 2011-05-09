@@ -66,10 +66,10 @@ private:
     void writeForLoop(NSocket *socket);
     void writeWhileLoop(NSocket *socket);
     void writeRSLLoop(NSocket *socket);
-    void writeString(NSocket *socket);
-    void writeFloat(NSocket *socket);
-    void writeVector(NSocket *socket);
-    void writeColor(NSocket *socket);
+    QString writeString(NSocket *socket);
+    QString writeFloat(NSocket *socket);
+    QString writeVector(NSocket *socket);
+    QString writeColor(NSocket *socket);
 
     QString var;
     QList<QString> socketnames;
