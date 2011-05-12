@@ -84,6 +84,8 @@ public:
 
     static QHash<int, NSocket*>loadIDMapper;
     static QHash<QString, int>SocketNameCnt;
+    bool operator==(NSocket &socket);
+    bool operator!=(NSocket &socket);
 
 public slots:
     void changeType();
@@ -194,11 +196,14 @@ public:
 
     static Node *newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize);
     static QHash<int, Node*>loadIDMapper;
+    static QList<Node*>NodeList;
 
     static bool isInput(Node *node);
     static bool isMathNode(Node *node);
     static bool isValueNode(Node *node);
     virtual void setSocketVarName(NSocket *socket);
+    bool operator==(Node &node);
+    bool operator!=(Node &node);
 
 protected:
     void drawName();
@@ -217,6 +222,7 @@ public:
     FunctionNode();
     QString function_name;
     void setFunctionName(QString name) {function_name = name;}
+    virtual bool operator==(Node &node);
 };
 
 class ContainerNode : public Node
@@ -244,6 +250,7 @@ public:
 
     void setNodeName(QString name);
     //virtual void setSocketVarName(NSocket *socket);
+    virtual bool operator==(Node &node);
 
 public slots:
     void newSocket(NSocket *socket);
@@ -391,6 +398,7 @@ public slots:
 public:
     ColorValueNode(bool raw=false);
     QColor colorvalue;
+    virtual bool operator==(Node &node);
 
 protected:
     void updateColorLabel();
@@ -405,6 +413,7 @@ public slots:
 public:
     StringValueNode(bool raw=false);
     QString stringvalue;
+    virtual bool operator==(Node &node);
 };
 
 class FloatValueNode : public ValueNode
@@ -416,6 +425,7 @@ public slots:
 public:
     FloatValueNode(bool raw=false);
     float floatvalue;
+    virtual bool operator==(Node &node);
 };
 
 typedef struct
@@ -434,6 +444,7 @@ public slots:
 public:
     VectorValueNode(bool raw=false);
     vector vectorvalue;
+    virtual bool operator==(Node &node);
 };
 
 class LoopNode : public ContainerNode

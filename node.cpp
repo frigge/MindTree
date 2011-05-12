@@ -171,6 +171,21 @@ QDataStream & operator>>(QDataStream &stream, NSocket **socket)
     return stream;
 }
 
+bool NSocket::operator==(NSocket &socket)
+{
+    if(isVariable != socket.isVariable
+            ||Socket.name != socket.Socket.name
+            ||Socket.isToken != socket.Socket.isToken
+            ||Socket.type != socket.Socket.type)
+        return false;
+    return true;
+}
+
+bool NSocket::operator !=(NSocket &socket)
+{
+    return(!(*this == socket));
+}
+
 void NSocket::removeLink(QGraphicsItem *Link)
 {
     NodeLink *nl = (NodeLink*)Link;
@@ -671,6 +686,33 @@ QDataStream &operator >>(QDataStream &stream, Node  **node)
     return stream;
 }
 
+bool Node::operator==(Node &node)
+{
+    if(NodeType != node.NodeType)
+        return false;
+
+    if(node_name->toPlainText() != node.node_name->toPlainText())
+        return false;
+
+    if(N_inSockets->size() != node.N_inSockets->size()
+            ||N_outSockets->size() != node.N_outSockets->size())
+        return false;
+
+    for(int i=0; i<N_inSockets->size(); i++)
+        if(*N_inSockets->at(i) != *node.N_inSockets->at(i))
+            return false;
+
+    for(int i=0; i<N_outSockets->size(); i++)
+        if(*N_outSockets->at(i) != *N_outSockets->at(i))
+            return false;
+    return true;
+}
+
+bool Node::operator!=(Node &node)
+{
+    return (!(*this == node));
+}
+
 void Node::initNode()
 {
     varcnt = 0;
@@ -1121,6 +1163,14 @@ FunctionNode::FunctionNode()
     initNode();
 }
 
+bool FunctionNode::operator==(Node &node)
+{
+    FunctionNode &fnode = dynamic_cast<FunctionNode&>(node);
+    if(function_name != fnode.function_name)
+        return false;
+    return true;
+}
+
 ContainerNode::ContainerNode(bool raw)
 {
     setNodeType(CONTAINER);
@@ -1287,6 +1337,16 @@ void ContainerNode::setNodeName(QString name)
 //{
 //    socket->Socket.varname = ""; //is ignored in code creation4
 //}
+
+bool ContainerNode::operator==(Node &node)
+{
+    ContainerNode &cnode = dynamic_cast<ContainerNode&>(node);
+    Shader_Space *space1 = dynamic_cast<Shader_Space*>(ContainerData);
+    Shader_Space *space2 = dynamic_cast<Shader_Space*>(cnode.ContainerData);
+    if(*space1 != *space2)
+        return false;
+    return true;
+}
 
 ConditionContainerNode::ConditionContainerNode(bool raw)
 {
@@ -1682,6 +1742,14 @@ void ColorValueNode::setValue(QColor newvalue)
     colorvalue = newvalue;
 }
 
+bool ColorValueNode::operator ==(Node &node)
+{
+    ColorValueNode &clnode = dynamic_cast<ColorValueNode&>(node);
+    if(colorvalue != clnode.colorvalue)
+        return false;
+    return true;
+}
+
 StringValueNode::StringValueNode(bool raw)
 {
     initNode();
@@ -1704,6 +1772,14 @@ StringValueNode::StringValueNode(bool raw)
 void StringValueNode::setValue(QString newstring)
 {
     stringvalue = newstring;
+}
+
+bool StringValueNode::operator ==(Node &node)
+{
+    StringValueNode &snode = dynamic_cast<StringValueNode&>(node);
+    if(stringvalue != snode.stringvalue)
+        return false;
+    return true;
 }
 
 FloatValueNode::FloatValueNode(bool raw)
@@ -1730,6 +1806,14 @@ void FloatValueNode::setValue(double newval)
     floatvalue = newval;
 }
 
+bool FloatValueNode::operator==(Node &node)
+{
+    FloatValueNode &flnode = dynamic_cast<FloatValueNode&>(node);
+    if(floatvalue != flnode.floatvalue)
+        return false;
+    return true;
+}
+
 VectorValueNode::VectorValueNode(bool raw)
 {
     initNode();
@@ -1740,6 +1824,11 @@ VectorValueNode::VectorValueNode(bool raw)
 void VectorValueNode::setValue()
 {
 
+}
+
+bool VectorValueNode::operator==(Node &node)
+{
+    return true;
 }
 
 WhileNode::WhileNode(bool raw)

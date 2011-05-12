@@ -160,6 +160,31 @@ void Shader_Space::leavelinkNodeMode(QPointF finalpos)
     }
 };
 
+bool Shader_Space::operator==(Shader_Space &space)
+{
+    if(name != space.name
+            ||items().size() != space.items().size())
+        return false;
+    foreach(QGraphicsItem *item1, items())
+    {
+        Node *node1 = (Node*)item1;
+        foreach(QGraphicsItem *item2, space.items())
+        {
+            Node *node2 = (Node*)item2;
+            if(*node1 == *node2)
+                continue;
+            else
+                return false;
+        }
+    }
+    return true;
+}
+
+bool Shader_Space::operator!=(Shader_Space &space)
+{
+    return(!(*this == space));
+}
+
 void Shader_Space::changeScene(QGraphicsScene *scene)
 {
     Shader_View *view = dynamic_cast<Shader_View *>(views().first());

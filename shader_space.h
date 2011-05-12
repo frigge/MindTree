@@ -58,6 +58,8 @@ public:
     int nodecnt;
 
     QList<NodeLink *> links;
+    bool operator==(Shader_Space &space);
+    bool operator!=(Shader_Space &space);
 
 public slots:
     void shownodelib();
