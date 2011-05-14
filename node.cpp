@@ -827,9 +827,10 @@ void Node::setSocketVarName(NSocket *socket)
         socket->setToolTip(socket->Socket.varname);
         return;
     }
-    if((NodeType == CONTAINER
-       ||NodeType == CONDITIONCONTAINER))
+    if((isContainer() && N_inSockets->isEmpty()))
     {
+        if(socket->Socket.name.startsWith('-'))
+            socket->Socket.varname = socket->Socket.name.replace(0, 1, "neg");
         socket->Socket.varname = socket->Socket.name;
         socket->setToolTip(socket->Socket.varname);
         return;

@@ -176,10 +176,13 @@ QString ShaderWriter::writeVarName(NSocket *insocket)
     ContainerNode *cnode = (ContainerNode*)node;
     if(node->isContainer())
     {
+        if(node->N_inSockets->isEmpty())
+            return prevsocket->Socket.varname;
         mapsocket = cnode->socket_map.key(prevsocket);
         return writeVarName(mapsocket);
     }
-    else if(node->NodeType == INSOCKETS)
+    else if(node->NodeType == INSOCKETS
+            ||node->NodeType == LOOPINSOCKETS)
     {
         return writeVarName(stepUp(prevsocket));
     }
@@ -385,6 +388,8 @@ void ShaderWriter::writeContainer(NSocket *socket)
 {
     ContainerNode *cnode = (ContainerNode*)socket->Socket.node;
     NSocket *mapped_socket = cnode->socket_map.key(socket);
+    if(cnode->N_inSockets->isEmpty())
+        initVar(socket);
     incCNodeDepth(cnode);
     gotoNextNode(mapped_socket);
     takeCNodeDepth();
