@@ -30,17 +30,21 @@ public:
 
 private:
     QString code;
-    QString VarDeclares;
+    QStringList VarDeclares;
     QString ShaderHeader;
     QStringList ShaderParameter;
-    QString OutputVars;
+    QStringList OutputVars;
 
     void addToCode(QString);
-    void addToVarDeclares(QString, bool newline=true);
-    void addToShaderHeader(QString, bool newline=true);
+    void addToVarDeclares(QString);
+    QString createVarDeclares();
+    void addToShaderHeader(QString);
     void addToShaderParameter(QString);
     QString createShaderParameterCode();
-    void addToOutputVars(QString, bool newline=true);
+    void addToOutputVars(QString);
+    QString createOutputVars();
+
+    inline bool isInputVar(NSocket*);
 
     int tabLevel;
     void incTabLevel();

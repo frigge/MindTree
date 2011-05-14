@@ -844,6 +844,13 @@ void Node::setSocketVarName(NSocket *socket)
         return;
     }
 
+    if(NodeType == FUNCTION)
+    {
+        socket->Socket.varname = socket->Socket.name;
+        socket->setToolTip(socket->Socket.varname);
+        return;
+    }
+
     QString varname_raw = socket->Socket.name.replace(" ", "_");
     if(NSocket::SocketNameCnt.contains(varname_raw))
     {

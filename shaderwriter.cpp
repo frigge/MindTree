@@ -25,6 +25,9 @@ ShaderWriter::ShaderWriter(OutputNode *start)
     setCNodeDepthCnt();
     tabLevel = 1;
     QString outputvar;
+
+    NSocket::SocketNameCnt.clear();
+
     switch(start->NodeType)
     {
     case SURFACEOUTPUT:
@@ -75,6 +78,7 @@ QString ShaderWriter::newline()
 
 void ShaderWriter::initVar(NSocket *socket)
 {
+    if(isInputVar(socket))return;
     QString VDstr;
     switch(socket->Socket.type)
     {
@@ -100,6 +104,18 @@ void ShaderWriter::initVar(NSocket *socket)
     VDstr.append(socket->Socket.varname);
     VDstr.append(";");
     addToVarDeclares(VDstr);
+}
+
+bool ShaderWriter::isInputVar(NSocket *socket)
+{
+    QStringList vars;
+    vars<<"P"<<"N"<<"I"<<"s"<<"t"<<"u"<<"v"<<"Cl"<<"Cs"<<"Os"<<"L"<<"Oi"<<"Ci"<<"Ps"<<"Ns"<<"du"<<"dv";
+    foreach(QString var, vars)
+    {
+        if(var == socket->Socket.varname)
+            return true;
+    }
+    return false;
 }
 
 void ShaderWriter::incTabLevel()
@@ -173,11 +189,10 @@ QString ShaderWriter::writeVarName(NSocket *insocket)
     NSocket *prevsocket = getPreviousSocket(insocket);
     NSocket *mapsocket = 0;
     Node *node = (Node*)prevsocket->Socket.node;
+
     ContainerNode *cnode = (ContainerNode*)node;
     if(node->isContainer())
     {
-        if(node->N_inSockets->isEmpty())
-            return prevsocket->Socket.varname;
         mapsocket = cnode->socket_map.key(prevsocket);
         return writeVarName(mapsocket);
     }
@@ -212,6 +227,7 @@ QString ShaderWriter::writeVarName(NSocket *insocket)
     }
     else
     {
+        node->setSocketVarName(prevsocket);
         setCNodeDepthCnt();
         return prevsocket->Socket.varname;
     }
@@ -548,6 +564,7 @@ QString ShaderWriter::writeColor(NSocket *socket)
     value.append(")");
     if(colornode->isShaderInput)
     {
+        colornode->setSocketVarName(socket);
         output.append("color ");
         output.append(socket->Socket.varname);
         output.append(" = ");
@@ -570,6 +587,7 @@ QString ShaderWriter::writeString(NSocket *socket)
     value.append("\"");
     if(stringnode->isShaderInput)
     {
+        stringnode->setSocketVarName(socket);
         output.append("string ");
         output.append(socket->Socket.varname);
         output.append(" = ");
@@ -589,6 +607,7 @@ QString ShaderWriter::writeFloat(NSocket *socket)
     value.append(QString::number(floatnode->floatvalue));
     if(floatnode->isShaderInput)
     {
+        floatnode->setSocketVarName(socket);
         output.append("float ");
         output.append(socket->Socket.varname);
         output.append(" = ");
@@ -610,10 +629,10 @@ QString ShaderWriter::getCode()
     QString returncode;
     returncode.append(ShaderHeader);
     returncode.append(createShaderParameterCode());
-    returncode.append(OutputVars);
+    returncode.append(createOutputVars());
     returncode.append(")\n{\n");
     returncode.append("    /*Variable declarations*/");
-    returncode.append(VarDeclares);
+    returncode.append(createVarDeclares());
     returncode.append("\n\n    /*Begin of the RSL Code*/");
     returncode.append(code);
     returncode.append("\n}");
@@ -624,7 +643,7 @@ void ShaderWriter::addToCode(QString c)
 {
     code.append(c);
 }
-void ShaderWriter::addToShaderHeader(QString s, bool newline)
+void ShaderWriter::addToShaderHeader(QString s)
 {
     ShaderHeader.append(s);
 }
@@ -640,7 +659,9 @@ QString ShaderWriter::createShaderParameterCode()
     QString parameters;
     foreach(QString parameter, ShaderParameter)
     {
-        if(parameter != ShaderParameter.first())
+        if(parameter != ShaderParameter.first()
+                &&(!(parameter == ShaderParameter.last())
+                   && OutputVars.isEmpty()))
         {
             QString space(ShaderHeader);
             space.fill(' ');
@@ -652,21 +673,44 @@ QString ShaderWriter::createShaderParameterCode()
     return parameters;
 }
 
-void ShaderWriter::addToOutputVars(QString ov, bool newline)
+void ShaderWriter::addToOutputVars(QString ov)
 {
-    if(newline)
-    {
-        QString space(ShaderHeader);
-        space.fill(' ');
-        OutputVars.append("\n");
-        OutputVars.append(space);
-    }
-    OutputVars.append(ov);
+    if(!OutputVars.contains(ov))
+        OutputVars.append(ov);
 }
 
-void ShaderWriter::addToVarDeclares(QString vd, bool newline)
+QString ShaderWriter::createOutputVars()
 {
-    if(newline)VarDeclares.append("\n    ");
-    VarDeclares.append(vd);
+    QString vars;
+    foreach(QString var, OutputVars)
+    {
+        if(var != OutputVars.last())
+        {
+            QString space(ShaderHeader);
+            space.fill(' ');
+            vars.append("\n");
+            vars.append(space);
+        }
+        vars.append(var);
+    }
+    return vars;
+}
+
+void ShaderWriter::addToVarDeclares(QString vd)
+{
+
+    if(!VarDeclares.contains(vd))
+        VarDeclares.append(vd);
+}
+
+QString ShaderWriter::createVarDeclares()
+{
+    QString vars;
+    foreach(QString var, VarDeclares)
+    {
+        vars.append("\n    ");
+        vars.append(var);
+    }
+    return vars;
 }
 
