@@ -54,6 +54,7 @@ private:
     void initVar(NSocket *socket);
     void outputVar(NSocket *socket);
     QString createCondition(NSocket *socket);
+    QString createMath(NSocket *);
     NSocket *getPreviousSocket(NSocket *socket);
 
     void gotoNextNode(NSocket *socket);
@@ -64,7 +65,7 @@ private:
 
     void writeFunction(NSocket *socket);
     void writeContainer(NSocket *socket);
-    void writeMath(NSocket *socket, QString mathOperator);
+    QString writeMath(NSocket *socket, QString mathOperator);
     QString writeCondition(NSocket *socket, QString conditionOperator);
     QString writeNot(NSocket *socket);
     void writeConditionContainer(NSocket *socket);

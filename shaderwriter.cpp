@@ -169,7 +169,6 @@ void ShaderWriter::outputVar(NSocket *socket)
 
 void ShaderWriter::gotoNextNode(NSocket *socket)
 {
-    NodeLink *nlink;
     if(socket->Socket.links.isEmpty())
         return;
 
@@ -179,6 +178,7 @@ void ShaderWriter::gotoNextNode(NSocket *socket)
         evalSocketValue(nextsocket);
         written_sockets.append(nextsocket->Socket.varname);
     }
+    return;
 }
 
 QString ShaderWriter::writeVarName(NSocket *insocket)
@@ -224,6 +224,10 @@ QString ShaderWriter::writeVarName(NSocket *insocket)
     {
         setCNodeDepthCnt();
         return writeVector(prevsocket);
+    }
+    else if(Node::isMathNode(node))
+    {
+        return createMath(prevsocket);
     }
     else
     {
@@ -291,6 +295,29 @@ QString ShaderWriter::createCondition(NSocket *socket)
     }
 }
 
+QString ShaderWriter::createMath(NSocket *socket)
+{
+    Node *node = (Node*)socket->Socket.node;
+    switch(node->NodeType)
+    {
+    case MULTIPLY:
+        return writeMath(socket, "*");
+        break;
+    case DIVIDE:
+        return writeMath(socket, "/");
+        break;
+    case ADD:
+        return writeMath(socket, "+");
+        break;
+    case SUBTRACT:
+        return writeMath(socket, "-");
+        break;
+    case DOTPRODUCT:
+        return writeMath(socket, ".");
+        break;
+    }
+}
+
 void ShaderWriter::evalSocketValue(NSocket *socket)
 {
     Node *node = (Node*)socket->Socket.node;
@@ -301,21 +328,6 @@ void ShaderWriter::evalSocketValue(NSocket *socket)
         break;
     case FUNCTION:
         writeFunction(socket);
-        break;
-    case MULTIPLY:
-        writeMath(socket, "*");
-        break;
-    case DIVIDE:
-        writeMath(socket, "/");
-        break;
-    case ADD:
-        writeMath(socket, "+");
-        break;
-    case SUBTRACT:
-        writeMath(socket, "-");
-        break;
-    case DOTPRODUCT:
-        writeMath(socket, ".");
         break;
     case CONDITIONCONTAINER:
         writeConditionContainer(socket);
@@ -411,12 +423,13 @@ void ShaderWriter::writeContainer(NSocket *socket)
     takeCNodeDepth();
 }
 
-void ShaderWriter::writeMath(NSocket *socket, QString mathOperator)
+QString ShaderWriter::writeMath(NSocket *socket, QString mathOperator)
 {
     QString output;
     output.append(newline());
     Node *node = (Node*)socket->Socket.node;
     initVar(socket);
+    output.append("(");
     output.append(socket->Socket.varname);
     output.append(" = ");
     int i = 1;
@@ -425,8 +438,14 @@ void ShaderWriter::writeMath(NSocket *socket, QString mathOperator)
         i++;
         if(nsocket->Socket.cntdSockets.size()>0)
         {
-            output.append(writeVarName(nsocket));
-            gotoNextNode(nsocket);
+            NSocket *prevSocket = getPreviousSocket(nsocket);
+            if(Node::isMathNode((Node*)prevSocket->Socket.node))
+                output.append(createMath(prevSocket));
+            else
+            {
+                output.append(writeVarName(nsocket));
+                gotoNextNode(nsocket);
+            }
         }
         if(i < node->N_inSockets->size())
         {
@@ -435,8 +454,9 @@ void ShaderWriter::writeMath(NSocket *socket, QString mathOperator)
             output.append(" ");
         }
     }
-    output.append(";");
-    code.append(output);
+    output.append(")");
+    setCNodeDepthCnt();
+    return output;
 }
 
 QString ShaderWriter::writeCondition(NSocket *socket, QString conditionOperator)
