@@ -10,25 +10,35 @@ TARGET = frg_Shader_Author
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-        frg_shader_author.cpp \
-    shader_space.cpp \
-    node.cpp \
-    nodelink.cpp \
-    shader_view.cpp \
-    newnodeeditor.cpp \
-    scenewidgetcontainer.cpp \
-    nodelib.cpp \
-    buildin_nodes.cpp \
-    shaderwriter.cpp
+SOURCES += source/data/base/main.cpp\
+        source/data/base/frg_shader_author.cpp \
+    source/data/base/shader_space.cpp \
+    source/graphics/nodelink.cpp \
+    source/graphics/shader_view.cpp \
+    source/graphics/newnodeeditor.cpp \
+    source/graphics/scenewidgetcontainer.cpp \
+    source/graphics/nodelib.cpp \
+    source/data/nodes/buildin_nodes.cpp \
+    source/data/shaderwriter.cpp \
+    source/data/undo/frg_generic_undo.cpp \
+    source/graphics/nodes/graphics_node_socket.cpp \
+    source/data/nodes/data_node_socket.cpp \
+    source/data/nodes/data_node.cpp \
+    source/graphics/nodes/graphics_node.cpp \
+    source/data/base/project.cpp
 
-HEADERS  += frg_shader_author.h \
-    shader_space.h \
-    node.h \
-    nodelink.h \
-    shader_view.h \
-    newnodeeditor.h \
-    scenewidgetcontainer.h \
-    nodelib.h \
-    buildin_nodes.h \
-    shaderwriter.h
+HEADERS  += source/data/base/frg_shader_author.h \
+    source/data/base/shader_space.h \
+    source/graphics/nodelink.h \
+    source/graphics/shader_view.h \
+    source/graphics/newnodeeditor.h \
+    source/graphics/scenewidgetcontainer.h \
+    source/graphics/nodelib.h \
+    source/data/nodes/buildin_nodes.h \
+    source/data/shaderwriter.h \
+    source/data/undo/frg_generic_undo.h \
+    source/graphics/nodes/graphics_node_socket.h \
+    source/data/nodes/data_node_socket.h \
+    source/data/nodes/data_node.h \
+    source/graphics/nodes/graphics_node.h \
+    source/data/base/project.h
