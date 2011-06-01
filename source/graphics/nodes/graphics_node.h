@@ -29,6 +29,7 @@
 #include "QObject"
 
 #include "source/data/nodes/data_node.h"
+#include "source/graphics/nodes/graphics_node_socket.h"
 
 class NodeName : public QGraphicsTextItem
 {

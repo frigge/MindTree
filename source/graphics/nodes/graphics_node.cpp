@@ -32,7 +32,9 @@
 #include "QTextCursor"
 #include "QGraphicsProxyWidget"
 
-#include "source/data/base/shader_space.h"
+#include "source/data/base/frg.h"
+#include "source/data/base/dnspace.h"
+#include "source/graphics/base/vnspace.h"
 
 NodeName::NodeName(QString name, QGraphicsItem *parent)
 {
@@ -53,14 +55,13 @@ void NodeName::focusOutEvent(QFocusEvent *event)
         ContainerNode *cNode = (ContainerNode*)pNode;
         if(cNode->ContainerData)
         {
-            Shader_Space *contspace = (Shader_Space*)cNode->ContainerData;
-            contspace->setName(toPlainText());
+            cNode->ContainerData->setName(toPlainText());
         }
     }
     if(scene())
     {
-        Shader_Space *space = (Shader_Space*)scene();
-        space->leaveEditNameMode();
+        DNSpace *space = (DNSpace*)scene();
+        space->getSpaceVis()->leaveEditNameMode();
     }
     setTextInteractionFlags(Qt::NoTextInteraction);
     textCursor().clearSelection();
@@ -70,8 +71,8 @@ void NodeName::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
     if(scene())
     {
-        Shader_Space *space = (Shader_Space*)scene();
-        space->enterEditNameMode();
+        DNSpace *space = (DNSpace*)scene();
+        space->getSpaceVis()->enterEditNameMode();
     }
     if (textInteractionFlags() == Qt::NoTextInteraction)
         setTextInteractionFlags(Qt::TextEditorInteraction);
@@ -217,8 +218,7 @@ void VContainerNode::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
     ContainerNode *container = (ContainerNode*)data;
     if(!container->ContainerData)
         return;
-    Shader_Space *space = (Shader_Space*)scene();
-    space->changeScene(container->ContainerData);
+    FRG::space->moveIntoSpace(container->ContainerData);
 }
 
 void VContainerNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)

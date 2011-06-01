@@ -1,0 +1,125 @@
+/*
+    FRG Shader Editor, a Node-based Renderman Shading Language Editor
+    Copyright (C) 2011  Sascha Fricke
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "dnspace.h"
+#include "source/data/base/project.h"
+#include "source/graphics/base/vnspace.h"
+
+DNSpace::DNSpace()
+{
+}
+
+QDataStream & operator<<(QDataStream &stream, DNSpace *space)
+{
+    stream<<space->getName();
+    stream<<space->getNodeCnt();
+    foreach(DNode *node, space->getNodes())
+        stream<<node;
+}
+
+QDataStream & operator>>(QDataStream &stream, DNSpace **space)
+{
+    DNSpace *newspace = new DNSpace;
+    *space = newspace;
+    qint16 nodecnt;
+    QString name;
+    stream>>name;
+    newspace->setName(name);
+    stream>>nodecnt;
+    DNode *node = 0;
+    for(int i = 0; i<nodecnt; i++)
+    {
+        stream>>&node;
+        newspace->addNode(node);
+    }
+}
+
+bool DNSpace::operator==(DNSpace &space)
+{
+    if(name != space.name
+            ||getNodeCnt() != space.getNodeCnt())
+        return false;
+    foreach(DNode* node1, getNodes())
+    {
+        foreach(DNode *node2, space.getNodes())
+        {
+            if(*node1 == *node2)
+                continue;
+            else
+                return false;
+        }
+    }
+    return true;
+}
+
+bool DNSpace::operator!=(DNSpace &space)
+{
+    return(!(*this == space));
+}
+
+void DNSpace::addNode(DNode *node)
+{
+    nodes.append(node);
+}
+
+void DNSpace::removeNode(DNode *node)
+{
+    nodes.removeAll(node);
+    if(spaceVis)
+        spaceVis->removeItem(node->nodeVis);
+}
+
+VNSpace *DNSpace::getSpaceVis()
+{
+    return spaceVis;
+}
+
+void DNSpace::setSpaceVis(VNSpace *spaceVis)
+{
+    this->spaceVis = spaceVis;
+}
+
+QList<DNode*> DNSpace::selectedItems()
+{
+    QList<DNode*> items;
+    foreach(QGraphicsItem* item, spaceVis->selectedItems())
+        items.append((DNode*)item);
+
+    return items;
+}
+
+qint16 DNSpace::getNodeCnt()
+{
+    return (qint16)nodes.size();
+}
+
+QList<DNode*> DNSpace::getNodes()
+{
+    return nodes;
+}
+
+QString DNSpace::getName()
+{
+		return name;
+}
+
+void DNSpace::setName(QString value)
+{
+		name = value;
+}
+

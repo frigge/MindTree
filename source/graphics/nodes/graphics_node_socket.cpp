@@ -24,9 +24,11 @@
 #include "QGraphicsSceneMouseEvent"
 
 #include "source/data/nodes/data_node_socket.h"
+#include "source/data/base/frg.h"
 #include "source/data/nodes/data_node.h"
 #include "graphics_node.h"
-#include "source/data/base/shader_space.h"
+#include "source/graphics/base/vnspace.h"
+#include "source/data/base/project.h"
 
 VNSocket::VNSocket(DNSocket *data)
 {
@@ -168,18 +170,16 @@ void VNSocket::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 
 void VNSocket::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    Shader_Space *space = (Shader_Space*)data->node->nodeVis->scene();
-
     if(event->button() != Qt::LeftButton)
         return;
 
-    if (space->newlink == 0)
+	if(FRG::space->isLinkNodeMode())
     {
-        space->enterlinkNodeMode(this);
+        FRG::space->enterlinkNodeMode(this);
     }
     else
     {
-        space->leavelinkNodeMode(event->scenePos());
+        FRG::space->leavelinkNodeMode(event->scenePos());
     }
 }
 

@@ -12,7 +12,6 @@ TEMPLATE = app
 
 SOURCES += source/data/base/main.cpp\
         source/data/base/frg_shader_author.cpp \
-    source/data/base/shader_space.cpp \
     source/graphics/nodelink.cpp \
     source/graphics/shader_view.cpp \
     source/graphics/newnodeeditor.cpp \
@@ -25,10 +24,11 @@ SOURCES += source/data/base/main.cpp\
     source/data/nodes/data_node_socket.cpp \
     source/data/nodes/data_node.cpp \
     source/graphics/nodes/graphics_node.cpp \
-    source/data/base/project.cpp
+    source/data/base/project.cpp \
+    source/data/base/dnspace.cpp \
+    source/graphics/base/vnspace.cpp
 
 HEADERS  += source/data/base/frg_shader_author.h \
-    source/data/base/shader_space.h \
     source/graphics/nodelink.h \
     source/graphics/shader_view.h \
     source/graphics/newnodeeditor.h \
@@ -41,4 +41,6 @@ HEADERS  += source/data/base/frg_shader_author.h \
     source/data/nodes/data_node_socket.h \
     source/data/nodes/data_node.h \
     source/graphics/nodes/graphics_node.h \
-    source/data/base/project.h
+    source/data/base/project.h \
+    source/data/base/dnspace.h \
+    source/graphics/base/vnspace.h
