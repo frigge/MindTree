@@ -32,28 +32,29 @@ class VNSpace : public QGraphicsScene
     Q_OBJECT
 public:
     VNSpace();
-    void addLink(NodeLink *nlink, VNSocket *final);
-    void addLink(NodeLink *nlink);
-    void enterlinkNodeMode(VNSocket *socket);
-    void leavelinkNodeMode(QPointF finalpos);
+    void addLink(VNSocket *final);
+    void enterLinkNodeMode(VNSocket *socket);
+    void leaveLinkNodeMode();
     void enterEditNameMode();
     void leaveEditNameMode();
+    bool isEditNameMode();
     void destroyContainer(QGraphicsItem *container);
     void moveIntoSpace(DNSpace *space);
     void createSpaceVis();
     void deleteSpaceVis();
-    void showNode(DNode *);
 	NodeLib *getNodeLib();
 	NewNodeEditor *getNewNodeEditor();
 	QPointF getMousePos();
 	bool isLinkNodeMode();
+	QList<DNode*> selectedNodes();
+    bool isSelected(VNode *node);
 
 public slots:
     void shownodelib();
     void createNode();
     void removeNode();
     void removeSelectedNodes();
-    void removeLink(NodeLink *link);
+    void removeLink(VNodeLink *link);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -62,20 +63,19 @@ protected:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     void dropEvent(QGraphicsSceneDragDropEvent *event);
     void dragMoveEvent(QGraphicsSceneDragDropEvent *event);
+    void containerNode();
 
 private:
-    DNSpace *spaceData;
     QMenu *NContextMenu;
     void ContextAddMenu();
     void updateLinks();
     QPointF getSelectedItemsCenter();
-    void cacheLinks();
-    QHash<DNSocket*, NodeLink*> cachedLinks;
+    ////QHash<DinSocket*, VNodeLink*> cachedLinks;
     QPointF mousePos;
     NodeLib *nodelib;
     NewNodeEditor *nodeedit;
     VNSocket *linksocket;
-    NodeLink *newlink;
+    VNodeLink *newlink;
     bool editNameMode;
 	bool linkNodeMode;
 };

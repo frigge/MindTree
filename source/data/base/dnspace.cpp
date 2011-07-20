@@ -17,17 +17,30 @@
 */
 
 #include "dnspace.h"
+
+#include "QDebug"
 #include "source/data/base/project.h"
-#include "source/graphics/base/vnspace.h"
+#include "source/data/base/frg.h"
 
 DNSpace::DNSpace()
 {
+    FRG::CurrentProject->registerSpace(this);
 }
+
+DNSpace::~DNSpace()
+{
+    FRG::CurrentProject->unregisterSpace(this);
+    clearLinksCache();
+    foreach(DNode *node, getNodes())
+        delete node;
+    nodes.clear();
+}
+
 
 QDataStream & operator<<(QDataStream &stream, DNSpace *space)
 {
     stream<<space->getName();
-    stream<<space->getNodeCnt();
+    stream<<(qint16)space->getNodeCnt();
     foreach(DNode *node, space->getNodes())
         stream<<node;
 }
@@ -47,6 +60,17 @@ QDataStream & operator>>(QDataStream &stream, DNSpace **space)
         stream>>&node;
         newspace->addNode(node);
     }
+
+	//set pointer to connected sockets from temp. IDs
+	foreach(DSocket *socket, LoadSocketIDMapper::getAllSockets())
+	{
+		if(socket->getDir() == IN)
+		{
+			DinSocket *inSocket = (DinSocket*)socket;
+			if(inSocket->getTempCntdID() > 0)
+				inSocket->setCntdSocket((DoutSocket*)LoadSocketIDMapper::getSocket(inSocket->getTempCntdID()));
+		}
+	}
 }
 
 bool DNSpace::operator==(DNSpace &space)
@@ -72,16 +96,110 @@ bool DNSpace::operator!=(DNSpace &space)
     return(!(*this == space));
 }
 
+void DNSpace::cacheNodePositions()    
+{
+    foreach(DNode *node, getNodes())
+        FRG::CurrentProject->setNodePosition(node, node->getNodeVis()->pos());
+}
+
+void DNSpace::cacheLinks()
+{
+    clearLinksCache();
+    foreach(DNode *node, getNodes())
+        foreach(DinSocket *socket, node->getInSockets())
+            if(!isSocketLinkCached(socket)
+                && socket->getCntdSocket())cacheNewLink(socket);
+}
+
+void DNSpace::clearLinksCache()    
+{
+    while(!cachedLinks.isEmpty())
+        delete cachedLinks.takeLast();
+}
+
+void DNSpace::deleteCachedLink(DNodeLink *dnlink)    
+{
+    cachedLinks.removeAll(dnlink);
+    delete dnlink;
+}
+
+void DNSpace::visCachedLinks()    
+{
+    if(cachedLinks.isEmpty())
+        return;
+    foreach(DNodeLink *dnlink, cachedLinks)
+        if(!dnlink->vis)dnlink->vis = new VNodeLink(dnlink);
+}
+
+QList<DNodeLink*> DNSpace::getCachedLinks()    
+{
+    return cachedLinks;
+}
+
+QList<VNodeLink*> DNSpace::getCachedLinksVis()    
+{
+    QList<VNodeLink*> linkVis;
+    visCachedLinks();
+    if(!cachedLinks.isEmpty())
+        foreach(DNodeLink *dnlink, cachedLinks)
+            linkVis.append(dnlink->vis);
+    return linkVis;
+}
+
+void DNSpace::cacheNewLink(DinSocket *socket)    
+{
+    cachedLinks.append(new DNodeLink(socket, socket->getCntdSocket()));
+}
+
+bool DNSpace::isSocketLinkCached(DSocket *socket)    
+{
+    if(socket->getDir() == IN)
+    {
+        foreach(DNodeLink *dnlink, cachedLinks)
+            if(dnlink->in == socket) return true;
+    }
+    else
+    {
+        foreach(DNodeLink *dnlink, cachedLinks)
+            if(dnlink->out == socket) return true;
+    }
+    return false;
+}
+
+QList<DinSocket*> DNSpace::getConnected(DoutSocket* out)    
+{
+    QList<DinSocket*> ins;
+    foreach(DNodeLink *dnlink, cachedLinks)
+        if(dnlink->out == out)
+            ins.append(dnlink->in);
+    return ins;
+}
+
+int DNSpace::getLinkCount(DoutSocket* socket)    
+{
+    int i = 0;
+    foreach(DNodeLink *dnlink, cachedLinks)
+        if(dnlink->out == socket) ++i;
+    return i;
+}
+
 void DNSpace::addNode(DNode *node)
 {
-    nodes.append(node);
+    node->setSpace(this);
+    if(!nodes.contains(node))nodes.append(node);
 }
 
 void DNSpace::removeNode(DNode *node)
 {
+    unregisterNode(node);
+    delete node;
+}
+
+void DNSpace::unregisterNode(DNode *node)    
+{
     nodes.removeAll(node);
-    if(spaceVis)
-        spaceVis->removeItem(node->nodeVis);
+    if(this == FRG::SpaceDataInFocus)
+        node->deleteNodeVis();
 }
 
 VNSpace *DNSpace::getSpaceVis()
@@ -92,15 +210,6 @@ VNSpace *DNSpace::getSpaceVis()
 void DNSpace::setSpaceVis(VNSpace *spaceVis)
 {
     this->spaceVis = spaceVis;
-}
-
-QList<DNode*> DNSpace::selectedItems()
-{
-    QList<DNode*> items;
-    foreach(QGraphicsItem* item, spaceVis->selectedItems())
-        items.append((DNode*)item);
-
-    return items;
 }
 
 qint16 DNSpace::getNodeCnt()

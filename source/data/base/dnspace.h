@@ -22,29 +22,42 @@
 #include "QList"
 #include "QString"
 
-class VNSpace;
-class DNode;
+#include "source/data/nodes/data_node.h"
+#include "source/graphics/nodelink.h"
+#include "source/graphics/base/vnspace.h"
 
 class DNSpace
 {
 public:
     DNSpace();
+    ~DNSpace();
     void addNode(DNode *node);
     void removeNode(DNode *node);
+    void unregisterNode(DNode *node);
     QString getName();
 	void setName(QString value);
     bool operator==(DNSpace &space);
     bool operator!=(DNSpace &space);
+    void cacheLinks();
+    void clearLinksCache();
+    bool isSocketLinkCached(DSocket *socket);
+    void cacheNewLink(DinSocket *socket);
+    QList<DNodeLink*> getCachedLinks();
+    void visCachedLinks();
+    QList<VNodeLink*> getCachedLinksVis();
+    void deleteCachedLink(DNodeLink *dnlink);
+    int getLinkCount(DoutSocket* socket);
+    void cacheNodePositions();
+    QList<DinSocket*> getConnected(DoutSocket* out);
 
     VNSpace *getSpaceVis();
     void setSpaceVis(VNSpace*);
-
-    QList<DNode*> selectedItems();
 
     qint16 getNodeCnt();
     QList<DNode*>getNodes();
 
 private:
+    QList<DNodeLink*> cachedLinks;
     VNSpace *spaceVis;
     QString name;
     QList<DNode*> nodes;

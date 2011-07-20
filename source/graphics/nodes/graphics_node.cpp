@@ -33,8 +33,10 @@
 #include "QGraphicsProxyWidget"
 
 #include "source/data/base/frg.h"
+#include "source/data/base/frg_shader_author.h"
 #include "source/data/base/dnspace.h"
 #include "source/graphics/base/vnspace.h"
+#include "source/data/base/project.h"
 
 NodeName::NodeName(QString name, QGraphicsItem *parent)
 {
@@ -49,20 +51,20 @@ NodeName::NodeName(QString name, QGraphicsItem *parent)
 void NodeName::focusOutEvent(QFocusEvent *event)
 {
     QGraphicsTextItem::focusOutEvent(event);
-    DNode *pNode = (DNode*)parentItem();
+    VNode *vnode = static_cast<VNode*>(parentItem());
+    DNode *pNode = vnode->data;
+    pNode->setNodeName(toPlainText());
     if((pNode->isContainer()))
     {
-        ContainerNode *cNode = (ContainerNode*)pNode;
-        if(cNode->ContainerData)
+        ContainerNode *cNode = static_cast<ContainerNode*>(pNode);
+        if(cNode->getContainerData())
         {
-            cNode->ContainerData->setName(toPlainText());
+            cNode->getContainerData()->setName(toPlainText());
         }
     }
     if(scene())
-    {
-        DNSpace *space = (DNSpace*)scene();
-        space->getSpaceVis()->leaveEditNameMode();
-    }
+		FRG::Space->leaveEditNameMode();
+
     setTextInteractionFlags(Qt::NoTextInteraction);
     textCursor().clearSelection();
 }
@@ -71,8 +73,8 @@ void NodeName::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
     if(scene())
     {
-        DNSpace *space = (DNSpace*)scene();
-        space->getSpaceVis()->enterEditNameMode();
+        VNSpace *space = (VNSpace*)scene();
+        space->enterEditNameMode();
     }
     if (textInteractionFlags() == Qt::NoTextInteraction)
         setTextInteractionFlags(Qt::TextEditorInteraction);
@@ -82,12 +84,8 @@ void NodeName::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 VNode::VNode(DNode *data)
 {
     this->data = data;
-    init();
-}
-
-void VNode::init()
-{
     node_name = new NodeName("", this);
+	setCacheMode(ItemCoordinateCache);
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsFocusable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -101,52 +99,102 @@ void VNode::init()
     //dropshad->setOffset(5);
     //dropshad->setColor(QColor(10, 10, 10, 200));
     //setGraphicsEffect(dropshad);
+
+	foreach(DinSocket *socket, data->getInSockets())
+		socket->createSocketVis(this);
+
+	foreach(DoutSocket *socket, data->getOutSockets())
+		socket->createSocketVis(this);
+
+	cacheSocketSize();
+	recalcNodeVis();
+	setPos(FRG::CurrentProject->getNodePosition(data));
 }
+
+VNode::~VNode()
+{
+}
+
+int VNode::getNodeWidth()
+{
+	return node_width;
+}
+
+void VNode::setNodeWidth(int w)
+{
+	node_width = w;
+}
+
+int VNode::getNodeHeight()
+{
+	return node_height;
+}
+
+void VNode::setNodeHeight(int h)
+{
+	node_height = h;
+}
+
+void VNode::cacheSocketSize()
+{
+	if(!data->getInSockets().isEmpty())
+		socket_size = data->getInSockets().first()->getSocketVis()->getHeight();
+    else if(!data->getOutSockets().isEmpty())
+		socket_size = data->getOutSockets().first()->getSocketVis()->getHeight();
+}
+
 
 void VNode::drawName()
 {
-    node_name->setPlainText(data->nodeName);
-    int node_width = NodeWidth();
-    int node_height = NodeHeight(data->N_inSockets->size() + data->N_outSockets->size());
+    if(FRG::Space->isEditNameMode()) return;
+    node_name->setPlainText(data->getNodeName());
     node_name->setPos(0-(node_width/2)+4, -(node_height/2)-20);
 }
 
-int VNode::NodeWidth() const
+void VNode::NodeWidth()
 {
-    int node_width = 150;
-    return node_width;
+    if(data->getInSockets().isEmpty()
+        &&data->getOutSockets().isEmpty())
+    {
+        node_width = 25;
+        return;
+    }
+
+    //fit the widest socket name
+    node_width = 0;
+	foreach(DSocket *socket, data->getInSockets())
+        if((socket->getSocketVis())
+            &&socket->getSocketVis()->getSocketNameVisWidth() > node_width)
+                node_width = socket->getSocketVis()->getSocketNameVisWidth();
+
+	foreach(DSocket *socket, data->getOutSockets())
+        if((socket->getSocketVis())
+            &&socket->getSocketVis()->getSocketNameVisWidth() > node_width)
+            node_width = socket->getSocketVis()->getSocketNameVisWidth();
+
+	node_width += 6 + socket_size; //Left/Right border margin
 };
 
-int VNode::NodeHeight(int numSockets) const
+void VNode::NodeHeight(int numSockets)
 {
-    int node_height = 0;
     if(!numSockets)
         node_height = 25;
     else
-        node_height = 7 + (17*numSockets);
-    return node_height;
+        node_height = (2 + socket_size) * numSockets + 6;
 };
 
 QRectF VNode::boundingRect() const
 {
-    int node_height = NodeHeight(data->N_inSockets->size() + data->N_outSockets->size());
-    node_height +=2;
-    int node_width = NodeWidth();
-    node_width += 2;
-    return QRectF(0-(node_width/2), 0-(node_height/2), node_width, node_height);
+    return QRectF(-node_width/2, -node_height/2, node_width, node_height);
 };
 
 void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    int node_width = NodeWidth();
-    int node_height = NodeHeight(data->N_inSockets->size() + data->N_outSockets->size());
-    int space = 2;
-    int socket_size = 15;
-    int nodePen = 4;
     QColor nodeBGColor;
     QColor nodeHColor;
     QColor textColor;
     QPen node_outline;
+    int nodePen = 4;
 
     if (isSelected())
     {
@@ -164,97 +212,100 @@ void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
     };
     painter->setPen(node_outline);
     painter->setBrush(QBrush(nodeBGColor, Qt::SolidPattern));
-    painter->drawRect(-(node_width/2), 0-(node_height/2), node_width, node_height);
-
-    int inSocket_pos;
-    inSocket_pos = 0 - (node_height/2) + 2*space;
-
-    foreach(DNSocket *insocket, *data->N_inSockets)
-    {
-        insocket->socketVis->setPos(2*socket_size-(node_width/2)+2*space, inSocket_pos-socket_size);
-        painter->setPen(textColor);
-        QRectF textrect(-node_width/2 + (socket_size+4*space), inSocket_pos, node_width-(socket_size+4*space), socket_size);
-        painter->drawText(textrect, insocket->name, QTextOption(Qt::AlignLeft));
-        inSocket_pos += socket_size + space;
-    }
-
-    int outSocket_pos;
-    outSocket_pos = inSocket_pos + 2;
-
-    foreach(DNSocket *out, *data->N_outSockets)
-    {
-        out->socketVis->setPos((node_width/2)+10, outSocket_pos-socket_size);
-        painter->setPen(textColor);
-        QRectF outtextrect(-node_width/2, outSocket_pos, node_width-(socket_size+4*space), socket_size);
-        painter->drawText(outtextrect, out->name, QTextOption(Qt::AlignRight));
-        outSocket_pos += socket_size + space;
-    }
+    painter->drawRect(-node_width/2, -node_height/2, node_width, node_height);
     drawName();
 };
 
-VContainerNode::VContainerNode(DNode *data)
-    :VNode(data)
+void VNode::recalcNodeVis()
 {
-    if(data->NodeType == CONTAINER)
+    int space = 2;
+
+    NodeHeight(data->getInSockets().size() + data->getOutSockets().size());
+	NodeWidth();
+    int socketPos = 2*space - (node_height/2);
+
+	foreach(DinSocket *insocket, data->getInSockets())
+    {
+        insocket->getSocketVis()->setPos((-node_width/2) + (4 + socket_size/2), socketPos+(socket_size/2));
+        socketPos += socket_size + space;
+	}
+
+    foreach(DoutSocket *out, data->getOutSockets())
+    {
+        out->getSocketVis()->setPos((node_width/2) - (4 + socket_size/2), socketPos+(socket_size/2));
+        socketPos += socket_size + space;
+	}
+}
+
+VContainerNode::VContainerNode(DNode *data)
+    :VNode(data), contextMenu(0)
+{
+    if(data->getNodeType() == CONTAINER)
         createContextMenu();
+}
+
+VContainerNode::~VContainerNode()
+{
+    if(contextMenu)delete contextMenu;
+}
+
+
+void VContainerNode::addToLib()
+{
+    ContainerNode *cdata = (ContainerNode*)data;
+    cdata->addtolib();
 }
 
 void VContainerNode::createContextMenu()
 {
     contextMenu = new QMenu;
-    QAction *addtolibaction = contextMenu->addAction("Add to Library");
+    QAction *addtolibaction = contextMenu->addAction("add to library");
+    contextMenu->addAction(addtolibaction);
 
     connect(addtolibaction, SIGNAL(triggered()), this, SLOT(addToLib()));
-}
-
-void VContainerNode::addToLib()
-{
-    ContainerNode* data = (ContainerNode*)this->data;
-    data->addtolib();
 }
 
 void VContainerNode::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
     ContainerNode *container = (ContainerNode*)data;
-    if(!container->ContainerData)
+    if(!container->getContainerData())
         return;
-    FRG::space->moveIntoSpace(container->ContainerData);
+    FRG::Author->moveIntoSpace(container->getContainerData());
 }
 
 void VContainerNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
-    if(data->NodeType == CONTAINER)
+    if(data->getNodeType() == CONTAINER)
         contextMenu->exec(event->screenPos());
 }
 
 VValueNode::VValueNode(DNode *data)
     :VNode(data)
 {
-}
-
-void VValueNode::init()
-{
-    VNode::init();
     proxy = new QGraphicsProxyWidget;
     proxy->setParentItem(this);
-    int width = NodeWidth();
-    int height = NodeHeight(1);
     createContextMenu();
+}
+
+VValueNode::~VValueNode()
+{
+    delete contextMenu;
+    delete widget;
+}
+
+
+void VValueNode::setShaderInput(bool tgl)
+{
+    ValueNode* vdata = (ValueNode*)data;
+    vdata->setShaderInput(tgl);
 }
 
 void VValueNode::createContextMenu()
 {
     contextMenu = new QMenu;
-    QAction *shaderinputAction = contextMenu->addAction("Shader Parameter");
+    QAction *shaderinputAction =  contextMenu->addAction("Shader Parameter");
     shaderinputAction->setCheckable(true);
-    ValueNode *data = (ValueNode*)this->data;
     connect(shaderinputAction, SIGNAL(toggled(bool)), this, SLOT(setShaderInput(bool)));
-}
-
-void VValueNode::setShaderInput(bool isInput)
-{
-    ValueNode* data = (ValueNode*)this->data;
-    data->setShaderInput(isInput);
 }
 
 void VValueNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -267,20 +318,18 @@ void VValueNode::setValueEditor(QWidget *editor)
 {
     widget = editor;
     proxy->setWidget(widget);
-    widget->resize(NodeWidth() - 8, 25);
-    proxy->setPos(QPointF(4-NodeWidth()/2, 8));
+    widget->resize(getNodeWidth() - 8, 25);
+    proxy->setPos(QPointF(4-getNodeWidth()/2, 8));
 }
 
-int VValueNode::NodeWidth() const
+void VValueNode::NodeWidth()
 {
-    int node_width = 150;
-    return node_width;
+    setNodeWidth(20);
 };
 
-int VValueNode::NodeHeight(int numSockets) const
+void VValueNode::NodeHeight(int numSockets)
 {
-    int node_height = 60 + (17*numSockets);
-    return node_height;
+    setNodeHeight( 60 + (17*numSockets));
 };
 
 ColorButton::ColorButton()
@@ -300,13 +349,8 @@ void ColorButton::setColor()
 VColorValueNode::VColorValueNode(DNode *data)
     : VValueNode(data)
 {
-}
-
-void VColorValueNode::init()
-{
-    VValueNode::init();
     ColorButton *cbutton = new ColorButton;
-    connect(cbutton, SIGNAL(clicked(QColor)), this, SLOT(setValue(QColor)));
+    contextMenu->connect(cbutton, SIGNAL(clicked(QColor)), this, SLOT(setValue(QColor)));
     setValueEditor(cbutton);
 }
 
@@ -319,13 +363,8 @@ void VColorValueNode::setValue(QColor color)
 VStringValueNode::VStringValueNode(DNode *data)
     :VValueNode(data)
 {
-
-}
-
-void VStringValueNode::init()
-{
     QLineEdit *lineedit = new QLineEdit;
-    connect(lineedit, SIGNAL(textChanged(QString)), this, SLOT(setValue(QString)));
+    contextMenu->connect(lineedit, SIGNAL(textChanged(QString)), this, SLOT(setValue(QString)));
     setValueEditor(lineedit);
 }
 
@@ -338,13 +377,9 @@ void VStringValueNode::setValue(QString string)
 VFloatValueNode::VFloatValueNode(DNode *data)
     :VValueNode(data)
 {
-}
-
-void VFloatValueNode::init()
-{
     QDoubleSpinBox *spinbox = new QDoubleSpinBox;
     spinbox->setRange(-1000, 1000);
-    connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(setValue(double)));
+    contextMenu->connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(setValue(double)));
     setValueEditor(spinbox);
 }
 
@@ -359,10 +394,6 @@ VVectorValueNode::VVectorValueNode(DNode *data)
 {
 }
 
-void VVectorValueNode::init()
-{
-}
-
 void VVectorValueNode::setValue()
 {
 
@@ -372,10 +403,6 @@ VOutputNode::VOutputNode(DNode *data)
     :VNode(data)
 {
     this->data = data;
-}
-
-void VOutputNode::init()
-{
     createMenu();
 }
 

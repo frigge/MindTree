@@ -1,1 +1,4 @@
-*.pro.user
+*.pro*
+tags/
+cscope.*
+build/

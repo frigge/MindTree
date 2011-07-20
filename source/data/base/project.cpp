@@ -2,22 +2,39 @@
 
 #include "QFileDialog"
 
+#include "source/data/base/frg.h"
 #include "source/graphics/base/vnspace.h"
 
-Project::Project()
+Project::Project(QString filename)
+    : filename(filename)
 {
-	setRootSpace(new DNSpace);
-    root_scene->setSpaceVis(new VNSpace);
+    FRG::CurrentProject = this;
+    DNSpace *space;
+    if(filename != "")
+    {
+        QFile file(filename);
+        file.open(QIODevice::ReadOnly);
+        QDataStream stream(&file);
+        stream>>&space;
+        file.close();
+        LoadNodeIDMapper::clear();
+        LoadSocketIDMapper::clear();
+    }
+    else
+    {
+        space = new DNSpace;
+    }
+    setRootSpace(space);
+    moveIntoRootSpace();
     root_scene->setName("Root");
-	setCurrentSpace(root_scene);
-	setFilename("");	
 }
 
 Project::~Project()
 {
-	foreach(DNode* node, nodes)
-		delete node;
-	nodes.clear();
+    spaces.clear();
+    delete root_scene;
+    nodePositions.clear();
+    FRG::SpaceDataInFocus = 0;
 }
 
 void Project::save()
@@ -43,31 +60,14 @@ void Project::saveAs()
     file.close();
 }
 
-QList<DNode*> Project::getNodes()
+void Project::registerSpace(DNSpace *space)    
 {
-    return nodes;
+    spaces.append(space);
 }
 
-void Project::addNode(DNode *node)
+void Project::unregisterSpace(DNSpace *space)    
 {
-    nodes.append(node);
-}
-
-void Project::deleteNode(DNode *node)
-{
-    nodes.removeAll(node);
-    delete node;
-}
-
-void Project::removeNode(DNode *node)
-{
-    nodes.removeAll(node);
-}
-
-void Project::removeSelectedNodes(QList<DNode *> nodes)
-{
-    foreach(DNode *node, nodes)
-        removeNode(node);
+    spaces.removeAll(space);
 }
 
 QString Project::getFilename()
@@ -90,13 +90,45 @@ void Project::setRootSpace(DNSpace* value)
 	root_scene = value;
 }
 
-DNSpace* Project::getCurrentSpace()
+void Project::moveIntoRootSpace()
 {
-	return currentSpace;
+    FRG::Space->moveIntoSpace(root_scene);
 }
 
-void Project::setCurrentSpace(DNSpace* value)
+QList<DNodeLink*> Project::getContainerInLinks()
 {
-	currentSpace = value;
+	QList<DNodeLink*> ins;
+    foreach(DNodeLink *dnlink, FRG::SpaceDataInFocus->getCachedLinks())
+        if(FRG::Space->isSelected(dnlink->in->getNode()->getNodeVis())
+            &&!FRG::Space->isSelected(dnlink->out->getNode()->getNodeVis()))
+            ins.append(dnlink);
+    return ins;
 }
 
+QList<DNodeLink *> Project::getContainerOutLinks()
+{
+    QList<DNodeLink *> outs;
+    foreach(DNodeLink *dnlink, FRG::SpaceDataInFocus->getCachedLinks())
+        if(FRG::Space->isSelected(dnlink->out->getNode()->getNodeVis())
+            &&!FRG::Space->isSelected(dnlink->in->getNode()->getNodeVis()))
+            outs.append(dnlink);
+    return outs;
+}
+QPointF Project::getNodePosition(DNode *node)
+{
+	return nodePositions.value(node);
+}
+
+void Project::setNodePosition(DNode *node, QPointF value)
+{
+    if(value == QPointF(0,0))
+        nodePositions.remove(node);
+
+	nodePositions[node] = value;
+    if(node->getNodeVis())node->getNodeVis()->setPos(value);
+}
+
+void Project::clearNodePosition(DNode *node)    
+{
+    nodePositions.remove(node);
+}

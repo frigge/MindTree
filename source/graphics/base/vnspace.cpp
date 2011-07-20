@@ -22,22 +22,20 @@
 #include "QKeyEvent"
 
 #include "source/data/base/frg.h"
+#include "source/data/base/frg_shader_author.h"
 #include "source/data/base/project.h"
 #include "source/data/nodes/buildin_nodes.h"
 
 VNSpace::VNSpace()
+    : newlink(0), nodelib(0), nodeedit(0), editNameMode(false), linkNodeMode(false)
 {
-    newlink = 0;
-    nodelib = 0;
-    nodeedit = 0;
-    editNameMode = false;
     qreal space_width, space_height;
-    if (itemsBoundingRect().width() < 10000)
-        space_width = 10000;
+    if (itemsBoundingRect().width() < 1000)
+        space_width = 1000;
     else
         space_width = itemsBoundingRect().width();
-    if (itemsBoundingRect().height() < 10000)
-        space_height = 10000;
+    if (itemsBoundingRect().height() < 1000)
+        space_height = 1000;
     else
         space_height = itemsBoundingRect().height();
     QRectF space_rect = QRectF(0-(space_width/2), 0-(space_height/2), space_width, space_height);
@@ -58,11 +56,7 @@ void VNSpace::removeNode()
     {
         VNode *node = (VNode*)item;
         if (node && node->type() == VNode::Type)
-        {
-            node->data->clearSocketLinks();
-            removeItem(item);
-            delete node->data;
-        }
+            FRG::SpaceDataInFocus->removeNode(node->data);
     }
     update();
 };
@@ -72,70 +66,50 @@ void VNSpace::removeSelectedNodes()
     removeNode();
 }
 
-void VNSpace::addLink(NodeLink *nlink, VNSocket *final)
+void VNSpace::addLink(VNSocket *final)
 {
-    nlink->setlink(linksocket->data, final->data);
-    cachedLinks.insert(nlink->inSocket, nlink);
-    if(!items().contains(nlink)) addItem(nlink);
-    connect(nlink, SIGNAL(removeLink(NodeLink*)), this, SLOT(removeLink(NodeLink*)));
+    DSocket::createLink(linksocket->data, final->data);
+    leaveLinkNodeMode();
+    updateLinks();
 };
 
-void VNSpace::addLink(NodeLink *nlink)
+void VNSpace::removeLink(VNodeLink *link)
 {
-    addItem(nlink);
-    cachedLinks.insert(nlink->inSocket, nlink);
-    connect(nlink, SIGNAL(removeLink(NodeLink*)), this, SLOT(removeLink(NodeLink*)));
-}
-
-void VNSpace::removeLink(NodeLink *link)
-{
-    cachedLinks.remove(link->inSocket);
     removeItem(link);
-    disconnect(link, SIGNAL(removeLink(NodeLink*)), this, SLOT(removeLink(NodeLink*)));
     delete link;
-    update();
+    updateLinks();
 }
 
 void VNSpace::updateLinks()
 {
-    foreach(DNSocket *socket, cachedLinks.keys())
+    FRG::SpaceDataInFocus->cacheLinks();
+    foreach(VNodeLink *vnlink, FRG::SpaceDataInFocus->getCachedLinksVis())
     {
-        if(!spaceData->getNodes().contains(socket->node)
-                ||socket->cntdSockets.isEmpty())
-        {
-            removeItem(cachedLinks.value(socket));
-            delete cachedLinks.value(socket);
-        }
-        cachedLinks.value(socket)->updateLink();
+        vnlink->updateLink(); 
+        if(!items().contains(vnlink)) addItem(vnlink);
     }
-};
+}
 
-void VNSpace::enterlinkNodeMode(VNSocket *socket)
+void VNSpace::enterLinkNodeMode(VNSocket *socket)
 {
 	linkNodeMode = true;
     QPointF endpos;
     linksocket = socket;
-    endpos = socket->parentItem()->pos() + socket->pos() + QPointF(-15, 22);
-    newlink = new NodeLink(endpos, endpos);
+    endpos = socket->parentItem()->pos() + socket->pos();
+    newlink = new VNodeLink(endpos, endpos);
     addItem(newlink);
 };
 
-void VNSpace::leavelinkNodeMode(QPointF finalpos)
+void VNSpace::leaveLinkNodeMode()
 {
-	if(linkNodeMode)
-    {
-		linkNodeMode = false;
-        VNSocket *finalSocket;
-        finalSocket = 0;
-        finalSocket = dynamic_cast<VNSocket*>(itemAt(finalpos));
-        if (NodeLink::isCompatible(linksocket, finalSocket))
-            addLink(newlink, finalSocket);
-        else
-            removeItem(newlink);
+	if(!linkNodeMode)
+        return;
 
+    linkNodeMode = false;
+    VNSocket *finalSocket;
+    removeItem(newlink);
     linksocket = 0;
     newlink = 0;
-    }
 };
 
 bool VNSpace::isLinkNodeMode()
@@ -146,12 +120,20 @@ bool VNSpace::isLinkNodeMode()
 void VNSpace::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     mousePos = event->scenePos();
-    if (newlink != 0)
+    if (isLinkNodeMode())
     {
         QPointF lpos;
+
+        //snap to compatible socket
         QGraphicsItem *item = itemAt(event->scenePos());
-        if(item && item->type() == VNSocket::Type && NodeLink::isCompatible(linksocket, (VNSocket*)item))
-            lpos = item->pos() + item->parentItem()->pos() + QPointF(-15, 22);
+        if(item && item->type() == VNSocket::Type)
+        {
+            VNSocket *vsocket = (VNSocket*)item;
+            if(DSocket::isCompatible(linksocket->data, vsocket->data))
+                lpos = item->pos() + item->parentItem()->pos();
+            else
+                lpos = event->scenePos();
+        }
         else
             lpos = event->scenePos();
         newlink->setlink(lpos);
@@ -164,10 +146,11 @@ void VNSpace::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void VNSpace::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    if(!itemAt(event->scenePos())
-        || itemAt(event->scenePos())->type() != VNSocket::Type)
-            leavelinkNodeMode(event->scenePos());
     QGraphicsScene::mousePressEvent(event);
+    QGraphicsItem *item = itemAt(event->scenePos());
+    if(!item || item->type() != VNSocket::Type)
+        leaveLinkNodeMode();
+    updateLinks();
     update();
 };
 
@@ -184,11 +167,19 @@ void VNSpace::keyPressEvent(QKeyEvent *event)
             removeNode();
             break;
         case Qt::Key_C:
-            if(selectedItems().size()>0)DNode::buildContainerNode(getSelectedItemsCenter());
+            if(selectedItems().size()>0)containerNode();
             break;
         }
     }
     QGraphicsScene::keyPressEvent(event);
+}
+
+void VNSpace::containerNode()    
+{
+    QPointF pos = getSelectedItemsCenter();
+    DNode *node = DNode::buildContainerNode();
+    addItem(node->createNodeVis());
+    FRG::CurrentProject->setNodePosition(node, pos);
 }
 
 void VNSpace::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -206,6 +197,7 @@ void VNSpace::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 
 void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
 {
+    DNode *dnode = 0;
     if(itemAt(event->scenePos()))
     {
         QGraphicsScene::dropEvent(event);
@@ -218,110 +210,109 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
     if (QFileInfo(node->text(1)).isFile())
     {
         QFileInfo file(node->text(1));
-        DNode *newnode;
-        newnode = DNode::dropNode(node->text(1));
-
-        showNode(newnode);
-        newnode->nodeVis->setPos(event->scenePos());
+        dnode = DNode::dropNode(node->text(1));
     }
     else
     {
         if(node->parent()->parent()
             &&node->parent()->parent()->text(0) == "Build In")
         {
-            mousePos = event->scenePos();
             switch(node->text(1).toInt())
             {
             case 1:
-                BuildIn::surfaceInput(spaceData);
+                dnode = BuildIn::surfaceInput(FRG::SpaceDataInFocus);
                 break;
             case 2:
-                BuildIn::displacementInput(spaceData);
+                dnode = BuildIn::displacementInput(FRG::SpaceDataInFocus);
                 break;
             case 3:
-                BuildIn::volumeInput(spaceData);
+                dnode = BuildIn::volumeInput(FRG::SpaceDataInFocus);
                 break;
             case 4:
-                BuildIn::lightInput(spaceData);
+                dnode = BuildIn::lightInput(FRG::SpaceDataInFocus);
                 break;
             case 5:
-                BuildIn::surfaceOutput(spaceData);
+                dnode = BuildIn::surfaceOutput(FRG::SpaceDataInFocus);
                 break;
             case 6:
-                BuildIn::displacementOutput(spaceData);
+                dnode = BuildIn::displacementOutput(FRG::SpaceDataInFocus);
                 break;
             case 7:
-                BuildIn::volumeOutput(spaceData);
+                dnode = BuildIn::volumeOutput(FRG::SpaceDataInFocus);
                 break;
             case 8:
-                BuildIn::lightOutput(spaceData);
+                dnode = BuildIn::lightOutput(FRG::SpaceDataInFocus);
                 break;
             case 9:
-                BuildIn::MaddNode(spaceData);
+                dnode = BuildIn::MaddNode(FRG::SpaceDataInFocus);
                 break;
             case 10:
-                BuildIn::MSubNode(spaceData);
+                dnode = BuildIn::MSubNode(FRG::SpaceDataInFocus);
                 break;
             case 11:
-                BuildIn::MmultNode(spaceData);
+                dnode = BuildIn::MmultNode(FRG::SpaceDataInFocus);
                 break;
             case 12:
-                BuildIn::MdivNode(spaceData);
+                dnode = BuildIn::MdivNode(FRG::SpaceDataInFocus);
                 break;
             case 13:
-                BuildIn::MdotNode(spaceData);
+                dnode = BuildIn::MdotNode(FRG::SpaceDataInFocus);
                 break;
             case 14:
-                BuildIn::ContIfNode(spaceData);
+                dnode = BuildIn::ContIfNode(FRG::SpaceDataInFocus);
                 break;
             case 15:
-                BuildIn::CgreaterNode(spaceData);
+                dnode = BuildIn::CgreaterNode(FRG::SpaceDataInFocus);
                 break;
             case 16:
-                BuildIn::CsmallerNode(spaceData);
+                dnode = BuildIn::CsmallerNode(FRG::SpaceDataInFocus);
                 break;
             case 17:
-                BuildIn::CeqNode(spaceData);
+                dnode = BuildIn::CeqNode(FRG::SpaceDataInFocus);
                 break;
             case 18:
-                BuildIn::CnotNode(spaceData);
+                dnode = BuildIn::CnotNode(FRG::SpaceDataInFocus);
                 break;
             case 19:
-                BuildIn::CandNode(spaceData);
+                dnode = BuildIn::CandNode(FRG::SpaceDataInFocus);
                 break;
             case 20:
-                BuildIn::CorNode(spaceData);
+                dnode = BuildIn::CorNode(FRG::SpaceDataInFocus);
                 break;
             case 21:
-                BuildIn::VColNode(spaceData);
+                dnode = BuildIn::VColNode(FRG::SpaceDataInFocus);
                 break;
             case 22:
-                BuildIn::VStrNode(spaceData);
+                dnode = BuildIn::VStrNode(FRG::SpaceDataInFocus);
                 break;
             case 23:
-                BuildIn::VFlNode(spaceData);
+                dnode = BuildIn::VFlNode(FRG::SpaceDataInFocus);
                 break;
             case 24:
-                BuildIn::ContForNode(spaceData);
+                dnode = BuildIn::ContForNode(FRG::SpaceDataInFocus);
                 break;
             case 25:
-                BuildIn::ContWhileNode(spaceData);
+                dnode = BuildIn::ContWhileNode(FRG::SpaceDataInFocus);
                 break;
             case 26:
-                BuildIn::CLilluminate(spaceData);
+                dnode = BuildIn::CLilluminate(FRG::SpaceDataInFocus);
                 break;
             case 27:
-                BuildIn::CLilluminance(spaceData);
+                dnode = BuildIn::CLilluminance(FRG::SpaceDataInFocus);
                 break;
             case 28:
-                BuildIn::CLsolar(spaceData);
+                dnode = BuildIn::CLsolar(FRG::SpaceDataInFocus);
                 break;
             case 29:
-                BuildIn::CLgather(spaceData);
+                dnode = BuildIn::CLgather(FRG::SpaceDataInFocus);
                 break;
             }
         }
-
+    }
+    if(dnode)
+    {
+        addItem(dnode->createNodeVis());
+        FRG::CurrentProject->setNodePosition(dnode, event->scenePos());
     }
 }
 
@@ -367,6 +358,11 @@ void VNSpace::leaveEditNameMode()
     editNameMode = false;
 }
 
+bool VNSpace::isEditNameMode()    
+{
+    return editNameMode;
+}
+
 void VNSpace::destroyContainer(QGraphicsItem *container)
 {
     QGraphicsProxyWidget *contwidget = (QGraphicsProxyWidget *)container->childItems().first();
@@ -387,11 +383,12 @@ void VNSpace::destroyContainer(QGraphicsItem *container)
 
 void VNSpace::moveIntoSpace(DNSpace *space)
 {
+    if(space == FRG::SpaceDataInFocus)
+        return;
     //delete old visualization
     deleteSpaceVis();
 
-    spaceData = space;
-	FRG::project->setCurrentSpace(space);
+    FRG::SpaceDataInFocus = space;
 
     //create new visual nodes
     createSpaceVis();
@@ -400,48 +397,30 @@ void VNSpace::moveIntoSpace(DNSpace *space)
 void VNSpace::createSpaceVis()
 {
     //create nodeVis for new nodes
-    foreach(DNode* node, spaceData->getNodes())
+    foreach(DNode* node, FRG::SpaceDataInFocus->getNodes())
     {
-        if(!node->nodeVis)
-            node->createNodeVis();
-        addItem(node->nodeVis);
+        addItem(node->createNodeVis());
+		node->getNodeVis()->setPos(FRG::CurrentProject->getNodePosition(node));
     }
-
-    //cache links of visual nodes
-    cacheLinks();
-}
-
-void VNSpace::cacheLinks()
-{
-    foreach(DNode *node, spaceData->getNodes())
-    {
-        foreach(DNSocket *socket, *node->N_inSockets)
-        {
-            if(!cachedLinks.contains(socket))
-            {
-                NodeLink *nlink = new NodeLink;
-                nlink->setlink(socket, socket->cntdSockets.first());
-                addLink(nlink);
-            }
-        }
-    }
+    updateLinks();
 }
 
 void VNSpace::deleteSpaceVis()
 {
+    if(!FRG::SpaceDataInFocus)
+        return;
     //delete all Links
-    foreach(NodeLink *link, cachedLinks.values())
-    {
-        removeItem(link);
-        delete link;
-    }
+    FRG::SpaceDataInFocus->clearLinksCache();
+
+    //cache positions
+    FRG::SpaceDataInFocus->cacheNodePositions();
 
     //delete all visual nodes
-    foreach(DNode *node, spaceData->getNodes())
-    {
-        removeItem(node->nodeVis);
-        delete node->nodeVis;
-    }
+	if(!FRG::SpaceDataInFocus->getNodes().isEmpty())
+	{
+		foreach(DNode *node, FRG::SpaceDataInFocus->getNodes())
+            node->deleteNodeVis();
+	}
 }
 
 void VNSpace::createNode()
@@ -472,13 +451,25 @@ QPointF VNSpace::getSelectedItemsCenter()
     return QPointF(cx, cy);
 }
 
-void VNSpace::showNode(DNode *node)
-{
-    if(!node->nodeVis)node->createNodeVis();
-    addItem(node->nodeVis);
-}
 QPointF VNSpace::getMousePos()
 {
 		return mousePos;
+}
+
+QList<DNode*> VNSpace::selectedNodes()
+{
+	QList<DNode*>selNodes;
+	foreach(QGraphicsItem *item, selectedItems())
+    if (item->type() == VNode::Type)
+    {
+        VNode *vnode = (VNode*)item;
+        selNodes.append(vnode->data);
+    }
+	return selNodes;
+}
+
+bool VNSpace::isSelected(VNode *node)    
+{
+    return selectedNodes().contains(node->data);
 }
 

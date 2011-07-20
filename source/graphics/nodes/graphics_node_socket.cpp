@@ -22,6 +22,8 @@
 #include "QInputDialog"
 #include "QPainter"
 #include "QGraphicsSceneMouseEvent"
+#include "QGraphicsTextItem"
+#include "QTextDocument"
 
 #include "source/data/nodes/data_node_socket.h"
 #include "source/data/base/frg.h"
@@ -30,20 +32,54 @@
 #include "source/graphics/base/vnspace.h"
 #include "source/data/base/project.h"
 
-VNSocket::VNSocket(DNSocket *data)
+VNSocket::VNSocket(DSocket *data, VNode *parent)
+	: data(data), width(SOCKET_WIDTH), height(SOCKET_HEIGHT), socketNameVis(0)
 {
-    this->data = data;
+	//setCacheMode(ItemCoordinateCache);
     setAcceptDrops(true);
     setAcceptHoverEvents(true);
     setZValue(zValue()+0.1);
     setFlag(ItemIsSelectable, false);
 //    setGraphicsEffect(new QGraphicsDropShadowEffect);
     createContextMenu();
+	createNameVis();
+    setParentItem(parent);
 }
 
 VNSocket::~VNSocket()
 {
-    disconnect();
+    data->setSocketVis(0);
+}
+
+
+void VNSocket::createNameVis()
+{
+	//create Name
+	socketNameVis = new QGraphicsTextItem(data->getName());
+	socketNameVis->setParentItem(this);
+	socketNameVis->setZValue(zValue()+.2);
+	socketNameVis->setY(-height/2);
+	if(data->getDir() == OUT)
+    {
+        socketNameVis->setX(-width/2);
+		socketNameVis->setX(socketNameVis->x()-getSocketNameVisWidth());
+    }
+	else
+		socketNameVis->setX(width/2);
+}
+
+void VNSocket::killNameVis()    
+{
+    socketNameVis->setParentItem(0);
+    FRG::Space->removeItem(socketNameVis);
+    delete socketNameVis;
+}
+
+int VNSocket::getSocketNameVisWidth()
+{
+    if(!socketNameVis)
+        return 0;
+	return socketNameVis->document()->size().width();
 }
 
 void VNSocket::createContextMenu()
@@ -62,9 +98,9 @@ void VNSocket::changeName()
     QString newname;
     newname = QInputDialog::getText(0, "Change Socket Name", "New Name", QLineEdit::Normal, "", &ok);
     if(ok)
-    {
-        data->name = newname;
-        data->node->setSocketVarName(data);
+	{
+        data->setName(newname);
+        data->getNode()->setSocketVarName((DoutSocket*)data);
     }
 }
 
@@ -92,18 +128,38 @@ void VNSocket::changeType()
         newtype = VARIABLE;
 
     if(ok)
-        data->type = newtype;
+        data->setType(newtype);
+}
+
+int VNSocket::getWidth()
+{
+	return width;
+}
+
+void VNSocket::setWidth(int newwidth)
+{
+	width = newwidth;
+}
+
+int VNSocket::getHeight()
+{
+	return height;
+}
+
+void VNSocket::setHeight(int newHeight)
+{
+	height = newHeight;
 }
 
 QRectF VNSocket::boundingRect() const
 {
-    return QRectF(-15, 15, -15, 15);
+    return QRectF(-width/2, -height/2, width, height); 
 };
 
 void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
     QColor color;
-    switch(data->type)
+    switch(data->getType())
     {
     case STRING:
         if (isUnderMouse())
@@ -155,7 +211,7 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     };
     painter->setBrush(QBrush(color, Qt::SolidPattern));
     painter->setPen(Qt::NoPen);
-    painter->drawRoundedRect(-15, 15, -15, 15, 2.5, 2.5);
+    painter->drawRoundedRect(-width/2, -height/2, width, height, 2.5, 2.5);
 };
 
 void VNSocket::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
@@ -173,14 +229,10 @@ void VNSocket::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if(event->button() != Qt::LeftButton)
         return;
 
-	if(FRG::space->isLinkNodeMode())
-    {
-        FRG::space->enterlinkNodeMode(this);
-    }
+	if(!FRG::Space->isLinkNodeMode())
+        FRG::Space->enterLinkNodeMode(this);
     else
-    {
-        FRG::space->leavelinkNodeMode(event->scenePos());
-    }
+        FRG::Space->addLink(this);
 }
 
 void VNSocket::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)

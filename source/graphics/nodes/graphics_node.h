@@ -27,6 +27,7 @@
 #include "QGraphicsView"
 #include "QGraphicsItem"
 #include "QObject"
+#include "QAction"
 
 #include "source/data/nodes/data_node.h"
 #include "source/graphics/nodes/graphics_node_socket.h"
@@ -41,10 +42,11 @@ protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
 };
 
-class VNode : public QGraphicsItem
+class VNode : public QGraphicsObject
 {
 public:
     VNode(DNode *data);
+    virtual ~VNode();
     DNode *data;
     enum {Type = UserType + 2};
     QRectF boundingRect() const;
@@ -52,20 +54,30 @@ public:
     int type() const {return Type;}
     NodeName *node_name;
     void drawName();
+	void recalcNodeVis();
+	void cacheSocketSize();
+	int getNodeWidth();
+	void setNodeWidth(int w);
+	void setNodeHeight(int h);
+	int getNodeHeight();
 
 protected:
-    virtual void init();
-    virtual int NodeWidth() const;
-    virtual int NodeHeight(int numSockets) const;
+    void NodeWidth();
+    void NodeHeight(int numSockets);
+
+private:
+	unsigned short socket_size;
+	unsigned short node_width, node_height;
 };
 
 class ContainerNode;
 
-class VContainerNode : public QObject, public VNode
+class VContainerNode : public VNode
 {
     Q_OBJECT
 public:
     VContainerNode(DNode*);
+    ~VContainerNode();
 
 public slots:
     void addToLib();
@@ -92,20 +104,21 @@ signals:
     void clicked(QColor);
 };
 
-class VValueNode : public QObject, public VNode
+class VValueNode : public VNode
 {
     Q_OBJECT
 public:
     VValueNode(DNode *);
+    ~VValueNode();
     void setValueEditor(QWidget *editor);
 
 public slots:
-    void setShaderInput(bool isInput);
+    void setShaderInput(bool tgl);
 
 protected:
     QGraphicsProxyWidget *proxy;
-    virtual int NodeWidth() const;
-    virtual int NodeHeight(int numSockets) const;
+    void NodeWidth();
+    void NodeHeight(int numSockets);
     QWidget *widget;
     QWidget *base_widget;
     QCheckBox *shader_parameter;
@@ -113,64 +126,51 @@ protected:
     QMenu *contextMenu;
     void createContextMenu();
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
-    virtual void init();
 };
 
 class VColorValueNode : public VValueNode
 {
-    Q_OBJECT
+Q_OBJECT
 public:
     VColorValueNode(DNode *);
 
 public slots:
     void setValue(QColor);
-
-protected:
-    virtual void init();
 };
 
 class VStringValueNode : public VValueNode
 {
-    Q_OBJECT
+Q_OBJECT
 public:
     VStringValueNode(DNode *data);
 
 public slots:
     void setValue(QString);
-
-protected:
-    virtual void init();
 };
 
 class VFloatValueNode : public VValueNode
 {
-    Q_OBJECT
+Q_OBJECT
 public:
     VFloatValueNode(DNode *data);
 
 public slots:
     void setValue(double);
-
-protected:
-    virtual void init();
 };
 
 class VVectorValueNode : public VValueNode
 {
-    Q_OBJECT
+Q_OBJECT
 public:
     VVectorValueNode(DNode *data);
 
 public slots:
     void setValue();
-
-protected:
-    virtual void init();
 };
 
-class VOutputNode : public QObject, public VNode
+class VOutputNode : public VNode
 {
-    Q_OBJECT
+Q_OBJECT
 public:
     VOutputNode(DNode *data);
 
@@ -180,7 +180,6 @@ public slots:
 
 protected:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
-    void init();
 
 private:
     void createMenu();

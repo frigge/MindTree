@@ -21,6 +21,21 @@
 
 #include "QHash"
 
+class  DSocket;
+
+class LoadSocketIDMapper
+{
+public:
+    static unsigned short getID(DSocket *socket);
+    static void setID(DSocket *socket, unsigned short ID);
+    static DSocket * getSocket(unsigned short ID);
+    static QList<DSocket*> getAllSockets();
+    static void clear();
+
+private:
+    static QHash<unsigned short, DSocket*>loadIDMapper;
+};
+
 class VNSocket;
 
 typedef enum
@@ -41,37 +56,98 @@ typedef enum
     OUT
 } socket_dir;
 
-class  DNode;
+class DNode;
+class VNode;
+class DinSocket;
+class DoutSocket;
 
-class DNSocket
+class DSocket
 {
 public:
-    DNSocket(QString, socket_type);
+	DSocket(QString, socket_type);
+    ~DSocket();
+
+    void setSocketVis(VNSocket *vis);
+	void  setNode(DNode*);
+    void killSocketVis();
+	void createSocketVis(VNode *parent);
+    bool operator==(DSocket &socket);
+    bool operator!=(DSocket &socket);
+	QString getName();
+	void setName(QString value);
+	socket_type getType();
+	void setType(socket_type value);
+	socket_dir getDir();
+	void setDir(socket_dir value);
+	DNode* getNode();
+	bool getVariable();
+	void setVariable(bool value);
+	VNSocket* getSocketVis();
+	unsigned short getID();
+	void setVarName(QString value);
+	QString getVarName();
+
+    static unsigned short count;
+    static QHash<QString, int>SocketNameCnt;
+    static void createLink(DSocket *socket1, DSocket *socket2);
+    static bool isCompatible(DSocket *s1, DSocket *s2);
+
+private:
     QString name;
+	QString varname;
     socket_type type;
     socket_dir dir;
     DNode *node;
-    QList<DNSocket*> cntdSockets;
-    bool isToken;
-    QString varname;
-    bool isVariable;
-    static int count;
+    bool Variable;
     VNSocket *socketVis;
-    int ID;
-
-    void setNode(DNode*);
-    void addLink(DNSocket*);
-    void clearLinks();
-    void removeLink(DNSocket*);
-
-    static QHash<int, DNSocket*>loadIDMapper;
-    static QHash<QString, int>SocketNameCnt;
-    static void createLink(DNSocket *in, DNSocket *out);
-    bool operator==(DNSocket &socket);
-    bool operator!=(DNSocket &socket);
+    unsigned short ID;
 };
 
-QDataStream & operator<<(QDataStream &stream, DNSocket *socket);
-QDataStream & operator>>(QDataStream &stream, DNSocket **socket);
+class QDataStream;
+
+QDataStream& operator<<(QDataStream &stream, DSocket *socket);
+QDataStream& operator>>(QDataStream &stream, DSocket **socket);
+
+class DoutSocket;
+
+class DinSocket : public DSocket
+{
+public:
+    DinSocket(QString, socket_type);
+
+    void setNode(DNode*);
+    void addLink(DoutSocket*);
+    void clearLink();
+
+    static void createLink(DinSocket *in, DinSocket *out);
+	DoutSocket* getCntdSocket();
+	void setCntdSocket(DoutSocket *socket);
+	bool getToken();
+	void setToken(bool value);
+    bool operator==(DinSocket &socket);
+    bool operator!=(DinSocket &socket);
+	void setTempCntdID(unsigned short value);
+	unsigned short getTempCntdID();
+
+private:
+	unsigned short tempCntdID;
+    DoutSocket* cntdSocket;
+    bool Token;
+};
+
+QDataStream& operator<<(QDataStream &stream, DinSocket *socket);
+QDataStream& operator>>(QDataStream &stream, DinSocket **socket);
+
+class DoutSocket: public DSocket
+{
+public:
+	DoutSocket(QString, socket_type);
+    ~DoutSocket();
+    bool operator==(DoutSocket &socket);
+    bool operator!=(DoutSocket &socket);
+};
+
+typedef QList<DinSocket*> DinSocketList;
+typedef QList<DoutSocket*> DoutSocketList;
 
 #endif // DATA_NODE_SOCKET_H
