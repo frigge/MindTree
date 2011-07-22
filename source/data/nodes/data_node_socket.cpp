@@ -29,6 +29,7 @@
 QHash<unsigned short, DSocket*>LoadSocketIDMapper::loadIDMapper;
 QHash<QString, int> DSocket::SocketNameCnt;
 unsigned short DSocket::count = 0;
+QHash<DSocket*, DSocket*> CopySocketMapper::socketMap;
 
 unsigned short LoadSocketIDMapper::getID(DSocket *socket)    
 {
@@ -56,13 +57,31 @@ void LoadSocketIDMapper::clear()
     loadIDMapper.clear();
 }
 
-DSocket::DSocket(QString name, socket_type type)
-	: name(name), type(type)
+void CopySocketMapper::setSocketPair(DSocket *original, DSocket *copy)    
 {
-    count++;
-    ID = count;
-    Variable = false;
-	socketVis = 0;
+   socketMap.insert(original, copy); 
+}
+
+DSocket * CopySocketMapper::getCopy(DSocket *original)    
+{
+    return socketMap.value(original);
+}
+
+void CopySocketMapper::clear()    
+{
+    socketMap.clear();
+}
+
+DSocket::DSocket(QString name, socket_type type)
+	: name(name), type(type), ID(++count), Variable(false), socketVis(0)
+{
+}
+
+DSocket::DSocket(DSocket* socket)
+    : name(socket->getName()), type(socket->getType()), ID(++count),
+    Variable(socket->getVariable()), socketVis(0)
+{
+    CopySocketMapper::setSocketPair(socket, this);
 }
 
 DSocket::~DSocket()
@@ -120,6 +139,14 @@ DinSocket::DinSocket(QString name, socket_type type)
 {
 	setDir(IN);
 };
+
+DinSocket::DinSocket(DinSocket* socket)
+    : DSocket(socket),
+    cntdSocket(socket->getCntdSocket()),
+    tempCntdID(0), Token(socket->getToken())
+{
+    setDir(IN);
+}
 
 void DinSocket::addLink(DoutSocket *socket)
 {
@@ -283,10 +310,17 @@ DoutSocket::DoutSocket(QString name, socket_type type)
 	setDir(OUT);
 }
 
+DoutSocket::DoutSocket(DoutSocket* socket)
+    : DSocket(socket)
+{
+    setDir(OUT);
+}
+
 DoutSocket::~DoutSocket()
 {
-    foreach(DinSocket *socket, getNode()->getSpace()->getConnected(this))
-        socket->clearLink();
+    if(getNode()->getSpace())
+        foreach(DinSocket *socket, getNode()->getSpace()->getConnected(this))
+            socket->clearLink();
 }
 
 
@@ -312,6 +346,10 @@ void DinSocket::setToken(bool value)
 
 QString DSocket::getVarName()
 {
+    if(varname == ""
+        && getDir() == IN
+        && !getVariable())
+        return name;
 	return varname;
 }
 

@@ -15,6 +15,7 @@ Project::Project(QString filename)
         QFile file(filename);
         file.open(QIODevice::ReadOnly);
         QDataStream stream(&file);
+        space = new DNSpace();
         stream>>&space;
         file.close();
         LoadNodeIDMapper::clear();

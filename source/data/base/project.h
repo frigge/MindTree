@@ -6,10 +6,11 @@
 #include "source/data/nodes/data_node.h"
 #include "source/graphics/nodelink.h"
 #include "source/data/base/dnspace.h"
+#include "source/data/undo/frg_generic_undo.h"
 
 class DNode;
 
-class Project
+class Project : public FRGUndoBase
 {
 public:
 	Project(QString filename="");

@@ -36,6 +36,17 @@ private:
     static QHash<unsigned short, DSocket*>loadIDMapper;
 };
 
+class CopySocketMapper
+{
+public:
+    static void setSocketPair(DSocket *original, DSocket *copy);
+    static DSocket * getCopy(DSocket *original);
+    void clear();
+
+private:
+    static QHash<DSocket*, DSocket*> socketMap;
+};
+
 class VNSocket;
 
 typedef enum
@@ -65,6 +76,7 @@ class DSocket
 {
 public:
 	DSocket(QString, socket_type);
+    DSocket(DSocket* socket);
     ~DSocket();
 
     void setSocketVis(VNSocket *vis);
@@ -114,6 +126,7 @@ class DinSocket : public DSocket
 {
 public:
     DinSocket(QString, socket_type);
+    DinSocket(DinSocket* socket);
 
     void setNode(DNode*);
     void addLink(DoutSocket*);
@@ -142,6 +155,7 @@ class DoutSocket: public DSocket
 {
 public:
 	DoutSocket(QString, socket_type);
+    DoutSocket(DoutSocket* socket);
     ~DoutSocket();
     bool operator==(DoutSocket &socket);
     bool operator!=(DoutSocket &socket);

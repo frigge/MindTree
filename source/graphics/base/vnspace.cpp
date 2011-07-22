@@ -26,6 +26,35 @@
 #include "source/data/base/project.h"
 #include "source/data/nodes/buildin_nodes.h"
 
+UndoRemoveNode::UndoRemoveNode(QList<DNode*>nodes, DNSpace *space)
+    : space(space)
+{
+    foreach(DNode *node, nodes)
+    {
+        FRG::CurrentProject->setNodePosition(node, node->getNodeVis()->pos());
+        this->nodes.append(DNode::copy(node));
+    }
+}
+
+void UndoRemoveNode::undo()
+{
+    foreach(DNode *node, nodes)
+    {
+        DNode *restoreNode = DNode::copy(node);
+        redoNodes.append(restoreNode);
+        space->addNode(restoreNode);
+        if(FRG::SpaceDataInFocus == space)
+            FRG::Space->addItem(restoreNode->createNodeVis());
+    }
+}
+
+void UndoRemoveNode::redo()    
+{
+    foreach(DNode *node, redoNodes)
+        space->removeNode(node);
+    redoNodes.clear();
+}
+
 VNSpace::VNSpace()
     : newlink(0), nodelib(0), nodeedit(0), editNameMode(false), linkNodeMode(false)
 {
@@ -52,18 +81,43 @@ void VNSpace::ContextAddMenu()
 
 void VNSpace::removeNode()
 {
-    foreach(QGraphicsItem *item, selectedItems())
-    {
-        VNode *node = (VNode*)item;
-        if (node && node->type() == VNode::Type)
-            FRG::SpaceDataInFocus->removeNode(node->data);
-    }
+    FRG::CurrentProject->registerUndoRedoObject(new UndoRemoveNode(selectedNodes(), FRG::SpaceDataInFocus));
+    foreach(DNode *node, selectedNodes())
+        FRG::SpaceDataInFocus->removeNode(node);
     update();
 };
 
-void VNSpace::removeSelectedNodes()
+void VNSpace::copy()
 {
+    while(!clipboard.isEmpty())
+        delete clipboard.takeLast();
+
+    foreach(QGraphicsItem *item, selectedItems())
+    {
+        if(item->type() != VNode::Type)continue;
+        VNode *node = static_cast<VNode*>(item);
+        DNode *copy = DNode::copy(node->data);
+        FRG::CurrentProject->setNodePosition(copy, node->pos() - getSelectedItemsCenter());
+        clipboard.append(copy);
+    }
+}
+
+void VNSpace::cut()    
+{
+    copy();
     removeNode();
+}
+
+void VNSpace::paste()
+{
+    foreach(DNode *node, clipboard)
+    {
+        DNode *newNode = DNode::copy(node);
+        FRG::SpaceDataInFocus->addNode(newNode);
+        QPointF oldPosition = FRG::CurrentProject->getNodePosition(newNode);
+        FRG::CurrentProject->setNodePosition(newNode, oldPosition + FRG::Space->getMousePos());
+        addItem(newNode->createNodeVis());
+    }
 }
 
 void VNSpace::addLink(VNSocket *final)
@@ -153,26 +207,6 @@ void VNSpace::mousePressEvent(QGraphicsSceneMouseEvent *event)
     updateLinks();
     update();
 };
-
-void VNSpace::keyPressEvent(QKeyEvent *event)
-{
-    if(!editNameMode)
-    {
-        switch(event->key())
-        {
-        case Qt::Key_Space:
-            shownodelib();
-            break;
-        case Qt::Key_X:
-            removeNode();
-            break;
-        case Qt::Key_C:
-            if(selectedItems().size()>0)containerNode();
-            break;
-        }
-    }
-    QGraphicsScene::keyPressEvent(event);
-}
 
 void VNSpace::containerNode()    
 {

@@ -23,8 +23,18 @@
 #include "source/data/base/frg.h"
 
 DNSpace::DNSpace()
+    : spaceVis(0)
 {
     FRG::CurrentProject->registerSpace(this);
+}
+
+DNSpace::DNSpace(DNSpace* space)
+{
+    foreach(DNode *node, space->getNodes())
+        addNode(DNode::copy(node));
+    foreach(DNode *node, getNodes())
+        foreach(DinSocket *socket, node->getInSockets())
+            socket->setCntdSocket(static_cast<DoutSocket*>(CopySocketMapper::getCopy(socket->getCntdSocket())));
 }
 
 DNSpace::~DNSpace()
@@ -47,8 +57,7 @@ QDataStream & operator<<(QDataStream &stream, DNSpace *space)
 
 QDataStream & operator>>(QDataStream &stream, DNSpace **space)
 {
-    DNSpace *newspace = new DNSpace;
-    *space = newspace;
+    DNSpace *newspace = *space;
     qint16 nodecnt;
     QString name;
     stream>>name;
@@ -232,3 +241,22 @@ void DNSpace::setName(QString value)
 		name = value;
 }
 
+ContainerSpace::ContainerSpace()
+    : DNSpace()
+{
+}
+
+ContainerSpace::ContainerSpace(ContainerSpace* space)
+    : DNSpace(space)
+{
+}
+
+ContainerNode* ContainerSpace::getContainer()
+{
+    return node;
+}
+
+void ContainerSpace::setContainer(ContainerNode* value)
+{
+    node = value;
+}

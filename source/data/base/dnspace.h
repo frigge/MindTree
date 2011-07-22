@@ -30,6 +30,7 @@ class DNSpace
 {
 public:
     DNSpace();
+    DNSpace(DNSpace* space);
     ~DNSpace();
     void addNode(DNode *node);
     void removeNode(DNode *node);
@@ -66,4 +67,15 @@ private:
 QDataStream & operator<<(QDataStream &stream, DNSpace *space);
 QDataStream & operator>>(QDataStream &stream, DNSpace **space);
 
+class ContainerSpace : public DNSpace
+{
+public:
+    ContainerSpace();
+    ContainerSpace(ContainerSpace* space);
+    ContainerNode *getContainer();
+    void setContainer(ContainerNode *node);
+
+private:
+    ContainerNode *node;
+};
 #endif // DNSPACE_H

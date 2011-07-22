@@ -26,6 +26,20 @@
 #include "source/graphics/nodelib.h"
 #include "source/graphics/newnodeeditor.h"
 #include "source/data/base/dnspace.h"
+#include "source/data/undo/frg_generic_undo.h"
+
+class UndoRemoveNode : public FRGUndoRedoObjectBase
+{
+public:
+    UndoRemoveNode(QList <DNode*> nodes, DNSpace *space);
+    virtual void undo();
+    virtual void redo();
+
+private:
+    QList<DNode*> nodes;
+    QList<DNode*> redoNodes;
+    DNSpace *space;
+};
 
 class VNSpace : public QGraphicsScene
 {
@@ -48,18 +62,20 @@ public:
 	bool isLinkNodeMode();
 	QList<DNode*> selectedNodes();
     bool isSelected(VNode *node);
+    QPointF getSelectedItemsCenter();
 
 public slots:
     void shownodelib();
     void createNode();
     void removeNode();
-    void removeSelectedNodes();
+    void copy();
+    void paste();
+    void cut();
     void removeLink(VNodeLink *link);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void keyPressEvent(QKeyEvent *event);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     void dropEvent(QGraphicsSceneDragDropEvent *event);
     void dragMoveEvent(QGraphicsSceneDragDropEvent *event);
@@ -69,7 +85,6 @@ private:
     QMenu *NContextMenu;
     void ContextAddMenu();
     void updateLinks();
-    QPointF getSelectedItemsCenter();
     ////QHash<DinSocket*, VNodeLink*> cachedLinks;
     QPointF mousePos;
     NodeLib *nodelib;
@@ -78,6 +93,7 @@ private:
     VNodeLink *newlink;
     bool editNameMode;
 	bool linkNodeMode;
+    QList<DNode*> clipboard;
 };
 
 #endif // VNSPACE_H
