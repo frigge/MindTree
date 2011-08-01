@@ -98,6 +98,25 @@ private:
     QList<DNodeLink> oldLinks;
 };
 
+typedef struct ContainerCache
+{
+    ContainerCache(ContainerNode *contnode);
+    ContainerNode *contnode;
+    NodeList containerNodes;
+    QList<DNodeLink> oldLinks;
+} ContainerCache;
+
+class UndoUnpackContainer : public FRGUndoRedoObjectBase
+{
+public:
+    UndoUnpackContainer(QList<ContainerNode*>contnodes);
+    virtual void undo();
+    virtual void redo();
+
+private:
+    QList<ContainerCache> containers;
+};
+
 class VNSpace : public QGraphicsScene
 {
     Q_OBJECT

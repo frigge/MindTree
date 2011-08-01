@@ -145,12 +145,6 @@ void UndoMoveNode::redo()
 UndoBuildContainer::UndoBuildContainer(ContainerNode *contnode)
     : contnode(contnode)
 {
-}
-
-void UndoBuildContainer::undo()    
-{
-    containerNodes.clear();
-
     foreach(DNode *node, contnode->getContainerData()->getNodes())
         if(node != contnode->getInputs()
             &&node != contnode->getOutputs())
@@ -164,13 +158,17 @@ void UndoBuildContainer::undo()
                 
     foreach(DoutSocket *socket, contnode->getOutSockets())
         oldLinks.append(socket->getLinks());
+}
 
+void UndoBuildContainer::undo()    
+{
     DNode::unpackContainerNode(contnode);
     FRG::Space->updateLinks();
 }
 
 void UndoBuildContainer::redo()    
 {
+    FRG::Space->centerNodes(containerNodes);
     foreach(DNode* node, containerNodes)
     {
         FRG::SpaceDataInFocus->unregisterNode(node);
@@ -184,6 +182,60 @@ void UndoBuildContainer::redo()
     VNode *nodeVis = contnode->createNodeVis();
     FRG::Space->addItem(nodeVis);
     nodeVis->setPos(contnode->getPos());
+    FRG::Space->updateLinks();
+}
+
+ContainerCache::ContainerCache(ContainerNode *contnode)
+    : contnode(contnode)
+{
+    foreach(DNode *node, contnode->getContainerData()->getNodes())
+        if(node != contnode->getInputs()
+            &&node != contnode->getOutputs())
+            containerNodes.append(node);
+
+    foreach(DNode* node, containerNodes)
+        foreach(DinSocket *socket, node->getInSockets())
+            if(socket->getCntdSocket()
+                &&socket->getCntdSocket()->getNode() == contnode->getInputs())
+                oldLinks.append(DNodeLink(socket, socket->getCntdSocket()));
+                
+    foreach(DoutSocket *socket, contnode->getOutSockets())
+        oldLinks.append(socket->getLinks());
+}    
+
+UndoUnpackContainer::UndoUnpackContainer(QList<ContainerNode*> contnodes)
+{
+    foreach(ContainerNode *contnode, contnodes)
+        containers.append(ContainerCache(contnode));
+}
+
+void UndoUnpackContainer::undo()    
+{
+    foreach(ContainerCache cache, containers)
+    {
+        FRG::Space->centerNodes(cache.containerNodes);
+        foreach(DNode* node, cache.containerNodes)
+            {
+                FRG::SpaceDataInFocus->unregisterNode(node);
+                cache.contnode->getContainerData()->addNode(node);
+            }
+
+        foreach(DNodeLink dnlink, cache.oldLinks)
+            dnlink.in->addLink(dnlink.out);
+
+        FRG::SpaceDataInFocus->addNode(cache.contnode);
+        VNode *nodeVis = cache.contnode->createNodeVis();
+        FRG::Space->addItem(nodeVis);
+        nodeVis->setPos(cache.contnode->getPos());
+    }
+    FRG::Space->updateLinks();
+}
+
+void UndoUnpackContainer::redo()    
+{
+    foreach(ContainerCache cache, containers)
+        DNode::unpackContainerNode(cache.contnode);
+
     FRG::Space->updateLinks();
 }
 
@@ -633,9 +685,14 @@ void VNSpace::buildContainer()
 
 void VNSpace::unpackContainer()    
 {
+    QList<ContainerNode*>contnodes;
     foreach(DNode *node, selectedNodes())
-    {
+        if(node->isContainer())
+            contnodes.append(static_cast<ContainerNode*>(node));
+
+    FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoUnpackContainer(contnodes));
+    foreach(ContainerNode *node, contnodes)
         DNode::unpackContainerNode(node);
-    }
+
     updateLinks();
 }

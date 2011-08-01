@@ -160,7 +160,7 @@ void DinSocket::addLink(DoutSocket *socket)
 
     if(cntdSocket)
     {
-        cntdSocket = socket;
+        setCntdSocket(socket);
         return;
     }
 
@@ -327,7 +327,7 @@ DoutSocket::~DoutSocket()
 
 void DoutSocket::registerSocket(DSocket *socket)    
 {
-    if(cntdSockets.isEmpty()) getNode()->inc_var_socket();
+    if(cntdSockets.isEmpty() && getVariable()) getNode()->inc_var_socket();
     cntdSockets.append(static_cast<DinSocket*>(socket)); 
 }
 
@@ -342,7 +342,7 @@ QList<DNodeLink> DoutSocket::getLinks()
 void DoutSocket::unregisterSocket(DinSocket *socket)
 {
     cntdSockets.removeAll(socket); 
-    if(cntdSockets.isEmpty()) getNode()->dec_var_socket(this);
+    if(cntdSockets.isEmpty() && getVariable()) getNode()->dec_var_socket(this);
 }
 
 void DinSocket::setCntdSocket(DoutSocket *socket)
