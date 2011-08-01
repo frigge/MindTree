@@ -6,11 +6,10 @@
 #include "source/data/nodes/data_node.h"
 #include "source/graphics/nodelink.h"
 #include "source/data/base/dnspace.h"
-#include "source/data/undo/frg_generic_undo.h"
 
 class DNode;
 
-class Project : public FRGUndoBase
+class Project 
 {
 public:
 	Project(QString filename="");
@@ -19,8 +18,10 @@ public:
     void registerSpace(DNSpace *space);
     void unregisterSpace(DNSpace *space);
 
-    static QList<DNodeLink*> getContainerOutLinks();
-    static QList<DNodeLink*> getContainerInLinks();
+    static QList<DNodeLink*> getOutLinks(NodeList nodes);
+    static QList<DNodeLink*> getInLinks(NodeList nodes);
+    static QList<DNodeLink*> getOutLinks(DNode *node);
+    static QList<DNodeLink*> getInLinks(DNode *node);
 
     void save(); 
     void saveAs(); 

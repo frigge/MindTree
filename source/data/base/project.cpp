@@ -96,27 +96,43 @@ void Project::moveIntoRootSpace()
     FRG::Space->moveIntoSpace(root_scene);
 }
 
-QList<DNodeLink*> Project::getContainerInLinks()
+QList<DNodeLink*> Project::getInLinks(NodeList nodes)
 {
 	QList<DNodeLink*> ins;
     foreach(DNodeLink *dnlink, FRG::SpaceDataInFocus->getCachedLinks())
-        if(FRG::Space->isSelected(dnlink->in->getNode()->getNodeVis())
-            &&!FRG::Space->isSelected(dnlink->out->getNode()->getNodeVis()))
+        if(nodes.contains(dnlink->in->getNode())
+            &&!nodes.contains(dnlink->out->getNode()))
             ins.append(dnlink);
     return ins;
 }
 
-QList<DNodeLink *> Project::getContainerOutLinks()
+QList<DNodeLink*> Project::getInLinks(DNode *node)    
+{
+    NodeList nodes;
+    nodes.append(node);
+    return getInLinks(nodes);
+}
+
+QList<DNodeLink *> Project::getOutLinks(NodeList nodes)
 {
     QList<DNodeLink *> outs;
     foreach(DNodeLink *dnlink, FRG::SpaceDataInFocus->getCachedLinks())
-        if(FRG::Space->isSelected(dnlink->out->getNode()->getNodeVis())
-            &&!FRG::Space->isSelected(dnlink->in->getNode()->getNodeVis()))
+        if(nodes.contains(dnlink->out->getNode())
+            &&!nodes.contains(dnlink->in->getNode()))
             outs.append(dnlink);
     return outs;
 }
+
+QList<DNodeLink*> Project::getOutLinks(DNode *node)    
+{
+    NodeList nodes;
+    nodes.append(node);
+    return getOutLinks(nodes);
+}
+
 QPointF Project::getNodePosition(DNode *node)
 {
+    if(!nodePositions.contains(node)) return QPointF(0, 0);
 	return nodePositions.value(node);
 }
 
@@ -126,7 +142,6 @@ void Project::setNodePosition(DNode *node, QPointF value)
         nodePositions.remove(node);
 
 	nodePositions[node] = value;
-    if(node->getNodeVis())node->getNodeVis()->setPos(value);
 }
 
 void Project::clearNodePosition(DNode *node)    

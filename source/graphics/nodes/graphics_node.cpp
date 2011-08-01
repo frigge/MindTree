@@ -108,7 +108,7 @@ VNode::VNode(DNode *data)
 
 	cacheSocketSize();
 	recalcNodeVis();
-	setPos(FRG::CurrentProject->getNodePosition(data));
+	//setPos(FRG::CurrentProject->getNodePosition(data));
 }
 
 VNode::~VNode()

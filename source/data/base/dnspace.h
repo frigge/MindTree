@@ -25,8 +25,9 @@
 #include "source/data/nodes/data_node.h"
 #include "source/graphics/nodelink.h"
 #include "source/graphics/base/vnspace.h"
+#include "source/data/undo/frg_generic_undo.h"
 
-class DNSpace
+class DNSpace : public FRGUndoBase
 {
 public:
     DNSpace();
@@ -39,6 +40,7 @@ public:
 	void setName(QString value);
     bool operator==(DNSpace &space);
     bool operator!=(DNSpace &space);
+
     void cacheLinks();
     void clearLinksCache();
     bool isSocketLinkCached(DSocket *socket);
@@ -48,14 +50,15 @@ public:
     QList<VNodeLink*> getCachedLinksVis();
     void deleteCachedLink(DNodeLink *dnlink);
     int getLinkCount(DoutSocket* socket);
-    void cacheNodePositions();
+    QList<DNodeLink*> getOutLinksToNode(DNode *node);
+
     QList<DinSocket*> getConnected(DoutSocket* out);
 
     VNSpace *getSpaceVis();
     void setSpaceVis(VNSpace*);
 
     qint16 getNodeCnt();
-    QList<DNode*>getNodes();
+    NodeList getNodes();
 
 private:
     QList<DNodeLink*> cachedLinks;

@@ -43,7 +43,8 @@ void LoadSocketIDMapper::setID(DSocket *socket, unsigned short ID)
 
 DSocket * LoadSocketIDMapper::getSocket(unsigned short ID)    
 {
-    if(!loadIDMapper.contains(ID))printf("could not resolve pointer for ID: %2d", ID);
+//    if(!loadIDMapper.contains(ID))
+//        printf("could not resolve pointer for ID: %2d", ID);
     return loadIDMapper.value(ID);
 }
 
@@ -73,12 +74,12 @@ void CopySocketMapper::clear()
 }
 
 DSocket::DSocket(QString name, socket_type type)
-	: name(name), type(type), ID(++count), Variable(false), socketVis(0)
+	: name(name), type(type), ID(++count), Variable(false), socketVis(0), node(0)
 {
 }
 
 DSocket::DSocket(DSocket* socket)
-    : name(socket->getName()), type(socket->getType()), ID(++count),
+    : name(socket->getName()), type(socket->getType()), ID(++count), node(0),
     Variable(socket->getVariable()), socketVis(0)
 {
     CopySocketMapper::setSocketPair(socket, this);
@@ -117,7 +118,7 @@ bool DSocket::isCompatible(DSocket *s1, DSocket *s2)
     return false;
 }
 
-void DSocket::createLink(DSocket *socket1, DSocket *socket2)    
+DNodeLink DSocket::createLink(DSocket *socket1, DSocket *socket2)    
 {
     DinSocket *in;
     DoutSocket *out;
@@ -132,6 +133,7 @@ void DSocket::createLink(DSocket *socket1, DSocket *socket2)
        in = (DinSocket*)socket2;
     }
     in->addLink(out);
+    return DNodeLink(in, out);
 }
 
 DinSocket::DinSocket(QString name, socket_type type)
@@ -155,6 +157,12 @@ void DinSocket::addLink(DoutSocket *socket)
 
     if(!isCompatible(this, socket))
         return;
+
+    if(cntdSocket)
+    {
+        cntdSocket = socket;
+        return;
+    }
 
     //here we set the actual link
 	cntdSocket = socket;

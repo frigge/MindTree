@@ -31,14 +31,71 @@
 class UndoRemoveNode : public FRGUndoRedoObjectBase
 {
 public:
-    UndoRemoveNode(QList <DNode*> nodes, DNSpace *space);
+    UndoRemoveNode(QList<DNode*>nodes);
+    ~UndoRemoveNode();
     virtual void undo();
     virtual void redo();
 
 private:
     QList<DNode*> nodes;
-    QList<DNode*> redoNodes;
-    DNSpace *space;
+};
+
+class UndoDropNode : public FRGUndoRedoObjectBase
+{
+public:
+    UndoDropNode(DNode *node);
+    virtual void undo();
+    virtual void redo();
+
+private:
+    DNode *node;
+};
+
+class UndoLink : public FRGUndoRedoObjectBase
+{
+public:
+    UndoLink(DNodeLink dnlink, DNodeLink oldLink);
+    virtual void undo();
+    virtual void redo();
+
+private:
+    DNodeLink dnlink;
+    DNodeLink oldLink;
+};
+
+class UndoRemoveLink : public FRGUndoRedoObjectBase
+{
+public:
+    UndoRemoveLink(DNodeLink dnlink);
+    virtual void undo();
+    virtual void redo();
+
+private:
+    DNodeLink dnlink;
+};
+
+class UndoMoveNode : public FRGUndoRedoObjectBase
+{
+public:
+    UndoMoveNode(NodeList nodes);
+    virtual void undo();
+    virtual void redo();
+
+private:
+    QHash<DNode*, QPointF> nodePositions;
+};
+
+class UndoBuildContainer : public FRGUndoRedoObjectBase
+{
+public:
+    UndoBuildContainer(ContainerNode *contnode);
+    virtual void undo();
+    virtual void redo();
+
+private:
+    NodeList containerNodes;
+    ContainerNode *contnode;
+    QList<DNodeLink*> oldLinks;
 };
 
 class VNSpace : public QGraphicsScene
@@ -52,29 +109,29 @@ public:
     void enterEditNameMode();
     void leaveEditNameMode();
     bool isEditNameMode();
-    void destroyContainer(QGraphicsItem *container);
     void moveIntoSpace(DNSpace *space);
     void createSpaceVis();
     void deleteSpaceVis();
-	NodeLib *getNodeLib();
-	NewNodeEditor *getNewNodeEditor();
+    void cacheNodePositions(QList<DNode*>nodes);
 	QPointF getMousePos();
 	bool isLinkNodeMode();
-	QList<DNode*> selectedNodes();
+	NodeList selectedNodes();
     bool isSelected(VNode *node);
-    QPointF getSelectedItemsCenter();
+    void removeNode(QList<DNode*>nodeList);
+    void centerNodes(QList<DNode*>nodes);
+    QPointF getCenter(QList<DNode*>nodes);
+    void buildContainer();
+    void unpackContainer();
 
 public slots:
-    void shownodelib();
-    void createNode();
-    void removeNode();
     void copy();
     void paste();
     void cut();
-    void removeLink(VNodeLink *link);
+    void updateLinks();
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     void dropEvent(QGraphicsSceneDragDropEvent *event);
@@ -84,7 +141,6 @@ protected:
 private:
     QMenu *NContextMenu;
     void ContextAddMenu();
-    void updateLinks();
     ////QHash<DinSocket*, VNodeLink*> cachedLinks;
     QPointF mousePos;
     NodeLib *nodelib;
@@ -93,7 +149,7 @@ private:
     VNodeLink *newlink;
     bool editNameMode;
 	bool linkNodeMode;
-    QList<DNode*> clipboard;
+    QList<DNode*> nodeClipboard;
 };
 
 #endif // VNSPACE_H

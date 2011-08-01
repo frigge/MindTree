@@ -29,9 +29,14 @@ DNSpace::DNSpace()
 }
 
 DNSpace::DNSpace(DNSpace* space)
+    : name(space->getName())
 {
     foreach(DNode *node, space->getNodes())
-        addNode(DNode::copy(node));
+    {
+        DNode *copy = DNode::copy(node);
+        addNode(copy);
+        FRG::CurrentProject->setNodePosition(copy, node->getPos());
+    }
     foreach(DNode *node, getNodes())
         foreach(DinSocket *socket, node->getInSockets())
             socket->setCntdSocket(static_cast<DoutSocket*>(CopySocketMapper::getCopy(socket->getCntdSocket())));
@@ -42,7 +47,7 @@ DNSpace::~DNSpace()
     FRG::CurrentProject->unregisterSpace(this);
     clearLinksCache();
     foreach(DNode *node, getNodes())
-        delete node;
+        removeNode(node);
     nodes.clear();
 }
 
@@ -105,12 +110,6 @@ bool DNSpace::operator!=(DNSpace &space)
     return(!(*this == space));
 }
 
-void DNSpace::cacheNodePositions()    
-{
-    foreach(DNode *node, getNodes())
-        FRG::CurrentProject->setNodePosition(node, node->getNodeVis()->pos());
-}
-
 void DNSpace::cacheLinks()
 {
     clearLinksCache();
@@ -134,8 +133,6 @@ void DNSpace::deleteCachedLink(DNodeLink *dnlink)
 
 void DNSpace::visCachedLinks()    
 {
-    if(cachedLinks.isEmpty())
-        return;
     foreach(DNodeLink *dnlink, cachedLinks)
         if(!dnlink->vis)dnlink->vis = new VNodeLink(dnlink);
 }
@@ -177,11 +174,22 @@ bool DNSpace::isSocketLinkCached(DSocket *socket)
 
 QList<DinSocket*> DNSpace::getConnected(DoutSocket* out)    
 {
+    cacheLinks();
     QList<DinSocket*> ins;
     foreach(DNodeLink *dnlink, cachedLinks)
         if(dnlink->out == out)
             ins.append(dnlink->in);
     return ins;
+}
+
+QList<DNodeLink*> DNSpace::getOutLinksToNode(DNode *node)    
+{
+    cacheLinks();
+    QList<DNodeLink*> nodeLinks;
+    foreach(DNodeLink *dnlink, cachedLinks)
+        if(dnlink->out->getNode() == node)
+            nodeLinks.append(dnlink);
+    return nodeLinks;
 }
 
 int DNSpace::getLinkCount(DoutSocket* socket)    
@@ -226,7 +234,7 @@ qint16 DNSpace::getNodeCnt()
     return (qint16)nodes.size();
 }
 
-QList<DNode*> DNSpace::getNodes()
+NodeList DNSpace::getNodes()
 {
     return nodes;
 }

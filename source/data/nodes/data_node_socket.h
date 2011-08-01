@@ -71,13 +71,14 @@ class DNode;
 class VNode;
 class DinSocket;
 class DoutSocket;
+class DNodeLink;
 
 class DSocket
 {
 public:
 	DSocket(QString, socket_type);
     DSocket(DSocket* socket);
-    ~DSocket();
+    virtual ~DSocket();
 
     void setSocketVis(VNSocket *vis);
 	void  setNode(DNode*);
@@ -101,7 +102,7 @@ public:
 
     static unsigned short count;
     static QHash<QString, int>SocketNameCnt;
-    static void createLink(DSocket *socket1, DSocket *socket2);
+    static DNodeLink createLink(DSocket *socket1, DSocket *socket2);
     static bool isCompatible(DSocket *s1, DSocket *s2);
 
 private:
