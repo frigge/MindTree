@@ -165,7 +165,7 @@ void DinSocket::addLink(DoutSocket *socket)
     }
 
     //here we set the actual link
-	cntdSocket = socket;
+    setCntdSocket(socket);
 
     if (getType() == VARIABLE)
     {
@@ -174,10 +174,6 @@ void DinSocket::addLink(DoutSocket *socket)
     }
     if (getVariable())
         getNode()->inc_var_socket();
-
-    if(FRG::SpaceDataInFocus->getLinkCount(socket) == 0
-        && socket->getVariable())
-        socket->getNode()->inc_var_socket();
 }
 
 void DinSocket::clearLink()
@@ -185,9 +181,6 @@ void DinSocket::clearLink()
     if(getVariable())
         getNode()->dec_var_socket(this);
 
-    if(FRG::SpaceDataInFocus->getLinkCount(cntdSocket) == 1
-                && cntdSocket->getVariable())
-            cntdSocket->getNode()->dec_var_socket(cntdSocket);
 	cntdSocket = 0;
 }
 
@@ -270,6 +263,7 @@ bool DinSocket::operator !=(DinSocket &socket)
 void DSocket::setNode(DNode *node)
 {
     this->node = node;
+    if(getVariable())node->setVarSocket(this);
 }
 
 void DSocket::createSocketVis(VNode *parent)
@@ -331,10 +325,33 @@ DoutSocket::~DoutSocket()
             socket->clearLink();
 }
 
+void DoutSocket::registerSocket(DSocket *socket)    
+{
+    if(cntdSockets.isEmpty()) getNode()->inc_var_socket();
+    cntdSockets.append(static_cast<DinSocket*>(socket)); 
+}
+
+QList<DNodeLink> DoutSocket::getLinks()    
+{
+    QList<DNodeLink> links;
+    foreach(DinSocket *socket, cntdSockets)
+        links.append(DNodeLink(socket, this));
+    return links;
+}
+
+void DoutSocket::unregisterSocket(DinSocket *socket)
+{
+    cntdSockets.removeAll(socket); 
+    if(cntdSockets.isEmpty()) getNode()->dec_var_socket(this);
+}
 
 void DinSocket::setCntdSocket(DoutSocket *socket)
 {
+    if(!socket)return;
+    if(cntdSocket)
+        cntdSocket->unregisterSocket(this);
 	cntdSocket = socket;
+    cntdSocket->registerSocket(this);
 }
 
 DoutSocket* DinSocket::getCntdSocket()
@@ -374,6 +391,7 @@ bool DSocket::getVariable()
 void DSocket::setVariable(bool value)
 {
 	Variable = value;
+    if(getNode())getNode()->setVarSocket(this);
 }
 
 VNSocket* DSocket::getSocketVis()

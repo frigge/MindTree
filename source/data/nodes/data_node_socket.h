@@ -160,6 +160,12 @@ public:
     ~DoutSocket();
     bool operator==(DoutSocket &socket);
     bool operator!=(DoutSocket &socket);
+    QList<DNodeLink> getLinks();
+    void registerSocket(DSocket *socket);
+    void unregisterSocket(DinSocket *socket);
+
+private:
+    QList<DinSocket*> cntdSockets;
 };
 
 typedef QList<DinSocket*> DinSocketList;

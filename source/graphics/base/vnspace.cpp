@@ -145,12 +145,6 @@ void UndoMoveNode::redo()
 UndoBuildContainer::UndoBuildContainer(ContainerNode *contnode)
     : contnode(contnode)
 {
-    oldLinks.append(FRG::CurrentProject->getOutLinks(contnode));
-    foreach(DNode* node, contnode->getContainerData()->getNodes())
-        foreach(DinSocket *socket, node->getInSockets())
-            if(socket->getCntdSocket()
-                &&socket->getCntdSocket()->getNode() == contnode->getInputs())
-                oldLinks.append(new DNodeLink(socket, socket->getCntdSocket()));
 }
 
 void UndoBuildContainer::undo()    
@@ -161,7 +155,15 @@ void UndoBuildContainer::undo()
         if(node != contnode->getInputs()
             &&node != contnode->getOutputs())
             containerNodes.append(node);
-
+            
+    foreach(DNode* node, containerNodes)
+        foreach(DinSocket *socket, node->getInSockets())
+            if(socket->getCntdSocket()
+                &&socket->getCntdSocket()->getNode() == contnode->getInputs())
+                oldLinks.append(DNodeLink(socket, socket->getCntdSocket()));
+                
+    foreach(DoutSocket *socket, contnode->getOutSockets())
+        oldLinks.append(socket->getLinks());
 
     DNode::unpackContainerNode(contnode);
     FRG::Space->updateLinks();
@@ -175,8 +177,8 @@ void UndoBuildContainer::redo()
         contnode->getContainerData()->addNode(node);
     }
 
-    foreach(DNodeLink *dnlink, oldLinks)
-        dnlink->in->setCntdSocket(dnlink->out);
+    foreach(DNodeLink dnlink, oldLinks)
+        dnlink.in->addLink(dnlink.out);
 
     FRG::SpaceDataInFocus->addNode(contnode);
     VNode *nodeVis = contnode->createNodeVis();
@@ -620,14 +622,13 @@ void VNSpace::buildContainer()
 {
     NodeList selectedNodes = FRG::Space->selectedNodes();
     ContainerNode *contnode = DNode::buildContainerNode(selectedNodes);
-    if(contnode)
-    {
-        FRG::Space->addItem(contnode->createNodeVis());
-        contnode->getNodeVis()->setPos(FRG::CurrentProject->getNodePosition(contnode));
-        contnode->getNodeVis()->setSelected(true);
-        FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoBuildContainer(contnode));
-    }
+    if(!contnode)
+        return;
+    FRG::Space->addItem(contnode->createNodeVis());
+    contnode->getNodeVis()->setPos(FRG::CurrentProject->getNodePosition(contnode));
+    contnode->getNodeVis()->setSelected(true);
     updateLinks();
+    FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoBuildContainer(contnode));
 }
 
 void VNSpace::unpackContainer()    

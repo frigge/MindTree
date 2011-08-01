@@ -95,7 +95,7 @@ public:
 private:
     NodeList containerNodes;
     ContainerNode *contnode;
-    QList<DNodeLink*> oldLinks;
+    QList<DNodeLink> oldLinks;
 };
 
 class VNSpace : public QGraphicsScene
