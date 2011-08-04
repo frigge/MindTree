@@ -37,6 +37,7 @@
 #include "source/data/base/dnspace.h"
 #include "source/graphics/base/vnspace.h"
 #include "source/data/base/project.h"
+#include "source/data/callbacks.h"
 
 NodeName::NodeName(QString name, QGraphicsItem *parent)
 {
@@ -82,6 +83,7 @@ void NodeName::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 }
 
 VNode::VNode(DNode *data)
+    : data(data), node_name(new NodeName("", this)), node_width(30), node_height(30)
 {
     this->data = data;
     node_name = new NodeName("", this);
@@ -107,7 +109,9 @@ VNode::VNode(DNode *data)
 		socket->createSocketVis(this);
 
 	cacheSocketSize();
-	recalcNodeVis();
+    updateNodeVis();
+
+    data->regAddSocketCB(new VNodeUpdateCallback(this));
 	//setPos(FRG::CurrentProject->getNodePosition(data));
 }
 
@@ -218,10 +222,7 @@ void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 
 void VNode::recalcNodeVis()
 {
-    int space = 2;
-
-    NodeHeight(data->getInSockets().size() + data->getOutSockets().size());
-	NodeWidth();
+    int space=2;
     int socketPos = 2*space - (node_height/2);
 
 	foreach(DinSocket *insocket, data->getInSockets())
@@ -235,6 +236,15 @@ void VNode::recalcNodeVis()
         out->getSocketVis()->setPos((node_width/2) - (4 + socket_size/2), socketPos+(socket_size/2));
         socketPos += socket_size + space;
 	}
+}
+
+void VNode::updateNodeVis()    
+{
+    NodeHeight(data->getInSockets().size() + data->getOutSockets().size());
+    drawName();
+	NodeWidth();
+
+    recalcNodeVis();
 }
 
 VContainerNode::VContainerNode(DNode *data)

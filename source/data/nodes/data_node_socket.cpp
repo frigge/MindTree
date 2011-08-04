@@ -103,7 +103,7 @@ void DSocket::killSocketVis()
     FRG::Space->removeItem(socketVis);
     socketVis->deleteLater();
     socketVis = 0;
-    node->getNodeVis()->recalcNodeVis();
+    node->getNodeVis()->updateNodeVis();
 }
 
 bool DSocket::isCompatible(DSocket *s1, DSocket *s2)    

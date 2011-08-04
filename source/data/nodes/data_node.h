@@ -24,6 +24,8 @@
 #include "QPointF"
 #include "QColor"
 
+#include "source/data/callbacks.h"
+
 class DNode;
 class LoadNodeIDMapper
 {
@@ -112,6 +114,9 @@ public:
     DNSpace* getSpace();
     void setSpace(DNSpace* value);
 
+    void regAddSocketCB(Callback *cb);
+    void remAddSocketCB(Callback *cb);
+
     static void setsurfaceOutput(DNode *node);
     static void setdisplacementOutput(DNode *node);
     static void setvolumeOutput(DNode *node);
@@ -154,6 +159,7 @@ private:
     DSocket *lastsocket;
     int varcnt;
     DNSpace *space;
+    CallbackList addSocketCallbacks;
 };
 
 QDataStream &operator<<(QDataStream &stream, DNode *node);

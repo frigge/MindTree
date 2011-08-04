@@ -61,12 +61,10 @@ public:
     static void start_app();
 
 public slots:
-    void openNodeEditor();
     void moveIntoSpace(DNSpace *space); //copy to VNSPace
     void setRoot_Space(); //copy to project
     void buildContainer();
     void unpackContainer();
-    void openNodeLib();
     void removeNodes();
 
     void newfile(); 

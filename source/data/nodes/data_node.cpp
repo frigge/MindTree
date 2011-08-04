@@ -514,8 +514,18 @@ void DNode::addSocket(DSocket *socket)
 		outSockets.append((DoutSocket*)socket);
 		setSocketVarName((DoutSocket*)socket);
 	}
-    if(nodeVis)
-        nodeVis->recalcNodeVis();
+
+    addSocketCallbacks();
+}
+
+void DNode::regAddSocketCB(Callback *cb)
+{
+    addSocketCallbacks.add(cb);
+}
+
+void DNode::remAddSocketCB(Callback *cb)
+{
+    addSocketCallbacks.remove(cb);
 }
 
 void DNode::removeSocket(DSocket *socket)

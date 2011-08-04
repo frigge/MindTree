@@ -54,16 +54,17 @@ public:
     int type() const {return Type;}
     NodeName *node_name;
     void drawName();
-	void recalcNodeVis();
 	void cacheSocketSize();
 	int getNodeWidth();
 	void setNodeWidth(int w);
 	void setNodeHeight(int h);
 	int getNodeHeight();
+    virtual void updateNodeVis();
 
 protected:
-    void NodeWidth();
-    void NodeHeight(int numSockets);
+	virtual void recalcNodeVis();
+    virtual void NodeWidth();
+    virtual void NodeHeight(int numSockets);
 
 private:
 	unsigned short socket_size;
