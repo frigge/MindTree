@@ -31,7 +31,6 @@ class NodeLib : public QTreeWidget
 public:
     NodeLib(QWidget *parent = 0);
     ~NodeLib();
-    void update();
 
 signals:
 
@@ -39,6 +38,7 @@ public slots:
     void remove();
     void addFolder();
     void renamed(QTreeWidgetItem *item);
+    void update();
 
 protected:
     void mouseMoveEvent(QMouseEvent *event);

@@ -89,7 +89,8 @@ void frg_Shader_Author::createDocks()
     nodeeditor->hide();
 
     nodelib = new QDockWidget("Node Library");
-    nodelib->setWidget(new NodeLib);
+    FRG::lib = new NodeLib;
+    nodelib->setWidget(FRG::lib);
     addDockWidget(Qt::LeftDockWidgetArea, nodelib); 
 }
 

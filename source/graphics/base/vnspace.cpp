@@ -25,6 +25,7 @@
 #include "source/data/base/frg_shader_author.h"
 #include "source/data/base/project.h"
 #include "source/data/nodes/buildin_nodes.h"
+#include "source/graphics/shaderpreview.h"
 
 UndoRemoveNode::UndoRemoveNode(QList<DNode*>nodes)
     : nodes(nodes)
@@ -571,6 +572,9 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
         case 29:
             dnode = BuildIn::CLgather(FRG::SpaceDataInFocus);
             break;
+        case 30:
+            dnode = new DShaderPreview();
+            FRG::SpaceDataInFocus->addNode(dnode);
         }
     }
     if(dnode)

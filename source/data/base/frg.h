@@ -6,6 +6,7 @@
 class Project;
 class VNSpace;
 class DNSpace;
+class NodeLib;
 class frg_Shader_Author; 
 
 namespace FRG
@@ -14,5 +15,11 @@ namespace FRG
     extern VNSpace *Space;
 	extern DNSpace *SpaceDataInFocus;
     extern frg_Shader_Author *Author;
+    extern NodeLib *lib;
+
+    namespace Utils
+    {
+        
+    }
 };
 #endif   /* ----- #ifndef FRG_INC  ----- */

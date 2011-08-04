@@ -23,6 +23,7 @@
 
 #include "source/data/nodes/data_node_socket.h"
 #include	"source/graphics/base/vnspace.h"
+#include "source/data/base/frg.h"
 
 SlotTypeEditor::SlotTypeEditor()
 {
@@ -220,4 +221,6 @@ void NewNodeEditor::addtoLib()
 
     out<<func_name->text();
     file.close();
+    
+    FRG::lib->update();
 }

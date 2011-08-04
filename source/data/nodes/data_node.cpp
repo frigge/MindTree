@@ -360,7 +360,7 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
     DNode *newnode;
     newnode = DNode::newNode(name, (NType)nodetype, insocketsize, outsocketsize);
     LoadNodeIDMapper::setID(newnode, ID);
-    //FRG::CurrentProject->setNodePosition(newnode, nodepos);
+    FRG::CurrentProject->setNodePosition(newnode, nodepos);
     *node = newnode;
 
     DSocket *socket;

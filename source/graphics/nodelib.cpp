@@ -146,8 +146,10 @@ void NodeLib::addBuildInNodes()
     QTreeWidgetItem *solarloop = new QTreeWidgetItem(QStringList() << "Solar" << "28");
     QTreeWidgetItem *gatherloop = new QTreeWidgetItem(QStringList() << "Gather" << "29");
 
+    QTreeWidgetItem *preview = new QTreeWidgetItem(QStringList() << "Preview" << "30");
+
     QList<QTreeWidgetItem*> hardgrps, ins, outs, maths, conditionals, values, loops;
-    hardgrps<<inputs<<outputs<<math<<cond<<value<<loop;
+    hardgrps<<inputs<<outputs<<math<<cond<<value<<loop<<preview;
     ins<<surfin<<dispin<<volin<<lin;
     outs<<surfout<<dispout<<volout<<lout;
     maths<<madd<<msub<<mmult<<mdiv<<mdot;
