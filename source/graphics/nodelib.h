@@ -50,7 +50,6 @@ protected:
 private:
     QList<QTreeWidgetItem *> addNodeItems(QDir dir);
     void createContextMenu();
-    void moveNode(QDir source, QDir destination);
 
     void addBuildInNodes();
     QPoint dragstartpos;

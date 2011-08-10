@@ -22,6 +22,7 @@
 #include "QTextStream"
 #include "QDir"
 #include "QDebug"
+#include "QProcess"
 
 #include "source/data/base/frg.h"
 #include "source/graphics/nodes/graphics_node.h"
@@ -1207,6 +1208,11 @@ void SocketNode::connectToContainer(ContainerNode *contnode)
     container = contnode;
 }
 
+ContainerNode* SocketNode::getContainer()    
+{
+    return container;
+}
+
 void SocketNode::inc_var_socket()
 {
     DNode::inc_var_socket();
@@ -1725,7 +1731,6 @@ SolarNode::SolarNode(SolarNode* node)
 }
 
 OutputNode::OutputNode()
-    : filename("")
 {
 }
 
@@ -1747,7 +1752,6 @@ QString OutputNode::getShaderName()
 
 void OutputNode::writeCode()
 {
-
     QFile file(filename);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
@@ -1755,6 +1759,20 @@ void OutputNode::writeCode()
     QString code = sw.getCode();
     stream<<code;
     file.close();
+}
+
+void OutputNode::compile()    
+{
+    QProcess *process = new QProcess();
+    QStringList arguments;
+    arguments << filename;
+    process->setStandardErrorFile("compiler.log");
+    process->setWorkingDirectory(QFileInfo(filename).canonicalPath());
+    process->start("shaderdl", arguments);
+    process->waitForFinished(10000);
+
+    if(!process->pid())
+        printf("not running");
 }
 
 QString OutputNode::getFileName()

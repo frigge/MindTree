@@ -111,12 +111,15 @@ VNode::VNode(DNode *data)
 	cacheSocketSize();
     updateNodeVis();
 
-    data->regAddSocketCB(new VNodeUpdateCallback(this));
+    cb = new VNodeUpdateCallback(this);
+    data->regAddSocketCB(cb);
 	//setPos(FRG::CurrentProject->getNodePosition(data));
 }
 
 VNode::~VNode()
 {
+    data->remAddSocketCB(cb);
+    delete cb;
 }
 
 int VNode::getNodeWidth()
@@ -241,8 +244,8 @@ void VNode::recalcNodeVis()
 void VNode::updateNodeVis()    
 {
     NodeHeight(data->getInSockets().size() + data->getOutSockets().size());
-    drawName();
 	NodeWidth();
+    drawName();
 
     recalcNodeVis();
 }
@@ -295,6 +298,8 @@ VValueNode::VValueNode(DNode *data)
     proxy = new QGraphicsProxyWidget;
     proxy->setParentItem(this);
     createContextMenu();
+
+    updateNodeVis();
 }
 
 VValueNode::~VValueNode()
@@ -329,18 +334,28 @@ void VValueNode::setValueEditor(QWidget *editor)
     widget = editor;
     proxy->setWidget(widget);
     widget->resize(getNodeWidth() - 8, 25);
-    proxy->setPos(QPointF(4-getNodeWidth()/2, 8));
+    proxy->setPos(QPointF(4-getNodeWidth()/2, 0));
 }
 
 void VValueNode::NodeWidth()
 {
-    setNodeWidth(20);
+    VNode::NodeWidth();
+    setNodeWidth(getNodeWidth() + 5);
 };
 
 void VValueNode::NodeHeight(int numSockets)
 {
-    setNodeHeight( 60 + (17*numSockets));
+    VNode::NodeHeight(numSockets);
+    setNodeHeight(getNodeHeight() + 30);
 };
+
+void VValueNode::updateNodeVis()    
+{
+    NodeWidth();
+    NodeHeight(1);
+    drawName();
+    recalcNodeVis();
+}
 
 ColorButton::ColorButton()
 {

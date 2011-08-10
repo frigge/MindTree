@@ -64,7 +64,8 @@ enum NType
     LOOPINSOCKETS,      LOOPOUTSOCKETS,
 
     COLORNODE,          FLOATNODE,
-    STRINGNODE,         VECTORNODE
+    STRINGNODE,         VECTORNODE,
+    PREVIEW
 };
 
 class VNode;
@@ -244,6 +245,7 @@ public:
     virtual void dec_var_socket(DSocket *socket);
 
     void connectToContainer(ContainerNode*);
+    ContainerNode* getContainer();
     void add_socket(DinSocket *socket);
     void remove_socket(DinSocket *socket);
 
@@ -440,6 +442,7 @@ public:
     QString getShaderName();
 
     void writeCode();
+    void compile();
     void changeName(QString);
     QString getFileName();
     void setFileName(QString);

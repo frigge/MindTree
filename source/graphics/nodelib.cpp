@@ -26,7 +26,9 @@
 #include "QMimeData"
 #include "QMouseEvent"
 #include "QDrag"
+
 #include	"source/graphics/base/vnspace.h"
+#include "source/data/base/frg.h"
 
 NodeLib::NodeLib(QWidget *parent):
     QTreeWidget(parent)
@@ -302,48 +304,14 @@ void NodeLib::dropEvent(QDropEvent *event)
             destdir = QDir(parent->text(1));
             QFileInfo pinfo(parent->text(1));
             if(pinfo.isDir())
-                moveNode(filepath, destdir);
+                FRG::Utils::moveDir(filepath, destdir);
         }
         else
         {
             destdir = QDir("nodes");
-            moveNode(filepath, destdir);
+            FRG::Utils::moveDir(filepath, destdir);
         }
         update();
     }
     update();
-}
-
-void NodeLib::moveNode(QDir source, QDir destination)
-{
-    QFileInfo srcinfo(source.path());
-    QDir destdir(destination);
-    if (srcinfo.isDir())
-    {
-        QString srcdirname = source.dirName();
-        destdir.mkdir(srcdirname);
-        destdir.cd(srcdirname);
-
-        QDir sourceparent(source);
-        sourceparent.cdUp();
-        QString sourcedirname(source.dirName());
-        if (!sourceparent.rmdir(sourcedirname))
-        {
-            QFileInfoList sourceinfolist = source.entryInfoList();
-            foreach (QFileInfo dirinfo, sourceinfolist)
-            {
-                QString dirinfofilepath = dirinfo.filePath();
-                if (dirinfo.baseName() != "")
-                    moveNode(QDir(dirinfo.filePath()), destdir);
-            }
-            sourceparent.rmdir(sourcedirname);
-        }
-    } else
-    {
-        QFile srcfile(source.path());
-        QString filename(srcinfo.fileName());
-        QString destfilepath(destdir.filePath(filename));
-        if (srcfile.copy(destfilepath))
-            srcfile.remove();
-    }
 }

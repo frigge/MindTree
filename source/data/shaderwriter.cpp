@@ -28,42 +28,6 @@ ShaderWriter::ShaderWriter(OutputNode *start)
 
     switch(start->getNodeType())
     {
-	case CONTAINER:
-	case FUNCTION:
-	case MULTIPLY:
-	case DIVIDE:
-	case ADD:
-	case SUBTRACT:
-	case DOTPRODUCT:
-	case GREATERTHAN:
-	case SMALLERTHAN:
-	case EQUAL:
-	case AND:
-	case OR:
-	case CONDITIONCONTAINER:
-	case NOT:
-	case FOR:
-	case WHILE:
-	case GATHER:
-	case ILLUMINANCE:
-	case ILLUMINATE:
-	case SOLAR:
-	case SURFACEINPUT:
-	case DISPLACEMENTINPUT:
-	case VOLUMEINPUT:
-	case LIGHTINPUT:
-	case ILLUMINANCEINPUT:
-	case ILLUMINATEINPUT:
-	case SOLARINPUT:
-	case INSOCKETS:
-	case OUTSOCKETS:
-	case LOOPINSOCKETS:
-	case LOOPOUTSOCKETS:
-	case COLORNODE:
-	case FLOATNODE:
-	case STRINGNODE:
-	case VECTORNODE:
-	break;	
     case SURFACEOUTPUT:
         addToShaderHeader("surface ");
         break;
@@ -75,6 +39,8 @@ ShaderWriter::ShaderWriter(OutputNode *start)
         break;
     case LIGHTOUTPUT:
         addToShaderHeader("light ");
+        break;
+    default:
         break;
     }
 
@@ -271,7 +237,7 @@ QString ShaderWriter::writeVarName(DinSocket *insocket)
 
 DinSocket *ShaderWriter::stepUp(DoutSocket *socket)
 {
-    ContainerNode *node = static_cast<ContainerNode*>(socket->getNode());
+    ContainerNode *node = static_cast<SocketNode*>(socket->getNode())->getContainer();
     DinSocket *mapsocket = static_cast<DinSocket*>(node->getSocketOnContainer(socket));
     return mapsocket;
 }

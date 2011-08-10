@@ -142,6 +142,9 @@ public:
     void buildContainer();
     void unpackContainer();
 
+signals:
+    void linkChanged();
+
 public slots:
     void copy();
     void paste();

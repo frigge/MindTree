@@ -76,6 +76,7 @@ void VNodeLink::initVNodeLink()
     QAction *removeAction = cMenu->addAction("Remove Link");
     connect(removeAction, SIGNAL(triggered()), this, SLOT(remove()));
     connect(removeAction, SIGNAL(triggered()), FRG::Space, SLOT(updateLinks()));
+    connect(removeAction, SIGNAL(triggered()), FRG::Space, SIGNAL(linkChanged()));
 }
 
 void VNodeLink::remove()

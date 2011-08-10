@@ -69,6 +69,7 @@ protected:
 private:
 	unsigned short socket_size;
 	unsigned short node_width, node_height;
+    VNodeUpdateCallback *cb;
 };
 
 class ContainerNode;
@@ -112,6 +113,7 @@ public:
     VValueNode(DNode *);
     ~VValueNode();
     void setValueEditor(QWidget *editor);
+    void updateNodeVis();
 
 public slots:
     void setShaderInput(bool tgl);

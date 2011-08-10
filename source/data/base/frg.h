@@ -3,6 +3,8 @@
 #ifndef  FRG_INC
 #define  FRG_INC
 
+#include "QDir"
+
 class Project;
 class VNSpace;
 class DNSpace;
@@ -19,7 +21,8 @@ namespace FRG
 
     namespace Utils
     {
-        
-    }
+        void moveDir(QDir source, QDir destination);
+        void copyDir(QDir source, QDir destination);
+    };
 };
 #endif   /* ----- #ifndef FRG_INC  ----- */
