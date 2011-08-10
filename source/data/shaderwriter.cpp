@@ -246,42 +246,6 @@ QString ShaderWriter::createCondition(DoutSocket *socket)
 {
     switch(socket->getNode()->getNodeType())
     {
-		case CONTAINER:
-		case FUNCTION:
-		case MULTIPLY:
-		case DIVIDE:
-		case ADD:
-		case SUBTRACT:
-		case DOTPRODUCT:
-		case AND:
-		case OR:
-		case CONDITIONCONTAINER:
-		case FOR:
-		case WHILE:
-		case GATHER:
-		case ILLUMINANCE:
-		case ILLUMINATE:
-		case SOLAR:
-		case SURFACEINPUT:
-		case DISPLACEMENTINPUT:
-		case VOLUMEINPUT:
-		case LIGHTINPUT:
-		case ILLUMINANCEINPUT:
-		case ILLUMINATEINPUT:
-		case SOLARINPUT:
-		case SURFACEOUTPUT:
-		case DISPLACEMENTOUTPUT:
-		case VOLUMEOUTPUT:
-		case LIGHTOUTPUT:
-		case INSOCKETS:
-		case OUTSOCKETS:
-		case LOOPINSOCKETS:
-		case LOOPOUTSOCKETS:
-		case COLORNODE:
-		case FLOATNODE:
-		case STRINGNODE:
-		case VECTORNODE:
-			break;	
         case NOT:
             return writeNot(socket);
             break;
@@ -294,6 +258,8 @@ QString ShaderWriter::createCondition(DoutSocket *socket)
         case SMALLERTHAN:
             return writeCondition(socket, "<");
             break;
+        default:
+            break;
     }
 	return "";
 }
@@ -302,41 +268,6 @@ QString ShaderWriter::createMath(DoutSocket *socket)
 {
     switch(socket->getNode()->getNodeType())
     {
-		case CONTAINER:
-		case FUNCTION:
-		case AND:
-		case OR:
-		case CONDITIONCONTAINER:
-		case FOR:
-		case WHILE:
-		case GATHER:
-		case ILLUMINANCE:
-		case ILLUMINATE:
-		case SOLAR:
-		case SURFACEINPUT:
-		case DISPLACEMENTINPUT:
-		case VOLUMEINPUT:
-		case LIGHTINPUT:
-		case ILLUMINANCEINPUT:
-		case ILLUMINATEINPUT:
-		case SOLARINPUT:
-		case SURFACEOUTPUT:
-		case DISPLACEMENTOUTPUT:
-		case VOLUMEOUTPUT:
-		case LIGHTOUTPUT:
-		case INSOCKETS:
-		case OUTSOCKETS:
-		case LOOPINSOCKETS:
-		case LOOPOUTSOCKETS:
-		case COLORNODE:
-		case FLOATNODE:
-		case STRINGNODE:
-		case VECTORNODE:
-        case NOT:
-        case EQUAL:
-        case GREATERTHAN:
-        case SMALLERTHAN:
-            break;
     case MULTIPLY:
         return writeMath(socket, "*");
         break;
@@ -351,6 +282,8 @@ QString ShaderWriter::createMath(DoutSocket *socket)
         break;
     case DOTPRODUCT:
         return writeMath(socket, ".");
+        break;
+    default:
         break;
     }
 	return "";
@@ -370,32 +303,6 @@ void ShaderWriter::evalSocketValue(DoutSocket *socket)
 {
     switch(socket->getNode()->getNodeType())
     {
-	case GREATERTHAN:
-	case SMALLERTHAN:
-	case EQUAL:
-	case AND:
-	case OR:
-	case NOT:
-	case MULTIPLY:
-	case ADD:
-	case SUBTRACT:
-	case DIVIDE:
-	case DOTPRODUCT:
-	case SURFACEINPUT:
-	case DISPLACEMENTINPUT:
-	case VOLUMEINPUT:
-	case LIGHTINPUT:
-	case ILLUMINANCEINPUT:
-	case ILLUMINATEINPUT:
-	case SOLARINPUT:
-	case SURFACEOUTPUT:
-	case DISPLACEMENTOUTPUT:
-	case VOLUMEOUTPUT:
-	case LIGHTOUTPUT:
-	case OUTSOCKETS:
-	case LOOPINSOCKETS:
-	case LOOPOUTSOCKETS:
-		break;
     case CONTAINER:
         writeContainer(socket);
         break;
@@ -437,6 +344,8 @@ void ShaderWriter::evalSocketValue(DoutSocket *socket)
         break;
     case INSOCKETS:
         evalSocketValue(stepUp(socket)->getCntdSocket());
+        break;
+    default:
         break;
     }
 }

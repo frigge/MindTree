@@ -377,6 +377,7 @@ VColorValueNode::VColorValueNode(DNode *data)
     ColorButton *cbutton = new ColorButton;
     contextMenu->connect(cbutton, SIGNAL(clicked(QColor)), this, SLOT(setValue(QColor)));
     setValueEditor(cbutton);
+    connect(cbutton, SIGNAL(clicked(QColor)), FRG::Space, SIGNAL(linkChanged()));
 }
 
 void VColorValueNode::setValue(QColor color)
@@ -391,6 +392,7 @@ VStringValueNode::VStringValueNode(DNode *data)
     QLineEdit *lineedit = new QLineEdit;
     contextMenu->connect(lineedit, SIGNAL(textChanged(QString)), this, SLOT(setValue(QString)));
     setValueEditor(lineedit);
+    connect(lineedit, SIGNAL(textChanged()), FRG::Space, SIGNAL(linkChanged()));
 }
 
 void VStringValueNode::setValue(QString string)
@@ -406,6 +408,7 @@ VFloatValueNode::VFloatValueNode(DNode *data)
     spinbox->setRange(-1000, 1000);
     contextMenu->connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(setValue(double)));
     setValueEditor(spinbox);
+    connect(spinbox, SIGNAL(valueChanged(double)), FRG::Space, SIGNAL(linkChanged()));
 }
 
 void VFloatValueNode::setValue(double fval)
