@@ -34,7 +34,7 @@ class VNodeLink;
 
 typedef struct DNodeLink
 {
-	DNodeLink(DSocket *in=0, DSocket *out=0) : out(dynamic_cast<DoutSocket*>(out)), in(dynamic_cast<DinSocket*>(in)), vis(0){};
+	DNodeLink(DSocket *in=0, DSocket *out=0, bool createvis=false);
     DNodeLink(const DNodeLink &link) : out(link.out), in(link.in), vis(link.vis){};
     ~DNodeLink();
     DoutSocket *out;

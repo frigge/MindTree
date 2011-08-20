@@ -9,17 +9,22 @@ Project::Project(QString filename)
     : filename(filename)
 {
     FRG::CurrentProject = this;
-    DNSpace *space;
+    DNSpace *space = 0;
     if(filename != "")
     {
         QFile file(filename);
         file.open(QIODevice::ReadOnly);
         QDataStream stream(&file);
-        space = new DNSpace();
-        stream>>&space;
-        file.close();
-        LoadNodeIDMapper::clear();
-        LoadSocketIDMapper::clear();
+
+        FRG_PROJECT_HEADER_CHECK
+        {
+            stream>>&space;
+            file.close();
+            LoadNodeIDMapper::clear();
+            LoadSocketIDMapper::clear();
+        }
+        else
+            space = new DNSpace;
     }
     else
     {
@@ -47,6 +52,7 @@ void Project::save()
     QFile file(getFilename());
     file.open(QIODevice::WriteOnly);
     QDataStream stream(&file);
+    stream<<FRG_PROJECT_HEADER;
     stream<<getRootSpace();
     file.close();
 }
@@ -57,6 +63,7 @@ void Project::saveAs()
     QFile file(filename);
     file.open(QIODevice::WriteOnly);
     QDataStream stream(&file);
+    stream<<FRG_PROJECT_HEADER;
     stream<<getRootSpace();
     file.close();
 }
@@ -96,14 +103,15 @@ void Project::moveIntoRootSpace()
     FRG::Space->moveIntoSpace(root_scene);
 }
 
-QList<DNodeLink*> Project::getInLinks(NodeList nodes)
+QList<DNodeLink*> Project::getOutLinks(NodeList nodes)
 {
-	QList<DNodeLink*> ins;
-    foreach(DNodeLink *dnlink, FRG::SpaceDataInFocus->getCachedLinks())
-        if(nodes.contains(dnlink->in->getNode())
-            &&!nodes.contains(dnlink->out->getNode()))
-            ins.append(dnlink);
-    return ins;
+	QList<DNodeLink*> outs;
+    foreach(DNode *node, nodes)
+        foreach(DoutSocket* socket, node->getOutSockets())
+            foreach(DNodeLink dnlink, socket->getLinks())
+                if(!nodes.contains(dnlink.in->getNode()))
+                    outs.append(new DNodeLink(dnlink));
+    return outs;
 }
 
 QList<DNodeLink*> Project::getInLinks(DNode *node)    
@@ -113,14 +121,15 @@ QList<DNodeLink*> Project::getInLinks(DNode *node)
     return getInLinks(nodes);
 }
 
-QList<DNodeLink *> Project::getOutLinks(NodeList nodes)
+QList<DNodeLink *> Project::getInLinks(NodeList nodes)
 {
-    QList<DNodeLink *> outs;
-    foreach(DNodeLink *dnlink, FRG::SpaceDataInFocus->getCachedLinks())
-        if(nodes.contains(dnlink->out->getNode())
-            &&!nodes.contains(dnlink->in->getNode()))
-            outs.append(dnlink);
-    return outs;
+    QList<DNodeLink *> ins;
+    foreach(DNode *node, nodes)
+        foreach(DinSocket *socket, node->getInSockets())
+            if(socket->getCntdSocket()
+                &&!nodes.contains(socket->getCntdSocket()->getNode()))
+            ins.append(new DNodeLink(socket, socket->getCntdSocket()));
+    return ins;
 }
 
 QList<DNodeLink*> Project::getOutLinks(DNode *node)    
@@ -130,13 +139,13 @@ QList<DNodeLink*> Project::getOutLinks(DNode *node)
     return getOutLinks(nodes);
 }
 
-QPointF Project::getNodePosition(DNode *node)
+QPointF Project::getNodePosition(const DNode *node)
 {
     if(!nodePositions.contains(node)) return QPointF(0, 0);
 	return nodePositions.value(node);
 }
 
-void Project::setNodePosition(DNode *node, QPointF value)
+void Project::setNodePosition(const DNode *node, QPointF value)
 {
     if(value == QPointF(0,0))
         nodePositions.remove(node);
@@ -144,7 +153,7 @@ void Project::setNodePosition(DNode *node, QPointF value)
 	nodePositions[node] = value;
 }
 
-void Project::clearNodePosition(DNode *node)    
+void Project::clearNodePosition(const DNode *node)    
 {
     nodePositions.remove(node);
 }

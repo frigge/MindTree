@@ -195,42 +195,42 @@ DNode* BuildIn::ContIfNode(DNSpace *space)
 
 DNode* BuildIn::ContForNode(DNSpace *space)
 {
-    ForNode *node = new ForNode(false);
+    ForNode *node = new ForNode("", false);
     space->addNode(node);
     return node;
 }
 
 DNode* BuildIn::ContWhileNode(DNSpace *space)
 {
-    WhileNode *node = new WhileNode(false);
+    WhileNode *node = new WhileNode("", false);
     space->addNode(node);
     return node;
 }
 
 DNode* BuildIn::CLilluminate(DNSpace *space)
 {
-    IlluminateNode *node = new IlluminateNode(false);
+    IlluminateNode *node = new IlluminateNode("", false);
     space->addNode(node);
     return node;
 }
 
 DNode* BuildIn::CLgather(DNSpace *space)
 {
-    GatherNode *node = new GatherNode(false);
+    GatherNode *node = new GatherNode("", false);
     space->addNode(node);
     return node;
 }
 
 DNode* BuildIn::CLilluminance(DNSpace *space)
 {
-    IlluminanceNode *node = new IlluminanceNode(false);
+    IlluminanceNode *node = new IlluminanceNode("", false);
     space->addNode(node);
     return node;
 }
 
 DNode* BuildIn::CLsolar(DNSpace *space)
 {
-    SolarNode *node = new SolarNode(false);
+    SolarNode *node = new SolarNode("", false);
     space->addNode(node);
     return node;
 }

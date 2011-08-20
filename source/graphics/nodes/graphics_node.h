@@ -60,6 +60,7 @@ public:
 	void setNodeHeight(int h);
 	int getNodeHeight();
     virtual void updateNodeVis();
+    void setNodeColor(QColor col);
 
 protected:
 	virtual void recalcNodeVis();
@@ -70,6 +71,7 @@ private:
 	unsigned short socket_size;
 	unsigned short node_width, node_height;
     VNodeUpdateCallback *cb;
+    QColor nodeColor;
 };
 
 class ContainerNode;
@@ -97,13 +99,16 @@ class ColorButton : public QPushButton
 {
     Q_OBJECT
 public:
-    ColorButton();
+    ColorButton(QColor init);
 
 public slots:
     void setColor();
 
 signals:
     void clicked(QColor);
+
+private:
+    QColor color;
 };
 
 class VValueNode : public VNode
@@ -120,7 +125,6 @@ public slots:
 
 protected:
     QGraphicsProxyWidget *proxy;
-    void NodeWidth();
     void NodeHeight(int numSockets);
     QWidget *widget;
     QWidget *base_widget;
@@ -180,6 +184,8 @@ public:
 public slots:
     void writeCode();
     void changeName();
+    void changeDir();
+    void writeAndCompile();
 
 protected:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);

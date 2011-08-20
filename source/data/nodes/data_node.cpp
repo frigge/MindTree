@@ -30,11 +30,12 @@
 #include "source/data/base/dnspace.h"
 #include "source/graphics/base/vnspace.h"
 #include "source/data/base/project.h"
+#include "source/graphics/shaderpreview.h"
 
 unsigned short DNode::count = 1;
 QHash<unsigned short, DNode*>LoadNodeIDMapper::loadIDMapper;
 
-unsigned short LoadNodeIDMapper::getID(DNode *node)    
+unsigned short LoadNodeIDMapper::getID(DNode *node)
 {
     return loadIDMapper.key(node);
 }
@@ -58,35 +59,47 @@ DNode::DNode(QString name)
     : space(0), varcnt(0), ID(count++), nodeVis(0), nodeName(name), varsocket(0), lastsocket(0)
 {};
 
-DNode::DNode(DNode* node)
+DNode::DNode(const DNode* node)
     : space(0), varcnt(0), ID(count++), nodeVis(0),
     nodeName(node->getNodeName()), NodeType(node->getNodeType())
 {
     foreach(DinSocket *socket, node->inSockets)
-        addSocket(new DinSocket(socket));
+        new DinSocket(socket, this);
     foreach(DoutSocket *socket, node->outSockets)
-        addSocket(new DoutSocket(socket));
+        new DoutSocket(socket, this);
     varsocket = CopySocketMapper::getCopy(node->getVarSocket());
     lastsocket = CopySocketMapper::getCopy(node->getLastSocket());
 }
 
-DNode* DNode::copy(DNode *original)    
+template<class C>
+const C* DNode::getDerivedConst() const
+{
+    return static_cast<const C*>(this); 
+}
+
+template<class C>
+C* DNode::getDerived()
+{
+    return static_cast<C*>(this); 
+}
+
+DNode* DNode::copy(const DNode *original)    
 {
     DNode *newNode;
     switch(original->getNodeType())
     {
     case CONTAINER:
-        newNode = new ContainerNode(static_cast<ContainerNode*>(original));
+        newNode = new ContainerNode(original->getDerivedConst<ContainerNode>());
         break;
     case FUNCTION:
-        newNode = new FunctionNode(static_cast<FunctionNode*>(original));
+        newNode = new FunctionNode(original->getDerivedConst<FunctionNode>());
         break;
     case MULTIPLY:
     case DIVIDE:
     case ADD:
     case SUBTRACT:
     case DOTPRODUCT:
-        newNode = new MathNode(static_cast<MathNode*>(original));
+        newNode = new MathNode(original->getDerivedConst<MathNode>());
         break;
     case GREATERTHAN:
     case SMALLERTHAN:
@@ -94,28 +107,28 @@ DNode* DNode::copy(DNode *original)
     case AND:
     case OR:
     case NOT:
-        newNode = new ConditionNode(static_cast<ConditionNode*>(original));
+        newNode = new ConditionNode(original->getDerivedConst<ConditionNode>());
         break;
     case CONDITIONCONTAINER:
-        newNode = new ConditionContainerNode(static_cast<ConditionContainerNode*>(original));
+        newNode = new ConditionContainerNode(original->getDerivedConst<ConditionContainerNode>());
         break;
     case FOR:
-        newNode = new ForNode(static_cast<ForNode*>(original));
+        newNode = new ForNode(original->getDerivedConst<ForNode>());
         break;
     case WHILE: 
-        newNode = new WhileNode(static_cast<WhileNode*>(original));
+        newNode = new WhileNode(original->getDerivedConst<WhileNode>());
         break;
     case GATHER:
-        newNode = new GatherNode(static_cast<GatherNode*>(original));
+        newNode = new GatherNode(original->getDerivedConst<GatherNode>());
         break;
     case ILLUMINANCE:
-        newNode = new IlluminanceNode(static_cast<IlluminanceNode*>(original));
+        newNode = new IlluminanceNode(original->getDerivedConst<IlluminanceNode>());
         break;
     case ILLUMINATE:
-        newNode = new IlluminateNode(static_cast<IlluminateNode*>(original));
+        newNode = new IlluminateNode(original->getDerivedConst<IlluminateNode>());
         break;
     case SOLAR:
-        newNode = new SolarNode(static_cast<SolarNode*>(original));
+        newNode = new SolarNode(original->getDerivedConst<SolarNode>());
         break;
     case SURFACEINPUT:
     case DISPLACEMENTINPUT:
@@ -124,36 +137,39 @@ DNode* DNode::copy(DNode *original)
     case ILLUMINANCEINPUT:
     case SOLARINPUT:
     case ILLUMINATEINPUT:
-        newNode = new InputNode(static_cast<InputNode*>(original));
+        newNode = new InputNode(original->getDerivedConst<InputNode>());
         break;
     case SURFACEOUTPUT:
     case DISPLACEMENTOUTPUT:
     case VOLUMEOUTPUT:
     case LIGHTOUTPUT:
-        newNode = new OutputNode(static_cast<OutputNode*>(original));
+        newNode = new OutputNode(original->getDerivedConst<OutputNode>());
         break;
     case INSOCKETS:
     case OUTSOCKETS:
-        newNode = new SocketNode(static_cast<SocketNode*>(original));
+        newNode = new SocketNode(original->getDerivedConst<SocketNode>());
         break;
     case LOOPINSOCKETS:
     case LOOPOUTSOCKETS:
-        newNode = new LoopSocketNode(static_cast<LoopSocketNode*>(original));
+        newNode = new LoopSocketNode(original->getDerivedConst<LoopSocketNode>());
         break;
     case COLORNODE:
-        newNode = new ColorValueNode(static_cast<ColorValueNode*>(original));
+        newNode = new ColorValueNode(original->getDerivedConst<ColorValueNode>());
         break;
     case FLOATNODE:
-        newNode = new FloatValueNode(static_cast<FloatValueNode*>(original));
+        newNode = new FloatValueNode(original->getDerivedConst<FloatValueNode>());
         break;
     case STRINGNODE:
-        newNode = new StringValueNode(static_cast<StringValueNode*>(original));
+        newNode = new StringValueNode(original->getDerivedConst<StringValueNode>());
         break;
     case VECTORNODE:
-        newNode = new VectorValueNode(static_cast<VectorValueNode*>(original));
+        newNode = new VectorValueNode(original->getDerivedConst<VectorValueNode>());
+        break;
+    case PREVIEW:
+        newNode = new DShaderPreview(original->getDerivedConst<DShaderPreview>());
         break;
     }
-    //FRG::CurrentProject->setNodePosition(newNode, FRG::CurrentProject->getNodePosition(original));
+    FRG::CurrentProject->setNodePosition(newNode, FRG::CurrentProject->getNodePosition(original));
     return newNode;
 }
 
@@ -166,7 +182,7 @@ QList<DNode*> DNode::copy(QList<DNode*>nodes)
         foreach(DinSocket *socket, newNode->getInSockets())
             if(socket->getCntdSocket()
                 &&nodes.contains(socket->getCntdSocket()->getNode()))
-                socket->setCntdSocket(static_cast<DoutSocket*>(CopySocketMapper::getCopy(socket->getCntdSocket())));
+                socket->setCntdSocket(CopySocketMapper::getCopy(socket->getCntdSocket())->toOut());
         nodeCopies.append(newNode);
    }
    return nodeCopies;
@@ -183,6 +199,18 @@ DNode::~DNode()
     FRG::CurrentProject->clearNodePosition(this);
 }
 
+NodeList DNode::getAllInNodes()    
+{
+    NodeList nodes;
+    foreach(DinSocket *socket, inSockets)
+        if(socket->getCntdSocket())
+        {
+            nodes.append(socket->getCntdSocket()->getNode()); 
+            nodes.append(socket->getCntdSocket()->getNode()->getAllInNodes());
+        }
+    return nodes;
+}
+
 VNode* DNode::createNodeVis()
 {
     nodeVis = new VNode(this);
@@ -191,17 +219,23 @@ VNode* DNode::createNodeVis()
 
 void DNode::deleteNodeVis()    
 {
+    foreach(DinSocket *socket, inSockets)
+        socket->setSocketVis(0);
+
+    foreach(DoutSocket *socket, outSockets)
+        socket->setSocketVis(0);
+
     FRG::Space->removeItem(nodeVis);
     delete nodeVis;
     nodeVis = 0;
 }
 
-QPointF DNode::getPos()    
+QPointF DNode::getPos() const
 {
     return FRG::CurrentProject->getNodePosition(this);
 }
 
-bool DNode::isContainer()
+bool DNode::isContainer() const
 {
     if(NodeType == CONTAINER
             ||NodeType == CONDITIONCONTAINER
@@ -279,6 +313,14 @@ QDataStream &operator <<(QDataStream &stream, DNode  *node)
         stream<<vectornode->getValue().x<<vectornode->getValue().y<<vectornode->getValue().z;
     }
 
+    if(node->getNodeType() == PREVIEW)
+    {
+        PreviewScene scene;
+        DShaderPreview *prev = node->getDerived<DShaderPreview>();
+        stream<<scene.image<<scene.material<<scene.scene<<scene.dir;
+        prev->setPrevScene(scene);
+    }
+
     return stream;
 }
 
@@ -340,6 +382,8 @@ DNode *DNode::newNode(QString name, NType t, int insize, int outsize)
             ||t == VOLUMEINPUT
             ||t == LIGHTINPUT)
         node = new InputNode();
+    else if(t == PREVIEW)
+        node = new DShaderPreview();
     else
         node = new DNode();
 
@@ -367,18 +411,18 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
     DSocket *socket;
     for(int i=0; i<insocketsize; i++)
     {
+        socket = new DinSocket("", VARIABLE, newnode);
         stream>>&socket;
-        newnode->addSocket(socket);
     }
     for(int j=0; j<outsocketsize; j++)
     {
+        socket = new DoutSocket("", VARIABLE, newnode);
         stream>>&socket;
-        newnode->addSocket(socket);
     }
 
     if(newnode->getNodeType() == FUNCTION)
     {
-        FunctionNode *fnode = (FunctionNode*) newnode;
+        FunctionNode *fnode = newnode->getDerived<FunctionNode>();
         QString fname;
         stream>>fname;
         fnode->setFunctionName(fname);
@@ -388,7 +432,7 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
     int smapsize;
     if(newnode->isContainer())
     {
-        ContainerNode *contnode = (ContainerNode*)newnode;
+        ContainerNode *contnode = newnode->getDerived<ContainerNode>();
         stream>>inSocketID>>outSocketID;
         stream>>smapsize;
         QPair<unsigned short, unsigned short>cont_socket_map_ID_mapper[smapsize];
@@ -398,12 +442,12 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
             cont_socket_map_ID_mapper[i].first = keyID;
             cont_socket_map_ID_mapper[i].second = valueID;
         }
-        DNSpace *space = new ContainerSpace();
+        ContainerSpace *space = 0;
         stream>>&space;
-        contnode->setContainerData(static_cast<ContainerSpace*>(space));
-        SocketNode *innode = static_cast<SocketNode*>(LoadNodeIDMapper::getNode(inSocketID));
+        contnode->setContainerData(space);
+        SocketNode *innode = LoadNodeIDMapper::getNode(inSocketID)->getDerived<SocketNode>();
         contnode->setInputs(innode);
-        SocketNode *outnode = static_cast<SocketNode*>(LoadNodeIDMapper::getNode(outSocketID));
+        SocketNode *outnode = LoadNodeIDMapper::getNode(outSocketID)->getDerived<SocketNode>();
         contnode->setOutputs(outnode);
         for(int j = 0; j < smapsize; j++)
         {
@@ -413,15 +457,15 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
         }
         if(LoopNode::isLoopNode(newnode))
         {
-            LoopSocketNode *loutnode = (LoopSocketNode*) outnode;
-            LoopSocketNode *linnode = (LoopSocketNode*) innode;
+            LoopSocketNode *loutnode = outnode->getDerived<LoopSocketNode>();
+            LoopSocketNode *linnode = innode->getDerived<LoopSocketNode>();
             loutnode->setPartner(linnode);
         }
     }
 
     if(newnode->getNodeType() == COLORNODE)
     {
-        ColorValueNode *colornode = (ColorValueNode*)*node;
+        ColorValueNode *colornode = newnode->getDerived<ColorValueNode>();
         QColor color;
         stream>>color;
         colornode->setValue(color);
@@ -429,7 +473,7 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
 
     if(newnode->getNodeType() == FLOATNODE)
     {
-        FloatValueNode *floatnode = (FloatValueNode*)*node;
+        FloatValueNode *floatnode = newnode->getDerived<FloatValueNode>();
         float fval;
         stream>>fval;
         floatnode->setValue(fval);
@@ -437,7 +481,7 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
 
     if(newnode->getNodeType() == STRINGNODE)
     {
-        StringValueNode *stringnode = (StringValueNode*)*node;
+        StringValueNode *stringnode = newnode->getDerived<StringValueNode>();
         QString string;
         stream>>string;
         stringnode->setValue(string);
@@ -445,7 +489,7 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
 
     if(newnode->getNodeType() == VECTORNODE)
     {
-        VectorValueNode *vectornode = (VectorValueNode*)newnode;
+        VectorValueNode *vectornode = newnode->getDerived<VectorValueNode>();
         vector vec = vectornode->getValue();
         stream>>vec.x>>vec.y>>vec.z;
     }
@@ -454,7 +498,7 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
     if(newnode->getNodeType() == LOOPINSOCKETS
             ||newnode->getNodeType() == LOOPOUTSOCKETS)
     {
-        LoopSocketNode *lsnode = (LoopSocketNode*)newnode;
+        LoopSocketNode *lsnode = newnode->getDerived<LoopSocketNode>();
         int partnerSockets, socketID, partnerID;
         stream>>partnerSockets;
         for(int i = 0; i < partnerSockets; i++)
@@ -465,6 +509,14 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
             lsnode->mapPartner(socket, partner);
         }
     }
+
+    if(newnode->getNodeType() == PREVIEW)
+    {
+        DShaderPreview *prev = newnode->getDerived<DShaderPreview>();
+        PreviewScene scene = prev->getPrevScene();
+        stream>>scene.image>>scene.material>>scene.scene>>scene.dir;
+    }
+
 
     return stream;
 }
@@ -508,13 +560,9 @@ void DNode::setNodeName(QString name)
 
 void DNode::addSocket(DSocket *socket)
 {
-    socket->setNode(this);
-    if(socket->getDir()==IN) inSockets.append((DinSocket*)socket);
+    if(socket->getDir()==IN) inSockets.append(socket->toIn());
     else 
-	{
-		outSockets.append((DoutSocket*)socket);
-		setSocketVarName((DoutSocket*)socket);
-	}
+		outSockets.append(socket->toOut());
 
     addSocketCallbacks();
 }
@@ -532,9 +580,9 @@ void DNode::remAddSocketCB(Callback *cb)
 void DNode::removeSocket(DSocket *socket)
 {
     if(socket->getDir() == IN)
-        inSockets.removeAll((DinSocket*)socket);
+        inSockets.removeAll(socket->toIn());
     else
-        outSockets.removeAll((DoutSocket*)socket);
+        outSockets.removeAll(socket->toOut());
     socket->killSocketVis();
     delete socket;
 }
@@ -549,59 +597,11 @@ void DNode::inc_var_socket()
 {
     lastsocket = varsocket;
     if(lastsocket->getDir() == IN)
-        varsocket = new DinSocket("Add Socket", VARIABLE);
+        varsocket = new DinSocket("Add Socket", VARIABLE, this);
     else
-        varsocket = new DoutSocket("Add Socket", VARIABLE);
+        varsocket = new DoutSocket("Add Socket", VARIABLE, this);
     varsocket->setVariable(true);
-    addSocket(varsocket);
     varcnt +=1;
-}
-
-void DNode::setSocketVarName(DoutSocket *socket)
-{
-    if(socket->getDir() == IN)
-        return;
-
-    if(NodeType == SURFACEINPUT
-       ||NodeType == DISPLACEMENTINPUT
-       ||NodeType == VOLUMEINPUT
-       ||NodeType == LIGHTINPUT)
-    {
-        socket->setVarName(socket->getName());
-        return;
-    }
-    if((isContainer() && inSockets.isEmpty()))
-    {
-        if(socket->getName().startsWith('-'))
-            socket->getVarName() = socket->getName().replace(0, 1, "neg");
-        socket->setVarName(socket->getName());
-        return;
-    }
-
-    if((NodeType == INSOCKETS
-        ||NodeType == LOOPINSOCKETS))
-    {
-        socket->setVarName(socket->getName());
-        return;
-    }
-
-    if(NodeType == FUNCTION)
-    {
-        socket->setVarName(socket->getName());
-        return;
-    }
-
-    QString varname_raw = socket->getName().replace(" ", "_");
-    if(DinSocket::SocketNameCnt.contains(varname_raw))
-    {
-        DinSocket::SocketNameCnt[varname_raw]++;
-        socket->setVarName(varname_raw + QString::number(DinSocket::SocketNameCnt[varname_raw]));
-    }
-    else
-    {
-        DinSocket::SocketNameCnt.insert(varname_raw, 1);
-        socket->setVarName(varname_raw);
-    }
 }
 
 void DNode::clearSocketLinks()
@@ -615,12 +615,12 @@ bool DNode::isGhost()
     return ghost;
 }
 
-QString DNode::getNodeName()
+QString DNode::getNodeName() const
 {
     return nodeName;
 }
 
-unsigned short DNode::getID()
+unsigned short DNode::getID() const
 {
     return ID;
 }
@@ -630,7 +630,7 @@ void DNode::setID(unsigned short value)
     ID = value;
 }
 
-VNode* DNode::getNodeVis()
+VNode* DNode::getNodeVis() const
 {
     return nodeVis;
 }
@@ -640,7 +640,7 @@ void DNode::setNodeVis(VNode* value)
     nodeVis = value;
 }
 
-DoutSocketList DNode::getOutSockets()
+DoutSocketList DNode::getOutSockets() const
 {
     return outSockets;
 }
@@ -650,7 +650,7 @@ void DNode::setOutSockets(DoutSocketList value)
     outSockets = value;
 }
 
-DinSocketList DNode::getInSockets()
+DinSocketList DNode::getInSockets() const
 {
     return inSockets;
 }
@@ -660,32 +660,32 @@ void DNode::setInSockets(DinSocketList value)
     inSockets = value;
 }
 
-NType DNode::getNodeType()
+NType DNode::getNodeType() const
 {
     return NodeType;
 }
 
-DSocket* DNode::getVarSocket()
+DSocket* DNode::getVarSocket() const
 {
     return varsocket;
 }
 
-void DNode::setVarSocket(DSocket* value)
+void DNode::setVarSocket(const DSocket* value)
 {
-    varsocket = value;
+    varsocket = const_cast<DSocket*>(value);
 }
 
-DSocket* DNode::getLastSocket()
+DSocket* DNode::getLastSocket() const
 {
     return lastsocket;
 }
 
-void DNode::setLastSocket(DSocket* value)
+void DNode::setLastSocket(const DSocket* value)
 {
-    lastsocket = value;
+    lastsocket = const_cast<DSocket*>(value);
 }
 
-int DNode::getVarcnt()
+int DNode::getVarcnt() const
 {
     return varcnt;
 }
@@ -695,7 +695,7 @@ void DNode::setVarcnt(int value)
     varcnt = value;
 }
 
-DNSpace* DNode::getSpace()
+DNSpace* DNode::getSpace() const
 {
     return space;
 }
@@ -707,62 +707,62 @@ void DNode::setSpace(DNSpace* value)
 
 void DNode::setsurfaceInput(DNode *node)
 {
-    node->addSocket(new DoutSocket("P", POINT));
-    node->addSocket(new DoutSocket("N", NORMAL));
-    node->addSocket(new DoutSocket("Cs", COLOR));
-    node->addSocket(new DoutSocket("Os", COLOR));
-    node->addSocket(new DoutSocket("u", FLOAT));
-    node->addSocket(new DoutSocket("v", FLOAT));
-    node->addSocket(new DoutSocket("du", FLOAT));
-    node->addSocket(new DoutSocket("dv", FLOAT));
-    node->addSocket(new DoutSocket("s", FLOAT));
-    node->addSocket(new DoutSocket("t", FLOAT));
-    node->addSocket(new DoutSocket("I", VECTOR));
+    new DoutSocket("P", POINT, node);
+    new DoutSocket("N", NORMAL, node);
+    new DoutSocket("Cs", COLOR, node);
+    new DoutSocket("Os", COLOR, node);
+    new DoutSocket("u", FLOAT, node);
+    new DoutSocket("v", FLOAT, node);
+    new DoutSocket("du", FLOAT, node);
+    new DoutSocket("dv", FLOAT, node);
+    new DoutSocket("s", FLOAT, node);
+    new DoutSocket("t", FLOAT, node);
+    new DoutSocket("I", VECTOR, node);
     node->setNodeName("Surface Input");
     node->setNodeType(SURFACEINPUT);
 }
 
 void DNode::setdisplacementInput(DNode *node)
 {
-    node->addSocket(new DoutSocket("P", POINT));
-    node->addSocket(new DoutSocket("N", NORMAL));
-    node->addSocket(new DoutSocket("u", FLOAT));
-    node->addSocket(new DoutSocket("v", FLOAT));
-    node->addSocket(new DoutSocket("du", FLOAT));
-    node->addSocket(new DoutSocket("dv", FLOAT));
-    node->addSocket(new DoutSocket("s", FLOAT));
-    node->addSocket(new DoutSocket("t", FLOAT));
+    new DoutSocket("P", POINT, node);
+    new DoutSocket("N", NORMAL, node);
+    new DoutSocket("u", FLOAT, node);
+    new DoutSocket("v", FLOAT, node);
+    new DoutSocket("du", FLOAT, node);
+    new DoutSocket("dv", FLOAT, node);
+    new DoutSocket("s", FLOAT, node);
+    new DoutSocket("t", FLOAT, node);
     node->setNodeName("Displacement Input");
     node->setNodeType(DISPLACEMENTINPUT);
 }
 
 void DNode::setvolumeInput(DNode *node)
 {
-    node->addSocket(new DoutSocket("P", POINT));
-    node->addSocket(new DoutSocket("I", VECTOR));
-    node->addSocket(new DoutSocket("Ci", COLOR));
-    node->addSocket(new DoutSocket("Oi", COLOR));
-    node->addSocket(new DoutSocket("Cs", COLOR));
-    node->addSocket(new DoutSocket("Os", COLOR));
-    node->addSocket(new DoutSocket("L", VECTOR));
-    node->addSocket(new DoutSocket("Cl", COLOR));
+    new DoutSocket("P", POINT, node);
+    new DoutSocket("I", VECTOR, node);
+    new DoutSocket("Ci", COLOR, node);
+    new DoutSocket("Oi", COLOR, node);
+    new DoutSocket("Cs", COLOR, node);
+    new DoutSocket("Os", COLOR, node);
+    new DoutSocket("L", VECTOR, node);
+    new DoutSocket("Cl", COLOR, node);
     node->setNodeName("Volume Input");
     node->setNodeType(VOLUMEINPUT);
 }
 
 void DNode::setlightInput(DNode *node)
 {
-    node->addSocket(new DoutSocket("P", POINT));
-    node->addSocket(new DoutSocket("Ps", POINT));
-    node->addSocket(new DoutSocket("L", VECTOR));
+    new DoutSocket("P", POINT, node);
+    new DoutSocket("Ps", POINT, node);
+    new DoutSocket("L", VECTOR, node);
     node->setNodeName("Light Input");
     node->setNodeType(LIGHTINPUT);
 }
 
 void DNode::setsurfaceOutput(DNode *node)
 {
-    node->addSocket(new DinSocket("Ci", COLOR));
-    node->addSocket(new DinSocket("Oi", COLOR));
+    new DinSocket("Ci", COLOR, node);
+    new DinSocket("Oi", COLOR, node);
     node->setNodeName("Surface Output");
     node->setNodeType(SURFACEOUTPUT);
     node->setDynamicSocketsNode(IN);
@@ -770,8 +770,8 @@ void DNode::setsurfaceOutput(DNode *node)
 
 void DNode::setdisplacementOutput(DNode *node)
 {
-    node->addSocket(new DinSocket("P", POINT));
-    node->addSocket(new DinSocket("N", NORMAL));
+    new DinSocket("P", POINT, node);
+    new DinSocket("N", NORMAL, node);
     node->setNodeName("Displacement Output");
     node->setNodeType(DISPLACEMENTOUTPUT);
     node->setDynamicSocketsNode(IN);
@@ -779,8 +779,8 @@ void DNode::setdisplacementOutput(DNode *node)
 
 void DNode::setvolumeOutput(DNode *node)
 {
-    node->addSocket(new DinSocket("Ci", COLOR));
-    node->addSocket(new DinSocket("Oi", COLOR));
+    new DinSocket("Ci", COLOR, node);
+    new DinSocket("Oi", COLOR, node);
     node->setNodeName("Volume Output");
     node->setNodeType(VOLUMEOUTPUT);
     node->setDynamicSocketsNode(IN);
@@ -788,7 +788,7 @@ void DNode::setvolumeOutput(DNode *node)
 
 void DNode::setlightOutput(DNode *node)
 {
-    node->addSocket(new DinSocket("Cl", COLOR));
+    new DinSocket("Cl", COLOR, node);
     node->setNodeName("Light Output");
     node->setNodeType(LIGHTOUTPUT);
     node->setDynamicSocketsNode(IN);
@@ -796,12 +796,15 @@ void DNode::setlightOutput(DNode *node)
 
 void DNode::setDynamicSocketsNode(socket_dir dir, socket_type t)
 {
-    varsocket = dir == IN ? (DSocket*)new DinSocket("Add Socket", t) : (DSocket*)new DoutSocket("Add Socket", t);
+    DSocket *varsocket = 0;
+    if(dir == IN)
+        varsocket = new DinSocket("Add Socket", t, this);
+    else
+        varsocket = new DoutSocket("Add Socket", t, this);
     varsocket->setVariable(true);
-    addSocket(varsocket);
 }
 
-bool DNode::isInput(DNode *node)
+bool DNode::isInput(const DNode *node)
 {
     if(node->getNodeType() == SURFACEINPUT
        ||node->getNodeType() == DISPLACEMENTINPUT
@@ -818,15 +821,18 @@ DNode *DNode::dropNode(QString filepath)
     file.open(QIODevice::ReadOnly);
     QDataStream stream(&file);
 
-    DNode *node;
-    stream>>&node;
-    
-    file.close();
+    DNode *node = 0;
+    FRG_NODE_HEADER_CHECK
+    {
+        stream>>&node;
 
-    LoadNodeIDMapper::clear();
-    LoadSocketIDMapper::clear();
+        file.close();
 
-	FRG::SpaceDataInFocus->addNode(node);
+        LoadNodeIDMapper::clear();
+        LoadSocketIDMapper::clear();
+
+        FRG::SpaceDataInFocus->addNode(node);
+    }
     return node;
 }
 
@@ -849,7 +855,7 @@ ContainerNode *DNode::buildContainerNode(QList<DNode*>nodes)
         float nodeX = FRG::CurrentProject->getNodePosition(node).x();
         float nodeMinX = nodeX - nodeWidth/2;
         float nodeMaxX = nodeX + nodeWidth/2;
-        node->getSpace()->unregisterNode(node);
+        FRG::SpaceDataInFocus->unregisterNode(node);
         contnode->getContainerData()->addNode(node);
         if(minX > nodeMinX) minX = nodeMinX;
         if(maxX < nodeMaxX) maxX = nodeMaxX;
@@ -894,9 +900,9 @@ void DNode::unpackContainerNode(DNode *node)
     foreach(DNodeLink *in, ins)
     {
         DoutSocket *inContainer = static_cast<DoutSocket*>(contnode->getSocketInContainer(in->in));
-        QList<DinSocket*> newInSockets = contnode->getContainerData()->getConnected(inContainer);
-        foreach(DinSocket *newInSocket, newInSockets)
-            newInLinks.append(DNodeLink(newInSocket, in->out));
+        QList<DNodeLink> TMPnewInLinks = inContainer->getLinks();
+        foreach(DNodeLink dnlink, TMPnewInLinks)
+            newInLinks.append(DNodeLink(dnlink.in, in->out));
     }
 
     foreach(DNodeLink *out, outs)
@@ -938,12 +944,12 @@ FunctionNode::FunctionNode(QString name)
     : DNode(name)
 {}
 
-FunctionNode::FunctionNode(FunctionNode* node)
+FunctionNode::FunctionNode(const FunctionNode* node)
     : DNode(node), function_name(node->getFunctionName())
 {
 }
 
-QString FunctionNode::getFunctionName()
+QString FunctionNode::getFunctionName() const
 {
     return function_name;
 }
@@ -974,7 +980,7 @@ ContainerNode::ContainerNode(QString name, bool raw)
     }
 }
 
-ContainerNode::ContainerNode(ContainerNode* node)
+ContainerNode::ContainerNode(const ContainerNode* node)
     : DNode(node)
 {
     setNodeType(CONTAINER);
@@ -1008,18 +1014,11 @@ VNode* ContainerNode::createNodeVis()
 
 void ContainerNode::addMappedSocket(DSocket *socket)
 {
-    addSocket(socket);
     DSocket *mapped_socket = 0;
     if(socket->getDir() == IN)
-    {
-        mapped_socket = (DSocket*)new DoutSocket(socket->getName(), socket->getType());
-        inSocketNode->addSocket(mapped_socket);
-    }
+        mapped_socket = new DoutSocket(socket->getName(), socket->getType(), inSocketNode);
     else
-    {
-        mapped_socket = (DSocket*)new DinSocket(socket->getName(), socket->getType());
-        outSocketNode->addSocket(mapped_socket);
-    }
+        mapped_socket = new DinSocket(socket->getName(), socket->getType(), outSocketNode);
     mapOnToIn(socket, mapped_socket);     
 }
 
@@ -1034,6 +1033,7 @@ void ContainerNode::addtolib()
     QFile file(filename);
     file.open(QIODevice::WriteOnly);
     QDataStream out(&file);
+    out<<FRG_NODE_HEADER;
     out<<this;
 }
 
@@ -1068,26 +1068,24 @@ void ContainerNode::setOutputs(DNode *outputNode)
     setOutputs(static_cast<SocketNode*>(outputNode));
 }
 
-SocketNode* ContainerNode::getInputs()
+SocketNode* ContainerNode::getInputs() const
 {
     return inSocketNode;
 }
 
-SocketNode* ContainerNode::getOutputs()
+SocketNode* ContainerNode::getOutputs() const
 {
     return outSocketNode;
 }
 
 void ContainerNode::newSocket(DSocket *socket)
 {
-    DSocket *newsocket = 0;
+    DSocket *mapped_socket = 0;
     if(socket->getDir() == IN)
-        newsocket = new DoutSocket(socket->getName(), socket->getType());
+        mapped_socket = new DoutSocket(socket->toOut(), this);
     else
-        newsocket = new DinSocket(socket->getName(), socket->getType());
-    newsocket->setVariable(false);
-    mapOnToIn(socket, newsocket);
-    addSocket(newsocket);
+        mapped_socket = new DinSocket(socket->toIn(), this);
+    mapOnToIn(socket, mapped_socket);
 }
 
 void ContainerNode::killSocket(DSocket *socket)
@@ -1097,9 +1095,9 @@ void ContainerNode::killSocket(DSocket *socket)
     removeSocket(contsocket);
 }
 
-DSocket *ContainerNode::getSocketInContainer(DSocket *socket)
+DSocket *ContainerNode::getSocketInContainer(const DSocket *socket) const
 {
-    return socket_map.value(socket);
+    return socket_map.value(const_cast<DSocket*>(socket));
 }
 
 void ContainerNode::mapOnToIn(DSocket *on, DSocket *in)    
@@ -1107,17 +1105,17 @@ void ContainerNode::mapOnToIn(DSocket *on, DSocket *in)
     socket_map.insert(on, in);
 }
 
-DSocket *ContainerNode::getSocketOnContainer(DSocket *socket)
+DSocket *ContainerNode::getSocketOnContainer(const DSocket *socket) const
 {
-    return socket_map.key(socket);
+    return socket_map.key(const_cast<DSocket*>(socket));
 }
 
-QList<DSocket*> ContainerNode::getMappedSocketsOnContainer()    
+QList<DSocket*> ContainerNode::getMappedSocketsOnContainer() const
 {
     return socket_map.keys();
 }
 
-int ContainerNode::getSocketMapSize()    
+int ContainerNode::getSocketMapSize() const
 {
     return socket_map.size();
 }
@@ -1128,7 +1126,7 @@ void ContainerNode::setNodeName(QString name)
     containerData->setName(name);
 }
 
-ContainerSpace* ContainerNode::getContainerData()
+ContainerSpace* ContainerNode::getContainerData() const
 {
     return containerData;
 }
@@ -1138,11 +1136,6 @@ void ContainerNode::setContainerData(ContainerSpace* value)
     containerData = value;
     containerData->setContainer(this);
 }
-
-//void ContainerNode::setSocketVarName(NSocket *socket)
-//{
-//    socket->varname = ""; //is ignored in code creation4
-//}
 
 bool ContainerNode::operator==(DNode &node)
 {
@@ -1160,11 +1153,11 @@ ConditionContainerNode::ConditionContainerNode(QString name, bool raw)
     {
         new SocketNode(IN, this);
         new SocketNode(OUT, this);
-        addSocket(new DinSocket("Condition", CONDITION));
+        new DinSocket("Condition", CONDITION, this);
     }
 }
 
-ConditionContainerNode::ConditionContainerNode(ConditionContainerNode* node)
+ConditionContainerNode::ConditionContainerNode(const ConditionContainerNode* node)
     : ContainerNode(node)
 {
     setNodeType(CONDITIONCONTAINER);
@@ -1184,7 +1177,7 @@ SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
     }
 }
 
-SocketNode::SocketNode(SocketNode* node)
+SocketNode::SocketNode(const SocketNode* node)
     : DNode(node)
 {
 }
@@ -1208,7 +1201,7 @@ void SocketNode::connectToContainer(ContainerNode *contnode)
     container = contnode;
 }
 
-ContainerNode* SocketNode::getContainer()    
+const ContainerNode* SocketNode::getContainer() const
 {
     return container;
 }
@@ -1218,11 +1211,10 @@ void SocketNode::inc_var_socket()
     DNode::inc_var_socket();
 	DSocket *newsocket;
 	if(getLastSocket()->getDir() == IN)
-		newsocket = new DoutSocket(getLastSocket()->getName(), getLastSocket()->getType());
+		newsocket = new DoutSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
 	else
-		newsocket = new DinSocket(getLastSocket()->getName(), getLastSocket()->getType());
+		newsocket = new DinSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
     container->mapOnToIn(newsocket, getLastSocket());
-    container->addSocket(newsocket);
 }
 
 void SocketNode::dec_var_socket(DSocket *socket)
@@ -1230,12 +1222,6 @@ void SocketNode::dec_var_socket(DSocket *socket)
     DNode::dec_var_socket(socket);
     container->removeSocket(container->getSocketOnContainer(socket));
 }
-
-//void SocketNode::setSocketVarName(NSocket *socket)
-//{
-//    socket->varname = ""; //Is ignored in conde creation
-//}
-
 
 LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
     :SocketNode(dir, contnode, raw)
@@ -1251,7 +1237,7 @@ LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw
 
 }
 
-LoopSocketNode::LoopSocketNode(LoopSocketNode* node)
+LoopSocketNode::LoopSocketNode(const LoopSocketNode* node)
     : SocketNode(node)
 {
     foreach(DSocket *original, node->getLoopedSockets())
@@ -1267,12 +1253,12 @@ void LoopSocketNode::dec_var_socket(DinSocket *socket)
     }
 }
 
-QList<DSocket*> LoopSocketNode::getLoopedSockets()    
+QList<DSocket*> LoopSocketNode::getLoopedSockets() const
 {
     return loopSocketMap.keys();
 }
 
-qint16 LoopSocketNode::getLoopedSocketsCount()    
+qint16 LoopSocketNode::getLoopedSocketsCount() const
 {
     return loopSocketMap.size();
 }
@@ -1281,16 +1267,15 @@ void LoopSocketNode::createPartnerSocket(DSocket *socket)
 {
 	DSocket *partnerSocket;
 	if(socket->getDir() == IN)
-		partnerSocket = new DoutSocket(socket->getName(), socket->getType());
+		partnerSocket = new DoutSocket(socket->getName(), socket->getType(), partner);
 	else
-		partnerSocket = new DinSocket(socket->getName(), socket->getType());
-    partner->addSocket(partnerSocket);
+		partnerSocket = new DinSocket(socket->getName(), socket->getType(), partner);
     loopSocketMap.insert(socket, partnerSocket);
 }
 
 void LoopSocketNode::deletePartnerSocket(DSocket *socket)
 {
-    DinSocket *partnerSocket = (DinSocket*)getPartnerSocket(socket);
+    DinSocket *partnerSocket = getPartnerSocket(socket)->toIn();
     partner->removeSocket(partnerSocket);
     loopSocketMap.remove(socket);
 }
@@ -1305,14 +1290,9 @@ void LoopSocketNode::setPartner(LoopSocketNode *p)
     partner = p;
 }
 
-DSocket *LoopSocketNode::getPartnerSocket(DSocket *socket)
+DSocket *LoopSocketNode::getPartnerSocket(const DSocket *socket) const
 {
-    return loopSocketMap.value(socket);
-}
-
-void LoopSocketNode::addSocket(DSocket *socket)
-{
-    DNode::addSocket(socket);
+    return loopSocketMap.value(const_cast<DSocket*>(socket));
 }
 
 void LoopSocketNode::inc_var_socket()
@@ -1327,12 +1307,12 @@ ConditionNode::ConditionNode(NType t, bool raw)
 
     if(!raw)
     {
-        addSocket(new DoutSocket("Output", CONDITION));
+        new DoutSocket("Output", CONDITION, this);
         if(getNodeType() != AND && getNodeType() != OR)
         {
-            addSocket(new DinSocket("Input", getNodeType() == NOT ? CONDITION : VARIABLE));
+            new DinSocket("Input", getNodeType() == NOT ? CONDITION : VARIABLE, this);
             if(getNodeType() != NOT)
-                addSocket(new DinSocket("Input", VARIABLE));
+                new DinSocket("Input", VARIABLE, this);
         }
         switch(getNodeType())
         {
@@ -1356,11 +1336,13 @@ ConditionNode::ConditionNode(NType t, bool raw)
             setNodeName("Or");
             setDynamicSocketsNode(IN, CONDITION);
             break;
+        default:
+            break;
         }
     }
 }
 
-ConditionNode::ConditionNode(ConditionNode* node)
+ConditionNode::ConditionNode(const ConditionNode* node)
     : DNode(node)
 {
 }
@@ -1385,17 +1367,18 @@ MathNode::MathNode(NType t, bool raw)
     case DOTPRODUCT:
         setNodeName("Dot Product");
         break;
+    default:
+        break;
     }
 
     if(!raw)
     {
         setDynamicSocketsNode(IN);
-        DoutSocket *result = new DoutSocket("Result", VARIABLE);
-        addSocket(result);
+        new DoutSocket("Result", VARIABLE, this);
     }
 }
 
-MathNode::MathNode(MathNode* node)
+MathNode::MathNode(const MathNode* node)
     : DNode(node)
 {
 }
@@ -1418,7 +1401,7 @@ void MathNode::dec_var_socket(DSocket *socket)
     }
 }
 
-bool DNode::isMathNode(DNode *node)
+bool DNode::isMathNode(const DNode *node)
 {
     return node->getNodeType() == ADD
        || node->getNodeType() == SUBTRACT
@@ -1431,7 +1414,7 @@ ValueNode::ValueNode(QString name)
 {
 }
 
-ValueNode::ValueNode(ValueNode* node)
+ValueNode::ValueNode(const ValueNode* node)
     : DNode(node), shaderInput(node->isShaderInput())
 {
 }
@@ -1447,23 +1430,23 @@ void ValueNode::setShaderInput(bool si)
     shaderInput = si;
 }
 
-bool ValueNode::isShaderInput()
+bool ValueNode::isShaderInput() const
 {
     return shaderInput;
 }
 
 ColorValueNode::ColorValueNode(QString name, bool raw)
-    : ValueNode(name)
+    : ValueNode(name), colorvalue(QColor(255, 255, 255))
 {
     setNodeType(COLORNODE);
     setNodeName("Color Value");
     if(!raw)
     {
-        addSocket(new DoutSocket("Color", COLOR));
+        new DoutSocket("Color", COLOR, this);
     }
 }
 
-ColorValueNode::ColorValueNode(ColorValueNode* node)
+ColorValueNode::ColorValueNode(const ColorValueNode* node)
     : ValueNode(node), colorvalue(node->getValue())
 {
 }
@@ -1479,7 +1462,7 @@ void ColorValueNode::setValue(QColor newvalue)
     colorvalue = newvalue;
 }
 
-QColor ColorValueNode::getValue()
+QColor ColorValueNode::getValue() const
 {
     return colorvalue;
 }
@@ -1499,11 +1482,11 @@ StringValueNode::StringValueNode(QString name, bool raw)
     setNodeName("String Value");
     if(!raw)
     {
-        addSocket(new DoutSocket("String", STRING));
+        new DoutSocket("String", STRING, this);
     }
 }
 
-StringValueNode::StringValueNode(StringValueNode* node)
+StringValueNode::StringValueNode(const StringValueNode* node)
     : ValueNode(node), stringvalue(node->getValue())
 {
 }
@@ -1519,7 +1502,7 @@ void StringValueNode::setValue(QString newstring)
     stringvalue = newstring;
 }
 
-QString StringValueNode::getValue()
+QString StringValueNode::getValue() const
 {
     return stringvalue;
 }
@@ -1533,17 +1516,17 @@ bool StringValueNode::operator ==(DNode &node)
 }
 
 FloatValueNode::FloatValueNode(QString name, bool raw)
-    : ValueNode(name)
+    : ValueNode(name), floatvalue(1.0)
 {
     setNodeType(FLOATNODE);
     setNodeName("Float Value");
     if(!raw)
     {
-        addSocket(new DoutSocket("Float", FLOAT));
+        new DoutSocket("Float", FLOAT, this);
     }
 }
 
-FloatValueNode::FloatValueNode(FloatValueNode* node)
+FloatValueNode::FloatValueNode(const FloatValueNode* node)
     : ValueNode(node), floatvalue(node->getValue())
 {
 }
@@ -1559,7 +1542,7 @@ void FloatValueNode::setValue(double newval)
     floatvalue = newval;
 }
 
-float FloatValueNode::getValue()
+float FloatValueNode::getValue() const
 {
     return floatvalue;
 }
@@ -1579,7 +1562,7 @@ VectorValueNode::VectorValueNode(QString name, bool raw)
     setNodeName("Vector Value");
 }
 
-VectorValueNode::VectorValueNode(VectorValueNode* node)
+VectorValueNode::VectorValueNode(const VectorValueNode* node)
     : ValueNode(node), vectorvalue(node->getValue())
 {
 }
@@ -1589,7 +1572,7 @@ void VectorValueNode::setValue(vector newvalue)
     vectorvalue = newvalue;
 }
 
-vector VectorValueNode::getValue()    
+vector VectorValueNode::getValue() const
 {
     return vectorvalue;
 }
@@ -1614,7 +1597,7 @@ LoopNode::LoopNode(QString name, bool raw)
     }
 }
 
-LoopNode::LoopNode(LoopNode* node)
+LoopNode::LoopNode(const LoopNode* node)
     : ContainerNode(node)
 {
 }
@@ -1633,10 +1616,10 @@ WhileNode::WhileNode(QString name, bool raw)
 {
     setNodeType(WHILE);
     if(!raw)
-        getOutputs()->addSocket(new DinSocket("Condition", CONDITION));
+        new DinSocket("Condition", CONDITION, getOutputs());
 }
 
-WhileNode::WhileNode(WhileNode* node)
+WhileNode::WhileNode(const WhileNode* node)
     : LoopNode(node)
 {
 }
@@ -1647,13 +1630,13 @@ ForNode::ForNode(QString name, bool raw)
     setNodeType(FOR);
     if(!raw)
     {
-        addMappedSocket(new DinSocket("Start", FLOAT));
-        addMappedSocket(new DinSocket("End", FLOAT));
-        addMappedSocket(new DinSocket("Step", FLOAT));
+        addMappedSocket(new DinSocket("Start", FLOAT, this));
+        addMappedSocket(new DinSocket("End", FLOAT, this));
+        addMappedSocket(new DinSocket("Step", FLOAT, this));
     }
 }
 
-ForNode::ForNode(ForNode* node)
+ForNode::ForNode(const ForNode* node)
     : LoopNode(node)
 {
 }
@@ -1664,15 +1647,15 @@ IlluminanceNode::IlluminanceNode(QString name, bool raw)
     setNodeType(ILLUMINANCE);
     if(!raw)
     {
-        addMappedSocket(new DinSocket("Category", STRING));
-        addMappedSocket(new DinSocket("Point", POINT));
-        addMappedSocket(new DinSocket("Direction", VECTOR));
-        addMappedSocket(new DinSocket("Angle", FLOAT));
-        addMappedSocket(new DinSocket("Message Passing", STRING));
+        addMappedSocket(new DinSocket("Category", STRING, this));
+        addMappedSocket(new DinSocket("Point", POINT, this));
+        addMappedSocket(new DinSocket("Direction", VECTOR, this));
+        addMappedSocket(new DinSocket("Angle", FLOAT, this));
+        addMappedSocket(new DinSocket("Message Passing", STRING, this));
     }
 }
 
-IlluminanceNode::IlluminanceNode(IlluminanceNode* node)
+IlluminanceNode::IlluminanceNode(const IlluminanceNode* node)
     : LoopNode(node)
 {
 }
@@ -1683,13 +1666,13 @@ IlluminateNode::IlluminateNode(QString name, bool raw)
     setNodeType(ILLUMINATE);
     if(!raw)
     {
-        addMappedSocket(new DinSocket("Point", POINT));
-        addMappedSocket(new DinSocket("Direction", VECTOR));
-        addMappedSocket(new DinSocket("Angle", FLOAT));
+        addMappedSocket(new DinSocket("Point", POINT, this));
+        addMappedSocket(new DinSocket("Direction", VECTOR, this));
+        addMappedSocket(new DinSocket("Angle", FLOAT, this));
     }
 }
 
-IlluminateNode::IlluminateNode(IlluminateNode* node)
+IlluminateNode::IlluminateNode(const IlluminateNode* node)
     : LoopNode(node)
 {
 }
@@ -1700,16 +1683,16 @@ GatherNode::GatherNode(QString name, bool raw)
     setNodeType(GATHER);
     if(!raw)
     {
-        addMappedSocket(new DinSocket("Category", STRING));
-        addMappedSocket(new DinSocket("Point", POINT));
-        addMappedSocket(new DinSocket("Direction", VECTOR));
-        addMappedSocket(new DinSocket("Angle", FLOAT));
-        addMappedSocket(new DinSocket("Message Passing", STRING));
-        addMappedSocket(new DinSocket("Samples", FLOAT));
+        addMappedSocket(new DinSocket("Category", STRING, this));
+        addMappedSocket(new DinSocket("Point", POINT, this));
+        addMappedSocket(new DinSocket("Direction", VECTOR, this));
+        addMappedSocket(new DinSocket("Angle", FLOAT, this));
+        addMappedSocket(new DinSocket("Message Passing", STRING, this));
+        addMappedSocket(new DinSocket("Samples", FLOAT, this));
     }
 }
 
-GatherNode::GatherNode(GatherNode* node)
+GatherNode::GatherNode(const GatherNode* node)
     : LoopNode(node)
 {
 }
@@ -1720,12 +1703,12 @@ SolarNode::SolarNode(QString name, bool raw)
     setNodeType(SOLAR);
     if(!raw)
     {
-        addMappedSocket(new DinSocket("Axis", VECTOR));
-        addMappedSocket(new DinSocket("Angle", FLOAT));
+        addMappedSocket(new DinSocket("Axis", VECTOR, this));
+        addMappedSocket(new DinSocket("Angle", FLOAT, this));
     }
 }
 
-SolarNode::SolarNode(SolarNode* node)
+SolarNode::SolarNode(const SolarNode* node)
     : LoopNode(node)
 {
 }
@@ -1734,9 +1717,68 @@ OutputNode::OutputNode()
 {
 }
 
-OutputNode::OutputNode(OutputNode* node)
-    : DNode(node), filename(node->getFileName()), ShaderName(node->getShaderName())
+OutputNode::OutputNode(const OutputNode* node)
+    : DNode(node), ShaderName(node->getShaderName())
 {
+}
+
+void OutputNode::setVariables(DNode *node)    
+{
+    if(!node)
+    {
+        variables.clear();
+        variableCnt.clear();
+        node = this;
+    }
+
+    foreach(DinSocket *socket, node->getInSockets())
+    {
+        if(!socket->getCntdSocket())
+            continue;
+
+        DoutSocket *cntdSocket = 0;
+        if(socket->getCntdSocket()->getNode()->isContainer())
+            cntdSocket = socket->getCntdSocket()->getNode()->getDerived<ContainerNode>()->getSocketInContainer(socket->getCntdSocket())->toIn()->getCntdSocket();
+        else
+            cntdSocket = socket->getCntdSocket();
+
+        if(variables.contains(cntdSocket))
+            return;
+            
+        DNode *cntdNode = cntdSocket->getNode();
+        QString varname_raw = cntdSocket->getName().replace(" ", "_");
+        DoutSocket *simSocket = getSimilar(cntdSocket);
+        if(variableCnt.contains(varname_raw)
+            &&cntdNode->getSpace()->isContainerSpace()
+            &&cntdNode->getSpace()->toContainer()->getContainer()->getInSockets().isEmpty()
+            && simSocket)
+            insertVariable(cntdSocket, getVariable(simSocket));
+        else
+            insertVariable(cntdSocket, cntdSocket->setSocketVarName(&variableCnt));
+
+        setVariables(cntdNode);
+    }
+}
+
+DoutSocket* OutputNode::getSimilar(DoutSocket *socket)    
+{
+    if(!socket->getNode()->getSpace()->isContainerSpace())
+        return 0;
+    ContainerNode *contNode = socket->getNode()->getSpace()->toContainer()->getContainer();
+    foreach(DNode *node, getAllInNodes())
+        if(node != contNode
+            && *node == *contNode)
+            foreach(DNode *simNode, node->getDerived<ContainerNode>()->getContainerData()->getNodes())
+                if(*simNode == *socket->getNode())
+                    foreach(DoutSocket *simOutSocket, simNode->getOutSockets())
+                        if(*simOutSocket == *socket)
+                            return simOutSocket;
+    return 0;        
+}
+
+void OutputNode::insertVariable(const DoutSocket *socket, QString variable)    
+{
+    variables.insert(socket, variable);
 }
 
 VNode* OutputNode::createNodeVis()
@@ -1745,13 +1787,19 @@ VNode* OutputNode::createNodeVis()
     return getNodeVis();
 }
 
-QString OutputNode::getShaderName()
+QString OutputNode::getVariable(const DoutSocket* socket)const
+{
+    return variables.value(socket);
+}
+
+QString OutputNode::getShaderName() const
 {
     return ShaderName;
 }
 
 void OutputNode::writeCode()
 {
+    setVariables();
     QFile file(filename);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
@@ -1770,12 +1818,9 @@ void OutputNode::compile()
     process->setWorkingDirectory(QFileInfo(filename).canonicalPath());
     process->start("shaderdl", arguments);
     process->waitForFinished(10000);
-
-    if(!process->pid())
-        printf("not running");
 }
 
-QString OutputNode::getFileName()
+QString OutputNode::getFileName() const
 {
     return filename;
 }
@@ -1802,41 +1847,7 @@ void OutputNode::changeName(QString newname)
     case LIGHTOUTPUT:
         shadertype = "Light Output";
         break;
-	case CONTAINER:
-	case FUNCTION:
-	case MULTIPLY:
-	case DIVIDE:
-	case ADD:
-	case SUBTRACT:
-	case DOTPRODUCT:
-	case GREATERTHAN:
-	case SMALLERTHAN:
-	case EQUAL:
-	case AND:
-	case OR:
-	case CONDITIONCONTAINER:
-	case NOT:
-	case FOR:
-	case WHILE:
-	case GATHER:
-	case ILLUMINANCE:
-	case ILLUMINATE:
-	case SOLAR:
-	case SURFACEINPUT:
-	case DISPLACEMENTINPUT:
-	case VOLUMEINPUT:
-	case LIGHTINPUT:
-	case ILLUMINANCEINPUT:
-	case ILLUMINATEINPUT:
-	case SOLARINPUT:
-	case INSOCKETS:
-	case OUTSOCKETS:
-	case LOOPINSOCKETS:
-	case LOOPOUTSOCKETS:
-	case COLORNODE:
-	case FLOATNODE:
-	case STRINGNODE:
-	case VECTORNODE:
+    default:
 	break;	
     }
 
@@ -1852,7 +1863,7 @@ InputNode::InputNode()
 {
 }
 
-InputNode::InputNode(InputNode* node)
+InputNode::InputNode(const InputNode* node)
     : DNode(node)
 {
 }

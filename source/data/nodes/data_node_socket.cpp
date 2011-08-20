@@ -27,9 +27,8 @@
 #include "source/graphics/base/vnspace.h"
 
 QHash<unsigned short, DSocket*>LoadSocketIDMapper::loadIDMapper;
-QHash<QString, int> DSocket::SocketNameCnt;
 unsigned short DSocket::count = 0;
-QHash<DSocket*, DSocket*> CopySocketMapper::socketMap;
+QHash<const DSocket*, DSocket*> CopySocketMapper::socketMap;
 
 unsigned short LoadSocketIDMapper::getID(DSocket *socket)    
 {
@@ -58,13 +57,14 @@ void LoadSocketIDMapper::clear()
     loadIDMapper.clear();
 }
 
-void CopySocketMapper::setSocketPair(DSocket *original, DSocket *copy)    
+void CopySocketMapper::setSocketPair(const DSocket *original, DSocket *copy)    
 {
    socketMap.insert(original, copy); 
 }
 
-DSocket * CopySocketMapper::getCopy(DSocket *original)    
+DSocket * CopySocketMapper::getCopy(const DSocket *original)    
 {
+    if(!socketMap.contains(original)) return 0;
     return socketMap.value(original);
 }
 
@@ -73,20 +73,44 @@ void CopySocketMapper::clear()
     socketMap.clear();
 }
 
-DSocket::DSocket(QString name, socket_type type)
-	: name(name), type(type), ID(++count), Variable(false), socketVis(0), node(0)
+DSocket::DSocket(QString name, socket_type type, DNode *node)
+	: name(name), type(type), ID(++count), Variable(false), socketVis(0x0), node(node)
 {
 }
 
-DSocket::DSocket(DSocket* socket)
-    : name(socket->getName()), type(socket->getType()), ID(++count), node(0),
-    Variable(socket->getVariable()), socketVis(0)
+DSocket::DSocket(DSocket* socket, DNode *node)
+    : name(socket->getName()), type(socket->getType()), ID(++count), node(node),
+    Variable(socket->getVariable()), socketVis(0x0)
 {
     CopySocketMapper::setSocketPair(socket, this);
 }
 
 DSocket::~DSocket()
 {
+}
+
+bool DSocket::operator==(DSocket &socket)    
+{
+    if(getVariable() != socket.getVariable()
+            ||getName() != socket.getName()
+            ||getType() != socket.getType())
+        return false;
+    return true;
+}
+
+bool DSocket::operator !=(DSocket &socket)
+{
+    return(!(*this == socket));
+}
+
+DinSocket* DSocket::toIn()
+{
+    return static_cast<DinSocket*>(this);
+}
+
+DoutSocket* DSocket::toOut()
+{
+    return static_cast<DoutSocket*>(this);
 }
 
 void DSocket::setSocketVis(VNSocket *vis)    
@@ -101,9 +125,9 @@ void DSocket::killSocketVis()
     socketVis->killNameVis();
     socketVis->setParentItem(0);
     FRG::Space->removeItem(socketVis);
-    socketVis->deleteLater();
+    delete socketVis;
     socketVis = 0;
-    node->getNodeVis()->updateNodeVis();
+    const_cast<VNode*>(node->getNodeVis())->updateNodeVis();
 }
 
 bool DSocket::isCompatible(DSocket *s1, DSocket *s2)    
@@ -136,18 +160,26 @@ DNodeLink DSocket::createLink(DSocket *socket1, DSocket *socket2)
     return DNodeLink(in, out);
 }
 
-DinSocket::DinSocket(QString name, socket_type type)
-	: DSocket(name, type), cntdSocket(0), tempCntdID(0), Token(false)
+DinSocket::DinSocket(QString name, socket_type type, DNode *node)
+	: DSocket(name, type, node), cntdSocket(0x0), tempCntdID(0), Token(false)
 {
 	setDir(IN);
+    getNode()->addSocket(this);
 };
 
-DinSocket::DinSocket(DinSocket* socket)
-    : DSocket(socket),
+DinSocket::DinSocket(DinSocket* socket, DNode *node)
+    : DSocket(socket, node),
     cntdSocket(socket->getCntdSocket()),
     tempCntdID(0), Token(socket->getToken())
 {
     setDir(IN);
+    getNode()->addSocket(this);
+}
+
+DinSocket::~DinSocket()
+{
+    if(cntdSocket)
+        cntdSocket->unregisterSocket(this);
 }
 
 void DinSocket::addLink(DoutSocket *socket)
@@ -184,7 +216,7 @@ void DinSocket::clearLink()
 	cntdSocket = 0;
 }
 
-unsigned short DinSocket::getTempCntdID()
+unsigned short DinSocket::getTempCntdID() const
 {
 	return tempCntdID;
 }
@@ -196,14 +228,13 @@ void DinSocket::setTempCntdID(unsigned short value)
 
 QDataStream & operator<<(QDataStream &stream, DSocket *socket)
 {
-    stream<<(unsigned short)socket->getID()<<socket->getVariable()<<socket->getDir();
+    stream<<(unsigned short)socket->getID()<<socket->getVariable();
     stream<<socket->getName()<<socket->getType();
 	if(socket->getDir() == IN)
 	{
-		DinSocket *inSocket = (DinSocket*)socket;
-		stream<<inSocket->getToken();
-        if(inSocket->getCntdSocket())
-            stream<<inSocket->getCntdSocket()->getID();
+		stream<<socket->toIn()->getToken();
+        if(socket->toIn()->getCntdSocket())
+            stream<<socket->toIn()->getCntdSocket()->getID();
         else
             stream<<(unsigned short)(0);
 	}
@@ -212,34 +243,28 @@ QDataStream & operator<<(QDataStream &stream, DSocket *socket)
 
 QDataStream & operator>>(QDataStream &stream, DSocket **socket)
 {
-    int dir;
 	int type;
     unsigned short ID;
     QString name;
     bool isVar; 
     stream>>ID;
     stream>>isVar;
-    stream>>dir;
     stream>>name;
     stream>>type;
+
 	DSocket *newsocket;
-	if(dir == IN)
+    newsocket->setType((socket_type)type);
+    newsocket->setName(name);
+    newsocket->setVariable(isVar);
+	if(newsocket->getDir() == IN)
 	{
 		bool istoken;
 		unsigned short tempID;
 		stream>>istoken;
 		stream>>tempID;
-		DinSocket* newInSocket = new DinSocket(name, (socket_type)type);
-		newInSocket->setTempCntdID(tempID);
-		newInSocket->setToken(istoken); 
-		newsocket = (DSocket*)newInSocket;
+		newsocket->toIn()->setTempCntdID(tempID);
+		newsocket->toIn()->setToken(istoken); 
 	}
-	else
-	{
-		newsocket = (DSocket*) new DoutSocket(name, (socket_type)type);
-	}
-    newsocket->setDir((socket_dir)dir);
-    newsocket->setVariable(isVar);
     LoadSocketIDMapper::setID(newsocket, ID);
     *socket = newsocket;
     return stream;
@@ -247,10 +272,8 @@ QDataStream & operator>>(QDataStream &stream, DSocket **socket)
 
 bool DinSocket::operator==(DinSocket &socket)
 {
-    if(getVariable() != socket.getVariable()
-            ||getName() != socket.getName()
-            ||getType() != socket.getToken()
-            ||getType() != socket.getType())
+    if(DSocket::operator!=(socket)
+        ||getToken() != socket.getToken())
         return false;
     return true;
 }
@@ -271,7 +294,7 @@ void DSocket::createSocketVis(VNode *parent)
     if(!socketVis)socketVis = new VNSocket(this, parent);	
 }
 
-QString DSocket::getName()
+QString DSocket::getName() const
 {
 	return name;
 }
@@ -281,7 +304,7 @@ void DSocket::setName(QString value)
 	name = value;
 }
 
-socket_type DSocket::getType()
+socket_type DSocket::getType() const
 {
 	return type;
 }
@@ -291,7 +314,7 @@ void DSocket::setType(socket_type value)
 	type = value;
 }
 
-socket_dir DSocket::getDir()
+socket_dir DSocket::getDir() const
 {
 	return dir;
 }
@@ -301,41 +324,103 @@ void DSocket::setDir(socket_dir value)
 	dir = value;
 }
 
-DNode* DSocket::getNode()
+DNode* DSocket::getNode() const
 {
 	return node;
 }
 
-DoutSocket::DoutSocket(QString name, socket_type type)
-	: DSocket(name, type)
+DoutSocket::DoutSocket(QString name, socket_type type, DNode *node)
+	: DSocket(name, type, node)
 {
 	setDir(OUT);
+    getNode()->addSocket(this);
+    //setSocketVarName(); 
 }
 
-DoutSocket::DoutSocket(DoutSocket* socket)
-    : DSocket(socket)
+DoutSocket::DoutSocket(DoutSocket* socket, DNode *node)
+    : DSocket(socket, node)
 {
     setDir(OUT);
+    getNode()->addSocket(this);
+//    setSocketVarName();
 }
 
 DoutSocket::~DoutSocket()
 {
-    if(getNode()->getSpace())
-        foreach(DinSocket *socket, getNode()->getSpace()->getConnected(this))
-            socket->clearLink();
+    foreach(DinSocket *socket, cntdSockets)
+        socket->clearLink();
+}
+
+bool DoutSocket::operator==(DoutSocket &socket)
+{
+    if(DSocket::operator!=(socket))
+        return false;
+    return true;
+}
+
+bool DoutSocket::operator !=(DoutSocket &socket)
+{
+    return(!(*this == socket));
+}
+
+void DoutSocket::setName(QString name)    
+{
+    DSocket::setName(name);
+}
+
+QString DoutSocket::setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt)
+{
+    QString name = getName();
+    QString varname_raw = name.replace(" ", "_");
+
+    switch(getNode()->getNodeType())
+    {
+        case SURFACEINPUT:
+        case DISPLACEMENTINPUT:
+        case VOLUMEINPUT:
+        case LIGHTINPUT:
+        case INSOCKETS:
+        case LOOPINSOCKETS:
+            varname = name;
+            break;
+        default:
+            if(getNode()->isContainer())
+                break;
+
+            if(SocketNameCnt->contains(varname_raw))
+            {
+                unsigned short cnt = SocketNameCnt->value(varname_raw);
+                SocketNameCnt->remove(varname_raw);
+                SocketNameCnt->insert(varname_raw, ++cnt);
+                varname = varname_raw + QString::number(SocketNameCnt->value(varname_raw));
+            }
+            else
+            {
+                SocketNameCnt->insert(varname_raw, 1);
+                varname = varname_raw;
+            }
+            break;
+    }
+    return varname;
+}
+
+QString DoutSocket::getVarName() const
+{
+    return varname;
 }
 
 void DoutSocket::registerSocket(DSocket *socket)    
 {
-    if(cntdSockets.isEmpty() && getVariable()) getNode()->inc_var_socket();
-    cntdSockets.append(static_cast<DinSocket*>(socket)); 
+    if(this == getNode()->getVarSocket()) 
+        getNode()->inc_var_socket();
+    cntdSockets.append(socket->toIn()); 
 }
 
-QList<DNodeLink> DoutSocket::getLinks()    
+QList<DNodeLink> DoutSocket::getLinks() const
 {
     QList<DNodeLink> links;
     foreach(DinSocket *socket, cntdSockets)
-        links.append(DNodeLink(socket, this));
+        links.append(DNodeLink(socket, const_cast<DoutSocket*>(this)));
     return links;
 }
 
@@ -348,18 +433,28 @@ void DoutSocket::unregisterSocket(DinSocket *socket)
 void DinSocket::setCntdSocket(DoutSocket *socket)
 {
     if(!socket)return;
-    if(cntdSocket)
+    if(cntdSocket &&!socket->getLinks().isEmpty())
         cntdSocket->unregisterSocket(this);
 	cntdSocket = socket;
     cntdSocket->registerSocket(this);
 }
 
-DoutSocket* DinSocket::getCntdSocket()
+void DinSocket::cntdSocketFromID()
+{
+    cntdSocket = (DoutSocket*)LoadSocketIDMapper::getSocket(getTempCntdID());
+}
+
+const DoutSocket* DinSocket::getCntdSocketConst() const
 {
 	return cntdSocket;
 }
 
-bool DinSocket::getToken()
+DoutSocket* DinSocket::getCntdSocket() const
+{
+	return cntdSocket;
+}
+
+bool DinSocket::getToken() const
 {
 	return Token;
 }
@@ -369,21 +464,7 @@ void DinSocket::setToken(bool value)
 	Token = value;
 }
 
-QString DSocket::getVarName()
-{
-    if(varname == ""
-        && getDir() == IN
-        && !getVariable())
-        return name;
-	return varname;
-}
-
-void DSocket::setVarName(QString value)
-{
-	varname = value;
-}
-
-bool DSocket::getVariable()
+bool DSocket::getVariable() const
 {
 	return Variable;
 }
@@ -391,15 +472,14 @@ bool DSocket::getVariable()
 void DSocket::setVariable(bool value)
 {
 	Variable = value;
-    if(getNode())getNode()->setVarSocket(this);
+    if(getNode()&&Variable)getNode()->setVarSocket(this);
 }
 
-VNSocket* DSocket::getSocketVis()
+VNSocket* DSocket::getSocketVis() const
 {
-    createSocketVis(getNode()->getNodeVis());
 	return socketVis;
 }
-unsigned short DSocket::getID()
+unsigned short DSocket::getID() const
 {
 	return ID;
 }

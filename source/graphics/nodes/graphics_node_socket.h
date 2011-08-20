@@ -22,8 +22,8 @@
 #include "QGraphicsItem"
 #include "QObject"
 
-#define SOCKET_WIDTH 20
-#define SOCKET_HEIGHT 20
+#define SOCKET_WIDTH 13
+#define SOCKET_HEIGHT 13
 
 class DSocket;
 class VNode;
@@ -35,17 +35,17 @@ public:
     VNSocket(DSocket *, VNode*);
     ~VNSocket();
     enum {Type = UserType + 1};
-    DSocket *data;
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     int type() const {return Type;}
 	void createNameVis();
     void killNameVis();
-	int getWidth();
+	int getWidth() const;
 	void setWidth(int newwidth);
 	void setHeight(int newHeight);
-	int getHeight();
-	int getSocketNameVisWidth();
+	int getHeight() const;
+	int getSocketNameVisWidth() const;
+    DSocket *getData() const;
 
 public slots:
     void changeType();
@@ -61,6 +61,7 @@ protected:
 
 private:
 	QGraphicsTextItem *socketNameVis;
+    DSocket *data;
 	int width, height;
 };
 

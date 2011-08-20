@@ -31,14 +31,14 @@ public:
 	void setRootSpace(DNSpace* value);
 	DNSpace* getRootSpace();
     void moveIntoRootSpace();
-	void setNodePosition(DNode *node, QPointF value);
-	QPointF getNodePosition(DNode *node);
-    void clearNodePosition(DNode *node);
+	void setNodePosition(const DNode *node, QPointF value);
+	QPointF getNodePosition(const DNode *node);
+    void clearNodePosition(const DNode *node);
 
 private:
     QString filename;
     DNSpace *root_scene;
-	QHash<DNode*, QPointF> nodePositions;
+	QHash<const DNode*, QPointF> nodePositions;
     QList<DNSpace*>spaces;
 };
 

@@ -28,6 +28,16 @@
 #include "source/data/base/frg.h"
 #include "source/graphics/base/vnspace.h"
 
+DNodeLink::DNodeLink(DSocket *in, DSocket *out, bool createvis)
+    : out(out->toOut()), in(in->toIn()), vis(0)
+{
+    if(createvis)
+    {
+        vis = new VNodeLink(this);
+        FRG::Space->addItem(vis);
+    }
+}
+
 DNodeLink::~DNodeLink()
 {
     if(vis)
@@ -75,7 +85,6 @@ void VNodeLink::initVNodeLink()
     cMenu = new QMenu;
     QAction *removeAction = cMenu->addAction("Remove Link");
     connect(removeAction, SIGNAL(triggered()), this, SLOT(remove()));
-    connect(removeAction, SIGNAL(triggered()), FRG::Space, SLOT(updateLinks()));
     connect(removeAction, SIGNAL(triggered()), FRG::Space, SIGNAL(linkChanged()));
 }
 
@@ -83,12 +92,13 @@ void VNodeLink::remove()
 {
     DNodeLink dnlink(inSocket, inSocket->getCntdSocket());
     if(dnlink.in->getVariable())
-        dnlink.in = static_cast<DinSocket*>(dnlink.in->getNode()->getVarSocket());
+        dnlink.in = const_cast<DinSocket*>(dnlink.in->getNode()->getVarSocket()->toIn());
     if(dnlink.out->getVariable())
-        dnlink.out = static_cast<DoutSocket*>(dnlink.out->getNode()->getVarSocket());
+        dnlink.out = const_cast<DoutSocket*>(dnlink.out->getNode()->getVarSocket()->toOut());
     FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoRemoveLink(dnlink));
     //emit removeLink(this);
     inSocket->clearLink();
+    FRG::Space->updateLinks();
 }
 
 void VNodeLink::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
@@ -122,7 +132,7 @@ void VNodeLink::setlink(DinSocket *in, DoutSocket *out)
 
 void VNodeLink::updateLink()
 {
-    VNode *pin, *pout;
+    const VNode *pin, *pout;
     pin = inSocket->getNode()->getNodeVis();
     pout = outSocket->getNode()->getNodeVis();
     if(!inSocket
@@ -133,7 +143,7 @@ void VNodeLink::updateLink()
     in = inSocket->getSocketVis()->pos() + pin->pos();
     in.setX(in.x());
     in.setY(in.y());
-    VNSocket *socketVis = outSocket->getSocketVis();
+    const VNSocket *socketVis = outSocket->getSocketVis();
     out = socketVis->pos();
     out += pout->pos();
     out.setX(out.x());
@@ -214,9 +224,9 @@ void VNodeLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     QPen linkpen;
     if (outSocket)
     {
-        linkpen.setWidth(1);
+        linkpen.setWidthF(1.5);
         if(isUnderMouse())
-            linkpen.setColor(QColor(255, 255, 255));
+            linkpen.setColor(QColor(255, 155, 155));
         else
             linkpen.setColor(QColor(255, 255, 255, 150));
         linkpen.setStyle(Qt::SolidLine);

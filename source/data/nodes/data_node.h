@@ -73,20 +73,29 @@ class DNSpace;
 class ContainerNode;
 
 typedef QList<DNode*> NodeList;
+typedef QList<const DNode*> ConstNodeList;
 
 class DNode
 {
 public:
     DNode(QString name="");
-    DNode(DNode* node);
-    static DNode* copy(DNode *original);
+    DNode(const DNode* node);
+    static DNode* copy(const DNode *original);
     static QList<DNode*> copy(QList<DNode*>nodes);
     virtual ~DNode();
+
+    template<class C>
+    const C* getDerivedConst() const;
+
+    template<class C>
+    C* getDerived();
+
+    NodeList getAllInNodes();
 
     virtual VNode* createNodeVis();
     virtual void deleteNodeVis();
     void setNodeName(QString name);
-    QString getNodeName();
+    QString getNodeName() const;
     void setNodeType(NType t);
     virtual void addSocket(DSocket *socket);
     void removeSocket(DSocket *socket);
@@ -94,25 +103,25 @@ public:
     virtual void inc_var_socket();
     void setDynamicSocketsNode(socket_dir dir, socket_type t=VARIABLE);
     void clearSocketLinks();
-    bool isContainer();
+    bool isContainer() const;
 
     void setNodeVis(VNode* value);
-    VNode* getNodeVis();
-    QPointF getPos();
-    unsigned short getID();
+    VNode* getNodeVis() const;
+    QPointF getPos() const;
+    unsigned short getID() const;
     void setID(unsigned short value);
     void setOutSockets(DoutSocketList value);
-    DoutSocketList getOutSockets();
-    DinSocketList getInSockets();
+    DoutSocketList getOutSockets() const;
+    DinSocketList getInSockets() const;
     void setInSockets(DinSocketList value);
-    NType getNodeType();
-    DSocket* getVarSocket();
-    void setVarSocket(DSocket* value);
-    DSocket* getLastSocket();
-    void setLastSocket(DSocket* value);
-    int getVarcnt();
+    NType getNodeType() const;
+    DSocket* getVarSocket() const;
+    void setVarSocket(const DSocket* value);
+    DSocket* getLastSocket() const;
+    void setLastSocket(const DSocket* value);
+    int getVarcnt() const;
     void setVarcnt(int value);
-    DNSpace* getSpace();
+    DNSpace* getSpace() const;
     void setSpace(DNSpace* value);
 
     void regAddSocketCB(Callback *cb);
@@ -130,13 +139,11 @@ public:
     static void setIlluminateInput(DNode *node);
 
     static DNode *newNode(QString name, NType t, int insize, int outsize);
-    static QList<DNode*>NodeList;
 
-    static bool isInput(DNode *node);
-    static bool isMathNode(DNode *node);
-    static bool isValueNode(DNode *node);
+    static bool isInput(const DNode *node);
+    static bool isMathNode(const DNode *node);
+    static bool isValueNode(const DNode *node);
     
-    virtual void setSocketVarName(DoutSocket *socket);
     bool operator==(DNode &node);
     bool operator!=(DNode &node);
 
@@ -170,9 +177,9 @@ class FunctionNode : public DNode
 {
 public:
     FunctionNode(QString name="");
-    FunctionNode(FunctionNode* node);
+    FunctionNode(const FunctionNode* node);
     virtual bool operator==(DNode &node);
-    QString getFunctionName();
+    QString getFunctionName() const;
     void setFunctionName(QString value);
 
 private:
@@ -187,17 +194,17 @@ class ContainerNode : public DNode
 {
 public:
     ContainerNode(QString name="", bool raw=false);
-    ContainerNode(ContainerNode* node);
+    ContainerNode(const ContainerNode* node);
     ~ContainerNode();
     virtual VNode* createNodeVis();
 
-    DSocket *getSocketInContainer(DSocket*);
-    DSocket *getSocketOnContainer(DSocket*);
-    QList<DSocket*> getMappedSocketsOnContainer();
+    DSocket *getSocketInContainer(const DSocket*) const;
+    DSocket *getSocketOnContainer(const DSocket*) const;
+    QList<DSocket*> getMappedSocketsOnContainer() const;
     void mapOnToIn(DSocket *on, DSocket *in);
-    int getSocketMapSize();
+    int getSocketMapSize() const;
 
-    ContainerSpace* getContainerData();
+    ContainerSpace* getContainerData() const;
     void setContainerData(ContainerSpace* value);
     void C_addItems(QList<DNode*> nodes);
 
@@ -207,11 +214,10 @@ public:
     void setInputs(DNode *inputNode);
     void setOutputs(SocketNode *outputNode);
     void setOutputs(DNode *outputNode);
-    SocketNode* getInputs();
-    SocketNode* getOutputs();
+    SocketNode* getInputs() const;
+    SocketNode* getOutputs() const;
 
     void setNodeName(QString name);
-    //virtual void setSocketVarName(NSocket *socket);
     virtual bool operator==(DNode &node);
 
     void newSocket(DSocket *socket);
@@ -229,14 +235,14 @@ class ConditionContainerNode : public ContainerNode
 {
 public:
     ConditionContainerNode(QString name="", bool raw=false);
-    ConditionContainerNode(ConditionContainerNode* node);
+    ConditionContainerNode(const ConditionContainerNode* node);
 };
 
 class SocketNode : public DNode
 {
 public:
     SocketNode(socket_dir dir, ContainerNode *contnode, bool raw=false);
-    SocketNode(SocketNode* node);
+    SocketNode(const SocketNode* node);
 
     void setInSocketNode(ContainerNode *contnode);
     virtual void setOutSocketNode(ContainerNode *contnode);
@@ -245,11 +251,10 @@ public:
     virtual void dec_var_socket(DSocket *socket);
 
     void connectToContainer(ContainerNode*);
-    ContainerNode* getContainer();
+    const ContainerNode* getContainer() const;
     void add_socket(DinSocket *socket);
     void remove_socket(DinSocket *socket);
 
-    //virtual void setSocketVarName(NSocket *socket);
 
 private:
     ContainerNode *container;
@@ -259,7 +264,7 @@ class LoopSocketNode : public SocketNode
 {
 public:
     LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw=false);
-    LoopSocketNode(LoopSocketNode* node);
+    LoopSocketNode(const LoopSocketNode* node);
 
     virtual void dec_var_socket(DinSocket *socket);
     void createPartnerSocket(DSocket *);
@@ -267,11 +272,10 @@ public:
     void mapPartner(DSocket* here, DSocket *partner);
 
     void setPartner(LoopSocketNode* p);
-    DSocket *getPartnerSocket(DSocket *);
-    QList<DSocket*> getLoopedSockets();
-    qint16 getLoopedSocketsCount();
+    DSocket *getPartnerSocket(const DSocket *) const;
+    QList<DSocket*> getLoopedSockets() const;
+    qint16 getLoopedSocketsCount() const;
 
-    virtual void addSocket(DSocket *socket);
     virtual void inc_var_socket();
 
 private:
@@ -283,14 +287,14 @@ class ConditionNode : public DNode
 {
 public:
     ConditionNode(NType t, bool raw=false);
-    ConditionNode(ConditionNode *node);
+    ConditionNode(const ConditionNode *node);
 };
 
 class MathNode : public DNode
 {
 public:
     MathNode(NType t, bool raw=false);
-    MathNode(MathNode *node);
+    MathNode(const MathNode *node);
 
     virtual void inc_var_socket();
     virtual void dec_var_socket(DSocket *socket);
@@ -300,8 +304,8 @@ class ValueNode : public DNode
 {
 public:
     ValueNode(QString name);
-    ValueNode(ValueNode* node);
-    bool isShaderInput();
+    ValueNode(const ValueNode* node);
+    bool isShaderInput() const;
     void setShaderInput(bool);
 
 protected:
@@ -316,11 +320,11 @@ class ColorValueNode : public ValueNode
 {
 public:
     ColorValueNode(QString name="Color", bool raw=false);
-    ColorValueNode(ColorValueNode* node);
+    ColorValueNode(const ColorValueNode* node);
     virtual bool operator==(DNode &node);
 
     void setValue(QColor);
-    QColor getValue();
+    QColor getValue() const;
 
 protected:
     void updateColorLabel();
@@ -334,11 +338,11 @@ class StringValueNode : public ValueNode
 {
 public:
     StringValueNode(QString name="String", bool raw=false);
-    StringValueNode(StringValueNode* node);
+    StringValueNode(const StringValueNode* node);
     virtual bool operator==(DNode &node);
 
     void setValue(QString);
-    QString getValue();
+    QString getValue() const;
 
 protected:
     virtual VNode* createNodeVis();
@@ -351,11 +355,11 @@ class FloatValueNode : public ValueNode
 {
 public:
     FloatValueNode(QString name="Float", bool raw=false);
-    FloatValueNode(FloatValueNode* node);
+    FloatValueNode(const FloatValueNode* node);
     void setValue(double);
     virtual bool operator==(DNode &node);
 
-    float getValue();
+    float getValue() const;
 
 private:
     float floatvalue;
@@ -375,8 +379,8 @@ class VectorValueNode : public ValueNode
 {
 public:
     VectorValueNode(QString name="Vector", bool raw=false);
-    VectorValueNode(VectorValueNode* node);
-    vector getValue();
+    VectorValueNode(const VectorValueNode* node);
+    vector getValue() const;
     void setValue(vector newvalue);
     virtual bool operator==(DNode &node);
 
@@ -388,7 +392,7 @@ class LoopNode : public ContainerNode
 {
 public:
     LoopNode(QString name="", bool raw=false);
-    LoopNode(LoopNode* node);
+    LoopNode(const LoopNode* node);
     static bool isLoopNode(DNode *);
 };
 
@@ -396,61 +400,68 @@ class ForNode : public LoopNode
 {
 public:
     ForNode(QString name="For", bool raw=false);
-    ForNode(ForNode* node);
+    ForNode(const ForNode* node);
 };
 
 class WhileNode : public LoopNode
 {
 public:
     WhileNode(QString name="While", bool raw=false);
-    WhileNode(WhileNode* node);
+    WhileNode(const WhileNode* node);
 };
 
 class GatherNode : public LoopNode
 {
 public:
     GatherNode(QString name="Gather", bool raw=false);
-    GatherNode(GatherNode* node);
+    GatherNode(const GatherNode* node);
 };
 
 class IlluminanceNode : public  LoopNode
 {
 public:
     IlluminanceNode(QString name="Illuminance", bool raw=false);
-    IlluminanceNode(IlluminanceNode* node);
+    IlluminanceNode(const IlluminanceNode* node);
 };
 
 class IlluminateNode : public LoopNode
 {
 public:
     IlluminateNode(QString name="Illuminate", bool raw=false);
-    IlluminateNode(IlluminateNode* node);
+    IlluminateNode(const IlluminateNode* node);
 };
 
 class SolarNode : public LoopNode
 {
 public:
     SolarNode(QString name="Solar", bool raw=false);
-    SolarNode(SolarNode* node);
+    SolarNode(const SolarNode* node);
 };
 
 class OutputNode : public DNode
 {
 public:
     OutputNode();
-    OutputNode(OutputNode* node);
-    QString getShaderName();
+    OutputNode(const OutputNode* node);
+    QString getShaderName() const;
 
     void writeCode();
     void compile();
     void changeName(QString);
-    QString getFileName();
+    QString getFileName() const;
     void setFileName(QString);
+
+    void setVariables(DNode *node=0);
+    QString getVariable(const DoutSocket* socket)const;
+    void insertVariable(const DoutSocket *socket, QString variable);
+    DoutSocket* getSimilar(DoutSocket *socket);
 
 protected:
     virtual VNode* createNodeVis();
 
 private:
+    QHash<const DoutSocket*, QString> variables;
+    QHash<QString, unsigned short>variableCnt;
     QString filename;
     QString ShaderName;
 };
@@ -459,8 +470,7 @@ class InputNode : public DNode
 {
 public:
     InputNode();
-    InputNode(InputNode* node);
-    //virtual void setSocketVarName(NSocket *socket);
+    InputNode(const InputNode* node);
 };
 
 #endif // DATA_NODE_H

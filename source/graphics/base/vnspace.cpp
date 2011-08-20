@@ -84,9 +84,9 @@ void UndoLink::undo()
     DinSocket *redoDinSocket = dnlink.in;
     DoutSocket *redoDoutSocket = dnlink.out;
     if(dnlink.in->getVariable())
-        redoDinSocket = static_cast<DinSocket*>(dnlink.in->getNode()->getVarSocket());
+        redoDinSocket = const_cast<DinSocket*>(dnlink.in->getNode()->getVarSocket()->toIn());
     if(dnlink.out->getVariable())
-        redoDoutSocket = static_cast<DoutSocket*>(dnlink.out->getNode()->getVarSocket());
+        redoDoutSocket = const_cast<DoutSocket*>(dnlink.out->getNode()->getVarSocket()->toOut());
     dnlink.in->clearLink();
     dnlink.in = redoDinSocket;
     dnlink.out = redoDoutSocket;
@@ -112,9 +112,9 @@ void UndoRemoveLink::redo()
     DinSocket *redoDinSocket = dnlink.in;
     DoutSocket *redoDoutSocket = dnlink.out;
     if(dnlink.in->getVariable())
-        redoDinSocket = static_cast<DinSocket*>(dnlink.in->getNode()->getVarSocket());
+        redoDinSocket = const_cast<DinSocket*>(dnlink.in->getNode()->getVarSocket()->toIn());
     if(dnlink.out->getVariable())
-        redoDoutSocket = static_cast<DoutSocket*>(dnlink.out->getNode()->getVarSocket());
+        redoDoutSocket = const_cast<DoutSocket*>(dnlink.out->getNode()->getVarSocket()->toOut());
     dnlink.in->clearLink();
     dnlink.in = redoDinSocket;
     dnlink.out = redoDoutSocket;
@@ -337,21 +337,28 @@ void VNSpace::paste()
         VNode *nodeVis = node->createNodeVis();
         addItem(nodeVis);
         nodeVis->setPos(FRG::CurrentProject->getNodePosition(node));
+
+        foreach(DinSocket *socket, node->getInSockets())
+        {
+            DSocket *outsocket = CopySocketMapper::getCopy(socket->getCntdSocket());
+            if(outsocket && nodes.contains(outsocket->getNode()))
+                    socket->setCntdSocket(outsocket->toOut());
+        }
     }
 }
 
 void VNSpace::addLink(VNSocket *final)
 {
     DinSocket *socketToBeLinked = 0;
-    if(linksocket->data->getDir() == IN) socketToBeLinked = static_cast<DinSocket*>(linksocket->data);
-    else socketToBeLinked = static_cast<DinSocket*>(final->data);
+    if(linksocket->getData()->getDir() == IN) socketToBeLinked = linksocket->getData()->toIn();
+    else socketToBeLinked = final->getData()->toIn();
     DNodeLink olddnlink;
     if(socketToBeLinked->getCntdSocket())
     {
-        olddnlink.in = socketToBeLinked;
-        olddnlink.out = socketToBeLinked->getCntdSocket();
+        olddnlink.in = socketToBeLinked->toIn();
+        olddnlink.out = socketToBeLinked->getCntdSocket()->toOut();
     }
-    DNodeLink dnlink = DSocket::createLink(linksocket->data, final->data);
+    DNodeLink dnlink = DSocket::createLink(linksocket->getData(), final->getData());
     leaveLinkNodeMode();
     updateLinks();
     FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoLink(dnlink, olddnlink));
@@ -361,12 +368,27 @@ void VNSpace::addLink(VNSocket *final)
 
 void VNSpace::updateLinks()
 {
-    FRG::SpaceDataInFocus->cacheLinks();
-    foreach(VNodeLink *vnlink, FRG::SpaceDataInFocus->getCachedLinksVis())
-    {
-        vnlink->updateLink(); 
-        if(!items().contains(vnlink)) addItem(vnlink);
-    }
+    foreach(DNode *node, FRG::SpaceDataInFocus->getNodes())
+        foreach(DinSocket *socket, node->getInSockets())
+            if(socket->getCntdSocket()
+                &&(!linkcache.contains(socket)
+                    ||linkcache.value(socket)->out!=socket->getCntdSocket()))
+            {
+                if(linkcache.contains(socket))
+                    delete linkcache.take(socket);
+                linkcache[socket] = new DNodeLink(socket, socket->getCntdSocket(), true);
+            }
+
+    foreach(DNodeLink *dnlink, linkcache.values())
+       dnlink->vis->updateLink(); 
+}
+
+void VNSpace::removeLink(DSocket *socket)  
+{
+    delete linkcache.take(socket);
+    if(socket->getDir() == OUT)
+        foreach(DNodeLink dnlink, socket->toOut()->getLinks())
+            delete linkcache.take(dnlink.in);
 }
 
 void VNSpace::enterLinkNodeMode(VNSocket *socket)
@@ -408,7 +430,7 @@ void VNSpace::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if(item && item->type() == VNSocket::Type)
         {
             VNSocket *vsocket = (VNSocket*)item;
-            if(DSocket::isCompatible(linksocket->data, vsocket->data))
+            if(DSocket::isCompatible(linksocket->getData(), vsocket->getData()))
                 lpos = item->pos() + item->parentItem()->pos();
             else
                 lpos = event->scenePos();
@@ -644,7 +666,9 @@ void VNSpace::deleteSpaceVis()
     if(!FRG::SpaceDataInFocus)
         return;
     //delete all Links
-    FRG::SpaceDataInFocus->clearLinksCache();
+    foreach(DSocket *socket, linkcache.keys())
+        delete linkcache.value(socket);
+    linkcache.clear();
     
     //delete all visual nodes
     if(!FRG::SpaceDataInFocus->getNodes().isEmpty())

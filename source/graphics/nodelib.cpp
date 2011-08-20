@@ -73,14 +73,7 @@ void NodeLib::remove()
     QList<QTreeWidgetItem *> items = selectedItems();
     foreach(QTreeWidgetItem *item, items)
     {
-        QFileInfo fileinfo(item->text(1));
-        QDir data(item->text(1));
-        QString name = data.dirName();
-        data.cdUp();
-        if (fileinfo.isDir())
-            data.rmdir(name);
-        else
-            data.remove(name);
+        FRG::Utils::remove(item->text(1));
         update();
     }
 }

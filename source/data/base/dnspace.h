@@ -41,30 +41,21 @@ public:
     bool operator==(DNSpace &space);
     bool operator!=(DNSpace &space);
 
-    void cacheLinks();
-    void clearLinksCache();
-    bool isSocketLinkCached(DSocket *socket);
-    void cacheNewLink(DinSocket *socket);
-    QList<DNodeLink*> getCachedLinks();
-    void visCachedLinks();
-    QList<VNodeLink*> getCachedLinksVis();
-    void deleteCachedLink(DNodeLink *dnlink);
-    int getLinkCount(DoutSocket* socket);
-    QList<DNodeLink*> getOutLinksToNode(DNode *node);
-
-    QList<DinSocket*> getConnected(DoutSocket* out);
-
     VNSpace *getSpaceVis();
     void setSpaceVis(VNSpace*);
 
     qint16 getNodeCnt();
     NodeList getNodes();
 
+    bool isContainerSpace();
+    void setContainerSpace(bool value);
+    ContainerSpace* toContainer();
+
 private:
-    QList<DNodeLink*> cachedLinks;
     VNSpace *spaceVis;
     QString name;
     QList<DNode*> nodes;
+    bool isCSpace;
 };
 
 QDataStream & operator<<(QDataStream &stream, DNSpace *space);
@@ -81,4 +72,7 @@ public:
 private:
     ContainerNode *node;
 };
+
+QDataStream & operator>>(QDataStream &stream, ContainerSpace **space);
+
 #endif // DNSPACE_H

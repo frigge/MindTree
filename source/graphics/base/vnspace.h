@@ -123,6 +123,7 @@ class VNSpace : public QGraphicsScene
 public:
     VNSpace();
     void addLink(VNSocket *final);
+    void removeLink(DSocket *socket);
     void enterLinkNodeMode(VNSocket *socket);
     void leaveLinkNodeMode();
     void enterEditNameMode();
@@ -172,6 +173,7 @@ private:
     bool editNameMode;
 	bool linkNodeMode;
     QList<DNode*> nodeClipboard;
+    QHash<DSocket*, DNodeLink*> linkcache;
 };
 
 #endif // VNSPACE_H

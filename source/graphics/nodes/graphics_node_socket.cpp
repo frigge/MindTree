@@ -48,9 +48,13 @@ VNSocket::VNSocket(DSocket *data, VNode *parent)
 
 VNSocket::~VNSocket()
 {
-    data->setSocketVis(0);
+    FRG::Space->removeLink(data);
 }
 
+DSocket* VNSocket::getData() const
+{
+    return data;
+}
 
 void VNSocket::createNameVis()
 {
@@ -59,6 +63,9 @@ void VNSocket::createNameVis()
 	socketNameVis->setParentItem(this);
 	socketNameVis->setZValue(zValue()+.2);
 	socketNameVis->setY(-height/2);
+    QFont font = socketNameVis->font();
+    font.setPointSize(9);
+    socketNameVis->setFont(font);
 	if(data->getDir() == OUT)
     {
         socketNameVis->setX(-width/2);
@@ -75,7 +82,7 @@ void VNSocket::killNameVis()
     delete socketNameVis;
 }
 
-int VNSocket::getSocketNameVisWidth()
+int VNSocket::getSocketNameVisWidth() const
 {
     if(!socketNameVis)
         return 0;
@@ -94,13 +101,15 @@ void VNSocket::createContextMenu()
 
 void VNSocket::changeName()
 {
+    const VNode *vn = data->getNode()->getNodeVis();
     bool ok;
     QString newname;
     newname = QInputDialog::getText(0, "Change Socket Name", "New Name", QLineEdit::Normal, "", &ok);
     if(ok)
 	{
         data->setName(newname);
-        data->getNode()->setSocketVarName((DoutSocket*)data);
+        socketNameVis->setPlainText(newname);
+        const_cast<VNode*>(vn)->updateNodeVis();
     }
 }
 
@@ -131,7 +140,7 @@ void VNSocket::changeType()
         data->setType(newtype);
 }
 
-int VNSocket::getWidth()
+int VNSocket::getWidth() const
 {
 	return width;
 }
@@ -141,7 +150,7 @@ void VNSocket::setWidth(int newwidth)
 	width = newwidth;
 }
 
-int VNSocket::getHeight()
+int VNSocket::getHeight() const
 {
 	return height;
 }
@@ -165,49 +174,49 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         if (isUnderMouse())
             color = QColor(255, 100, 100);
         else
-            color = QColor(160, 60, 60);
+            color = QColor(130, 30, 30);
         break;
     case POINT:
         if (isUnderMouse())
             color = QColor(0, 255, 255);
         else
-            color = QColor(90, 140, 210, 100);
+            color = QColor(60, 110, 180);
         break;
     case NORMAL:
         if (isUnderMouse())
             color = QColor(0, 255, 255);
         else
-            color = QColor(90, 140, 210, 100);
+            color = QColor(60, 110, 180);
         break;
     case FLOAT:
         if (isUnderMouse())
             color = QColor(0, 255, 0);
         else
-            color = QColor(90, 200, 90, 100);
+            color = QColor(90, 170, 60);
         break;
     case VECTOR:
         if (isUnderMouse())
             color = QColor(0, 255, 255);
         else
-            color = QColor(90, 140, 210, 100);
+            color = QColor(60, 110, 180);
         break;
     case COLOR:
         if (isUnderMouse())
             color = QColor(255, 255, 0);
         else
-            color = QColor(210, 210, 80, 100);
+            color = QColor(180, 180, 50);
         break;
     case CONDITION:
         if (isUnderMouse())
             color = QColor(255, 0, 0);
         else
-            color = QColor(170, 50, 50, 100);
+            color = QColor(140, 20, 20);
         break;
     case VARIABLE:
         if(isUnderMouse())
             color = QColor(255, 0, 255);
         else
-            color = QColor(120, 70, 120, 100);
+            color = QColor(90, 40, 90);
     };
     painter->setBrush(QBrush(color, Qt::SolidPattern));
     painter->setPen(Qt::NoPen);

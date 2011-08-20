@@ -41,38 +41,38 @@ private:
     void addToOutputVars(QString);
     QString createOutputVars();
 
-    inline bool isInputVar(DoutSocket*);
+    inline bool isInputVar(const DoutSocket*);
 
     void incTabLevel();
     void decTabLevel();
 
-    void evalSocketValue(DoutSocket *socket);
-    void initVar(DoutSocket *socket);
-    void outputVar(DinSocket *socket);
-    QString createCondition(DoutSocket *socket);
-    QString createMath(DoutSocket *);
+    void evalSocketValue(const DoutSocket *socket);
+    void initVar(const DoutSocket *socket);
+    void outputVar(const DinSocket *socket);
+    QString createCondition(const DoutSocket *socket);
+    QString createMath(const DoutSocket *);
 
-    void gotoNextNode(DinSocket *socket);
-    QString writeVarName(DinSocket *socket);
+    void gotoNextNode(const DinSocket *socket);
+    QString writeVarName(const DinSocket *socket);
 
     QString newline();
 
-    void writeFunction(DoutSocket *socket);
-    void writeContainer(DoutSocket *socket);
-    QString writeMath(DoutSocket *socket, QString mathOperator);
-    void writeMathToVar(DoutSocket *socket);
-    QString writeCondition(DoutSocket *socket, QString conditionOperator);
-    QString writeNot(DoutSocket *socket);
-    void writeConditionContainer(DoutSocket *socket);
-    void writeForLoop(DoutSocket *socket);
-    void writeWhileLoop(DoutSocket *socket);
-    void writeRSLLoop(DoutSocket *socket);
-    QString writeString(DoutSocket *socket);
-    QString writeFloat(DoutSocket *socket);
-    QString writeVector(DoutSocket *socket);
-    QString writeColor(DoutSocket *socket);
+    void writeFunction(const DoutSocket *socket);
+    void writeContainer(const DoutSocket *socket);
+    QString writeMath(const DoutSocket *socket, QString mathOperator);
+    void writeMathToVar(const DoutSocket *socket);
+    QString writeCondition(const DoutSocket *socket, QString conditionOperator);
+    QString writeNot(const DoutSocket *socket);
+    void writeConditionContainer(const DoutSocket *socket);
+    void writeForLoop(const DoutSocket *socket);
+    void writeWhileLoop(const DoutSocket *socket);
+    void writeRSLLoop(const DoutSocket *socket);
+    QString writeString(const DoutSocket *socket);
+    QString writeFloat(const DoutSocket *socket);
+    QString writeVector(const DoutSocket *socket);
+    QString writeColor(const DoutSocket *socket);
 
-    DinSocket *stepUp(DoutSocket *socket);
+    const DinSocket *stepUp(const DoutSocket *socket);
 
 private:
     QList<QString>written_sockets;
@@ -84,6 +84,7 @@ private:
     QStringList ShaderParameter;
     QStringList OutputVars;
     int tabLevel;
+    OutputNode *start;
 };
 
 #endif // SHADERWRITER_H

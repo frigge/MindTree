@@ -39,12 +39,12 @@ private:
 class CopySocketMapper
 {
 public:
-    static void setSocketPair(DSocket *original, DSocket *copy);
-    static DSocket * getCopy(DSocket *original);
+    static void setSocketPair(const DSocket *original, DSocket *copy);
+    static DSocket * getCopy(const DSocket *original);
     void clear();
 
 private:
-    static QHash<DSocket*, DSocket*> socketMap;
+    static QHash<const DSocket*, DSocket*> socketMap;
 };
 
 class VNSocket;
@@ -76,9 +76,12 @@ class DNodeLink;
 class DSocket
 {
 public:
-	DSocket(QString, socket_type);
-    DSocket(DSocket* socket);
+	DSocket(QString, socket_type, DNode *node);
+    DSocket(DSocket* socket, DNode *node);
     virtual ~DSocket();
+
+    DinSocket* toIn();
+    DoutSocket* toOut();
 
     void setSocketVis(VNSocket *vis);
 	void  setNode(DNode*);
@@ -86,28 +89,24 @@ public:
 	void createSocketVis(VNode *parent);
     bool operator==(DSocket &socket);
     bool operator!=(DSocket &socket);
-	QString getName();
-	void setName(QString value);
-	socket_type getType();
+	QString getName() const;
+	virtual void setName(QString value);
+	socket_type getType() const;
 	void setType(socket_type value);
-	socket_dir getDir();
+	socket_dir getDir() const;
 	void setDir(socket_dir value);
-	DNode* getNode();
-	bool getVariable();
+	DNode* getNode() const;
+	bool getVariable() const;
 	void setVariable(bool value);
-	VNSocket* getSocketVis();
-	unsigned short getID();
-	void setVarName(QString value);
-	QString getVarName();
+	VNSocket* getSocketVis() const;
+	unsigned short getID() const;
 
     static unsigned short count;
-    static QHash<QString, int>SocketNameCnt;
     static DNodeLink createLink(DSocket *socket1, DSocket *socket2);
     static bool isCompatible(DSocket *s1, DSocket *s2);
 
 private:
     QString name;
-	QString varname;
     socket_type type;
     socket_dir dir;
     DNode *node;
@@ -126,22 +125,25 @@ class DoutSocket;
 class DinSocket : public DSocket
 {
 public:
-    DinSocket(QString, socket_type);
-    DinSocket(DinSocket* socket);
+    DinSocket(QString, socket_type, DNode *node);
+    DinSocket(DinSocket* socket, DNode *node);
+    ~DinSocket();
 
     void setNode(DNode*);
     void addLink(DoutSocket*);
     void clearLink();
 
     static void createLink(DinSocket *in, DinSocket *out);
-	DoutSocket* getCntdSocket();
+	const DoutSocket* getCntdSocketConst() const;
+    DoutSocket* getCntdSocket() const;
 	void setCntdSocket(DoutSocket *socket);
-	bool getToken();
+    void cntdSocketFromID();
+	bool getToken() const;
 	void setToken(bool value);
     bool operator==(DinSocket &socket);
     bool operator!=(DinSocket &socket);
 	void setTempCntdID(unsigned short value);
-	unsigned short getTempCntdID();
+	unsigned short getTempCntdID() const;
 
 private:
 	unsigned short tempCntdID;
@@ -155,17 +157,21 @@ QDataStream& operator>>(QDataStream &stream, DinSocket **socket);
 class DoutSocket: public DSocket
 {
 public:
-	DoutSocket(QString, socket_type);
-    DoutSocket(DoutSocket* socket);
+	DoutSocket(QString, socket_type, DNode *node);
+    DoutSocket(DoutSocket* socket, DNode *node);
     ~DoutSocket();
     bool operator==(DoutSocket &socket);
     bool operator!=(DoutSocket &socket);
-    QList<DNodeLink> getLinks();
+    QList<DNodeLink> getLinks() const;
     void registerSocket(DSocket *socket);
     void unregisterSocket(DinSocket *socket);
+	virtual void setName(QString value);
+    QString setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt);
+	QString getVarName() const;
 
 private:
     QList<DinSocket*> cntdSockets;
+	QString varname;
 };
 
 typedef QList<DinSocket*> DinSocketList;

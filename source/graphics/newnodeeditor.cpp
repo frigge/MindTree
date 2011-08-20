@@ -190,6 +190,7 @@ void NewNodeEditor::addtoLib()
     outs = outputsockets->topLevelItemCount();
     ins = inputsockets->topLevelItemCount();
 
+    out<<FRG_NODE_HEADER;
     out<<node_name->text()<<(unsigned short)0<<NType(FUNCTION)<<QPointF(0, 0);
     out<<ins<<outs;
     QTreeWidgetItem *item = inputsockets->topLevelItem(0);
@@ -201,7 +202,7 @@ void NewNodeEditor::addtoLib()
         QString socketname(item->text(0));
         socket_type stype = (socket_type)sockettype->itemData(sockettype->currentIndex()).toInt();
 
-        out<<(unsigned short)0<<isVar->isChecked()<<(socket_dir)IN;
+        out<<(unsigned short)0<<isVar->isChecked();
         out<<socketname<<stype<<isToken->isChecked()<<(unsigned short)0;
         item = inputsockets->itemBelow(item);
     }
@@ -214,7 +215,7 @@ void NewNodeEditor::addtoLib()
         QString socketname(item->text(0));
         socket_type stype = (socket_type)sockettype->itemData(sockettype->currentIndex()).toInt();
 
-        out<<(unsigned short)0<<isVar->isChecked()<<(socket_dir)OUT;
+        out<<(unsigned short)0<<isVar->isChecked();
         out<<socketname<<stype;
         item = outputsockets->itemBelow(item);
     }

@@ -54,15 +54,22 @@ void NodeName::focusOutEvent(QFocusEvent *event)
     QGraphicsTextItem::focusOutEvent(event);
     VNode *vnode = static_cast<VNode*>(parentItem());
     DNode *pNode = vnode->data;
-    pNode->setNodeName(toPlainText());
-    if((pNode->isContainer()))
+
+    if(toPlainText() != "")
     {
-        ContainerNode *cNode = static_cast<ContainerNode*>(pNode);
-        if(cNode->getContainerData())
+        pNode->setNodeName(toPlainText());
+        if((pNode->isContainer()))
         {
-            cNode->getContainerData()->setName(toPlainText());
+            ContainerNode *cNode = static_cast<ContainerNode*>(pNode);
+            if(cNode->getContainerData())
+            {
+                cNode->getContainerData()->setName(toPlainText());
+            }
         }
     }
+    else
+        setPlainText(pNode->getNodeName());
+
     if(scene())
 		FRG::Space->leaveEditNameMode();
 
@@ -83,7 +90,7 @@ void NodeName::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 }
 
 VNode::VNode(DNode *data)
-    : data(data), node_name(new NodeName("", this)), node_width(30), node_height(30)
+    : data(data), node_name(new NodeName("", this)), node_width(30), node_height(30), nodeColor(100, 100, 100)
 {
     this->data = data;
     node_name = new NodeName("", this);
@@ -197,31 +204,32 @@ QRectF VNode::boundingRect() const
 
 void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    QColor nodeBGColor;
-    QColor nodeHColor;
     QColor textColor;
     QPen node_outline;
-    int nodePen = 4;
+    int nodePen = 2;
 
     if (isSelected())
     {
-        nodeBGColor = QColor(100, 100, 100);
         textColor = QColor(255, 255, 255);
-        node_outline.setColor(QColor(255, 145, 0, 100));
+        node_outline.setColor(QColor(255, 145, 0, 200));
         node_outline.setWidth(nodePen);
     }
     else
     {
-        nodeBGColor = QColor(100, 100, 100);
         textColor = QColor(255, 255, 255, 255);
-        node_outline.setColor(QColor(80, 80, 80, 100));
+        node_outline.setColor(QColor(30, 30, 30, 255));
         node_outline.setWidth(nodePen);
     };
     painter->setPen(node_outline);
-    painter->setBrush(QBrush(nodeBGColor, Qt::SolidPattern));
+    painter->setBrush(QBrush(nodeColor, Qt::SolidPattern));
     painter->drawRect(-node_width/2, -node_height/2, node_width, node_height);
     drawName();
 };
+
+void VNode::setNodeColor(QColor col)    
+{
+    nodeColor = col;
+}
 
 void VNode::recalcNodeVis()
 {
@@ -230,13 +238,17 @@ void VNode::recalcNodeVis()
 
 	foreach(DinSocket *insocket, data->getInSockets())
     {
-        insocket->getSocketVis()->setPos((-node_width/2) + (4 + socket_size/2), socketPos+(socket_size/2));
+        if(!insocket->getSocketVis()) insocket->createSocketVis(this);
+        //insocket->getSocketVis()->setPos((-node_width/2) + (4 + socket_size/2), socketPos+(socket_size/2));
+        insocket->getSocketVis()->setPos((-node_width/2) , socketPos+(socket_size/2));
         socketPos += socket_size + space;
 	}
 
     foreach(DoutSocket *out, data->getOutSockets())
     {
-        out->getSocketVis()->setPos((node_width/2) - (4 + socket_size/2), socketPos+(socket_size/2));
+        if(!out->getSocketVis()) out->createSocketVis(this);
+        //out->getSocketVis()->setPos((node_width/2) - (4 + socket_size/2), socketPos+(socket_size/2));
+        out->getSocketVis()->setPos((node_width/2), socketPos+(socket_size/2));
         socketPos += socket_size + space;
 	}
 }
@@ -267,6 +279,7 @@ void VContainerNode::addToLib()
 {
     ContainerNode *cdata = (ContainerNode*)data;
     cdata->addtolib();
+    FRG::lib->update();
 }
 
 void VContainerNode::createContextMenu()
@@ -300,6 +313,12 @@ VValueNode::VValueNode(DNode *data)
     createContextMenu();
 
     updateNodeVis();
+
+    ValueNode *node = static_cast<ValueNode*>(data);
+    if(node->isShaderInput())
+        setNodeColor(QColor(255, 135, 0));
+    else
+        setNodeColor(QColor(100, 100, 100));
 }
 
 VValueNode::~VValueNode()
@@ -311,15 +330,22 @@ VValueNode::~VValueNode()
 
 void VValueNode::setShaderInput(bool tgl)
 {
-    ValueNode* vdata = (ValueNode*)data;
-    vdata->setShaderInput(tgl);
+    ValueNode *node = static_cast<ValueNode*>(data);
+    node->setShaderInput(tgl);
+    if(tgl)
+        setNodeColor(QColor(255, 135, 0));
+    else
+        setNodeColor(QColor(100, 100, 100));
 }
 
 void VValueNode::createContextMenu()
 {
+    ValueNode *node = static_cast<ValueNode*>(data);
+
     contextMenu = new QMenu;
     QAction *shaderinputAction =  contextMenu->addAction("Shader Parameter");
     shaderinputAction->setCheckable(true);
+    shaderinputAction->setChecked(node->isShaderInput());
     connect(shaderinputAction, SIGNAL(toggled(bool)), this, SLOT(setShaderInput(bool)));
 }
 
@@ -337,12 +363,6 @@ void VValueNode::setValueEditor(QWidget *editor)
     proxy->setPos(QPointF(4-getNodeWidth()/2, 0));
 }
 
-void VValueNode::NodeWidth()
-{
-    VNode::NodeWidth();
-    setNodeWidth(getNodeWidth() + 5);
-};
-
 void VValueNode::NodeHeight(int numSockets)
 {
     VNode::NodeHeight(numSockets);
@@ -357,15 +377,19 @@ void VValueNode::updateNodeVis()
     recalcNodeVis();
 }
 
-ColorButton::ColorButton()
+ColorButton::ColorButton(QColor init)
+    : color(init)
 {
+    setPalette(QPalette(init));
     setFlat(true);
     connect(this, SIGNAL(clicked()), this, SLOT(setColor()));
 }
 
 void ColorButton::setColor()
 {
-    QColor newcolor = QColorDialog::getColor();
+    QColor newcolor = QColorDialog::getColor(color);
+    if(!newcolor.isValid()) return;
+    color = newcolor;
     setPalette(QPalette(newcolor));
     emit clicked(newcolor);
     update();
@@ -374,7 +398,7 @@ void ColorButton::setColor()
 VColorValueNode::VColorValueNode(DNode *data)
     : VValueNode(data)
 {
-    ColorButton *cbutton = new ColorButton;
+    ColorButton *cbutton = new ColorButton(static_cast<ColorValueNode*>(data)->getValue());
     contextMenu->connect(cbutton, SIGNAL(clicked(QColor)), this, SLOT(setValue(QColor)));
     setValueEditor(cbutton);
     connect(cbutton, SIGNAL(clicked(QColor)), FRG::Space, SIGNAL(linkChanged()));
@@ -393,6 +417,8 @@ VStringValueNode::VStringValueNode(DNode *data)
     contextMenu->connect(lineedit, SIGNAL(textChanged(QString)), this, SLOT(setValue(QString)));
     setValueEditor(lineedit);
     connect(lineedit, SIGNAL(textChanged()), FRG::Space, SIGNAL(linkChanged()));
+
+    lineedit->setText(static_cast<StringValueNode*>(data)->getValue());
 }
 
 void VStringValueNode::setValue(QString string)
@@ -409,6 +435,8 @@ VFloatValueNode::VFloatValueNode(DNode *data)
     contextMenu->connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(setValue(double)));
     setValueEditor(spinbox);
     connect(spinbox, SIGNAL(valueChanged(double)), FRG::Space, SIGNAL(linkChanged()));
+
+    spinbox->setValue(static_cast<FloatValueNode*>(data)->getValue());
 }
 
 void VFloatValueNode::setValue(double fval)
@@ -432,34 +460,52 @@ VOutputNode::VOutputNode(DNode *data)
 {
     this->data = data;
     createMenu();
+
+    changeDir();
 }
 
 void VOutputNode::createMenu()
 {
     contextMenu = new QMenu;
     QAction *nameAction = contextMenu->addAction("set Shader Name");
+    QAction *dirAction = contextMenu->addAction("set Shader Directory");
     QAction *writecodeAction = contextMenu->addAction("Create Code");
     QAction *compileAction = contextMenu->addAction("write and compile code");
 
     connect(writecodeAction, SIGNAL(triggered()), this, SLOT(writeCode()));
     connect(nameAction, SIGNAL(triggered()), this, SLOT(changeName()));
+    connect(dirAction, SIGNAL(triggered()), this, SLOT(changeDir()));
 }
 
 void VOutputNode::changeName()
 {
     OutputNode *data = (OutputNode*)this->data;
     bool ok;
-    QString newname = QInputDialog::getText(scene()->views().first(), "Shader Name", "Name", QLineEdit::Normal, "", &ok);
+    QString newname = QInputDialog::getText(FRG::Space->views().first(), "Shader Name", "Name", QLineEdit::Normal, "", &ok);
     if(ok)
         data->changeName(newname);
 }
 
 void VOutputNode::writeCode()
 {
-    OutputNode *data = (OutputNode*)this->data;
+    OutputNode *data = static_cast<OutputNode*>(this->data);
     if(data->getFileName() == "")
-        data->setFileName(QFileDialog::getSaveFileName(0, QString(), QString(), "RSL Code File (*.sl)"));
+        data->setFileName(QFileDialog::getExistingDirectory() + data->getShaderName() + ".sl");
     data->writeCode();
+}
+
+void VOutputNode::changeDir()
+{
+    OutputNode *data = static_cast<OutputNode*>(this->data);
+    if(data->getShaderName() == "")changeName();
+    data->setFileName(QFileDialog::getExistingDirectory() + data->getShaderName() + ".sl");
+}
+
+void VOutputNode::writeAndCompile()    
+{
+    OutputNode *data = static_cast<OutputNode*>(this->data);
+    writeCode();
+    data->compile();
 }
 
 void VOutputNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)

@@ -23,13 +23,13 @@
 #include "source/data/base/frg.h"
 
 DNSpace::DNSpace()
-    : spaceVis(0)
+    : spaceVis(0), isCSpace(false)
 {
     FRG::CurrentProject->registerSpace(this);
 }
 
 DNSpace::DNSpace(DNSpace* space)
-    : name(space->getName())
+    : name(space->getName()), isCSpace(false)
 {
     foreach(DNode *node, space->getNodes())
     {
@@ -39,13 +39,12 @@ DNSpace::DNSpace(DNSpace* space)
     }
     foreach(DNode *node, getNodes())
         foreach(DinSocket *socket, node->getInSockets())
-            socket->setCntdSocket(static_cast<DoutSocket*>(CopySocketMapper::getCopy(socket->getCntdSocket())));
+            socket->setCntdSocket(const_cast<DoutSocket*>(CopySocketMapper::getCopy(socket->getCntdSocket())->toOut()));
 }
 
 DNSpace::~DNSpace()
 {
     FRG::CurrentProject->unregisterSpace(this);
-    clearLinksCache();
     foreach(DNode *node, getNodes())
         removeNode(node);
     nodes.clear();
@@ -62,7 +61,9 @@ QDataStream & operator<<(QDataStream &stream, DNSpace *space)
 
 QDataStream & operator>>(QDataStream &stream, DNSpace **space)
 {
-    DNSpace *newspace = *space;
+    DNSpace *newspace = 0;
+    newspace = new DNSpace();
+    *space = newspace;
     qint16 nodecnt;
     QString name;
     stream>>name;
@@ -76,13 +77,13 @@ QDataStream & operator>>(QDataStream &stream, DNSpace **space)
     }
 
 	//set pointer to connected sockets from temp. IDs
-	foreach(DSocket *socket, LoadSocketIDMapper::getAllSockets())
+	foreach(const DSocket *socket, LoadSocketIDMapper::getAllSockets())
 	{
 		if(socket->getDir() == IN)
 		{
 			DinSocket *inSocket = (DinSocket*)socket;
 			if(inSocket->getTempCntdID() > 0)
-				inSocket->setCntdSocket((DoutSocket*)LoadSocketIDMapper::getSocket(inSocket->getTempCntdID()));
+                inSocket->cntdSocketFromID();
 		}
 	}
 }
@@ -110,96 +111,6 @@ bool DNSpace::operator!=(DNSpace &space)
     return(!(*this == space));
 }
 
-void DNSpace::cacheLinks()
-{
-    clearLinksCache();
-    foreach(DNode *node, getNodes())
-        foreach(DinSocket *socket, node->getInSockets())
-            if(!isSocketLinkCached(socket)
-                && socket->getCntdSocket())cacheNewLink(socket);
-}
-
-void DNSpace::clearLinksCache()    
-{
-    while(!cachedLinks.isEmpty())
-        delete cachedLinks.takeLast();
-}
-
-void DNSpace::deleteCachedLink(DNodeLink *dnlink)    
-{
-    cachedLinks.removeAll(dnlink);
-    delete dnlink;
-}
-
-void DNSpace::visCachedLinks()    
-{
-    foreach(DNodeLink *dnlink, cachedLinks)
-        if(!dnlink->vis)dnlink->vis = new VNodeLink(dnlink);
-}
-
-QList<DNodeLink*> DNSpace::getCachedLinks()    
-{
-    return cachedLinks;
-}
-
-QList<VNodeLink*> DNSpace::getCachedLinksVis()    
-{
-    QList<VNodeLink*> linkVis;
-    visCachedLinks();
-    if(!cachedLinks.isEmpty())
-        foreach(DNodeLink *dnlink, cachedLinks)
-            linkVis.append(dnlink->vis);
-    return linkVis;
-}
-
-void DNSpace::cacheNewLink(DinSocket *socket)    
-{
-    cachedLinks.append(new DNodeLink(socket, socket->getCntdSocket()));
-}
-
-bool DNSpace::isSocketLinkCached(DSocket *socket)    
-{
-    if(socket->getDir() == IN)
-    {
-        foreach(DNodeLink *dnlink, cachedLinks)
-            if(dnlink->in == socket) return true;
-    }
-    else
-    {
-        foreach(DNodeLink *dnlink, cachedLinks)
-            if(dnlink->out == socket) return true;
-    }
-    return false;
-}
-
-QList<DinSocket*> DNSpace::getConnected(DoutSocket* out)    
-{
-    cacheLinks();
-    QList<DinSocket*> ins;
-    foreach(DNodeLink *dnlink, cachedLinks)
-        if(dnlink->out == out)
-            ins.append(dnlink->in);
-    return ins;
-}
-
-QList<DNodeLink*> DNSpace::getOutLinksToNode(DNode *node)    
-{
-    cacheLinks();
-    QList<DNodeLink*> nodeLinks;
-    foreach(DNodeLink *dnlink, cachedLinks)
-        if(dnlink->out->getNode() == node)
-            nodeLinks.append(dnlink);
-    return nodeLinks;
-}
-
-int DNSpace::getLinkCount(DoutSocket* socket)    
-{
-    int i = 0;
-    foreach(DNodeLink *dnlink, cachedLinks)
-        if(dnlink->out == socket) ++i;
-    return i;
-}
-
 void DNSpace::addNode(DNode *node)
 {
     node->setSpace(this);
@@ -215,6 +126,7 @@ void DNSpace::removeNode(DNode *node)
 void DNSpace::unregisterNode(DNode *node)    
 {
     nodes.removeAll(node);
+    node->setSpace(0);
     if(this == FRG::SpaceDataInFocus)
         node->deleteNodeVis();
 }
@@ -249,14 +161,60 @@ void DNSpace::setName(QString value)
 		name = value;
 }
 
+bool DNSpace::isContainerSpace()
+{
+    return isCSpace;
+}
+
+void DNSpace::setContainerSpace(bool value)
+{
+    isCSpace = value;
+}
+
+ContainerSpace* DNSpace::toContainer()    
+{
+    return static_cast<ContainerSpace*>(this);
+}
+
 ContainerSpace::ContainerSpace()
     : DNSpace()
 {
+    setContainerSpace(true);
 }
 
 ContainerSpace::ContainerSpace(ContainerSpace* space)
     : DNSpace(space)
 {
+    setContainerSpace(true);
+}
+
+QDataStream & operator>>(QDataStream &stream, ContainerSpace **space)
+{
+    ContainerSpace *newspace = 0;
+    newspace = new ContainerSpace();
+    *space = newspace;
+    qint16 nodecnt;
+    QString name;
+    stream>>name;
+    newspace->setName(name);
+    stream>>nodecnt;
+    DNode *node = 0;
+    for(int i = 0; i<nodecnt; i++)
+    {
+        stream>>&node;
+        newspace->addNode(node);
+    }
+
+	//set pointer to connected sockets from temp. IDs
+	foreach(const DSocket *socket, LoadSocketIDMapper::getAllSockets())
+	{
+		if(socket->getDir() == IN)
+		{
+			DinSocket *inSocket = (DinSocket*)socket;
+			if(inSocket->getTempCntdID() > 0)
+                inSocket->cntdSocketFromID();
+		}
+	}
 }
 
 ContainerNode* ContainerSpace::getContainer()

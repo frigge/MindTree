@@ -34,6 +34,7 @@
 #include "source/data/base/dnspace.h"
 #include "source/data/nodes/data_node.h"
 #include "source/graphics/shader_view.h"
+#include "source/graphics/shaderpreview.h"
 
 ChangeSpaceAction::ChangeSpaceAction(DNSpace *space, QObject *parent)
     : QAction(parent)
@@ -75,6 +76,8 @@ frg_Shader_Author::frg_Shader_Author(QWidget *parent)
 
     createMenus();
     createDocks();
+    FRG::previewEditor = new PreviewSceneEditor();
+    FRG::previewEditor->hide();
 
     statusBar()->showMessage("Welcome to frg Shader Author");
     setCentralWidget(widget);
@@ -174,6 +177,10 @@ void frg_Shader_Author::createMenus()
     nodeLibAction->setChecked(true);
     nodeLibAction->setShortcut(QString("l"));
 
+    QMenu *previewMenu = new QMenu("&Preview");
+    QAction *editprevAction = previewMenu->addAction("&Edit Previews");
+    connect(editprevAction, SIGNAL(triggered()), this, SLOT(openPreviewEditor()));
+
     connect(newAction, SIGNAL(triggered()), this, SLOT(newfile()));
     connect(saveAction, SIGNAL(triggered()), this, SLOT(save()));
     connect(saveAsAction, SIGNAL(triggered()), this, SLOT(saveAs()));
@@ -195,6 +202,7 @@ void frg_Shader_Author::createMenus()
     menuBar()->addMenu(fileMenu);
     menuBar()->addMenu(editMenu);
     menuBar()->addMenu(nodeMenu);
+    menuBar()->addMenu(previewMenu);
 };
 
 void frg_Shader_Author::toggleNodeLib()    
@@ -211,6 +219,11 @@ void frg_Shader_Author::toggleNodeEditor()
         nodeeditor->hide();
     else
         nodeeditor->show();
+}
+
+void frg_Shader_Author::openPreviewEditor()    
+{
+    FRG::previewEditor->show();
 }
 
 void frg_Shader_Author::removeNodes()    

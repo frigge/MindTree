@@ -76,6 +76,7 @@ public slots:
 
     void toggleNodeLib();
     void toggleNodeEditor();
+    void openPreviewEditor();
 
 protected:
     void createMenus();
