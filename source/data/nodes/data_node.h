@@ -94,7 +94,7 @@ public:
 
     virtual VNode* createNodeVis();
     virtual void deleteNodeVis();
-    void setNodeName(QString name);
+    virtual void setNodeName(QString name);
     QString getNodeName() const;
     void setNodeType(NType t);
     virtual void addSocket(DSocket *socket);
@@ -142,10 +142,10 @@ public:
 
     static bool isInput(const DNode *node);
     static bool isMathNode(const DNode *node);
-    static bool isValueNode(const DNode *node);
+    bool isValueNode()const;
     
-    bool operator==(DNode &node);
-    bool operator!=(DNode &node);
+    virtual bool operator==(DNode &node);
+    virtual bool operator!=(DNode &node);
 
     bool isGhost();
 
@@ -179,6 +179,7 @@ public:
     FunctionNode(QString name="");
     FunctionNode(const FunctionNode* node);
     virtual bool operator==(DNode &node);
+    virtual bool operator!=(DNode &node);
     QString getFunctionName() const;
     void setFunctionName(QString value);
 
@@ -219,6 +220,7 @@ public:
 
     void setNodeName(QString name);
     virtual bool operator==(DNode &node);
+    virtual bool operator!=(DNode &node);
 
     void newSocket(DSocket *socket);
     void killSocket(DSocket *socket);
@@ -308,6 +310,8 @@ public:
     bool isShaderInput() const;
     void setShaderInput(bool);
 
+    void setNodeName(QString name);
+
 protected:
     virtual VNode* createNodeVis();
     //virtual void getValue() = 0;
@@ -322,6 +326,7 @@ public:
     ColorValueNode(QString name="Color", bool raw=false);
     ColorValueNode(const ColorValueNode* node);
     virtual bool operator==(DNode &node);
+    virtual bool operator!=(DNode &node);
 
     void setValue(QColor);
     QColor getValue() const;
@@ -340,6 +345,7 @@ public:
     StringValueNode(QString name="String", bool raw=false);
     StringValueNode(const StringValueNode* node);
     virtual bool operator==(DNode &node);
+    virtual bool operator!=(DNode &node);
 
     void setValue(QString);
     QString getValue() const;
@@ -358,6 +364,7 @@ public:
     FloatValueNode(const FloatValueNode* node);
     void setValue(double);
     virtual bool operator==(DNode &node);
+    virtual bool operator!=(DNode &node);
 
     float getValue() const;
 
@@ -368,24 +375,28 @@ protected:
     virtual VNode* createNodeVis();
 };
 
-typedef struct
+typedef struct Vector
 {
-    qint16 x;
-    qint16 y;
-    qint16 z;
-}   vector;
+    Vector(double x, double y, double z) : x(x), y(y), z(z) {}
+    Vector(const Vector &vec) : x(vec.x), y(vec.y), z(vec.z) {}
+    double x;
+    double y;
+    double z;
+}   Vector;
 
 class VectorValueNode : public ValueNode
 {
 public:
     VectorValueNode(QString name="Vector", bool raw=false);
     VectorValueNode(const VectorValueNode* node);
-    vector getValue() const;
-    void setValue(vector newvalue);
+    Vector getValue() const;
+    void setValue(Vector newvalue);
     virtual bool operator==(DNode &node);
+    virtual bool operator!=(DNode &node);
+    VNode* createNodeVis();
 
 private:
-    vector vectorvalue;
+    Vector vectorvalue;
 };
 
 class LoopNode : public ContainerNode

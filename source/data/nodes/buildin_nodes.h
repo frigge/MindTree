@@ -55,7 +55,7 @@ namespace BuildIn
     DNode* VColNode(DNSpace *space);
     DNode* VStrNode(DNSpace *space);
     DNode* VFlNode(DNSpace *space);
-//    void VVecNode(DNSpace *space);
+    DNode* VVecNode(DNSpace *space);
 //    void VMatNode(DNSpace *space);
 
     //Containers

@@ -43,7 +43,9 @@ void UndoRemoveNode::undo()
     foreach(DNode *node, nodes)
     {
         FRG::SpaceDataInFocus->addNode(node);
-        FRG::Space->addItem(node->createNodeVis());
+        VNode *nodeVis = node->createNodeVis();
+        FRG::Space->addItem(nodeVis);
+        nodeVis->setPos(node->getPos());
     }
 }
 
@@ -267,7 +269,14 @@ void VNSpace::ContextAddMenu()
 void VNSpace::removeNode(QList<DNode*>nodeList)
 {
     foreach(DNode *node, nodeList)
+    {
+        if(node->getNodeType() == INSOCKETS
+            ||node->getNodeType() == OUTSOCKETS
+            ||node->getNodeType() == LOOPINSOCKETS
+            ||node->getNodeType() == LOOPOUTSOCKETS)
+            continue;
         FRG::SpaceDataInFocus->unregisterNode(node);
+    }
     updateLinks();
 };
 
@@ -378,9 +387,16 @@ void VNSpace::updateLinks()
                     delete linkcache.take(socket);
                 linkcache[socket] = new DNodeLink(socket, socket->getCntdSocket(), true);
             }
+            else if(!socket->getCntdSocket() && linkcache.contains(socket))
+                delete linkcache.take(socket);
 
     foreach(DNodeLink *dnlink, linkcache.values())
-       dnlink->vis->updateLink(); 
+    {
+        if(!dnlink->in->getNode()
+            ||!dnlink->out->getNode())
+            delete linkcache.take(dnlink->in);
+        dnlink->vis->updateLink(); 
+    }
 }
 
 void VNSpace::removeLink(DSocket *socket)  
@@ -599,6 +615,10 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
         case 30:
             dnode = new DShaderPreview();
             FRG::SpaceDataInFocus->addNode(dnode);
+            break;
+        case 31:
+            dnode = BuildIn::VVecNode(FRG::SpaceDataInFocus);
+            break;
         }
     }
     if(dnode)

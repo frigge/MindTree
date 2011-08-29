@@ -28,6 +28,7 @@
 #include "QGraphicsItem"
 #include "QObject"
 #include "QAction"
+#include "QDoubleSpinBox"
 
 #include "source/data/nodes/data_node.h"
 #include "source/graphics/nodes/graphics_node_socket.h"
@@ -126,6 +127,7 @@ public slots:
 protected:
     QGraphicsProxyWidget *proxy;
     void NodeHeight(int numSockets);
+    void NodeWidth();
     QWidget *widget;
     QWidget *base_widget;
     QCheckBox *shader_parameter;
@@ -155,6 +157,12 @@ public slots:
     void setValue(QString);
 };
 
+class FloatValueSpinBox : public QDoubleSpinBox
+{
+public:
+    FloatValueSpinBox();
+};
+
 class VFloatValueNode : public VValueNode
 {
 Q_OBJECT
@@ -163,6 +171,27 @@ public:
 
 public slots:
     void setValue(double);
+
+private:
+    FloatValueSpinBox *spinbox;
+};
+
+class VectorValue : public QWidget
+{
+    Q_OBJECT
+public:
+    VectorValue();
+    void setValue(Vector value);
+
+public slots:
+    void emitValueChanged();
+
+signals:
+    void valueChanged(Vector);
+
+private:
+    FloatValueSpinBox *spinx, *spiny, *spinz;
+    QVBoxLayout *lay;
 };
 
 class VVectorValueNode : public VValueNode
@@ -170,9 +199,16 @@ class VVectorValueNode : public VValueNode
 Q_OBJECT
 public:
     VVectorValueNode(DNode *data);
+    void updateNodeVis();
+
+protected:
+    void NodeHeight(int numSockets);
 
 public slots:
-    void setValue();
+    void setValue(Vector);
+
+private:
+    VectorValue *vec;
 };
 
 class VOutputNode : public VNode

@@ -27,6 +27,7 @@
 
 class DSocket;
 class VNode;
+class VNodeUpdateCallback;
 
 class VNSocket : public QObject, public QGraphicsItem
 {
@@ -46,6 +47,9 @@ public:
 	int getHeight() const;
 	int getSocketNameVisWidth() const;
     DSocket *getData() const;
+    void updateNameVis();
+    void setDrawName(bool draw);
+    void setBlockContextMenu(bool block);
 
 public slots:
     void changeType();
@@ -63,6 +67,9 @@ private:
 	QGraphicsTextItem *socketNameVis;
     DSocket *data;
 	int width, height;
+    VNodeUpdateCallback *cb;
+    bool drawName;
+    bool blockContextMenu;
 };
 
 

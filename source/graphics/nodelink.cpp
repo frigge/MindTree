@@ -90,15 +90,14 @@ void VNodeLink::initVNodeLink()
 
 void VNodeLink::remove()
 {
-    DNodeLink dnlink(inSocket, inSocket->getCntdSocket());
+    DNodeLink dnlink(data->in, data->out);
     if(dnlink.in->getVariable())
-        dnlink.in = const_cast<DinSocket*>(dnlink.in->getNode()->getVarSocket()->toIn());
+        dnlink.in = dnlink.in->getNode()->getVarSocket()->toIn();
     if(dnlink.out->getVariable())
-        dnlink.out = const_cast<DoutSocket*>(dnlink.out->getNode()->getVarSocket()->toOut());
+        dnlink.out = dnlink.out->getNode()->getVarSocket()->toOut();
     FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoRemoveLink(dnlink));
     //emit removeLink(this);
-    inSocket->clearLink();
-    FRG::Space->updateLinks();
+    DSocket::removeLink(data->in, data->out);
 }
 
 void VNodeLink::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
@@ -132,14 +131,18 @@ void VNodeLink::setlink(DinSocket *in, DoutSocket *out)
 
 void VNodeLink::updateLink()
 {
+    if(!inSocket ||!outSocket)
+        return;
+    if(!inSocket->getNode() ||!outSocket->getNode())
+        return;
     const VNode *pin, *pout;
     pin = inSocket->getNode()->getNodeVis();
     pout = outSocket->getNode()->getNodeVis();
-    if(!inSocket
-        ||!outSocket
-        ||!pin
-        ||!pout)
+    if(!pin
+       ||!pout)
+    {
         return;
+    }
     in = inSocket->getSocketVis()->pos() + pin->pos();
     in.setX(in.x());
     in.setY(in.y());

@@ -75,33 +75,23 @@ QDataStream & operator>>(QDataStream &stream, DNSpace **space)
         stream>>&node;
         newspace->addNode(node);
     }
-
-	//set pointer to connected sockets from temp. IDs
-	foreach(const DSocket *socket, LoadSocketIDMapper::getAllSockets())
-	{
-		if(socket->getDir() == IN)
-		{
-			DinSocket *inSocket = (DinSocket*)socket;
-			if(inSocket->getTempCntdID() > 0)
-                inSocket->cntdSocketFromID();
-		}
-	}
 }
 
 bool DNSpace::operator==(DNSpace &space)
 {
-    if(name != space.name
+    if(name != space.getName()
             ||getNodeCnt() != space.getNodeCnt())
         return false;
+
     foreach(DNode* node1, getNodes())
     {
+        bool hasASimilar = false;
         foreach(DNode *node2, space.getNodes())
         {
             if(*node1 == *node2)
-                continue;
-            else
-                return false;
+                hasASimilar = true;
         }
+        if(!hasASimilar) return false;
     }
     return true;
 }
@@ -204,17 +194,6 @@ QDataStream & operator>>(QDataStream &stream, ContainerSpace **space)
         stream>>&node;
         newspace->addNode(node);
     }
-
-	//set pointer to connected sockets from temp. IDs
-	foreach(const DSocket *socket, LoadSocketIDMapper::getAllSockets())
-	{
-		if(socket->getDir() == IN)
-		{
-			DinSocket *inSocket = (DinSocket*)socket;
-			if(inSocket->getTempCntdID() > 0)
-                inSocket->cntdSocketFromID();
-		}
-	}
 }
 
 ContainerNode* ContainerSpace::getContainer()

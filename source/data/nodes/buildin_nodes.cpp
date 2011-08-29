@@ -186,6 +186,13 @@ DNode* BuildIn::VFlNode(DNSpace *space)
     return node;
 }
 
+DNode* BuildIn::VVecNode(DNSpace *space)
+{
+    VectorValueNode *node = new VectorValueNode;
+    space->addNode(node);
+    return node;
+}
+
 DNode* BuildIn::ContIfNode(DNSpace *space)
 {
     ConditionContainerNode *node = new ConditionContainerNode;

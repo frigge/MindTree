@@ -132,6 +132,7 @@ void NodeLib::addBuildInNodes()
     QTreeWidgetItem *color = new QTreeWidgetItem(QStringList() << "Color" << "21");
     QTreeWidgetItem *string = new QTreeWidgetItem(QStringList() << "String" << "22");
     QTreeWidgetItem *float_ = new QTreeWidgetItem(QStringList() << "Float" << "23");
+    QTreeWidgetItem *vector = new QTreeWidgetItem(QStringList() << "Vector" << "31");
 
     QTreeWidgetItem *loop = new QTreeWidgetItem(QStringList("Loop"));
     QTreeWidgetItem *forloop = new QTreeWidgetItem(QStringList() << "For" << "24");
@@ -149,7 +150,7 @@ void NodeLib::addBuildInNodes()
     outs<<surfout<<dispout<<volout<<lout;
     maths<<madd<<msub<<mmult<<mdiv<<mdot;
     conditionals<<ifcont<<cgr<<csm<<ceq<<cnot<<cand<<cor;
-    values<<color<<string<<float_;
+    values<<color<<string<<float_<<vector;
     loops<<forloop<<whileloop<<illuminateloop<<illuminanceloop<<solarloop<<gatherloop;
 
     hardnodes->addChildren(hardgrps);

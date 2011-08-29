@@ -406,11 +406,12 @@ QString ShaderWriter::writeMath(const DoutSocket *socket, QString mathOperator)
     foreach(const DinSocket *nsocket, socket->getNode()->getInSockets())
     {
         i++;
-		if(nsocket->getCntdSocket())
+		if(nsocket->getCntdFunctionalSocket())
 		{
 
-			if(DNode::isMathNode(nsocket->getCntdSocket()->getNode()))
-				output.append(createMath(nsocket->getCntdSocket()));
+            DNode *nextNode = nsocket->getCntdFunctionalSocket()->getNode();
+			if(DNode::isMathNode(nextNode))
+				output.append(createMath(nsocket->getCntdFunctionalSocket()));
 			else
 			{
 				output.append(writeVarName(nsocket));
@@ -604,7 +605,27 @@ QString ShaderWriter::writeFloat(const DoutSocket *socket)
 
 QString ShaderWriter::writeVector(const DoutSocket *socket)
 {
-    return QString();
+    QString output, value;
+    const VectorValueNode *node = socket->getNode()->getDerivedConst<VectorValueNode>();
+    value.append("vector(");
+    Vector vec = node->getValue();
+    value.append(QString::number(vec.x));
+    value.append(", ");
+    value.append(QString::number(vec.y));
+    value.append(", ");
+    value.append(QString::number(vec.z));
+    value.append(")");
+    if(node->isShaderInput())
+    {
+        output.append("vector ");
+        output.append(start->getVariable(socket));
+        output.append(" = ");
+        output.append(value);
+        output.append(";");
+        addToShaderParameter(output);
+        return start->getVariable(socket);
+    }
+    else return value;
 }
 
 QString ShaderWriter::getCode()

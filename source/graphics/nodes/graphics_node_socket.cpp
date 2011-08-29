@@ -33,7 +33,7 @@
 #include "source/data/base/project.h"
 
 VNSocket::VNSocket(DSocket *data, VNode *parent)
-	: data(data), width(SOCKET_WIDTH), height(SOCKET_HEIGHT), socketNameVis(0)
+	: data(data), width(SOCKET_WIDTH), height(SOCKET_HEIGHT), socketNameVis(0), drawName(true)
 {
 	//setCacheMode(ItemCoordinateCache);
     setAcceptDrops(true);
@@ -44,10 +44,14 @@ VNSocket::VNSocket(DSocket *data, VNode *parent)
     createContextMenu();
 	createNameVis();
     setParentItem(parent);
+
+    cb = new VNodeUpdateCallback(parent);
+    data->addRenameCB(cb);
 }
 
 VNSocket::~VNSocket()
 {
+    data->remRenameCB(cb);
     FRG::Space->removeLink(data);
 }
 
@@ -75,11 +79,37 @@ void VNSocket::createNameVis()
 		socketNameVis->setX(width/2);
 }
 
+void VNSocket::setDrawName(bool draw)    
+{
+    drawName = draw;
+    updateNameVis();
+}
+
+void VNSocket::setBlockContextMenu(bool block)    
+{
+    blockContextMenu = block;
+    if(block)
+    {
+        delete contextMenu;
+        contextMenu = 0;
+    }
+}
+
+void VNSocket::updateNameVis()    
+{
+   if(socketNameVis) killNameVis();
+   if(drawName)
+       createNameVis(); 
+}
+
 void VNSocket::killNameVis()    
 {
+    if(!socketNameVis)
+        return;
     socketNameVis->setParentItem(0);
-    FRG::Space->removeItem(socketNameVis);
+    if(FRG::Space->items().contains(socketNameVis))FRG::Space->removeItem(socketNameVis);
     delete socketNameVis;
+    socketNameVis = 0;
 }
 
 int VNSocket::getSocketNameVisWidth() const
@@ -108,8 +138,7 @@ void VNSocket::changeName()
     if(ok)
 	{
         data->setName(newname);
-        socketNameVis->setPlainText(newname);
-        const_cast<VNode*>(vn)->updateNodeVis();
+        if(socketNameVis)socketNameVis->setPlainText(newname);
     }
 }
 
@@ -246,5 +275,6 @@ void VNSocket::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void VNSocket::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
-    contextMenu->exec(event->screenPos());
+    if(contextMenu)
+        contextMenu->exec(event->screenPos());
 }

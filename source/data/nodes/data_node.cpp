@@ -203,11 +203,37 @@ NodeList DNode::getAllInNodes()
 {
     NodeList nodes;
     foreach(DinSocket *socket, inSockets)
-        if(socket->getCntdSocket())
+    {
+        DoutSocket *cntdSocket = socket->getCntdSocket();
+        if(cntdSocket)
         {
-            nodes.append(socket->getCntdSocket()->getNode()); 
-            nodes.append(socket->getCntdSocket()->getNode()->getAllInNodes());
+            DNode *cntdNode = cntdSocket->getNode();
+            if(cntdNode->getNodeType() == INSOCKETS
+                ||cntdNode->getNodeType() == LOOPINSOCKETS)
+            {
+                const ContainerNode *cont = cntdNode->getDerived<SocketNode>()->getContainer();
+                DinSocket *onCont = cont->getSocketOnContainer(cntdSocket)->toIn();
+                if(onCont->getCntdSocket())
+                {
+                    DNode *next = onCont->getCntdSocket()->getNode();
+                    nodes.append(next);
+                    nodes.append(next->getAllInNodes());
+                }
+            }
+            else
+                nodes.append(cntdNode);
+
+            if(cntdNode->isContainer())
+            {
+                ContainerNode *cont = cntdNode->getDerived<ContainerNode>();
+                DNode *nextInCont = cont->getSocketInContainer(cntdSocket)->toIn()->getCntdSocket()->getNode();
+                nodes.append(nextInCont);
+                nodes.append(nextInCont->getAllInNodes());
+            }
+            else
+                nodes.append(cntdNode->getAllInNodes());
         }
+    }
     return nodes;
 }
 
@@ -383,7 +409,7 @@ DNode *DNode::newNode(QString name, NType t, int insize, int outsize)
             ||t == LIGHTINPUT)
         node = new InputNode();
     else if(t == PREVIEW)
-        node = new DShaderPreview();
+        node = new DShaderPreview(true);
     else
         node = new DNode();
 
@@ -490,7 +516,7 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
     if(newnode->getNodeType() == VECTORNODE)
     {
         VectorValueNode *vectornode = newnode->getDerived<VectorValueNode>();
-        vector vec = vectornode->getValue();
+        Vector vec(vectornode->getValue());
         stream>>vec.x>>vec.y>>vec.z;
     }
 
@@ -529,16 +555,16 @@ bool DNode::operator==(DNode &node)
     if(nodeName != node.nodeName)
         return false;
 
-    if(inSockets.size() != node.inSockets.size()
-            ||outSockets.size() != node.outSockets.size())
+    if(inSockets.size() != node.getInSockets().size()
+            ||outSockets.size() != node.getOutSockets().size())
         return false;
 
     for(int i=0; i<inSockets.size(); i++)
-        if(inSockets.at(i) != node.inSockets.at(i))
+        if(*inSockets.at(i) != *node.getInSockets().at(i))
             return false;
 
     for(int i=0; i<outSockets.size(); i++)
-        if(outSockets.at(i) != outSockets.at(i))
+        if(*outSockets.at(i) != *node.getOutSockets().at(i))
             return false;
     return true;
 }
@@ -829,7 +855,7 @@ DNode *DNode::dropNode(QString filepath)
         file.close();
 
         LoadNodeIDMapper::clear();
-        LoadSocketIDMapper::clear();
+        LoadSocketIDMapper::remap();
 
         FRG::SpaceDataInFocus->addNode(node);
     }
@@ -865,6 +891,7 @@ ContainerNode *DNode::buildContainerNode(QList<DNode*>nodes)
     FRG::CurrentProject->setNodePosition(contnode->getOutputs(), QPointF(maxX + SPACING, 0));
     foreach(DNodeLink *nld, ins)
     {
+        nld->out->unregisterSocket(nld->in);
         //relink the first input of the slected nodes to the container input node
         DoutSocket *entryInContainer = static_cast<DoutSocket*>(contnode->getInputs()->getVarSocket());
         nld->in->addLink(entryInContainer);
@@ -876,12 +903,19 @@ ContainerNode *DNode::buildContainerNode(QList<DNode*>nodes)
 
     foreach(DNodeLink *nld, outs)
     {
+        nld->out->unregisterSocket(nld->in);
         //link the container output node to the last output of the selected nodes
-        DinSocket *exitInContainer = static_cast<DinSocket*>(contnode->getOutputs()->getVarSocket());
+        DinSocket *exitInContainer = contnode->getOutputs()->getVarSocket()->toIn();
+        foreach(DinSocket *output, contnode->getOutputs()->getInSockets())
+            if(output->getCntdSocket() == nld->out)
+            {
+                exitInContainer = output;
+                break;
+            }
         exitInContainer->addLink(nld->out);
 
         //relink the input previously connected to the generated mapped socket of the output of the container
-        nld->in->addLink(static_cast<DoutSocket*>(contnode->getSocketOnContainer(exitInContainer)));
+        nld->in->addLink(contnode->getSocketOnContainer(exitInContainer)->toOut());
     }
 
     FRG::SpaceDataInFocus->addNode(contnode);
@@ -890,7 +924,7 @@ ContainerNode *DNode::buildContainerNode(QList<DNode*>nodes)
 
 void DNode::unpackContainerNode(DNode *node)
 {
-    ContainerNode *contnode = static_cast<ContainerNode*>(node);
+    ContainerNode *contnode = node->getDerived<ContainerNode>();
     QList<DNodeLink*>ins = FRG::CurrentProject->getInLinks(contnode);
     QList<DNodeLink*>outs = FRG::CurrentProject->getOutLinks(contnode);
 
@@ -899,16 +933,22 @@ void DNode::unpackContainerNode(DNode *node)
 
     foreach(DNodeLink *in, ins)
     {
-        DoutSocket *inContainer = static_cast<DoutSocket*>(contnode->getSocketInContainer(in->in));
+        in->out->unregisterSocket(in->in);
+        DoutSocket *inContainer = contnode->getSocketInContainer(in->in)->toOut();
         QList<DNodeLink> TMPnewInLinks = inContainer->getLinks();
         foreach(DNodeLink dnlink, TMPnewInLinks)
+        {
             newInLinks.append(DNodeLink(dnlink.in, in->out));
+            inContainer->unregisterSocket(dnlink.in, false);
+        }
     }
 
     foreach(DNodeLink *out, outs)
     {
-        DinSocket *inContainer = static_cast<DinSocket*>(contnode->getSocketInContainer(out->out));
+        out->out->unregisterSocket(out->in);
+        DinSocket *inContainer = contnode->getSocketInContainer(out->out)->toIn();
         DoutSocket *newOutSocket = inContainer->getCntdSocket();
+        newOutSocket->unregisterSocket(inContainer, false);
         newOutLinks.append(DNodeLink(out->in, newOutSocket));
     }
 
@@ -961,14 +1001,19 @@ void FunctionNode::setFunctionName(QString value)
 
 bool FunctionNode::operator==(DNode &node)
 {
-    FunctionNode &fnode = dynamic_cast<FunctionNode&>(node);
-    if(function_name != fnode.function_name)
+    if(!DNode::operator==(node)) return false;
+    if(function_name != node.getDerived<FunctionNode>()->function_name)
         return false;
     return true;
 }
 
+bool FunctionNode::operator!=(DNode &node)
+{
+    return (!(operator==(node)));
+}
+
 ContainerNode::ContainerNode(QString name, bool raw)
-    : DNode(name)
+    : DNode(name), containerData(0)
 {
     setNodeType(CONTAINER);
     if(!raw)
@@ -1020,6 +1065,8 @@ void ContainerNode::addMappedSocket(DSocket *socket)
     else
         mapped_socket = new DinSocket(socket->getName(), socket->getType(), outSocketNode);
     mapOnToIn(socket, mapped_socket);     
+    socket->addRenameCB(new SNchangeNameCB(mapped_socket));
+    socket->addTypeCB(new SNchangeTypeCB(mapped_socket));
 }
 
 void ContainerNode::addtolib()
@@ -1102,6 +1149,7 @@ DSocket *ContainerNode::getSocketInContainer(const DSocket *socket) const
 
 void ContainerNode::mapOnToIn(DSocket *on, DSocket *in)    
 {
+    if(!on &&!in) return;
     socket_map.insert(on, in);
 }
 
@@ -1123,7 +1171,7 @@ int ContainerNode::getSocketMapSize() const
 void ContainerNode::setNodeName(QString name)
 {
     DNode::setNodeName(name);
-    containerData->setName(name);
+    if(containerData)containerData->setName(name);
 }
 
 ContainerSpace* ContainerNode::getContainerData() const
@@ -1139,10 +1187,15 @@ void ContainerNode::setContainerData(ContainerSpace* value)
 
 bool ContainerNode::operator==(DNode &node)
 {
-    ContainerNode &cnode = dynamic_cast<ContainerNode&>(node);
-    if(*containerData != *cnode.containerData)
+    if(!DNode::operator==(node)) return false;
+    if(*containerData != *node.getDerived<ContainerNode>()->containerData)
         return false;
     return true;
+}
+
+bool ContainerNode::operator!=(DNode &node)
+{
+    return (!(operator==(node)));
 }
 
 ConditionContainerNode::ConditionContainerNode(QString name, bool raw)
@@ -1164,6 +1217,7 @@ ConditionContainerNode::ConditionContainerNode(const ConditionContainerNode* nod
 }
 
 SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
+    : container(0)
 {
     if (dir == IN)
     {
@@ -1178,7 +1232,7 @@ SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
 }
 
 SocketNode::SocketNode(const SocketNode* node)
-    : DNode(node)
+    : DNode(node), container(0)
 {
 }
 
@@ -1219,8 +1273,8 @@ void SocketNode::inc_var_socket()
 
 void SocketNode::dec_var_socket(DSocket *socket)
 {
-    DNode::dec_var_socket(socket);
     container->removeSocket(container->getSocketOnContainer(socket));
+    DNode::dec_var_socket(socket);
 }
 
 LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
@@ -1406,7 +1460,16 @@ bool DNode::isMathNode(const DNode *node)
     return node->getNodeType() == ADD
        || node->getNodeType() == SUBTRACT
        || node->getNodeType() == MULTIPLY
-       || node->getNodeType() == DIVIDE;
+       || node->getNodeType() == DIVIDE
+       || node->getNodeType() == DOTPRODUCT;
+}
+
+bool DNode::isValueNode()    const
+{
+    return getNodeType() == FLOATNODE
+        || getNodeType() == STRINGNODE
+        || getNodeType() == COLORNODE
+        || getNodeType() == VECTORNODE;
 }
 
 ValueNode::ValueNode(QString name)
@@ -1425,6 +1488,13 @@ VNode* ValueNode::createNodeVis()
     return getNodeVis();
 }
 
+void ValueNode::setNodeName(QString name)    
+{
+    DNode::setNodeName(name);
+    if(!getOutSockets().isEmpty())
+        getOutSockets().first()->setName(name);
+}
+
 void ValueNode::setShaderInput(bool si)
 {
     shaderInput = si;
@@ -1439,11 +1509,12 @@ ColorValueNode::ColorValueNode(QString name, bool raw)
     : ValueNode(name), colorvalue(QColor(255, 255, 255))
 {
     setNodeType(COLORNODE);
-    setNodeName("Color Value");
     if(!raw)
     {
         new DoutSocket("Color", COLOR, this);
     }
+
+    setNodeName("Color");
 }
 
 ColorValueNode::ColorValueNode(const ColorValueNode* node)
@@ -1469,17 +1540,22 @@ QColor ColorValueNode::getValue() const
 
 bool ColorValueNode::operator ==(DNode &node)
 {
-    ColorValueNode &clnode = dynamic_cast<ColorValueNode&>(node);
-    if(colorvalue != clnode.colorvalue)
+    if(!DNode::operator==(node)) return false;
+    if(colorvalue != node.getDerived<ColorValueNode>()->colorvalue)
         return false;
     return true;
+}
+
+bool ColorValueNode::operator!=(DNode &node)
+{
+    return (!(operator==(node)));
 }
 
 StringValueNode::StringValueNode(QString name, bool raw)
     : ValueNode(name)
 {
     setNodeType(STRINGNODE);
-    setNodeName("String Value");
+    setNodeName("String");
     if(!raw)
     {
         new DoutSocket("String", STRING, this);
@@ -1509,17 +1585,22 @@ QString StringValueNode::getValue() const
 
 bool StringValueNode::operator ==(DNode &node)
 {
-    StringValueNode &snode = dynamic_cast<StringValueNode&>(node);
-    if(stringvalue != snode.stringvalue)
+    if(!DNode::operator==(node)) return false;
+    if(stringvalue != node.getDerived<StringValueNode>()->stringvalue)
         return false;
     return true;
+}
+
+bool StringValueNode::operator!=(DNode &node)
+{
+    return (!(operator==(node)));
 }
 
 FloatValueNode::FloatValueNode(QString name, bool raw)
     : ValueNode(name), floatvalue(1.0)
 {
     setNodeType(FLOATNODE);
-    setNodeName("Float Value");
+    setNodeName("Float");
     if(!raw)
     {
         new DoutSocket("Float", FLOAT, this);
@@ -1549,17 +1630,26 @@ float FloatValueNode::getValue() const
 
 bool FloatValueNode::operator==(DNode &node)
 {
-    FloatValueNode &flnode = dynamic_cast<FloatValueNode&>(node);
-    if(floatvalue != flnode.floatvalue)
+    if(!DNode::operator==(node)) return false;
+    if(floatvalue != node.getDerived<FloatValueNode>()->floatvalue)
         return false;
     return true;
 }
 
+bool FloatValueNode::operator!=(DNode &node)
+{
+    return (!(operator==(node)));
+}
+
 VectorValueNode::VectorValueNode(QString name, bool raw)
-    :ValueNode(name)
+    :ValueNode(name), vectorvalue(0, 0, 0)
 {
     setNodeType(VECTORNODE);
-    setNodeName("Vector Value");
+    setNodeName("Vector");
+    if(!raw)
+    {
+        new DoutSocket("Vector", VECTOR, this);
+    }
 }
 
 VectorValueNode::VectorValueNode(const VectorValueNode* node)
@@ -1567,19 +1657,36 @@ VectorValueNode::VectorValueNode(const VectorValueNode* node)
 {
 }
 
-void VectorValueNode::setValue(vector newvalue)
+VNode* VectorValueNode::createNodeVis()
+{
+    setNodeVis(new VVectorValueNode(this));
+    return getNodeVis();
+}
+
+void VectorValueNode::setValue(Vector newvalue)
 {
     vectorvalue = newvalue;
 }
 
-vector VectorValueNode::getValue() const
+Vector VectorValueNode::getValue() const
 {
     return vectorvalue;
 }
 
 bool VectorValueNode::operator==(DNode &node)
 {
+    if(!DNode::operator==(node)) return false;
+    VectorValueNode *vnode = node.getDerived<VectorValueNode>();
+    if(vectorvalue.x != vnode->getValue().x
+        ||vectorvalue.y != vnode->getValue().y
+        ||vectorvalue.z != vnode->getValue().z)
+        return false;
     return true;
+}
+
+bool VectorValueNode::operator!=(DNode &node)
+{
+    return (!(operator==(node)));
 }
 
 LoopNode::LoopNode(QString name, bool raw)
@@ -1733,24 +1840,17 @@ void OutputNode::setVariables(DNode *node)
 
     foreach(DinSocket *socket, node->getInSockets())
     {
-        if(!socket->getCntdSocket())
+        DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
+        if(!cntdSocket)
             continue;
 
-        DoutSocket *cntdSocket = 0;
-        if(socket->getCntdSocket()->getNode()->isContainer())
-            cntdSocket = socket->getCntdSocket()->getNode()->getDerived<ContainerNode>()->getSocketInContainer(socket->getCntdSocket())->toIn()->getCntdSocket();
-        else
-            cntdSocket = socket->getCntdSocket();
-
         if(variables.contains(cntdSocket))
-            return;
+            continue;
             
         DNode *cntdNode = cntdSocket->getNode();
         QString varname_raw = cntdSocket->getName().replace(" ", "_");
         DoutSocket *simSocket = getSimilar(cntdSocket);
         if(variableCnt.contains(varname_raw)
-            &&cntdNode->getSpace()->isContainerSpace()
-            &&cntdNode->getSpace()->toContainer()->getContainer()->getInSockets().isEmpty()
             && simSocket)
             insertVariable(cntdSocket, getVariable(simSocket));
         else
@@ -1762,18 +1862,36 @@ void OutputNode::setVariables(DNode *node)
 
 DoutSocket* OutputNode::getSimilar(DoutSocket *socket)    
 {
-    if(!socket->getNode()->getSpace()->isContainerSpace())
-        return 0;
-    ContainerNode *contNode = socket->getNode()->getSpace()->toContainer()->getContainer();
-    foreach(DNode *node, getAllInNodes())
-        if(node != contNode
-            && *node == *contNode)
-            foreach(DNode *simNode, node->getDerived<ContainerNode>()->getContainerData()->getNodes())
-                if(*simNode == *socket->getNode())
-                    foreach(DoutSocket *simOutSocket, simNode->getOutSockets())
-                        if(*simOutSocket == *socket)
-                            return simOutSocket;
-    return 0;        
+    DNode *node = socket->getNode();
+    DNode *simnode = 0;
+    foreach(DNode *n, getAllInNodes())
+    {
+        if(n != node
+            && *n == *node)
+            {
+                simnode = n;
+                foreach(DNode *inn, n->getAllInNodes())
+                {
+                    bool hasSim = false;
+                    foreach(DNode *inNode, node->getAllInNodes())
+                        if(*inn == *inNode)
+                        {
+                            hasSim = true;
+                            for(int i=0; i<inn->getInSockets().size(); i++)
+                                if(*inn->getInSockets().at(i) != *inNode->getInSockets().at(i))
+                                    hasSim = false;
+                        }
+                    if(!hasSim) simnode = 0;
+                }
+            }
+        if(simnode)
+            break;
+    }
+    if(!simnode) return 0;
+
+    foreach(DoutSocket *out, simnode->getOutSockets())
+        if(*out == *socket)
+            return out;
 }
 
 void OutputNode::insertVariable(const DoutSocket *socket, QString variable)    

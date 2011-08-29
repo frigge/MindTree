@@ -21,6 +21,8 @@
 
 #include "QHash"
 
+#include "source/data/callbacks.h"
+
 class  DSocket;
 
 class LoadSocketIDMapper
@@ -29,8 +31,7 @@ public:
     static unsigned short getID(DSocket *socket);
     static void setID(DSocket *socket, unsigned short ID);
     static DSocket * getSocket(unsigned short ID);
-    static QList<DSocket*> getAllSockets();
-    static void clear();
+    static void remap();
 
 private:
     static QHash<unsigned short, DSocket*>loadIDMapper;
@@ -98,11 +99,17 @@ public:
 	DNode* getNode() const;
 	bool getVariable() const;
 	void setVariable(bool value);
-	VNSocket* getSocketVis() const;
+	VNSocket* getSocketVis();
 	unsigned short getID() const;
+
+    void remRenameCB(Callback *cb);
+    void addRenameCB(Callback *cb);
+    void addTypeCB(Callback *cb);
+    void remTypeCB(Callback *cb);
 
     static unsigned short count;
     static DNodeLink createLink(DSocket *socket1, DSocket *socket2);
+    static void removeLink(DinSocket *in, DoutSocket *out);
     static bool isCompatible(DSocket *s1, DSocket *s2);
 
 private:
@@ -113,6 +120,8 @@ private:
     bool Variable;
     VNSocket *socketVis;
     unsigned short ID;
+    CallbackList renameCallbacks;
+    CallbackList changeTypeCallbacks;
 };
 
 class QDataStream;
@@ -136,6 +145,7 @@ public:
     static void createLink(DinSocket *in, DinSocket *out);
 	const DoutSocket* getCntdSocketConst() const;
     DoutSocket* getCntdSocket() const;
+    DoutSocket* getCntdFunctionalSocket() const;
 	void setCntdSocket(DoutSocket *socket);
     void cntdSocketFromID();
 	bool getToken() const;
@@ -164,7 +174,7 @@ public:
     bool operator!=(DoutSocket &socket);
     QList<DNodeLink> getLinks() const;
     void registerSocket(DSocket *socket);
-    void unregisterSocket(DinSocket *socket);
+    void unregisterSocket(DinSocket *socket, bool decr=true);
 	virtual void setName(QString value);
     QString setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt);
 	QString getVarName() const;

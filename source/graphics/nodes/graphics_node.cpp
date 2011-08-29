@@ -93,7 +93,6 @@ VNode::VNode(DNode *data)
     : data(data), node_name(new NodeName("", this)), node_width(30), node_height(30), nodeColor(100, 100, 100)
 {
     this->data = data;
-    node_name = new NodeName("", this);
 	setCacheMode(ItemCoordinateCache);
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsFocusable, true);
@@ -177,14 +176,23 @@ void VNode::NodeWidth()
     //fit the widest socket name
     node_width = 0;
 	foreach(DSocket *socket, data->getInSockets())
+    {
+        if(socket->getSocketVis())socket->getSocketVis()->updateNameVis();
         if((socket->getSocketVis())
-            &&socket->getSocketVis()->getSocketNameVisWidth() > node_width)
-                node_width = socket->getSocketVis()->getSocketNameVisWidth();
-
-	foreach(DSocket *socket, data->getOutSockets())
-        if((socket->getSocketVis())
+            &&socket->getSocketVis()->getSocketNameVisWidth()
             &&socket->getSocketVis()->getSocketNameVisWidth() > node_width)
             node_width = socket->getSocketVis()->getSocketNameVisWidth();
+    }
+
+	foreach(DSocket *socket, data->getOutSockets())
+    {
+        if(socket->getSocketVis())socket->getSocketVis()->updateNameVis();
+        if((socket->getSocketVis())
+            &&socket->getSocketVis()->getSocketNameVisWidth()
+            &&socket->getSocketVis()->getSocketNameVisWidth() > node_width)
+            socket->getSocketVis()->updateNameVis();
+        node_width = socket->getSocketVis()->getSocketNameVisWidth();
+    }
 
 	node_width += 6 + socket_size; //Left/Right border margin
 };
@@ -238,7 +246,6 @@ void VNode::recalcNodeVis()
 
 	foreach(DinSocket *insocket, data->getInSockets())
     {
-        if(!insocket->getSocketVis()) insocket->createSocketVis(this);
         //insocket->getSocketVis()->setPos((-node_width/2) + (4 + socket_size/2), socketPos+(socket_size/2));
         insocket->getSocketVis()->setPos((-node_width/2) , socketPos+(socket_size/2));
         socketPos += socket_size + space;
@@ -246,7 +253,6 @@ void VNode::recalcNodeVis()
 
     foreach(DoutSocket *out, data->getOutSockets())
     {
-        if(!out->getSocketVis()) out->createSocketVis(this);
         //out->getSocketVis()->setPos((node_width/2) - (4 + socket_size/2), socketPos+(socket_size/2));
         out->getSocketVis()->setPos((node_width/2), socketPos+(socket_size/2));
         socketPos += socket_size + space;
@@ -306,9 +312,8 @@ void VContainerNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 }
 
 VValueNode::VValueNode(DNode *data)
-    :VNode(data)
+    :VNode(data), widget(0), proxy(new QGraphicsProxyWidget)
 {
-    proxy = new QGraphicsProxyWidget;
     proxy->setParentItem(this);
     createContextMenu();
 
@@ -319,6 +324,9 @@ VValueNode::VValueNode(DNode *data)
         setNodeColor(QColor(255, 135, 0));
     else
         setNodeColor(QColor(100, 100, 100));
+
+    data->getOutSockets().first()->getSocketVis()->setDrawName(false);
+    data->getOutSockets().first()->getSocketVis()->setBlockContextMenu(true);
 }
 
 VValueNode::~VValueNode()
@@ -359,15 +367,30 @@ void VValueNode::setValueEditor(QWidget *editor)
 {
     widget = editor;
     proxy->setWidget(widget);
-    widget->resize(getNodeWidth() - 8, 25);
-    proxy->setPos(QPointF(4-getNodeWidth()/2, 0));
+    proxy->setMinimumSize(1, 1);
+    proxy->setContentsMargins(0, 0, 0, 0);
+    //proxy->setPalette(QColor(0, 0, 0, 0));
+    NodeWidth();
 }
 
 void VValueNode::NodeHeight(int numSockets)
 {
-    VNode::NodeHeight(numSockets);
-    setNodeHeight(getNodeHeight() + 30);
+    setNodeHeight(35);
 };
+
+void VValueNode::NodeWidth()    
+{
+    VNode::NodeWidth();
+    if(getNodeWidth() < 80) setNodeWidth(80);
+    if(proxy)
+    {
+        //proxy->resize(getNodeWidth(), 25);
+        proxy->setPos(QPointF(4-getNodeWidth()/2, 2-SOCKET_HEIGHT));
+        proxy->resize(getNodeWidth() - 15, 25);
+    }
+    if(widget)
+        widget->resize(getNodeWidth() - 15, 25);
+}
 
 void VValueNode::updateNodeVis()    
 {
@@ -399,6 +422,8 @@ VColorValueNode::VColorValueNode(DNode *data)
     : VValueNode(data)
 {
     ColorButton *cbutton = new ColorButton(static_cast<ColorValueNode*>(data)->getValue());
+    cbutton->setMinimumSize(1, 1);
+    cbutton->resize(20, 20);
     contextMenu->connect(cbutton, SIGNAL(clicked(QColor)), this, SLOT(setValue(QColor)));
     setValueEditor(cbutton);
     connect(cbutton, SIGNAL(clicked(QColor)), FRG::Space, SIGNAL(linkChanged()));
@@ -427,11 +452,18 @@ void VStringValueNode::setValue(QString string)
     data->setValue(string);
 }
 
-VFloatValueNode::VFloatValueNode(DNode *data)
-    :VValueNode(data)
+FloatValueSpinBox::FloatValueSpinBox()
 {
-    QDoubleSpinBox *spinbox = new QDoubleSpinBox;
-    spinbox->setRange(-1000, 1000);
+    setRange(-1000, 1000);
+    setDecimals(3);
+    setSingleStep(0.1);
+    setMinimumSize(1, 1);
+    resize(50, 20);
+}
+
+VFloatValueNode::VFloatValueNode(DNode *data)
+    :VValueNode(data), spinbox(new FloatValueSpinBox)
+{
     contextMenu->connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(setValue(double)));
     setValueEditor(spinbox);
     connect(spinbox, SIGNAL(valueChanged(double)), FRG::Space, SIGNAL(linkChanged()));
@@ -445,14 +477,70 @@ void VFloatValueNode::setValue(double fval)
     data->setValue(fval);
 }
 
-VVectorValueNode::VVectorValueNode(DNode *data)
-    :VValueNode(data)
+VectorValue::VectorValue()
 {
+    setContentsMargins(0, 0, 0, 0);
+    lay = new QVBoxLayout();
+    lay->setContentsMargins(0, 0, 0, 0);
+    lay->setSpacing(0);
+    spinx = new FloatValueSpinBox();
+    spiny = new FloatValueSpinBox();
+    spinz = new FloatValueSpinBox();
+    lay->setMargin(0);
+    lay->addWidget(spinx);
+    lay->addWidget(spiny);
+    lay->addWidget(spinz);
+    setLayout(lay);
+    connect(spinx, SIGNAL(valueChanged(double)), this, SLOT(emitValueChanged()));
+    connect(spiny, SIGNAL(valueChanged(double)), this, SLOT(emitValueChanged()));
+    connect(spinz, SIGNAL(valueChanged(double)), this, SLOT(emitValueChanged()));
 }
 
-void VVectorValueNode::setValue()
+void VectorValue::emitValueChanged()    
 {
+    Vector value(spinx->value(), spiny->value(), spinz->value());
+    emit valueChanged(value); 
+}
 
+void VectorValue::setValue(Vector value)    
+{
+    spinx->setValue(value.x); 
+    spiny->setValue(value.y); 
+    spinz->setValue(value.z); 
+}
+
+VVectorValueNode::VVectorValueNode(DNode *data)
+    :VValueNode(data), vec(new VectorValue())
+{
+    setValueEditor(vec);
+    updateNodeVis();
+    connect(vec, SIGNAL(valueChanged(Vector)), this, SLOT(setValue(Vector)));
+    connect(vec, SIGNAL(valueChanged(Vector)), FRG::Space, SIGNAL(linkChanged()));
+    vec->setValue(static_cast<VectorValueNode*>(data)->getValue());
+}
+
+void VVectorValueNode::updateNodeVis()    
+{
+    NodeWidth();
+    NodeHeight(1);
+    drawName();
+    recalcNodeVis();
+}
+
+void VVectorValueNode::NodeHeight(int numSockets)    
+{
+    VValueNode::NodeHeight(1); 
+    setNodeHeight(getNodeHeight() + 40);
+    if(widget)
+        widget->resize(widget->size().width(), 60);
+    if(proxy)
+        proxy->setPos(proxy->pos().x(), proxy->pos().y() - 20);
+}
+
+void VVectorValueNode::setValue(Vector value)
+{
+    VectorValueNode *node = data->getDerived<VectorValueNode>();
+    node->setValue(value);
 }
 
 VOutputNode::VOutputNode(DNode *data)

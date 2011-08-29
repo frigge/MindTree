@@ -21,7 +21,7 @@ Project::Project(QString filename)
             stream>>&space;
             file.close();
             LoadNodeIDMapper::clear();
-            LoadSocketIDMapper::clear();
+            LoadSocketIDMapper::remap();
         }
         else
             space = new DNSpace;
