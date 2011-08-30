@@ -34,6 +34,7 @@
 
 unsigned short DNode::count = 1;
 QHash<unsigned short, DNode*>LoadNodeIDMapper::loadIDMapper;
+QHash<DNode*, DNode*> CopyNodeMapper::nodeMap;
 
 unsigned short LoadNodeIDMapper::getID(DNode *node)
 {
@@ -55,6 +56,17 @@ void LoadNodeIDMapper::clear()
     loadIDMapper.clear();
 }
 
+void CopyNodeMapper::setNodePair(DNode *original, DNode *copy)    
+{
+   nodeMap.insert(original, copy); 
+}
+
+DNode * CopyNodeMapper::getCopy(DNode *original)    
+{
+    if(!nodeMap.contains(original)) return 0;
+    return nodeMap.value(original);
+}
+
 DNode::DNode(QString name)
     : space(0), varcnt(0), ID(count++), nodeVis(0), nodeName(name), varsocket(0), lastsocket(0)
 {};
@@ -69,6 +81,8 @@ DNode::DNode(const DNode* node)
         new DoutSocket(socket, this);
     varsocket = CopySocketMapper::getCopy(node->getVarSocket());
     lastsocket = CopySocketMapper::getCopy(node->getLastSocket());
+
+    CopyNodeMapper::setNodePair(const_cast<DNode*>(node), this);
 }
 
 template<class C>
@@ -177,14 +191,8 @@ QList<DNode*> DNode::copy(QList<DNode*>nodes)
 {
    QList<DNode*>nodeCopies;
    foreach(DNode *node, nodes)
-   {
-        DNode *newNode = copy(node);
-        foreach(DinSocket *socket, newNode->getInSockets())
-            if(socket->getCntdSocket()
-                &&nodes.contains(socket->getCntdSocket()->getNode()))
-                socket->setCntdSocket(CopySocketMapper::getCopy(socket->getCntdSocket())->toOut());
-        nodeCopies.append(newNode);
-   }
+        nodeCopies.append(copy(node));
+   CopySocketMapper::remap();
    return nodeCopies;
 }
 
@@ -605,11 +613,11 @@ void DNode::remAddSocketCB(Callback *cb)
 
 void DNode::removeSocket(DSocket *socket)
 {
+    if(!socket)return;
     if(socket->getDir() == IN)
         inSockets.removeAll(socket->toIn());
     else
         outSockets.removeAll(socket->toOut());
-    socket->killSocketVis();
     delete socket;
 }
 
@@ -891,7 +899,6 @@ ContainerNode *DNode::buildContainerNode(QList<DNode*>nodes)
     FRG::CurrentProject->setNodePosition(contnode->getOutputs(), QPointF(maxX + SPACING, 0));
     foreach(DNodeLink *nld, ins)
     {
-        nld->out->unregisterSocket(nld->in);
         //relink the first input of the slected nodes to the container input node
         DoutSocket *entryInContainer = static_cast<DoutSocket*>(contnode->getInputs()->getVarSocket());
         nld->in->addLink(entryInContainer);
@@ -903,7 +910,6 @@ ContainerNode *DNode::buildContainerNode(QList<DNode*>nodes)
 
     foreach(DNodeLink *nld, outs)
     {
-        nld->out->unregisterSocket(nld->in);
         //link the container output node to the last output of the selected nodes
         DinSocket *exitInContainer = contnode->getOutputs()->getVarSocket()->toIn();
         foreach(DinSocket *output, contnode->getOutputs()->getInSockets())
@@ -1030,22 +1036,12 @@ ContainerNode::ContainerNode(const ContainerNode* node)
 {
     setNodeType(CONTAINER);
     setContainerData(new ContainerSpace(node->getContainerData()));
-    foreach(DNode *node, containerData->getNodes())
-    {
-        if(node->getNodeType() == INSOCKETS
-                    ||node->getNodeType() == LOOPINSOCKETS)
-                setInputs(node);
-        if(node->getNodeType() == OUTSOCKETS
-                ||node->getNodeType() == LOOPOUTSOCKETS)
-            setOutputs(node);
-    }
     foreach(DSocket *socket, node->getMappedSocketsOnContainer())
         mapOnToIn(CopySocketMapper::getCopy(socket), CopySocketMapper::getCopy(node->getSocketInContainer(socket)));
 }
 
 ContainerNode::~ContainerNode()
 {
-    socket_map.clear();
     if(containerData) delete containerData;
 }
 
@@ -1232,7 +1228,7 @@ SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
 }
 
 SocketNode::SocketNode(const SocketNode* node)
-    : DNode(node), container(0)
+    : DNode(node), container(CopyNodeMapper::getCopy(static_cast<DNode*>(node->getContainer()))->getDerived<ContainerNode>())
 {
 }
 
@@ -1255,7 +1251,7 @@ void SocketNode::connectToContainer(ContainerNode *contnode)
     container = contnode;
 }
 
-const ContainerNode* SocketNode::getContainer() const
+ContainerNode* SocketNode::getContainer() const
 {
     return container;
 }
@@ -1273,7 +1269,7 @@ void SocketNode::inc_var_socket()
 
 void SocketNode::dec_var_socket(DSocket *socket)
 {
-    container->removeSocket(container->getSocketOnContainer(socket));
+    if(container)container->removeSocket(container->getSocketOnContainer(socket));
     DNode::dec_var_socket(socket);
 }
 

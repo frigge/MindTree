@@ -40,12 +40,12 @@ private:
 class CopySocketMapper
 {
 public:
-    static void setSocketPair(const DSocket *original, DSocket *copy);
-    static DSocket * getCopy(const DSocket *original);
-    void clear();
+    static void setSocketPair(DSocket *original, DSocket *copy);
+    static DSocket * getCopy(DSocket *original);
+    static void remap();
 
 private:
-    static QHash<const DSocket*, DSocket*> socketMap;
+    static QHash<DSocket*, DSocket*> socketMap;
 };
 
 class VNSocket;
@@ -140,7 +140,7 @@ public:
 
     void setNode(DNode*);
     void addLink(DoutSocket*);
-    void clearLink();
+    void clearLink(bool unregister=true);
 
     static void createLink(DinSocket *in, DinSocket *out);
 	const DoutSocket* getCntdSocketConst() const;

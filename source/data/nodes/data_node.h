@@ -39,6 +39,16 @@ private:
     static QHash<unsigned short, DNode*>loadIDMapper;
 };
 
+class CopyNodeMapper
+{
+public:
+    static void setNodePair(DNode *original, DNode *copy);
+    static DNode * getCopy(DNode *original);
+
+private:
+    static QHash<DNode*, DNode*> nodeMap;
+};
+
 enum NType
 {
     CONTAINER,          FUNCTION,
@@ -253,7 +263,7 @@ public:
     virtual void dec_var_socket(DSocket *socket);
 
     void connectToContainer(ContainerNode*);
-    const ContainerNode* getContainer() const;
+    ContainerNode* getContainer() const;
     void add_socket(DinSocket *socket);
     void remove_socket(DinSocket *socket);
 

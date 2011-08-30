@@ -346,13 +346,6 @@ void VNSpace::paste()
         VNode *nodeVis = node->createNodeVis();
         addItem(nodeVis);
         nodeVis->setPos(FRG::CurrentProject->getNodePosition(node));
-
-        foreach(DinSocket *socket, node->getInSockets())
-        {
-            DSocket *outsocket = CopySocketMapper::getCopy(socket->getCntdSocket());
-            if(outsocket && nodes.contains(outsocket->getNode()))
-                    socket->setCntdSocket(outsocket->toOut());
-        }
     }
 }
 

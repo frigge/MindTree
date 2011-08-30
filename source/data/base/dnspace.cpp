@@ -37,17 +37,18 @@ DNSpace::DNSpace(DNSpace* space)
         addNode(copy);
         FRG::CurrentProject->setNodePosition(copy, node->getPos());
     }
-    foreach(DNode *node, getNodes())
-        foreach(DinSocket *socket, node->getInSockets())
-            socket->setCntdSocket(const_cast<DoutSocket*>(CopySocketMapper::getCopy(socket->getCntdSocket())->toOut()));
 }
 
 DNSpace::~DNSpace()
 {
     FRG::CurrentProject->unregisterSpace(this);
+    //try to clear all links before deleting nodes
     foreach(DNode *node, getNodes())
-        removeNode(node);
-    nodes.clear();
+        foreach(DinSocket *socket, node->getInSockets())
+            socket->clearLink();
+
+    foreach(DNode *node, getNodes())
+        delete node;
 }
 
 

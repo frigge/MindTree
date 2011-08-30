@@ -28,7 +28,7 @@
 
 QHash<unsigned short, DSocket*>LoadSocketIDMapper::loadIDMapper;
 unsigned short DSocket::count = 0;
-QHash<const DSocket*, DSocket*> CopySocketMapper::socketMap;
+QHash<DSocket*, DSocket*> CopySocketMapper::socketMap;
 
 unsigned short LoadSocketIDMapper::getID(DSocket *socket)    
 {
@@ -56,19 +56,27 @@ void LoadSocketIDMapper::remap()
     loadIDMapper.clear();
 }
 
-void CopySocketMapper::setSocketPair(const DSocket *original, DSocket *copy)    
+void CopySocketMapper::setSocketPair(DSocket *original, DSocket *copy)    
 {
    socketMap.insert(original, copy); 
 }
 
-DSocket * CopySocketMapper::getCopy(const DSocket *original)    
+DSocket * CopySocketMapper::getCopy(DSocket *original)    
 {
     if(!socketMap.contains(original)) return 0;
     return socketMap.value(original);
 }
 
-void CopySocketMapper::clear()    
+void CopySocketMapper::remap()    
 {
+    foreach(DSocket *socket, socketMap.keys())
+        if(socket->getDir() == IN)
+            if(socket->toIn()->getCntdSocket())
+                if(socketMap.contains(socket->toIn()->getCntdSocket()))
+                    socketMap[socket]->toIn()->setCntdSocket(socketMap[socket->toIn()->getCntdSocket()]->toOut());
+                else
+                    socket->toIn()->getCntdSocket()->registerSocket(socketMap[socket]->toIn());
+
     socketMap.clear();
 }
 
@@ -79,13 +87,14 @@ DSocket::DSocket(QString name, socket_type type, DNode *node)
 
 DSocket::DSocket(DSocket* socket, DNode *node)
     : name(socket->getName()), type(socket->getType()), ID(++count), node(node),
-    Variable(socket->getVariable()), socketVis(0x0)
+    Variable(socket->getVariable()), socketVis(0)
 {
     CopySocketMapper::setSocketPair(socket, this);
 }
 
 DSocket::~DSocket()
 {
+    killSocketVis();
 }
 
 bool DSocket::operator==(DSocket &socket)    
@@ -163,21 +172,21 @@ DNodeLink DSocket::createLink(DSocket *socket1, DSocket *socket2)
 
 void DSocket::removeLink(DinSocket *in, DoutSocket *out)    
 {
-    if(in->getVariable()) 
-    {
-        in->setCntdSocket(0);
-        out->unregisterSocket(in, false);
-        DNode *inNode = in->getNode();
-        inNode->dec_var_socket(in);
-        return;
-    }
-    if(out->getVariable()) 
-    {
-        in->setCntdSocket(0);
-        DNode *outNode = out->getNode();
-        outNode->dec_var_socket(out);
-        return;
-    }
+//    if(in->getVariable()) 
+//    {
+//        in->clearLink(false);
+//        out->unregisterSocket(in, false);
+//        DNode *inNode = in->getNode();
+//        inNode->dec_var_socket(in);
+//        return;
+//    }
+//    if(out->getVariable()) 
+//    {
+//        in->clearLink(false);
+//        DNode *outNode = out->getNode();
+//        outNode->dec_var_socket(out);
+//        return;
+//    }
     in->clearLink();
 }
 
@@ -249,13 +258,13 @@ void DinSocket::addLink(DoutSocket *socket)
         getNode()->inc_var_socket();
 }
 
-void DinSocket::clearLink()
+void DinSocket::clearLink(bool unregister)
 {
+    if(cntdSocket&&unregister)cntdSocket->unregisterSocket(this);
+	cntdSocket = 0;
+
     if(getVariable())
         getNode()->dec_var_socket(this);
-
-    if(cntdSocket)cntdSocket->unregisterSocket(this);
-	cntdSocket = 0;
 }
 
 unsigned short DinSocket::getTempCntdID() const
@@ -392,7 +401,7 @@ DoutSocket::DoutSocket(DoutSocket* socket, DNode *node)
 DoutSocket::~DoutSocket()
 {
     foreach(DinSocket *socket, cntdSockets)
-        socket->clearLink();
+        socket->clearLink(false);
 }
 
 bool DoutSocket::operator==(DoutSocket &socket)
@@ -479,11 +488,12 @@ void DinSocket::setCntdSocket(DoutSocket *socket)
 {
     if(!socket)
     {
-//        clearLink();
+        clearLink();
         return;
     }
     if(cntdSocket)
-        cntdSocket->unregisterSocket(this);
+        cntdSocket->unregisterSocket(this, false);
+
 	cntdSocket = socket;
     if(socket->getType() == VARIABLE)
     {
