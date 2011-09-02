@@ -20,10 +20,12 @@
 #ifndef SHADERWRITER_H
 #define SHADERWRITER_H
 
-#include "source/data/nodes/data_node.h"
-
 #include "QString"
 #include "QStringList"
+
+class OutputNode;
+class DoutSocket;
+class DinSocket;
 
 class ShaderWriter
 {

@@ -145,6 +145,10 @@ public:
 
 public slots:
     void setValue(QColor);
+    void emitNode();
+
+signals:
+    void valueChanged(DNode*);
 };
 
 class VStringValueNode : public VValueNode
@@ -155,6 +159,10 @@ public:
 
 public slots:
     void setValue(QString);
+    void emitNode();
+
+signals:
+    void valueChanged(DNode*);
 };
 
 class FloatValueSpinBox : public QDoubleSpinBox
@@ -171,6 +179,10 @@ public:
 
 public slots:
     void setValue(double);
+    void emitNode();
+
+signals:
+    void valueChanged(DNode*);
 
 private:
     FloatValueSpinBox *spinbox;
@@ -206,6 +218,10 @@ protected:
 
 public slots:
     void setValue(Vector);
+    void emitNode();
+
+signals:
+    void valueChanged(DNode*);
 
 private:
     VectorValue *vec;

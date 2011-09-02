@@ -180,6 +180,18 @@ private:
     CallbackList addSocketCallbacks;
 };
 
+template<class C>
+const C* DNode::getDerivedConst() const
+{
+    return static_cast<const C*>(this); 
+}
+
+template<class C>
+C* DNode::getDerived()
+{
+    return static_cast<C*>(this); 
+}
+
 QDataStream &operator<<(QDataStream &stream, DNode *node);
 QDataStream &operator>>(QDataStream &stream, DNode **node);
 

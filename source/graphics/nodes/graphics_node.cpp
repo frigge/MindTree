@@ -426,7 +426,13 @@ VColorValueNode::VColorValueNode(DNode *data)
     cbutton->resize(20, 20);
     contextMenu->connect(cbutton, SIGNAL(clicked(QColor)), this, SLOT(setValue(QColor)));
     setValueEditor(cbutton);
-    connect(cbutton, SIGNAL(clicked(QColor)), FRG::Space, SIGNAL(linkChanged()));
+    connect(cbutton, SIGNAL(clicked(QColor)), this, SLOT(emitNode()));
+    connect(this, SIGNAL(valueChanged(DNode*)), FRG::Space, SIGNAL(linkChanged(DNode*)));
+}
+
+void VColorValueNode::emitNode()    
+{
+    emit valueChanged(data);
 }
 
 void VColorValueNode::setValue(QColor color)
@@ -441,9 +447,15 @@ VStringValueNode::VStringValueNode(DNode *data)
     QLineEdit *lineedit = new QLineEdit;
     contextMenu->connect(lineedit, SIGNAL(textChanged(QString)), this, SLOT(setValue(QString)));
     setValueEditor(lineedit);
-    connect(lineedit, SIGNAL(textChanged()), FRG::Space, SIGNAL(linkChanged()));
+    connect(lineedit, SIGNAL(textChanged()), this, SLOT(emitNode()));
+    connect(this, SIGNAL(valueChanged(DNode*)), FRG::Space, SIGNAL(linkChanged(DNode*)));
 
     lineedit->setText(static_cast<StringValueNode*>(data)->getValue());
+}
+
+void VStringValueNode::emitNode()    
+{
+   emit valueChanged(data); 
 }
 
 void VStringValueNode::setValue(QString string)
@@ -466,9 +478,15 @@ VFloatValueNode::VFloatValueNode(DNode *data)
 {
     contextMenu->connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(setValue(double)));
     setValueEditor(spinbox);
-    connect(spinbox, SIGNAL(valueChanged(double)), FRG::Space, SIGNAL(linkChanged()));
+    connect(spinbox, SIGNAL(valueChanged(double)), this, SLOT(emitNode()));
+    connect(this, SIGNAL(valueChanged(DNode*)), FRG::Space, SIGNAL(linkChanged(DNode*)));
 
     spinbox->setValue(static_cast<FloatValueNode*>(data)->getValue());
+}
+
+void VFloatValueNode::emitNode()    
+{
+    emit valueChanged(data);
 }
 
 void VFloatValueNode::setValue(double fval)
@@ -515,8 +533,14 @@ VVectorValueNode::VVectorValueNode(DNode *data)
     setValueEditor(vec);
     updateNodeVis();
     connect(vec, SIGNAL(valueChanged(Vector)), this, SLOT(setValue(Vector)));
-    connect(vec, SIGNAL(valueChanged(Vector)), FRG::Space, SIGNAL(linkChanged()));
+    connect(vec, SIGNAL(valueChanged(Vector)), this, SLOT(emitNode()));
+    connect(this, SIGNAL(valueChanged(DNode*)), FRG::Space, SIGNAL(linkChanged(DNode*)));
     vec->setValue(static_cast<VectorValueNode*>(data)->getValue());
+}
+
+void VVectorValueNode::emitNode()    
+{
+    emit valueChanged(data);
 }
 
 void VVectorValueNode::updateNodeVis()    

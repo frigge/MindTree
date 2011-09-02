@@ -365,7 +365,7 @@ void VNSpace::addLink(VNSocket *final)
     updateLinks();
     FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoLink(dnlink, olddnlink));
 
-    emit linkChanged();
+    emit linkChanged(dnlink.out->getNode());
 };
 
 void VNSpace::updateLinks()
@@ -672,6 +672,7 @@ void VNSpace::createSpaceVis()
         node->getNodeVis()->setPos(FRG::CurrentProject->getNodePosition(node));
     }
     updateLinks();
+    emit linkChanged();
 }
 
 void VNSpace::deleteSpaceVis()

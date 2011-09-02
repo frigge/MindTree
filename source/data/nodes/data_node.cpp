@@ -85,18 +85,6 @@ DNode::DNode(const DNode* node)
     CopyNodeMapper::setNodePair(const_cast<DNode*>(node), this);
 }
 
-template<class C>
-const C* DNode::getDerivedConst() const
-{
-    return static_cast<const C*>(this); 
-}
-
-template<class C>
-C* DNode::getDerived()
-{
-    return static_cast<C*>(this); 
-}
-
 DNode* DNode::copy(const DNode *original)    
 {
     DNode *newNode;

@@ -145,6 +145,7 @@ public:
 
 signals:
     void linkChanged();
+    void linkChanged(DNode*);
 
 public slots:
     void copy();
