@@ -19,8 +19,6 @@
 
 #include "shaderwriter.h"
 
-#include "source/data/nodes/data_node.h"
-
 ShaderWriter::ShaderWriter(OutputNode *start)
     : start(start)
 {
@@ -500,24 +498,29 @@ void ShaderWriter::writeForLoop(const DoutSocket *socket)
 
     output.append(newline());
     output.append("for(");
-    output.append("float step=");
+    output.append(start->getName());
+    output.append(" = ");
     output.append(writeVarName(start));
     gotoNextNode(start);
-    output.append("; step < ");
+    output.append(";");
+    output.append(start->getName());
+    output.append(" != ");
     output.append(writeVarName(end));
     gotoNextNode(end);
     output.append(";");
-    output.append("; step++)");
+    output.append(start->getName());
+    output.append("++");
+    output.append(")");
     output.append(newline());
     output.append("{");
     incTabLevel();
     output.append(newline());
-    code.append(output);
     const ContainerNode *cnode = node->getDerivedConst<ContainerNode>();
     mapped_socket = cnode->getSocketInContainer(socket)->toIn();
     gotoNextNode(mapped_socket);
+    output.append("}");
     decTabLevel();
-    code.append("}");
+    code.append(output);
 }
 
 void ShaderWriter::writeWhileLoop(const DoutSocket *socket)

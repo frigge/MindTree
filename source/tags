@@ -1,0 +1,663 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ADD	data/nodes/data_node.h	/^    ADD,                SUBTRACT,$/;"	e	enum:NType
+AND	data/nodes/data_node.h	/^    EQUAL,              AND,OR,$/;"	e	enum:NType
+BUILDIN_NODES_H	data/nodes/buildin_nodes.h	21;"	d
+BuildIn	data/nodes/buildin_nodes.h	/^namespace BuildIn$/;"	n
+CLgather	data/nodes/buildin_nodes.cpp	/^void BuildIn::CLgather(DNSpace *space)$/;"	f	class:BuildIn
+CLilluminance	data/nodes/buildin_nodes.cpp	/^void BuildIn::CLilluminance(DNSpace *space)$/;"	f	class:BuildIn
+CLilluminate	data/nodes/buildin_nodes.cpp	/^void BuildIn::CLilluminate(DNSpace *space)$/;"	f	class:BuildIn
+CLsolar	data/nodes/buildin_nodes.cpp	/^void BuildIn::CLsolar(DNSpace *space)$/;"	f	class:BuildIn
+COLOR	data/nodes/data_node_socket.h	/^    COLOR,$/;"	e	enum:__anon7
+COLORNODE	data/nodes/data_node.h	/^    COLORNODE,          FLOATNODE,$/;"	e	enum:NType
+CONDITION	data/nodes/data_node_socket.h	/^    CONDITION$/;"	e	enum:__anon7
+CONDITIONCONTAINER	data/nodes/data_node.h	/^    CONDITIONCONTAINER, NOT,$/;"	e	enum:NType
+CONTAINER	data/nodes/data_node.h	/^    CONTAINER,          FUNCTION,$/;"	e	enum:NType
+C_addItems	data/nodes/data_node.cpp	/^void ContainerNode::C_addItems(QList<DNode *> nodes)$/;"	f	class:ContainerNode
+CandNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::CandNode(DNSpace *space)$/;"	f	class:BuildIn
+CeqNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::CeqNode(DNSpace *space)$/;"	f	class:BuildIn
+CgreaterNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::CgreaterNode(DNSpace *space)$/;"	f	class:BuildIn
+ChangeSpaceAction	data/base/frg_shader_author.cpp	/^ChangeSpaceAction::ChangeSpaceAction(DNSpace *space, QObject *parent)$/;"	f	class:ChangeSpaceAction
+ChangeSpaceAction	data/base/frg_shader_author.h	/^class ChangeSpaceAction : public QAction$/;"	c
+CnotNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::CnotNode(DNSpace *space)$/;"	f	class:BuildIn
+ColorButton	graphics/nodes/graphics_node.cpp	/^ColorButton::ColorButton()$/;"	f	class:ColorButton
+ColorButton	graphics/nodes/graphics_node.h	/^class ColorButton : public QPushButton$/;"	c
+ColorValueNode	data/nodes/data_node.cpp	/^ColorValueNode::ColorValueNode(bool raw)$/;"	f	class:ColorValueNode
+ColorValueNode	data/nodes/data_node.h	/^class ColorValueNode : public ValueNode$/;"	c
+ConditionContainerNode	data/nodes/data_node.cpp	/^ConditionContainerNode::ConditionContainerNode(bool raw)$/;"	f	class:ConditionContainerNode
+ConditionContainerNode	data/nodes/data_node.h	/^class ConditionContainerNode : public ContainerNode$/;"	c
+ConditionNode	data/nodes/data_node.cpp	/^ConditionNode::ConditionNode(NType t, bool raw)$/;"	f	class:ConditionNode
+ConditionNode	data/nodes/data_node.h	/^class ConditionNode : public DNode$/;"	c
+ContForNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::ContForNode(DNSpace *space)$/;"	f	class:BuildIn
+ContIfNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::ContIfNode(DNSpace *space)$/;"	f	class:BuildIn
+ContWhileNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::ContWhileNode(DNSpace *space)$/;"	f	class:BuildIn
+ContainerData	data/nodes/data_node.h	/^    DNSpace *ContainerData;$/;"	m	class:ContainerNode
+ContainerNode	data/nodes/data_node.cpp	/^ContainerNode::ContainerNode(QString name, bool raw)$/;"	f	class:ContainerNode
+ContainerNode	data/nodes/data_node.cpp	/^ContainerNode::ContainerNode(bool raw)$/;"	f	class:ContainerNode
+ContainerNode	data/nodes/data_node.h	/^class ContainerNode : public DNode$/;"	c
+ContextAddMenu	graphics/base/vnspace.cpp	/^void VNSpace::ContextAddMenu()$/;"	f	class:VNSpace
+CorNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::CorNode(DNSpace *space)$/;"	f	class:BuildIn
+CsmallerNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::CsmallerNode(DNSpace *space)$/;"	f	class:BuildIn
+DATA_NODE_H	data/nodes/data_node.h	20;"	d
+DATA_NODE_SOCKET_H	data/nodes/data_node_socket.h	20;"	d
+DISPLACEMENTINPUT	data/nodes/data_node.h	/^    DISPLACEMENTINPUT,  DISPLACEMENTOUTPUT,$/;"	e	enum:NType
+DISPLACEMENTOUTPUT	data/nodes/data_node.h	/^    DISPLACEMENTINPUT,  DISPLACEMENTOUTPUT,$/;"	e	enum:NType
+DIVIDE	data/nodes/data_node.h	/^    MULTIPLY,           DIVIDE,$/;"	e	enum:NType
+DNSPACE_H	data/base/dnspace.h	20;"	d
+DNSocket	data/nodes/data_node_socket.cpp	/^DNSocket::DNSocket(QString name, socket_type type)$/;"	f	class:DNSocket
+DNSocket	data/nodes/data_node_socket.h	/^class DNSocket$/;"	c
+DNSpace	data/base/dnspace.cpp	/^DNSpace::DNSpace()$/;"	f	class:DNSpace
+DNSpace	data/base/dnspace.h	/^class DNSpace$/;"	c
+DNode	data/nodes/data_node.cpp	/^DNode::DNode()$/;"	f	class:DNode
+DNode	data/nodes/data_node.cpp	/^DNode::DNode(QString name)$/;"	f	class:DNode
+DNode	data/nodes/data_node.h	/^class DNode$/;"	c
+DOTPRODUCT	data/nodes/data_node.h	/^    DOTPRODUCT,$/;"	e	enum:NType
+EQUAL	data/nodes/data_node.h	/^    EQUAL,              AND,OR,$/;"	e	enum:NType
+FLOAT	data/nodes/data_node_socket.h	/^    FLOAT,$/;"	e	enum:__anon7
+FLOATNODE	data/nodes/data_node.h	/^    COLORNODE,          FLOATNODE,$/;"	e	enum:NType
+FOR	data/nodes/data_node.h	/^    FOR, WHILE, GATHER, ILLUMINANCE,$/;"	e	enum:NType
+FRGStack	data/undo/frg_generic_undo.cpp	/^FRGStack::FRGStack()$/;"	f	class:FRGStack
+FRGStack	data/undo/frg_generic_undo.h	/^class FRGStack$/;"	c
+FRGUndoBase	data/undo/frg_generic_undo.h	/^class FRGUndoBase$/;"	c
+FRG_GENERIC_UNDO_H	data/undo/frg_generic_undo.h	12;"	d
+FRG_SHADER_AUTHOR_H	data/base/frg_shader_author.h	21;"	d
+FUNCTION	data/nodes/data_node.h	/^    CONTAINER,          FUNCTION,$/;"	e	enum:NType
+FloatValueNode	data/nodes/data_node.cpp	/^FloatValueNode::FloatValueNode(bool raw)$/;"	f	class:FloatValueNode
+FloatValueNode	data/nodes/data_node.h	/^class FloatValueNode : public ValueNode$/;"	c
+ForNode	data/nodes/data_node.cpp	/^ForNode::ForNode(bool raw)$/;"	f	class:ForNode
+ForNode	data/nodes/data_node.h	/^class ForNode : public LoopNode$/;"	c
+FunctionNode	data/nodes/data_node.cpp	/^FunctionNode::FunctionNode()$/;"	f	class:FunctionNode
+FunctionNode	data/nodes/data_node.h	/^class FunctionNode : public DNode$/;"	c
+GATHER	data/nodes/data_node.h	/^    FOR, WHILE, GATHER, ILLUMINANCE,$/;"	e	enum:NType
+GRAPHICS_NODE_H	graphics/nodes/graphics_node.h	20;"	d
+GRAPHICS_NODE_SOCKET_H	graphics/nodes/graphics_node_socket.h	20;"	d
+GREATERTHAN	data/nodes/data_node.h	/^    GREATERTHAN,        SMALLERTHAN,$/;"	e	enum:NType
+GatherNode	data/nodes/data_node.cpp	/^GatherNode::GatherNode(bool raw)$/;"	f	class:GatherNode
+GatherNode	data/nodes/data_node.h	/^class GatherNode : public LoopNode$/;"	c
+ID	data/nodes/data_node.h	/^    int ID;$/;"	m	class:DNode
+ID	data/nodes/data_node_socket.h	/^    int ID;$/;"	m	class:DNSocket
+ILLUMINANCE	data/nodes/data_node.h	/^    FOR, WHILE, GATHER, ILLUMINANCE,$/;"	e	enum:NType
+ILLUMINANCEINPUT	data/nodes/data_node.h	/^    ILLUMINANCEINPUT,   ILLUMINATEINPUT,$/;"	e	enum:NType
+ILLUMINATE	data/nodes/data_node.h	/^    ILLUMINATE, SOLAR,$/;"	e	enum:NType
+ILLUMINATEINPUT	data/nodes/data_node.h	/^    ILLUMINANCEINPUT,   ILLUMINATEINPUT,$/;"	e	enum:NType
+IN	data/nodes/data_node_socket.h	/^    IN,$/;"	e	enum:__anon8
+INSOCKETS	data/nodes/data_node.h	/^    INSOCKETS,          OUTSOCKETS,$/;"	e	enum:NType
+IlluminanceNode	data/nodes/data_node.cpp	/^IlluminanceNode::IlluminanceNode(bool raw)$/;"	f	class:IlluminanceNode
+IlluminanceNode	data/nodes/data_node.h	/^class IlluminanceNode : public  LoopNode$/;"	c
+IlluminateNode	data/nodes/data_node.cpp	/^IlluminateNode::IlluminateNode(bool raw)$/;"	f	class:IlluminateNode
+IlluminateNode	data/nodes/data_node.h	/^class IlluminateNode : public LoopNode$/;"	c
+InputNode	data/nodes/data_node.cpp	/^InputNode::InputNode()$/;"	f	class:InputNode
+InputNode	data/nodes/data_node.h	/^class InputNode : public DNode$/;"	c
+LIGHTINPUT	data/nodes/data_node.h	/^    LIGHTINPUT,         LIGHTOUTPUT,$/;"	e	enum:NType
+LIGHTOUTPUT	data/nodes/data_node.h	/^    LIGHTINPUT,         LIGHTOUTPUT,$/;"	e	enum:NType
+LOOPINSOCKETS	data/nodes/data_node.h	/^    LOOPINSOCKETS,      LOOPOUTSOCKETS,$/;"	e	enum:NType
+LOOPOUTSOCKETS	data/nodes/data_node.h	/^    LOOPINSOCKETS,      LOOPOUTSOCKETS,$/;"	e	enum:NType
+LoopNode	data/nodes/data_node.h	/^class LoopNode : public ContainerNode$/;"	c
+LoopSocketNode	data/nodes/data_node.cpp	/^LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw)$/;"	f	class:LoopSocketNode
+LoopSocketNode	data/nodes/data_node.h	/^class LoopSocketNode : public SocketNode$/;"	c
+MSubNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::MSubNode(DNSpace *space)$/;"	f	class:BuildIn
+MULTIPLY	data/nodes/data_node.h	/^    MULTIPLY,           DIVIDE,$/;"	e	enum:NType
+MaddNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::MaddNode(DNSpace *space)$/;"	f	class:BuildIn
+MathNode	data/nodes/data_node.cpp	/^MathNode::MathNode(NType t, bool raw)$/;"	f	class:MathNode
+MathNode	data/nodes/data_node.h	/^class MathNode : public DNode$/;"	c
+MdivNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::MdivNode(DNSpace *space)$/;"	f	class:BuildIn
+MdotNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::MdotNode(DNSpace *space)$/;"	f	class:BuildIn
+MmultNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::MmultNode(DNSpace *space)$/;"	f	class:BuildIn
+NContextMenu	graphics/base/vnspace.h	/^    QMenu *NContextMenu;$/;"	m	class:VNSpace
+NEWNODEEDITOR_H	graphics/newnodeeditor.h	20;"	d
+NODELIB_H	graphics/nodelib.h	21;"	d
+NODELINK_H	graphics/nodelink.h	21;"	d
+NORMAL	data/nodes/data_node_socket.h	/^    NORMAL,$/;"	e	enum:__anon7
+NOT	data/nodes/data_node.h	/^    CONDITIONCONTAINER, NOT,$/;"	e	enum:NType
+NType	data/nodes/data_node.h	/^enum NType$/;"	g
+NULL	data/undo/frg_generic_undo.h	8;"	d
+N_inSockets	data/nodes/data_node.h	/^    V_NSocket_ptrs *N_inSockets;$/;"	m	class:DNode
+N_outSockets	data/nodes/data_node.h	/^    V_NSocket_ptrs *N_outSockets;$/;"	m	class:DNode
+NewNodeEditor	graphics/newnodeeditor.cpp	/^NewNodeEditor::NewNodeEditor(QPointF atPos, QWidget *parent) :$/;"	f	class:NewNodeEditor
+NewNodeEditor	graphics/newnodeeditor.h	/^class NewNodeEditor : public QWidget$/;"	c
+NodeHeight	graphics/nodes/graphics_node.cpp	/^int VNode::NodeHeight(int numSockets) const$/;"	f	class:VNode
+NodeHeight	graphics/nodes/graphics_node.cpp	/^int VValueNode::NodeHeight(int numSockets) const$/;"	f	class:VValueNode
+NodeLib	graphics/nodelib.cpp	/^NodeLib::NodeLib(QPointF atPos, QWidget *parent):$/;"	f	class:NodeLib
+NodeLib	graphics/nodelib.h	/^class NodeLib : public QTreeWidget$/;"	c
+NodeLink	graphics/nodelink.cpp	/^NodeLink::NodeLink()$/;"	f	class:NodeLink
+NodeLink	graphics/nodelink.cpp	/^NodeLink::NodeLink(QPointF startP, QPointF endP)$/;"	f	class:NodeLink
+NodeLink	graphics/nodelink.h	/^class NodeLink : public QObject, public QGraphicsItem$/;"	c
+NodeLinkData	graphics/nodelink.h	/^} NodeLinkData;$/;"	t	typeref:struct:__anon1
+NodeList	data/nodes/data_node.h	/^    static QList<DNode*>NodeList;$/;"	m	class:DNode
+NodeName	graphics/nodes/graphics_node.cpp	/^NodeName::NodeName(QString name, QGraphicsItem *parent)$/;"	f	class:NodeName
+NodeName	graphics/nodes/graphics_node.h	/^class NodeName : public QGraphicsTextItem$/;"	c
+NodeType	data/nodes/data_node.h	/^    NType NodeType;$/;"	m	class:DNode
+NodeWidth	graphics/nodes/graphics_node.cpp	/^int VNode::NodeWidth() const$/;"	f	class:VNode
+NodeWidth	graphics/nodes/graphics_node.cpp	/^int VValueNode::NodeWidth() const$/;"	f	class:VValueNode
+OR	data/nodes/data_node.h	/^    EQUAL,              AND,OR,$/;"	e	enum:NType
+OUT	data/nodes/data_node_socket.h	/^    OUT$/;"	e	enum:__anon8
+OUTSOCKETS	data/nodes/data_node.h	/^    INSOCKETS,          OUTSOCKETS,$/;"	e	enum:NType
+OutputNode	data/nodes/data_node.cpp	/^OutputNode::OutputNode()$/;"	f	class:OutputNode
+OutputNode	data/nodes/data_node.h	/^class OutputNode : public DNode$/;"	c
+OutputVars	data/shaderwriter.h	/^    QStringList OutputVars;$/;"	m	class:ShaderWriter
+POINT	data/nodes/data_node_socket.h	/^    POINT,$/;"	e	enum:__anon7
+PROJECT_H	data/base/project.h	2;"	d
+Project	data/base/project.cpp	/^Project::Project()$/;"	f	class:Project
+Project	data/base/project.h	/^class Project$/;"	c
+RemoveButton	graphics/newnodeeditor.cpp	/^RemoveButton::RemoveButton(int index)$/;"	f	class:RemoveButton
+RemoveButton	graphics/newnodeeditor.h	/^class RemoveButton : public QPushButton$/;"	c
+SCENEWIDGETCONTAINER_H	graphics/scenewidgetcontainer.h	21;"	d
+SHADERWRITER_H	data/shaderwriter.h	21;"	d
+SHADER_VIEW_H	graphics/shader_view.h	21;"	d
+SMALLERTHAN	data/nodes/data_node.h	/^    GREATERTHAN,        SMALLERTHAN,$/;"	e	enum:NType
+SOLAR	data/nodes/data_node.h	/^    ILLUMINATE, SOLAR,$/;"	e	enum:NType
+SOLARINPUT	data/nodes/data_node.h	/^    SOLARINPUT,$/;"	e	enum:NType
+STRING	data/nodes/data_node_socket.h	/^    STRING,$/;"	e	enum:__anon7
+STRINGNODE	data/nodes/data_node.h	/^    STRINGNODE,         VECTORNODE$/;"	e	enum:NType
+SUBTRACT	data/nodes/data_node.h	/^    ADD,                SUBTRACT,$/;"	e	enum:NType
+SURFACEINPUT	data/nodes/data_node.h	/^    SURFACEINPUT,       SURFACEOUTPUT,$/;"	e	enum:NType
+SURFACEOUTPUT	data/nodes/data_node.h	/^    SURFACEINPUT,       SURFACEOUTPUT,$/;"	e	enum:NType
+SceneWidgetCloseButton	graphics/scenewidgetcontainer.cpp	/^SceneWidgetCloseButton::SceneWidgetCloseButton()$/;"	f	class:SceneWidgetCloseButton
+SceneWidgetCloseButton	graphics/scenewidgetcontainer.h	/^class SceneWidgetCloseButton : public QGraphicsItem$/;"	c
+SceneWidgetContainer	graphics/scenewidgetcontainer.cpp	/^SceneWidgetContainer::SceneWidgetContainer()$/;"	f	class:SceneWidgetContainer
+SceneWidgetContainer	graphics/scenewidgetcontainer.h	/^class SceneWidgetContainer : public QGraphicsItem$/;"	c
+ShaderHeader	data/shaderwriter.h	/^    QString ShaderHeader;$/;"	m	class:ShaderWriter
+ShaderName	data/nodes/data_node.h	/^    QString ShaderName;$/;"	m	class:OutputNode
+ShaderParameter	data/shaderwriter.h	/^    QStringList ShaderParameter;$/;"	m	class:ShaderWriter
+ShaderWriter	data/shaderwriter.cpp	/^ShaderWriter::ShaderWriter(OutputNode *start)$/;"	f	class:ShaderWriter
+ShaderWriter	data/shaderwriter.h	/^class ShaderWriter$/;"	c
+Shader_View	graphics/shader_view.cpp	/^Shader_View::Shader_View(QMainWindow *parent)$/;"	f	class:Shader_View
+Shader_View	graphics/shader_view.h	/^class Shader_View : public QGraphicsView$/;"	c
+SlotTypeEditor	graphics/newnodeeditor.cpp	/^SlotTypeEditor::SlotTypeEditor()$/;"	f	class:SlotTypeEditor
+SlotTypeEditor	graphics/newnodeeditor.h	/^class SlotTypeEditor : public QComboBox$/;"	c
+SocketEditor	graphics/newnodeeditor.cpp	/^SocketEditor::SocketEditor()$/;"	f	class:SocketEditor
+SocketEditor	graphics/newnodeeditor.h	/^class SocketEditor : public QTreeWidget$/;"	c
+SocketNameCnt	data/nodes/data_node_socket.cpp	/^QHash<QString, int> DNSocket::SocketNameCnt;$/;"	m	class:DNSocket	file:
+SocketNameCnt	data/nodes/data_node_socket.h	/^    static QHash<QString, int>SocketNameCnt;$/;"	m	class:DNSocket
+SocketNode	data/nodes/data_node.cpp	/^SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)$/;"	f	class:SocketNode
+SocketNode	data/nodes/data_node.h	/^class SocketNode : public DNode$/;"	c
+SolarNode	data/nodes/data_node.cpp	/^SolarNode::SolarNode(bool raw)$/;"	f	class:SolarNode
+SolarNode	data/nodes/data_node.h	/^class SolarNode : public LoopNode$/;"	c
+StringValueNode	data/nodes/data_node.cpp	/^StringValueNode::StringValueNode(bool raw)$/;"	f	class:StringValueNode
+StringValueNode	data/nodes/data_node.h	/^class StringValueNode : public ValueNode$/;"	c
+Type	graphics/nodes/graphics_node.h	/^    enum {Type = UserType + 2};$/;"	e	enum:VNode::__anon2
+Type	graphics/nodes/graphics_node_socket.h	/^    enum {Type = UserType + 1};$/;"	e	enum:VNSocket::__anon3
+Type	graphics/scenewidgetcontainer.h	/^    enum {Type = UserType + 3};$/;"	e	enum:SceneWidgetContainer::__anon4
+VARIABLE	data/nodes/data_node_socket.h	/^    VARIABLE,$/;"	e	enum:__anon7
+VColNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::VColNode(DNSpace *space)$/;"	f	class:BuildIn
+VColorValueNode	graphics/nodes/graphics_node.cpp	/^VColorValueNode::VColorValueNode(DNode *data)$/;"	f	class:VColorValueNode
+VColorValueNode	graphics/nodes/graphics_node.h	/^class VColorValueNode : public VValueNode$/;"	c
+VContainerNode	graphics/nodes/graphics_node.cpp	/^VContainerNode::VContainerNode(DNode *data)$/;"	f	class:VContainerNode
+VContainerNode	graphics/nodes/graphics_node.h	/^class VContainerNode : public QObject, public VNode$/;"	c
+VECTOR	data/nodes/data_node_socket.h	/^    VECTOR,$/;"	e	enum:__anon7
+VECTORNODE	data/nodes/data_node.h	/^    STRINGNODE,         VECTORNODE$/;"	e	enum:NType
+VFlNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::VFlNode(DNSpace *space)$/;"	f	class:BuildIn
+VFloatValueNode	graphics/nodes/graphics_node.cpp	/^VFloatValueNode::VFloatValueNode(DNode *data)$/;"	f	class:VFloatValueNode
+VFloatValueNode	graphics/nodes/graphics_node.h	/^class VFloatValueNode : public VValueNode$/;"	c
+VNSPACE_H	graphics/base/vnspace.h	20;"	d
+VNSocket	graphics/nodes/graphics_node_socket.cpp	/^VNSocket::VNSocket(DNSocket *data)$/;"	f	class:VNSocket
+VNSocket	graphics/nodes/graphics_node_socket.h	/^class VNSocket : public QObject, public QGraphicsItem$/;"	c
+VNSpace	graphics/base/vnspace.cpp	/^VNSpace::VNSpace()$/;"	f	class:VNSpace
+VNSpace	graphics/base/vnspace.h	/^class VNSpace : public QGraphicsScene$/;"	c
+VNode	graphics/nodes/graphics_node.cpp	/^VNode::VNode(DNode *data)$/;"	f	class:VNode
+VNode	graphics/nodes/graphics_node.h	/^class VNode : public QGraphicsItem$/;"	c
+VOLUMEINPUT	data/nodes/data_node.h	/^    VOLUMEINPUT,        VOLUMEOUTPUT,$/;"	e	enum:NType
+VOLUMEOUTPUT	data/nodes/data_node.h	/^    VOLUMEINPUT,        VOLUMEOUTPUT,$/;"	e	enum:NType
+VOutputNode	graphics/nodes/graphics_node.cpp	/^VOutputNode::VOutputNode(DNode *data)$/;"	f	class:VOutputNode
+VOutputNode	graphics/nodes/graphics_node.h	/^class VOutputNode : public QObject, public VNode$/;"	c
+VStrNode	data/nodes/buildin_nodes.cpp	/^void BuildIn::VStrNode(DNSpace *space)$/;"	f	class:BuildIn
+VStringValueNode	graphics/nodes/graphics_node.cpp	/^VStringValueNode::VStringValueNode(DNode *data)$/;"	f	class:VStringValueNode
+VStringValueNode	graphics/nodes/graphics_node.h	/^class VStringValueNode : public VValueNode$/;"	c
+VValueNode	graphics/nodes/graphics_node.cpp	/^VValueNode::VValueNode(DNode *data)$/;"	f	class:VValueNode
+VValueNode	graphics/nodes/graphics_node.h	/^class VValueNode : public QObject, public VNode$/;"	c
+VVectorValueNode	graphics/nodes/graphics_node.cpp	/^VVectorValueNode::VVectorValueNode(DNode *data)$/;"	f	class:VVectorValueNode
+VVectorValueNode	graphics/nodes/graphics_node.h	/^class VVectorValueNode : public VValueNode$/;"	c
+V_NSocket_ptrs	data/nodes/data_node.h	/^typedef QList<DNSocket*> V_NSocket_ptrs;$/;"	t
+ValueNode	data/nodes/data_node.h	/^class ValueNode : public DNode$/;"	c
+VarDeclares	data/shaderwriter.h	/^    QStringList VarDeclares;$/;"	m	class:ShaderWriter
+VectorValueNode	data/nodes/data_node.cpp	/^VectorValueNode::VectorValueNode(bool raw)$/;"	f	class:VectorValueNode
+VectorValueNode	data/nodes/data_node.h	/^class VectorValueNode : public ValueNode$/;"	c
+WHILE	data/nodes/data_node.h	/^    FOR, WHILE, GATHER, ILLUMINANCE,$/;"	e	enum:NType
+WhileNode	data/nodes/data_node.cpp	/^WhileNode::WhileNode(bool raw)$/;"	f	class:WhileNode
+WhileNode	data/nodes/data_node.h	/^class WhileNode : public LoopNode$/;"	c
+addBuildInNodes	graphics/nodelib.cpp	/^void NodeLib::addBuildInNodes()$/;"	f	class:NodeLib
+addFolder	graphics/nodelib.cpp	/^void NodeLib::addFolder()$/;"	f	class:NodeLib
+addLink	data/nodes/data_node_socket.cpp	/^void DNSocket::addLink(DNSocket *socket)$/;"	f	class:DNSocket
+addLink	graphics/base/vnspace.cpp	/^void VNSpace::addLink(NodeLink *nlink)$/;"	f	class:VNSpace
+addLink	graphics/base/vnspace.cpp	/^void VNSpace::addLink(NodeLink *nlink, VNSocket *final)$/;"	f	class:VNSpace
+addMappedSocket	data/nodes/data_node.cpp	/^void ContainerNode::addMappedSocket(DNSocket *socket, socket_dir dir)$/;"	f	class:ContainerNode
+addNode	data/base/dnspace.cpp	/^void DNSpace::addNode(DNode *node)$/;"	f	class:DNSpace
+addNode	data/base/project.cpp	/^void Project::addNode(DNode *node)$/;"	f	class:Project
+addNodeItems	graphics/nodelib.cpp	/^QList<QTreeWidgetItem *> NodeLib::addNodeItems(QDir dir, QTreeWidgetItem *parent)$/;"	f	class:NodeLib
+addSocket	data/nodes/data_node.cpp	/^void DNode::addSocket(DNSocket *socket, socket_dir dir)$/;"	f	class:DNode
+addSocket	data/nodes/data_node.cpp	/^void LoopSocketNode::addSocket(DNSocket *socket, socket_dir dir)$/;"	f	class:LoopSocketNode
+addSocket	graphics/newnodeeditor.cpp	/^void SocketEditor::addSocket()$/;"	f	class:SocketEditor
+addToCode	data/shaderwriter.cpp	/^void ShaderWriter::addToCode(QString c)$/;"	f	class:ShaderWriter
+addToLib	graphics/nodes/graphics_node.cpp	/^void VContainerNode::addToLib()$/;"	f	class:VContainerNode
+addToOutputVars	data/shaderwriter.cpp	/^void ShaderWriter::addToOutputVars(QString ov)$/;"	f	class:ShaderWriter
+addToShaderHeader	data/shaderwriter.cpp	/^void ShaderWriter::addToShaderHeader(QString s)$/;"	f	class:ShaderWriter
+addToShaderParameter	data/shaderwriter.cpp	/^void ShaderWriter::addToShaderParameter(QString s)$/;"	f	class:ShaderWriter
+addToVarDeclares	data/shaderwriter.cpp	/^void ShaderWriter::addToVarDeclares(QString vd)$/;"	f	class:ShaderWriter
+addtoLib	graphics/newnodeeditor.cpp	/^void NewNodeEditor::addtoLib()$/;"	f	class:NewNodeEditor
+addtolib	data/nodes/data_node.cpp	/^void ContainerNode::addtolib()$/;"	f	class:ContainerNode
+app	data/base/frg_shader_author.h	/^    static QApplication *app;$/;"	m	class:frg_Shader_Author
+base_widget	graphics/nodes/graphics_node.h	/^    QWidget *base_widget;$/;"	m	class:VValueNode
+boundingRect	graphics/nodelink.cpp	/^QRectF NodeLink::boundingRect() const$/;"	f	class:NodeLink
+boundingRect	graphics/nodes/graphics_node.cpp	/^QRectF VNode::boundingRect() const$/;"	f	class:VNode
+boundingRect	graphics/nodes/graphics_node_socket.cpp	/^QRectF VNSocket::boundingRect() const$/;"	f	class:VNSocket
+boundingRect	graphics/scenewidgetcontainer.cpp	/^QRectF SceneWidgetCloseButton::boundingRect() const$/;"	f	class:SceneWidgetCloseButton
+boundingRect	graphics/scenewidgetcontainer.cpp	/^QRectF SceneWidgetContainer::boundingRect() const$/;"	f	class:SceneWidgetContainer
+buildContainerNode	data/nodes/data_node.cpp	/^DNode *DNode::buildContainerNode(QPointF pos)$/;"	f	class:DNode
+c1	graphics/nodelink.h	/^    QPointF in, out, c1, c2;$/;"	m	class:NodeLink
+c2	graphics/nodelink.h	/^    QPointF in, out, c1, c2;$/;"	m	class:NodeLink
+cMenu	graphics/nodelink.h	/^    QMenu *cMenu;$/;"	m	class:NodeLink
+cacheLinks	graphics/base/vnspace.cpp	/^void VNSpace::cacheLinks()$/;"	f	class:VNSpace
+cachedLinks	graphics/base/vnspace.h	/^    QHash<DNSocket*, NodeLink*> cachedLinks;$/;"	m	class:VNSpace
+changeName	data/nodes/data_node.cpp	/^void OutputNode::changeName(QString newname)$/;"	f	class:OutputNode
+changeName	graphics/nodes/graphics_node.cpp	/^void VOutputNode::changeName()$/;"	f	class:VOutputNode
+changeName	graphics/nodes/graphics_node_socket.cpp	/^void VNSocket::changeName()$/;"	f	class:VNSocket
+changeType	graphics/nodes/graphics_node_socket.cpp	/^void VNSocket::changeType()$/;"	f	class:VNSocket
+change_window_title	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::change_window_title(QString title)$/;"	f	class:frg_Shader_Author
+childproxy	graphics/scenewidgetcontainer.h	/^    QGraphicsProxyWidget *childproxy;$/;"	m	class:SceneWidgetContainer
+clearLinks	data/nodes/data_node_socket.cpp	/^void DNSocket::clearLinks()$/;"	f	class:DNSocket
+clearSocketLinks	data/nodes/data_node.cpp	/^void DNode::clearSocketLinks()$/;"	f	class:DNode
+close	graphics/scenewidgetcontainer.h	/^    SceneWidgetCloseButton close;$/;"	m	class:SceneWidgetContainer
+closepos	graphics/scenewidgetcontainer.h	/^    QPoint closepos;$/;"	m	class:SceneWidgetContainer
+cnode_depth	data/shaderwriter.h	/^    QList<ContainerNode*> cnode_depth;$/;"	m	class:ShaderWriter
+cnode_depth_cnt	data/shaderwriter.h	/^    int cnode_depth_cnt;$/;"	m	class:ShaderWriter
+cntdSockets	data/nodes/data_node_socket.h	/^    QList<DNSocket*> cntdSockets;$/;"	m	class:DNSocket
+code	data/shaderwriter.h	/^    QString code;$/;"	m	class:ShaderWriter
+colorvalue	data/nodes/data_node.h	/^    QColor colorvalue;$/;"	m	class:ColorValueNode
+connectToContainer	data/nodes/data_node.cpp	/^void SocketNode::connectToContainer(ContainerNode *contnode)$/;"	f	class:SocketNode
+container	data/nodes/data_node.h	/^    ContainerNode *container;$/;"	m	class:SocketNode
+container	graphics/newnodeeditor.h	/^    SceneWidgetContainer *container;$/;"	m	class:NewNodeEditor
+container	graphics/nodelib.h	/^    SceneWidgetContainer *container;$/;"	m	class:NodeLib
+container	graphics/scenewidgetcontainer.h	/^    SceneWidgetContainer *container;$/;"	m	class:SceneWidgetCloseButton
+contextMenu	graphics/nodes/graphics_node.h	/^    QMenu *contextMenu;$/;"	m	class:VContainerNode
+contextMenu	graphics/nodes/graphics_node.h	/^    QMenu *contextMenu;$/;"	m	class:VOutputNode
+contextMenu	graphics/nodes/graphics_node.h	/^    QMenu *contextMenu;$/;"	m	class:VValueNode
+contextMenu	graphics/nodes/graphics_node_socket.h	/^    QMenu *contextMenu;$/;"	m	class:VNSocket
+contextMenuEvent	graphics/base/vnspace.cpp	/^void VNSpace::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)$/;"	f	class:VNSpace
+contextMenuEvent	graphics/nodelink.cpp	/^void NodeLink::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)$/;"	f	class:NodeLink
+contextMenuEvent	graphics/nodes/graphics_node.cpp	/^void VContainerNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)$/;"	f	class:VContainerNode
+contextMenuEvent	graphics/nodes/graphics_node.cpp	/^void VOutputNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)$/;"	f	class:VOutputNode
+contextMenuEvent	graphics/nodes/graphics_node.cpp	/^void VValueNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)$/;"	f	class:VValueNode
+contextMenuEvent	graphics/nodes/graphics_node_socket.cpp	/^void VNSocket::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)$/;"	f	class:VNSocket
+copyNode	data/nodes/data_node.cpp	/^DNode* ContainerNode::copyNode(QHash<DNSocket *, DNSocket *> *socketmapping)$/;"	f	class:ContainerNode
+copyNode	data/nodes/data_node.cpp	/^DNode* DNode::copyNode(QHash<DNSocket *, DNSocket *> *socketmapping)$/;"	f	class:DNode
+count	data/nodes/data_node.cpp	/^int DNode::count = 1;$/;"	m	class:DNode	file:
+count	data/nodes/data_node.h	/^    static int count;$/;"	m	class:DNode
+count	data/nodes/data_node_socket.cpp	/^int DNSocket::count = 0;$/;"	m	class:DNSocket	file:
+count	data/nodes/data_node_socket.h	/^    static int count;$/;"	m	class:DNSocket
+createCondition	data/shaderwriter.cpp	/^QString ShaderWriter::createCondition(DNSocket *socket)$/;"	f	class:ShaderWriter
+createContextMenu	graphics/nodelib.cpp	/^void NodeLib::createContextMenu()$/;"	f	class:NodeLib
+createContextMenu	graphics/nodes/graphics_node.cpp	/^void VContainerNode::createContextMenu()$/;"	f	class:VContainerNode
+createContextMenu	graphics/nodes/graphics_node.cpp	/^void VValueNode::createContextMenu()$/;"	f	class:VValueNode
+createContextMenu	graphics/nodes/graphics_node_socket.cpp	/^void VNSocket::createContextMenu()$/;"	f	class:VNSocket
+createLayout	graphics/newnodeeditor.cpp	/^void NewNodeEditor::createLayout()$/;"	f	class:NewNodeEditor
+createLink	data/nodes/data_node_socket.cpp	/^void DNSocket::createLink(DNSocket *in, DNSocket *out)$/;"	f	class:DNSocket
+createMath	data/shaderwriter.cpp	/^QString ShaderWriter::createMath(DNSocket *socket)$/;"	f	class:ShaderWriter
+createMenu	graphics/nodes/graphics_node.cpp	/^void VOutputNode::createMenu()$/;"	f	class:VOutputNode
+createMenus	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::createMenus()$/;"	f	class:frg_Shader_Author
+createNode	graphics/base/vnspace.cpp	/^void VNSpace::createNode()$/;"	f	class:VNSpace
+createNodeVis	data/nodes/data_node.cpp	/^void ColorValueNode::createNodeVis()$/;"	f	class:ColorValueNode
+createNodeVis	data/nodes/data_node.cpp	/^void ContainerNode::createNodeVis()$/;"	f	class:ContainerNode
+createNodeVis	data/nodes/data_node.cpp	/^void DNode::createNodeVis()$/;"	f	class:DNode
+createNodeVis	data/nodes/data_node.cpp	/^void FloatValueNode::createNodeVis()$/;"	f	class:FloatValueNode
+createNodeVis	data/nodes/data_node.cpp	/^void OutputNode::createNodeVis()$/;"	f	class:OutputNode
+createNodeVis	data/nodes/data_node.cpp	/^void StringValueNode::createNodeVis()$/;"	f	class:StringValueNode
+createNodeVis	data/nodes/data_node.cpp	/^void ValueNode::createNodeVis()$/;"	f	class:ValueNode
+createOutputVars	data/shaderwriter.cpp	/^QString ShaderWriter::createOutputVars()$/;"	f	class:ShaderWriter
+createPartnerSocket	data/nodes/data_node.cpp	/^void LoopSocketNode::createPartnerSocket(DNSocket *socket)$/;"	f	class:LoopSocketNode
+createShaderParameterCode	data/shaderwriter.cpp	/^QString ShaderWriter::createShaderParameterCode()$/;"	f	class:ShaderWriter
+createSpace	graphics/shader_view.cpp	/^void Shader_View::createSpace()$/;"	f	class:Shader_View
+createSpaceVis	graphics/base/vnspace.cpp	/^void VNSpace::createSpaceVis()$/;"	f	class:VNSpace
+createVarDeclares	data/shaderwriter.cpp	/^QString ShaderWriter::createVarDeclares()$/;"	f	class:ShaderWriter
+currentSpace	data/base/project.h	/^    DNSpace *currentSpace;$/;"	m	class:Project
+data	graphics/nodes/graphics_node.h	/^    DNode *data;$/;"	m	class:VNode
+data	graphics/nodes/graphics_node_socket.h	/^    DNSocket *data;$/;"	m	class:VNSocket
+decTabLevel	data/shaderwriter.cpp	/^void ShaderWriter::decTabLevel()$/;"	f	class:ShaderWriter
+dec_var_socket	data/nodes/data_node.cpp	/^void DNode::dec_var_socket(DNSocket *socket)$/;"	f	class:DNode
+dec_var_socket	data/nodes/data_node.cpp	/^void LoopSocketNode::dec_var_socket(DNSocket *socket)$/;"	f	class:LoopSocketNode
+dec_var_socket	data/nodes/data_node.cpp	/^void MathNode::dec_var_socket(DNSocket *socket)$/;"	f	class:MathNode
+dec_var_socket	data/nodes/data_node.cpp	/^void SocketNode::dec_var_socket(DNSocket *socket)$/;"	f	class:SocketNode
+deleteNode	data/base/project.cpp	/^void Project::deleteNode(DNode *node)$/;"	f	class:Project
+deletePartnerSocket	data/nodes/data_node.cpp	/^void LoopSocketNode::deletePartnerSocket(DNSocket *socket)$/;"	f	class:LoopSocketNode
+deleteSpaceVis	graphics/base/vnspace.cpp	/^void VNSpace::deleteSpaceVis()$/;"	f	class:VNSpace
+destroyContainer	graphics/base/vnspace.cpp	/^void VNSpace::destroyContainer(QGraphicsItem *container)$/;"	f	class:VNSpace
+dir	data/nodes/data_node_socket.h	/^    socket_dir dir;$/;"	m	class:DNSocket
+displacementInput	data/nodes/buildin_nodes.cpp	/^void BuildIn::displacementInput(DNSpace *space)$/;"	f	class:BuildIn
+displacementOutput	data/nodes/buildin_nodes.cpp	/^void BuildIn::displacementOutput(DNSpace *space)$/;"	f	class:BuildIn
+dragMoveEvent	graphics/base/vnspace.cpp	/^void VNSpace::dragMoveEvent(QGraphicsSceneDragDropEvent *event)$/;"	f	class:VNSpace
+drawBackground	graphics/shader_view.cpp	/^void Shader_View::drawBackground(QPainter *painter, const QRectF &rect)$/;"	f	class:Shader_View
+drawName	graphics/nodes/graphics_node.cpp	/^void VNode::drawName()$/;"	f	class:VNode
+drawPath	graphics/nodelink.cpp	/^QPainterPath NodeLink::drawPath()$/;"	f	class:NodeLink
+dropEvent	graphics/base/vnspace.cpp	/^void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)$/;"	f	class:VNSpace
+dropMimeData	graphics/nodelib.cpp	/^bool NodeLib::dropMimeData(QTreeWidgetItem *parent, int index, const QMimeData *data, Qt::DropAction action)$/;"	f	class:NodeLib
+dropNode	data/nodes/data_node.cpp	/^DNode *DNode::dropNode(QString filepath)$/;"	f	class:DNode
+editNameMode	graphics/base/vnspace.h	/^    bool editNameMode;$/;"	m	class:VNSpace
+emitClicked	graphics/newnodeeditor.cpp	/^void RemoveButton::emitClicked()$/;"	f	class:RemoveButton
+emitTriggered	data/base/frg_shader_author.cpp	/^void ChangeSpaceAction::emitTriggered()$/;"	f	class:ChangeSpaceAction
+enterEditNameMode	graphics/base/vnspace.cpp	/^void VNSpace::enterEditNameMode()$/;"	f	class:VNSpace
+enterlinkNodeMode	graphics/base/vnspace.cpp	/^void VNSpace::enterlinkNodeMode(VNSocket *socket)$/;"	f	class:VNSpace
+evalSocketValue	data/shaderwriter.cpp	/^void ShaderWriter::evalSocketValue(DNSocket *socket)$/;"	f	class:ShaderWriter
+filename	data/base/project.h	/^    QString filename; \/\/copy to project$/;"	m	class:Project
+filename	data/nodes/data_node.h	/^    QString filename;$/;"	m	class:OutputNode
+floatvalue	data/nodes/data_node.h	/^    float floatvalue;$/;"	m	class:FloatValueNode
+focusOutEvent	graphics/nodes/graphics_node.cpp	/^void NodeName::focusOutEvent(QFocusEvent *event)$/;"	f	class:NodeName
+frg_Shader_Author	data/base/frg_shader_author.cpp	/^frg_Shader_Author::frg_Shader_Author(QWidget *parent)$/;"	f	class:frg_Shader_Author
+frg_Shader_Author	data/base/frg_shader_author.h	/^class frg_Shader_Author : public QMainWindow$/;"	c
+func_name	graphics/newnodeeditor.h	/^    QLineEdit *func_name;$/;"	m	class:NewNodeEditor
+functionPair	data/undo/frg_generic_undo.h	/^}   functionPair;$/;"	t	typeref:struct:__anon5
+functionPtr	data/undo/frg_generic_undo.h	/^typedef void (*functionPtr) (void);$/;"	t
+function_name	data/nodes/data_node.h	/^    QString function_name;$/;"	m	class:FunctionNode
+functions	data/undo/frg_generic_undo.h	/^    functionPair *functions;$/;"	m	class:FRGStack
+getCNodeDepthbyCnt	data/shaderwriter.cpp	/^ContainerNode *ShaderWriter::getCNodeDepthbyCnt()$/;"	f	class:ShaderWriter
+getCode	data/shaderwriter.cpp	/^QString ShaderWriter::getCode()$/;"	f	class:ShaderWriter
+getCurrentSpace	data/base/project.cpp	/^DNSpace* Project::getCurrentSpace()$/;"	f	class:Project
+getFileName	data/nodes/data_node.cpp	/^QString OutputNode::getFileName()$/;"	f	class:OutputNode
+getFilename	data/base/project.cpp	/^QString Project::getFilename()$/;"	f	class:Project
+getLastSocket	data/nodes/data_node.cpp	/^DNSocket *SocketNode::getLastSocket()$/;"	f	class:SocketNode
+getLib_height	graphics/nodelib.cpp	/^float NodeLib::getLib_height()$/;"	f	class:NodeLib
+getMappedCntNSocket	data/nodes/data_node.cpp	/^DNSocket *ContainerNode::getMappedCntNSocket(DNSocket *socket)$/;"	f	class:ContainerNode
+getMappedSNSocket	data/nodes/data_node.cpp	/^DNSocket *ContainerNode::getMappedSNSocket(DNSocket *socket)$/;"	f	class:ContainerNode
+getMousePos	graphics/base/vnspace.cpp	/^QPointF VNSpace::getMousePos()$/;"	f	class:VNSpace
+getNewNodeEditor	graphics/base/vnspace.cpp	/^NewNodeEditor* VNSpace::getNewNodeEditor()$/;"	f	class:VNSpace
+getNodeCnt	data/base/dnspace.cpp	/^qint16 DNSpace::getNodeCnt()$/;"	f	class:DNSpace
+getNodeLib	graphics/base/vnspace.cpp	/^NodeLib* VNSpace::getNodeLib()$/;"	f	class:VNSpace
+getNodes	data/base/dnspace.cpp	/^QList<DNode*> DNSpace::getNodes()$/;"	f	class:DNSpace
+getNodes	data/base/project.cpp	/^QList<DNode*> Project::getNodes()$/;"	f	class:Project
+getPartnerSocket	data/nodes/data_node.cpp	/^DNSocket *LoopSocketNode::getPartnerSocket(DNSocket *socket)$/;"	f	class:LoopSocketNode
+getPreviousSocket	data/shaderwriter.cpp	/^DNSocket *ShaderWriter::getPreviousSocket(DNSocket *socket)$/;"	f	class:ShaderWriter
+getRootScene	data/base/project.cpp	/^DNSpace* Project::getRootScene()$/;"	f	class:Project
+getSelectedItemsCenter	graphics/base/vnspace.cpp	/^QPointF VNSpace::getSelectedItemsCenter()$/;"	f	class:VNSpace
+getShaderName	data/nodes/data_node.cpp	/^QString OutputNode::getShaderName()$/;"	f	class:OutputNode
+getSpace	graphics/scenewidgetcontainer.cpp	/^VNSpace* SceneWidgetContainer::getSpace()$/;"	f	class:SceneWidgetContainer
+getSpace	graphics/shader_view.cpp	/^VNSpace* Shader_View::getSpace()$/;"	f	class:Shader_View
+getSpaceVis	data/base/dnspace.cpp	/^VNSpace *DNSpace::getSpaceVis()$/;"	f	class:DNSpace
+getValue	data/nodes/data_node.cpp	/^QColor ColorValueNode::getValue()$/;"	f	class:ColorValueNode
+getValue	data/nodes/data_node.cpp	/^QString StringValueNode::getValue()$/;"	f	class:StringValueNode
+getValue	data/nodes/data_node.cpp	/^float FloatValueNode::getValue()$/;"	f	class:FloatValueNode
+getmiddle	graphics/nodelink.cpp	/^QPointF NodeLink::getmiddle(QPointF p1, QPointF p2)$/;"	f	class:NodeLink
+ghost	data/nodes/data_node.h	/^    bool ghost;$/;"	m	class:DNode
+gotoNextNode	data/shaderwriter.cpp	/^void ShaderWriter::gotoNextNode(DNSocket *socket)$/;"	f	class:ShaderWriter
+grid	graphics/newnodeeditor.h	/^    QGridLayout *grid;$/;"	m	class:NewNodeEditor
+hoverEnterEvent	graphics/nodelink.cpp	/^void NodeLink::hoverEnterEvent(QGraphicsSceneHoverEvent *event)$/;"	f	class:NodeLink
+hoverEnterEvent	graphics/nodes/graphics_node_socket.cpp	/^void VNSocket::hoverEnterEvent(QGraphicsSceneHoverEvent *event)$/;"	f	class:VNSocket
+hoverLeaveEvent	graphics/nodelink.cpp	/^void NodeLink::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)$/;"	f	class:NodeLink
+hoverLeaveEvent	graphics/nodes/graphics_node_socket.cpp	/^void VNSocket::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)$/;"	f	class:VNSocket
+in	graphics/nodelink.h	/^    DNSocket *in;$/;"	m	struct:__anon1
+in	graphics/nodelink.h	/^    QPointF in, out, c1, c2;$/;"	m	class:NodeLink
+inSocket	graphics/nodelink.h	/^    DNSocket *inSocket, *outSocket;$/;"	m	class:NodeLink
+inSocketNode	data/nodes/data_node.h	/^    DNode *inSocketNode, *outSocketNode;$/;"	m	class:ContainerNode
+incCNodeDepth	data/shaderwriter.cpp	/^void ShaderWriter::incCNodeDepth(ContainerNode *cnode)$/;"	f	class:ShaderWriter
+incTabLevel	data/shaderwriter.cpp	/^void ShaderWriter::incTabLevel()$/;"	f	class:ShaderWriter
+inc_var_socket	data/nodes/data_node.cpp	/^void DNode::inc_var_socket()$/;"	f	class:DNode
+inc_var_socket	data/nodes/data_node.cpp	/^void LoopSocketNode::inc_var_socket()$/;"	f	class:LoopSocketNode
+inc_var_socket	data/nodes/data_node.cpp	/^void MathNode::inc_var_socket()$/;"	f	class:MathNode
+inc_var_socket	data/nodes/data_node.cpp	/^void SocketNode::inc_var_socket()$/;"	f	class:SocketNode
+index	graphics/newnodeeditor.h	/^    int index;$/;"	m	class:RemoveButton
+init	graphics/nodes/graphics_node.cpp	/^void VColorValueNode::init()$/;"	f	class:VColorValueNode
+init	graphics/nodes/graphics_node.cpp	/^void VFloatValueNode::init()$/;"	f	class:VFloatValueNode
+init	graphics/nodes/graphics_node.cpp	/^void VNode::init()$/;"	f	class:VNode
+init	graphics/nodes/graphics_node.cpp	/^void VOutputNode::init()$/;"	f	class:VOutputNode
+init	graphics/nodes/graphics_node.cpp	/^void VStringValueNode::init()$/;"	f	class:VStringValueNode
+init	graphics/nodes/graphics_node.cpp	/^void VValueNode::init()$/;"	f	class:VValueNode
+init	graphics/nodes/graphics_node.cpp	/^void VVectorValueNode::init()$/;"	f	class:VVectorValueNode
+initNode	data/nodes/data_node.cpp	/^void ContainerNode::initNode()$/;"	f	class:ContainerNode
+initNode	data/nodes/data_node.cpp	/^void DNode::initNode()$/;"	f	class:DNode
+initNode	data/nodes/data_node.cpp	/^void LoopNode::initNode(bool raw)$/;"	f	class:LoopNode
+initNode	data/nodes/data_node.cpp	/^void ValueNode::initNode()$/;"	f	class:ValueNode
+initNodeLink	graphics/nodelink.cpp	/^void NodeLink::initNodeLink()$/;"	f	class:NodeLink
+initVar	data/shaderwriter.cpp	/^void ShaderWriter::initVar(DNSocket *socket)$/;"	f	class:ShaderWriter
+inputsockets	graphics/newnodeeditor.h	/^    SocketEditor *inputsockets, *outputsockets;$/;"	m	class:NewNodeEditor
+isCompatible	graphics/nodelink.cpp	/^bool NodeLink::isCompatible(VNSocket *first, VNSocket *last)$/;"	f	class:NodeLink
+isContainer	data/nodes/data_node.cpp	/^bool DNode::isContainer()$/;"	f	class:DNode
+isGhost	data/nodes/data_node.cpp	/^bool DNode::isGhost()$/;"	f	class:DNode
+isInput	data/nodes/data_node.cpp	/^bool DNode::isInput(DNode *node)$/;"	f	class:DNode
+isInputVar	data/shaderwriter.cpp	/^bool ShaderWriter::isInputVar(DNSocket *socket)$/;"	f	class:ShaderWriter
+isLinkNodeMode	graphics/base/vnspace.cpp	/^bool VNSpace::isLinkNodeMode()$/;"	f	class:VNSpace
+isLoopNode	data/nodes/data_node.cpp	/^bool LoopNode::isLoopNode(DNode *node)$/;"	f	class:LoopNode
+isMathNode	data/nodes/data_node.cpp	/^bool DNode::isMathNode(DNode *node)$/;"	f	class:DNode
+isShaderInput	data/nodes/data_node.cpp	/^bool ValueNode::isShaderInput()$/;"	f	class:ValueNode
+isToken	data/nodes/data_node_socket.h	/^    bool isToken;$/;"	m	class:DNSocket
+isVariable	data/nodes/data_node_socket.h	/^    bool isVariable;$/;"	m	class:DNSocket
+keyPressEvent	graphics/base/vnspace.cpp	/^void VNSpace::keyPressEvent(QKeyEvent *event)$/;"	f	class:VNSpace
+keyPressEvent	graphics/shader_view.cpp	/^void Shader_View::keyPressEvent(QKeyEvent *event)$/;"	f	class:Shader_View
+keyReleaseEvent	graphics/shader_view.cpp	/^void Shader_View::keyReleaseEvent(QKeyEvent *event)$/;"	f	class:Shader_View
+killSocket	data/nodes/data_node.cpp	/^void ContainerNode::killSocket(DNSocket *socket)$/;"	f	class:ContainerNode
+lastsocket	data/nodes/data_node.h	/^    DNSocket *lastsocket;$/;"	m	class:DNode
+lay	graphics/nodes/graphics_node.h	/^    QGridLayout *lay;$/;"	m	class:VValueNode
+leaveEditNameMode	graphics/base/vnspace.cpp	/^void VNSpace::leaveEditNameMode()$/;"	f	class:VNSpace
+leavelinkNodeMode	graphics/base/vnspace.cpp	/^void VNSpace::leavelinkNodeMode(QPointF finalpos)$/;"	f	class:VNSpace
+lightInput	data/nodes/buildin_nodes.cpp	/^void BuildIn::lightInput(DNSpace *space)$/;"	f	class:BuildIn
+lightOutput	data/nodes/buildin_nodes.cpp	/^void BuildIn::lightOutput(DNSpace *space)$/;"	f	class:BuildIn
+linkNodeMode	graphics/base/vnspace.h	/^	bool linkNodeMode;$/;"	m	class:VNSpace
+linksocket	graphics/base/vnspace.h	/^    VNSocket *linksocket;$/;"	m	class:VNSpace
+loadIDMapper	data/nodes/data_node.cpp	/^QHash<int, DNode*>DNode::loadIDMapper;$/;"	m	class:DNode	file:
+loadIDMapper	data/nodes/data_node.h	/^    static QHash<int, DNode*>loadIDMapper;$/;"	m	class:DNode
+loadIDMapper	data/nodes/data_node_socket.cpp	/^QHash<int, DNSocket*> DNSocket::loadIDMapper;$/;"	m	class:DNSocket	file:
+loadIDMapper	data/nodes/data_node_socket.h	/^    static QHash<int, DNSocket*>loadIDMapper;$/;"	m	class:DNSocket
+loopSocketMap	data/nodes/data_node.h	/^    QHash<DNSocket*, DNSocket*> loopSocketMap;$/;"	m	class:LoopSocketNode
+main	data/base/main.cpp	/^int main(int argc, char *argv[])$/;"	f
+mouseDoubleClickEvent	graphics/nodes/graphics_node.cpp	/^void NodeName::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)$/;"	f	class:NodeName
+mouseDoubleClickEvent	graphics/nodes/graphics_node.cpp	/^void VContainerNode::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)$/;"	f	class:VContainerNode
+mouseMoveEvent	graphics/base/vnspace.cpp	/^void VNSpace::mouseMoveEvent(QGraphicsSceneMouseEvent *event)$/;"	f	class:VNSpace
+mouseMoveEvent	graphics/shader_view.cpp	/^void Shader_View::mouseMoveEvent(QMouseEvent *event)$/;"	f	class:Shader_View
+mousePos	graphics/base/vnspace.h	/^    QPointF mousePos;$/;"	m	class:VNSpace
+mousePos	graphics/nodelib.h	/^    QPoint mousePos;$/;"	m	class:NodeLib
+mousePressEvent	graphics/base/vnspace.cpp	/^void VNSpace::mousePressEvent(QGraphicsSceneMouseEvent *event)$/;"	f	class:VNSpace
+mousePressEvent	graphics/nodes/graphics_node_socket.cpp	/^void VNSocket::mousePressEvent(QGraphicsSceneMouseEvent *event)$/;"	f	class:VNSocket
+mousePressEvent	graphics/scenewidgetcontainer.cpp	/^void SceneWidgetCloseButton::mousePressEvent(QGraphicsSceneMouseEvent *event)$/;"	f	class:SceneWidgetCloseButton
+mousePressEvent	graphics/shader_view.cpp	/^void Shader_View::mousePressEvent(QMouseEvent *event)$/;"	f	class:Shader_View
+mouseReleaseEvent	graphics/shader_view.cpp	/^void Shader_View::mouseReleaseEvent(QMouseEvent *event)$/;"	f	class:Shader_View
+moveIntoSpace	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::moveIntoSpace(DNSpace *space)$/;"	f	class:frg_Shader_Author
+moveIntoSpace	graphics/base/vnspace.cpp	/^void VNSpace::moveIntoSpace(DNSpace *space)$/;"	f	class:VNSpace
+moveNode	graphics/nodelib.cpp	/^void NodeLib::moveNode(QDir source, QDir destination)$/;"	f	class:NodeLib
+name	data/base/dnspace.h	/^    QString name;$/;"	m	class:DNSpace
+name	data/nodes/data_node_socket.h	/^    QString name;$/;"	m	class:DNSocket
+newNode	data/nodes/data_node.cpp	/^DNode *DNode::newNode(QString name, NType t, int ID, QPointF pos, int insize, int outsize)$/;"	f	class:DNode
+newSocket	data/nodes/data_node.cpp	/^void ContainerNode::newSocket(DNSocket *socket)$/;"	f	class:ContainerNode
+new_space	data/base/frg_shader_author.h	/^    DNSpace *new_space;$/;"	m	class:ChangeSpaceAction
+newfile	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::newfile()$/;"	f	class:frg_Shader_Author
+newline	data/shaderwriter.cpp	/^QString ShaderWriter::newline()$/;"	f	class:ShaderWriter
+newlink	graphics/base/vnspace.h	/^    NodeLink *newlink;$/;"	m	class:VNSpace
+node	data/nodes/data_node_socket.h	/^    DNode *node;$/;"	m	class:DNSocket
+nodeName	data/nodes/data_node.h	/^    QString nodeName;$/;"	m	class:DNode
+nodeVis	data/nodes/data_node.h	/^    VNode* nodeVis;$/;"	m	class:DNode
+node_name	graphics/newnodeeditor.h	/^    QLineEdit *node_name;$/;"	m	class:NewNodeEditor
+node_name	graphics/nodes/graphics_node.h	/^    NodeName *node_name;$/;"	m	class:VNode
+nodeedit	graphics/base/vnspace.h	/^    NewNodeEditor *nodeedit;$/;"	m	class:VNSpace
+nodeedit_proxy	graphics/newnodeeditor.h	/^    QGraphicsProxyWidget *nodeedit_proxy;$/;"	m	class:NewNodeEditor
+nodelib	graphics/base/vnspace.h	/^    NodeLib *nodelib;$/;"	m	class:VNSpace
+nodelib_proxy	graphics/nodelib.h	/^    QGraphicsProxyWidget *nodelib_proxy;$/;"	m	class:NodeLib
+nodes	data/base/dnspace.h	/^    QList<DNode*> nodes;$/;"	m	class:DNSpace
+nodes	data/base/project.h	/^    QList<DNode*> nodes;$/;"	m	class:Project
+open	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::open()$/;"	f	class:frg_Shader_Author
+operator !=	data/base/dnspace.cpp	/^bool DNSpace::operator!=(DNSpace &space)$/;"	f	class:DNSpace
+operator !=	data/nodes/data_node.cpp	/^bool DNode::operator!=(DNode &node)$/;"	f	class:DNode
+operator !=	data/nodes/data_node_socket.cpp	/^bool DNSocket::operator !=(DNSocket &socket)$/;"	f	class:DNSocket
+operator <<	data/base/dnspace.cpp	/^QDataStream & operator<<(QDataStream &stream, DNSpace *space)$/;"	f
+operator <<	data/nodes/data_node.cpp	/^QDataStream &operator <<(QDataStream &stream, DNode  *node)$/;"	f
+operator <<	data/nodes/data_node_socket.cpp	/^QDataStream & operator<<(QDataStream &stream, DNSocket *socket)$/;"	f
+operator ==	data/base/dnspace.cpp	/^bool DNSpace::operator==(DNSpace &space)$/;"	f	class:DNSpace
+operator ==	data/nodes/data_node.cpp	/^bool ColorValueNode::operator ==(DNode &node)$/;"	f	class:ColorValueNode
+operator ==	data/nodes/data_node.cpp	/^bool ContainerNode::operator==(DNode &node)$/;"	f	class:ContainerNode
+operator ==	data/nodes/data_node.cpp	/^bool DNode::operator==(DNode &node)$/;"	f	class:DNode
+operator ==	data/nodes/data_node.cpp	/^bool FloatValueNode::operator==(DNode &node)$/;"	f	class:FloatValueNode
+operator ==	data/nodes/data_node.cpp	/^bool FunctionNode::operator==(DNode &node)$/;"	f	class:FunctionNode
+operator ==	data/nodes/data_node.cpp	/^bool StringValueNode::operator ==(DNode &node)$/;"	f	class:StringValueNode
+operator ==	data/nodes/data_node.cpp	/^bool VectorValueNode::operator==(DNode &node)$/;"	f	class:VectorValueNode
+operator ==	data/nodes/data_node_socket.cpp	/^bool DNSocket::operator==(DNSocket &socket)$/;"	f	class:DNSocket
+operator >>	data/base/dnspace.cpp	/^QDataStream & operator>>(QDataStream &stream, DNSpace **space)$/;"	f
+operator >>	data/nodes/data_node.cpp	/^QDataStream &operator >>(QDataStream &stream, DNode  **node)$/;"	f
+operator >>	data/nodes/data_node_socket.cpp	/^QDataStream & operator>>(QDataStream &stream, DNSocket **socket)$/;"	f
+out	graphics/nodelink.h	/^    DNSocket *out;$/;"	m	struct:__anon1
+out	graphics/nodelink.h	/^    QPointF in, out, c1, c2;$/;"	m	class:NodeLink
+outSocket	graphics/nodelink.h	/^    DNSocket *inSocket, *outSocket;$/;"	m	class:NodeLink
+outSocketNode	data/nodes/data_node.h	/^    DNode *inSocketNode, *outSocketNode;$/;"	m	class:ContainerNode
+outputVar	data/shaderwriter.cpp	/^void ShaderWriter::outputVar(DNSocket *socket)$/;"	f	class:ShaderWriter
+outputsockets	graphics/newnodeeditor.h	/^    SocketEditor *inputsockets, *outputsockets;$/;"	m	class:NewNodeEditor
+paint	graphics/nodelink.cpp	/^void NodeLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)$/;"	f	class:NodeLink
+paint	graphics/nodes/graphics_node.cpp	/^void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)$/;"	f	class:VNode
+paint	graphics/nodes/graphics_node_socket.cpp	/^void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)$/;"	f	class:VNSocket
+paint	graphics/scenewidgetcontainer.cpp	/^void SceneWidgetCloseButton::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)$/;"	f	class:SceneWidgetCloseButton
+paint	graphics/scenewidgetcontainer.cpp	/^void SceneWidgetContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)$/;"	f	class:SceneWidgetContainer
+partner	data/nodes/data_node.h	/^    LoopSocketNode *partner;$/;"	m	class:LoopSocketNode
+project	data/base/frg_shader_author.h	/^	Project *project;$/;"	m	class:frg_Shader_Author
+proxy	graphics/nodes/graphics_node.h	/^    QGraphicsProxyWidget *proxy;$/;"	m	class:VValueNode
+redo	data/undo/frg_generic_undo.cpp	/^void FRGUndoBase::redo()$/;"	f	class:FRGUndoBase
+redoFunction	data/undo/frg_generic_undo.h	/^    functionPtr redoFunction;$/;"	m	struct:__anon5
+redoStack	data/undo/frg_generic_undo.h	/^    FRGStack undoStack, redoStack;$/;"	m	class:FRGUndoBase
+refreshIndices	graphics/newnodeeditor.cpp	/^void SocketEditor::refreshIndices()$/;"	f	class:SocketEditor
+registerFunction	data/undo/frg_generic_undo.cpp	/^void FRGStack::registerFunction(functionPair fpair)$/;"	f	class:FRGStack
+registerFunction	data/undo/frg_generic_undo.cpp	/^void FRGUndoBase::registerFunction(functionPtr undo, functionPtr redo)$/;"	f	class:FRGUndoBase
+releaseFunction	data/undo/frg_generic_undo.cpp	/^functionPair FRGStack::releaseFunction()$/;"	f	class:FRGStack
+remove	graphics/nodelib.cpp	/^void NodeLib::remove()$/;"	f	class:NodeLib
+remove	graphics/nodelink.cpp	/^void NodeLink::remove()$/;"	f	class:NodeLink
+removeLink	data/nodes/data_node_socket.cpp	/^void DNSocket::removeLink(DNSocket *socket)$/;"	f	class:DNSocket
+removeLink	graphics/base/vnspace.cpp	/^void VNSpace::removeLink(NodeLink *link)$/;"	f	class:VNSpace
+removeNode	data/base/dnspace.cpp	/^void DNSpace::removeNode(DNode *node)$/;"	f	class:DNSpace
+removeNode	data/base/project.cpp	/^void Project::removeNode(DNode *node)$/;"	f	class:Project
+removeNode	graphics/base/vnspace.cpp	/^void VNSpace::removeNode()$/;"	f	class:VNSpace
+removeSelectedNodes	data/base/project.cpp	/^void Project::removeSelectedNodes(QList<DNode *> nodes)$/;"	f	class:Project
+removeSelectedNodes	graphics/base/vnspace.cpp	/^void VNSpace::removeSelectedNodes()$/;"	f	class:VNSpace
+removeSocket	data/nodes/data_node.cpp	/^void DNode::removeSocket(DNSocket *socket)$/;"	f	class:DNode
+removeSocket	graphics/newnodeeditor.cpp	/^void SocketEditor::removeSocket(int index)$/;"	f	class:SocketEditor
+renamed	graphics/nodelib.cpp	/^void NodeLib::renamed(QTreeWidgetItem *item)$/;"	f	class:NodeLib
+resizeLib	graphics/nodelib.cpp	/^void NodeLib::resizeLib()$/;"	f	class:NodeLib
+root_scene	data/base/project.h	/^    DNSpace *root_scene; \/\/copy to project$/;"	m	class:Project
+save	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::save()$/;"	f	class:frg_Shader_Author
+saveAs	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::saveAs()$/;"	f	class:frg_Shader_Author
+scaleView	graphics/shader_view.cpp	/^void Shader_View::scaleView(qreal scaleFactor)$/;"	f	class:Shader_View
+selectedItems	data/base/dnspace.cpp	/^QList<DNode*> DNSpace::selectedItems()$/;"	f	class:DNSpace
+setCNodeDepthCnt	data/shaderwriter.cpp	/^void ShaderWriter::setCNodeDepthCnt()$/;"	f	class:ShaderWriter
+setColor	graphics/nodes/graphics_node.cpp	/^void ColorButton::setColor()$/;"	f	class:ColorButton
+setContainerData	data/nodes/data_node.h	/^    void setContainerData(DNSpace *space){ContainerData = space;}$/;"	f	class:ContainerNode
+setCurrentSpace	data/base/project.cpp	/^void Project::setCurrentSpace(DNSpace* value)$/;"	f	class:Project
+setDNSpace	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::setDNSpace(DNSpace *space)$/;"	f	class:frg_Shader_Author
+setDynamicSocketsNode	data/nodes/data_node.cpp	/^void DNode::setDynamicSocketsNode(socket_dir dir, socket_type t)$/;"	f	class:DNode
+setFileName	data/nodes/data_node.cpp	/^void OutputNode::setFileName(QString name)$/;"	f	class:OutputNode
+setFilename	data/base/project.cpp	/^void Project::setFilename(QString value)$/;"	f	class:Project
+setFunctionName	data/nodes/data_node.h	/^    void setFunctionName(QString name) {function_name = name;}$/;"	f	class:FunctionNode
+setInSocketNode	data/nodes/data_node.cpp	/^void SocketNode::setInSocketNode(ContainerNode *contnode)$/;"	f	class:SocketNode
+setIndex	graphics/newnodeeditor.cpp	/^void RemoveButton::setIndex(int index)$/;"	f	class:RemoveButton
+setInputs	data/nodes/data_node.cpp	/^void ContainerNode::setInputs(DNode *inputNode)$/;"	f	class:ContainerNode
+setName	data/base/dnspace.h	/^    void setName(QString n){name = n;}$/;"	f	class:DNSpace
+setNode	data/nodes/data_node_socket.cpp	/^void DNSocket::setNode(DNode *node)$/;"	f	class:DNSocket
+setNodeName	data/nodes/data_node.cpp	/^void ContainerNode::setNodeName(QString name)$/;"	f	class:ContainerNode
+setNodeName	data/nodes/data_node.cpp	/^void DNode::setNodeName(QString name)$/;"	f	class:DNode
+setNodeType	data/nodes/data_node.cpp	/^void DNode::setNodeType(NType t)$/;"	f	class:DNode
+setOutSocketNode	data/nodes/data_node.cpp	/^void SocketNode::setOutSocketNode(ContainerNode *contnode)$/;"	f	class:SocketNode
+setOutputs	data/nodes/data_node.cpp	/^void ContainerNode::setOutputs(DNode *outputNode)$/;"	f	class:ContainerNode
+setParent	graphics/scenewidgetcontainer.cpp	/^void SceneWidgetCloseButton::setParent(SceneWidgetContainer *parent)$/;"	f	class:SceneWidgetCloseButton
+setPartner	data/nodes/data_node.cpp	/^void LoopSocketNode::setPartner(LoopSocketNode *p)$/;"	f	class:LoopSocketNode
+setProxy	graphics/scenewidgetcontainer.cpp	/^void SceneWidgetContainer::setProxy(QGraphicsProxyWidget *child)$/;"	f	class:SceneWidgetContainer
+setRoot_Space	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::setRoot_Space()$/;"	f	class:frg_Shader_Author
+setScene	graphics/newnodeeditor.cpp	/^void NewNodeEditor::setScene(VNSpace *scene)$/;"	f	class:NewNodeEditor
+setScene	graphics/nodelib.cpp	/^void NodeLib::setScene(VNSpace *scene)$/;"	f	class:NodeLib
+setShaderInput	data/nodes/data_node.cpp	/^void ValueNode::setShaderInput(bool si)$/;"	f	class:ValueNode
+setShaderInput	graphics/nodes/graphics_node.cpp	/^void VValueNode::setShaderInput(bool isInput)$/;"	f	class:VValueNode
+setSocketVarName	data/nodes/data_node.cpp	/^void DNode::setSocketVarName(DNSocket *socket)$/;"	f	class:DNode
+setSocketVarName	data/nodes/data_node.cpp	/^void OutputNode::setSocketVarName(DNSocket *socket)$/;"	f	class:OutputNode
+setSpace	graphics/scenewidgetcontainer.cpp	/^void SceneWidgetContainer::setSpace(VNSpace *space)$/;"	f	class:SceneWidgetContainer
+setSpaceVis	data/base/dnspace.cpp	/^void DNSpace::setSpaceVis(VNSpace *spaceVis)$/;"	f	class:DNSpace
+setValue	data/nodes/data_node.cpp	/^void ColorValueNode::setValue(QColor newvalue)$/;"	f	class:ColorValueNode
+setValue	data/nodes/data_node.cpp	/^void FloatValueNode::setValue(double newval)$/;"	f	class:FloatValueNode
+setValue	data/nodes/data_node.cpp	/^void StringValueNode::setValue(QString newstring)$/;"	f	class:StringValueNode
+setValue	data/nodes/data_node.cpp	/^void VectorValueNode::setValue()$/;"	f	class:VectorValueNode
+setValue	graphics/nodes/graphics_node.cpp	/^void VColorValueNode::setValue(QColor color)$/;"	f	class:VColorValueNode
+setValue	graphics/nodes/graphics_node.cpp	/^void VFloatValueNode::setValue(double fval)$/;"	f	class:VFloatValueNode
+setValue	graphics/nodes/graphics_node.cpp	/^void VStringValueNode::setValue(QString string)$/;"	f	class:VStringValueNode
+setValue	graphics/nodes/graphics_node.cpp	/^void VVectorValueNode::setValue()$/;"	f	class:VVectorValueNode
+setValueEditor	graphics/nodes/graphics_node.cpp	/^void VValueNode::setValueEditor(QWidget *editor)$/;"	f	class:VValueNode
+setdisplacementInput	data/nodes/data_node.cpp	/^void DNode::setdisplacementInput(DNode *node)$/;"	f	class:DNode
+setdisplacementOutput	data/nodes/data_node.cpp	/^void DNode::setdisplacementOutput(DNode *node)$/;"	f	class:DNode
+setlightInput	data/nodes/data_node.cpp	/^void DNode::setlightInput(DNode *node)$/;"	f	class:DNode
+setlightOutput	data/nodes/data_node.cpp	/^void DNode::setlightOutput(DNode *node)$/;"	f	class:DNode
+setlink	graphics/nodelink.cpp	/^void NodeLink::setlink(DNSocket *first, DNSocket *last)$/;"	f	class:NodeLink
+setlink	graphics/nodelink.cpp	/^void NodeLink::setlink(QPointF endP)$/;"	f	class:NodeLink
+setrootScene	data/base/project.cpp	/^void Project::setrootScene(DNSpace* value)$/;"	f	class:Project
+setsurfaceInput	data/nodes/data_node.cpp	/^void DNode::setsurfaceInput(DNode *node)$/;"	f	class:DNode
+setsurfaceOutput	data/nodes/data_node.cpp	/^void DNode::setsurfaceOutput(DNode *node)$/;"	f	class:DNode
+setvolumeInput	data/nodes/data_node.cpp	/^void DNode::setvolumeInput(DNode *node)$/;"	f	class:DNode
+setvolumeOutput	data/nodes/data_node.cpp	/^void DNode::setvolumeOutput(DNode *node)$/;"	f	class:DNode
+shaderInput	data/nodes/data_node.h	/^    bool shaderInput;$/;"	m	class:ValueNode
+shader_parameter	graphics/nodes/graphics_node.h	/^    QCheckBox *shader_parameter;$/;"	m	class:VValueNode
+showNode	graphics/base/vnspace.cpp	/^void VNSpace::showNode(DNode *node)$/;"	f	class:VNSpace
+shownodelib	graphics/base/vnspace.cpp	/^void VNSpace::shownodelib()$/;"	f	class:VNSpace
+socketVis	data/nodes/data_node_socket.h	/^    VNSocket *socketVis;$/;"	m	class:DNSocket
+socket_dir	data/nodes/data_node_socket.h	/^} socket_dir;$/;"	t	typeref:enum:__anon8
+socket_map	data/nodes/data_node.h	/^    QHash<DNSocket*, DNSocket*> socket_map;$/;"	m	class:ContainerNode
+socket_type	data/nodes/data_node_socket.h	/^}socket_type;$/;"	t	typeref:enum:__anon7
+socketnames	data/shaderwriter.h	/^    QList<QString> socketnames;$/;"	m	class:ShaderWriter
+space	data/base/frg_shader_author.h	/^    VNSpace *space;$/;"	m	class:frg_Shader_Author
+space	graphics/newnodeeditor.h	/^    VNSpace *space;$/;"	m	class:NewNodeEditor
+space	graphics/nodelib.h	/^    VNSpace *space;$/;"	m	class:NodeLib
+space	graphics/scenewidgetcontainer.h	/^    VNSpace *space;$/;"	m	class:SceneWidgetContainer
+space	graphics/shader_view.h	/^    VNSpace *space;$/;"	m	class:Shader_View
+spaceActions	data/base/frg_shader_author.h	/^    QList<ChangeSpaceAction*>spaceActions;$/;"	m	class:frg_Shader_Author
+spaceData	graphics/base/vnspace.h	/^    DNSpace *spaceData;$/;"	m	class:VNSpace
+spaceVis	data/base/dnspace.h	/^    VNSpace *spaceVis;$/;"	m	class:DNSpace
+spaces	data/base/frg_shader_author.h	/^	QList<DNSpace*>spaces;$/;"	m	class:frg_Shader_Author
+stackSize	data/undo/frg_generic_undo.h	/^    int stackSize;$/;"	m	class:FRGStack
+stepUp	data/shaderwriter.cpp	/^DNSocket *ShaderWriter::stepUp(DNSocket *socket)$/;"	f	class:ShaderWriter
+stringvalue	data/nodes/data_node.h	/^    QString stringvalue;$/;"	m	class:StringValueNode
+surfaceInput	data/nodes/buildin_nodes.cpp	/^void BuildIn::surfaceInput(DNSpace *space)$/;"	f	class:BuildIn
+surfaceOutput	data/nodes/buildin_nodes.cpp	/^void BuildIn::surfaceOutput(DNSpace *space)$/;"	f	class:BuildIn
+tabLevel	data/shaderwriter.h	/^    int tabLevel;$/;"	m	class:ShaderWriter
+takeCNodeDepth	data/shaderwriter.cpp	/^ContainerNode *ShaderWriter::takeCNodeDepth()$/;"	f	class:ShaderWriter
+toolbar	data/base/frg_shader_author.h	/^    QToolBar *toolbar;$/;"	m	class:frg_Shader_Author
+type	data/nodes/data_node_socket.h	/^    socket_type type;$/;"	m	class:DNSocket
+type	graphics/nodes/graphics_node.h	/^    int type() const {return Type;}$/;"	f	class:VNode
+type	graphics/nodes/graphics_node_socket.h	/^    int type() const {return Type;}$/;"	f	class:VNSocket
+type	graphics/scenewidgetcontainer.h	/^    int type() const {return Type;}$/;"	f	class:SceneWidgetContainer
+undo	data/undo/frg_generic_undo.cpp	/^void FRGUndoBase::undo()$/;"	f	class:FRGUndoBase
+undoFunction	data/undo/frg_generic_undo.h	/^    functionPtr undoFunction;$/;"	m	struct:__anon5
+undoStack	data/undo/frg_generic_undo.h	/^    FRGStack undoStack, redoStack;$/;"	m	class:FRGUndoBase
+update	graphics/newnodeeditor.cpp	/^void NewNodeEditor::update()$/;"	f	class:NewNodeEditor
+update	graphics/nodelib.cpp	/^void NodeLib::update()$/;"	f	class:NodeLib
+updateLink	graphics/nodelink.cpp	/^void NodeLink::updateLink()$/;"	f	class:NodeLink
+updateLinks	graphics/base/vnspace.cpp	/^void VNSpace::updateLinks()$/;"	f	class:VNSpace
+updateToolBar	data/base/frg_shader_author.cpp	/^void frg_Shader_Author::updateToolBar()$/;"	f	class:frg_Shader_Author
+var	data/shaderwriter.h	/^    QString var;$/;"	m	class:ShaderWriter
+varcnt	data/nodes/data_node.h	/^    int varcnt;$/;"	m	class:DNode
+varname	data/nodes/data_node_socket.h	/^    QString varname;$/;"	m	class:DNSocket
+varsocket	data/nodes/data_node.h	/^    DNSocket *varsocket;$/;"	m	class:DNode
+vector	data/nodes/data_node.h	/^}   vector;$/;"	t	typeref:struct:__anon6
+vectorvalue	data/nodes/data_node.h	/^    vector vectorvalue;$/;"	m	class:VectorValueNode
+view	data/base/frg_shader_author.h	/^    Shader_View *view;$/;"	m	class:frg_Shader_Author
+volumeInput	data/nodes/buildin_nodes.cpp	/^void BuildIn::volumeInput(DNSpace *space)$/;"	f	class:BuildIn
+volumeOutput	data/nodes/buildin_nodes.cpp	/^void BuildIn::volumeOutput(DNSpace *space)$/;"	f	class:BuildIn
+wheelEvent	graphics/shader_view.cpp	/^void Shader_View::wheelEvent(QWheelEvent *event)$/;"	f	class:Shader_View
+widget	graphics/nodes/graphics_node.h	/^    QWidget *widget;$/;"	m	class:VValueNode
+writeCode	data/nodes/data_node.cpp	/^void OutputNode::writeCode()$/;"	f	class:OutputNode
+writeCode	graphics/nodes/graphics_node.cpp	/^void VOutputNode::writeCode()$/;"	f	class:VOutputNode
+writeColor	data/shaderwriter.cpp	/^QString ShaderWriter::writeColor(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeCondition	data/shaderwriter.cpp	/^QString ShaderWriter::writeCondition(DNSocket *socket, QString conditionOperator)$/;"	f	class:ShaderWriter
+writeConditionContainer	data/shaderwriter.cpp	/^void ShaderWriter::writeConditionContainer(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeContainer	data/shaderwriter.cpp	/^void ShaderWriter::writeContainer(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeFloat	data/shaderwriter.cpp	/^QString ShaderWriter::writeFloat(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeForLoop	data/shaderwriter.cpp	/^void ShaderWriter::writeForLoop(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeFunction	data/shaderwriter.cpp	/^void ShaderWriter::writeFunction(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeMath	data/shaderwriter.cpp	/^QString ShaderWriter::writeMath(DNSocket *socket, QString mathOperator)$/;"	f	class:ShaderWriter
+writeNot	data/shaderwriter.cpp	/^QString ShaderWriter::writeNot(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeRSLLoop	data/shaderwriter.cpp	/^void ShaderWriter::writeRSLLoop(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeString	data/shaderwriter.cpp	/^QString ShaderWriter::writeString(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeVarName	data/shaderwriter.cpp	/^QString ShaderWriter::writeVarName(DNSocket *insocket)$/;"	f	class:ShaderWriter
+writeVector	data/shaderwriter.cpp	/^QString ShaderWriter::writeVector(DNSocket *socket)$/;"	f	class:ShaderWriter
+writeWhileLoop	data/shaderwriter.cpp	/^void ShaderWriter::writeWhileLoop(DNSocket *socket)$/;"	f	class:ShaderWriter
+written_sockets	data/shaderwriter.h	/^    QList<QString>written_sockets;$/;"	m	class:ShaderWriter
+x	data/nodes/data_node.h	/^    float x;$/;"	m	struct:__anon6
+y	data/nodes/data_node.h	/^    float y;$/;"	m	struct:__anon6
+z	data/nodes/data_node.h	/^    float z;$/;"	m	struct:__anon6
+~DNode	data/nodes/data_node.cpp	/^DNode::~DNode()$/;"	f	class:DNode
+~FRGStack	data/undo/frg_generic_undo.cpp	/^FRGStack::~FRGStack()$/;"	f	class:FRGStack
+~NewNodeEditor	graphics/newnodeeditor.cpp	/^NewNodeEditor::~NewNodeEditor()$/;"	f	class:NewNodeEditor
+~NodeLib	graphics/nodelib.cpp	/^NodeLib::~NodeLib()$/;"	f	class:NodeLib
+~NodeLink	graphics/nodelink.cpp	/^NodeLink::~NodeLink()$/;"	f	class:NodeLink
+~Project	data/base/project.cpp	/^Project::~Project()$/;"	f	class:Project
+~RemoveButton	graphics/newnodeeditor.cpp	/^RemoveButton::~RemoveButton()$/;"	f	class:RemoveButton
+~SceneWidgetContainer	graphics/scenewidgetcontainer.cpp	/^SceneWidgetContainer::~SceneWidgetContainer()$/;"	f	class:SceneWidgetContainer
+~SocketEditor	graphics/newnodeeditor.cpp	/^SocketEditor::~SocketEditor()$/;"	f	class:SocketEditor
+~VNSocket	graphics/nodes/graphics_node_socket.cpp	/^VNSocket::~VNSocket()$/;"	f	class:VNSocket
+~frg_Shader_Author	data/base/frg_shader_author.cpp	/^frg_Shader_Author::~frg_Shader_Author()$/;"	f	class:frg_Shader_Author
