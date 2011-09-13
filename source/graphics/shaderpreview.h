@@ -70,7 +70,7 @@ class PreviewSceneCache
 public:
     PreviewSceneCache();
     PreviewScene getScene(QString dirname);
-    QStringList getPreviews();
+    QList<QString> getPreviews();
     void updateCache();
 
 private:

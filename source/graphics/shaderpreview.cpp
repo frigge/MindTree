@@ -26,6 +26,7 @@
 #include "QMenu"
 #include "QInputDialog"
 #include "QGraphicsSceneContextMenuEvent"
+#include "iostream"
 
 #include "source/data/base/frg.h"
 
@@ -172,6 +173,7 @@ void PreviewSceneCache::updateCache()
 {
     QDir dir("preview");
     QStringList entries = dir.entryList().filter(QRegExp(".+\.sce$"));
+    previews.clear();
 
     foreach(QString filename, entries)
     {
@@ -185,14 +187,15 @@ void PreviewSceneCache::updateCache()
         QString dir = filename;
         dir.replace(".sce", "");
         scene.dir = dir;
-
-        previews[dir] = scene;
         file.close();
+
+        previews.insert(dir, scene);
     }
 }
 
-QStringList PreviewSceneCache::getPreviews()    
+QList<QString> PreviewSceneCache::getPreviews()    
 {
+    updateCache();
     return previews.keys();
 }
 
@@ -292,10 +295,8 @@ DShaderPreview::DShaderPreview(bool raw)
     shadername += QString::number(prevID);
     changeName(shadername);
 
-    QString appdirstr(QCoreApplication::applicationDirPath());
-    QDir appdir(appdirstr);
-    QDir::setCurrent(appdirstr);
     QDir libdir("preview");
+    QDir appdir;
 
     if (!libdir.exists())
         appdir.mkdir("preview");
@@ -310,15 +311,15 @@ DShaderPreview::DShaderPreview(bool raw)
 
     renderprocess.setStandardErrorFile("render.log");
 
-    QStringList previews = FRG::previewScenes.getPreviews();
+    QList<QString> previews = FRG::previewScenes.getPreviews();
     PreviewScene startsce;
+    if(previews.isEmpty())
+        return;
     if(previews.contains("default"))
         startsce = FRG::previewScenes.getScene("default");
     else
         startsce = FRG::previewScenes.getScene(previews.first());
-
-        prevScene = startsce;
-
+    prevScene = startsce;
 }
 
 DShaderPreview::DShaderPreview(const DShaderPreview *preview)
