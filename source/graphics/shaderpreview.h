@@ -91,6 +91,8 @@ public slots:
     void render();
     void render(DNode* node);
     void changePreview();
+    void externalPreview();
+    void updateScene();
 
 protected:
     void NodeWidth();
@@ -118,15 +120,18 @@ public:
     void writeMaterial();
     void setPrevScene(PreviewScene scene);
     PreviewScene getPrevScene() const;
+    void createTmpPrevDir();
+    void createTmpExtPrevDir();
 
     static unsigned short count;
+    bool isExtScene() const;
+    void setExtScene(bool ext);
 
 protected:
     void setSockets();
     const VShaderPreview* getPreviewVis();
     virtual VNode* createNodeVis();
     void deleteNodeVis();
-    void createTmpPrevDir();
 
 private:
     unsigned short prevID;
@@ -135,6 +140,7 @@ private:
     QTimer timer;
     QProcess renderprocess;
     QString shadername;
+    bool ext_scene;
 };
 
 #endif /* FRGShaderPreview */

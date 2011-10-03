@@ -221,7 +221,20 @@ void VShaderPreview::contextMenu()
 {
     cxtM = new QMenu();
     QAction *prvAct = cxtM->addAction("Change Preview Scene");
+    QAction *extAct = cxtM->addAction("External Scene");
+    QAction *updateSceneAct = cxtM->addAction("Update Scene");
     connect(prvAct, SIGNAL(triggered()), this, SLOT(changePreview()));
+    connect(extAct, SIGNAL(triggered()), this, SLOT(externalPreview()));
+    connect(updateSceneAct, SIGNAL(triggered()), this, SLOT(updateScene()));
+}
+
+void VShaderPreview::updateScene()    
+{
+    DShaderPreview *prev = data->getDerived<DShaderPreview>();
+    if(prev->isExtScene())
+        prev->createTmpPrevDir();
+    else
+        prev->createTmpExtPrevDir();
 }
 
 void VShaderPreview::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -236,6 +249,26 @@ void VShaderPreview::changePreview()
 
     DShaderPreview* prev = static_cast<DShaderPreview*>(data);
     prev->setPrevScene(FRG::previewScenes.getScene(newprev));
+    prev->createTmpPrevDir();
+    prev->setExtScene(false);
+    render();
+}
+
+void VShaderPreview::externalPreview()    
+{
+    PreviewScene external;
+
+    external.scene = QFileDialog::getOpenFileName(0, "Scene RIB", "");
+    external.dir = QFileInfo(external.scene).canonicalPath();
+    external.material = QFileDialog::getOpenFileName(0, "Material RIB", "");
+    external.material.replace(external.dir, "");
+    external.image = QFileDialog::getOpenFileName(0, "Image File", "");
+    external.image.replace(external.dir, "");
+
+    DShaderPreview *prev = data->getDerived<DShaderPreview>();
+    prev->setPrevScene(external);
+    prev->createTmpExtPrevDir();
+    prev->setExtScene(true);
     render();
 }
 
@@ -291,7 +324,7 @@ void VShaderPreview::updateNodeVis()
 }
 
 DShaderPreview::DShaderPreview(bool raw)
-    : prevID(++count)
+    : prevID(++count), ext_scene(false)
 {
     setNodeType(PREVIEW);
     shadername = "preview";
@@ -326,7 +359,7 @@ DShaderPreview::DShaderPreview(bool raw)
 }
 
 DShaderPreview::DShaderPreview(const DShaderPreview *preview)
-    : OutputNode(preview), prevID(++count), prevScene(preview->getPrevScene())
+    : OutputNode(preview), prevID(++count), prevScene(preview->getPrevScene()), ext_scene(preview->isExtScene())
 {
     setNodeType(PREVIEW);
     shadername = "preview";
@@ -349,6 +382,16 @@ DShaderPreview::~DShaderPreview()
     --count;
 }
 
+bool DShaderPreview::isExtScene() const
+{
+    return ext_scene;
+}
+
+void DShaderPreview::setExtScene(bool ext)    
+{
+    ext_scene = ext; 
+}
+
 PreviewScene DShaderPreview::getPrevScene() const
 {
     return prevScene; 
@@ -357,7 +400,6 @@ PreviewScene DShaderPreview::getPrevScene() const
 void DShaderPreview::setPrevScene(PreviewScene scene)    
 {
     prevScene = scene;
-    createTmpPrevDir();
 }
 
 void DShaderPreview::createTmpPrevDir()    
@@ -369,7 +411,24 @@ void DShaderPreview::createTmpPrevDir()
     tmpScene.dir = tmppath +"/"+ prevScene.dir + "/";
     tmpScene.image = tmpScene.dir + prevScene.image;
     tmpScene.material = tmpScene.dir + prevScene.material;
-    tmpScene.scene = tmpScene.dir + prevScene.scene;
+    tmpScene.scene = prevScene.scene;
+
+    QString prevShadFile = tmpScene.dir;
+    prevShadFile += shadername;
+    prevShadFile += ".sl";
+    setFileName(prevShadFile);
+}
+
+void DShaderPreview::createTmpExtPrevDir()    
+{
+    QDir::temp().mkdir(QString::number(prevID));
+    QDir tmpdir(QDir::tempPath() + "/" + QString::number(prevID));
+    QString tmppath = tmpdir.absolutePath();
+    FRG::Utils::copyDir(QDir(prevScene.dir), tmpdir);
+    tmpScene.dir = tmppath +"/"+ QDir(prevScene.dir).dirName() + "/";
+    tmpScene.image = tmpScene.dir + prevScene.image;
+    tmpScene.material = tmpScene.dir + prevScene.material;
+    tmpScene.scene = prevScene.scene;
 
     QString prevShadFile = tmpScene.dir;
     prevShadFile += shadername;
