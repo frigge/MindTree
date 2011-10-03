@@ -21,6 +21,7 @@
 
 #include "QGraphicsItem"
 #include "QObject"
+#include "QAction"
 
 #define SOCKET_WIDTH 13
 #define SOCKET_HEIGHT 13
@@ -50,10 +51,12 @@ public:
     void updateNameVis();
     void setDrawName(bool draw);
     void setBlockContextMenu(bool block);
+    void setVisible(bool vis);
 
 public slots:
     void changeType();
     void changeName();
+    void setArray();
 
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
@@ -61,6 +64,8 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     void createContextMenu();
+    void createArrCMEntry();
+    void removeArrCMEntry();
     QMenu *contextMenu;
 
 private:
@@ -70,7 +75,8 @@ private:
     VNodeUpdateCallback *cb;
     bool drawName;
     bool blockContextMenu;
+    QAction *expandAction;
+    bool visible;
 };
-
 
 #endif // GRAPHCIS_NODE_SOCKET_H

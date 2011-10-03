@@ -29,6 +29,7 @@
 QHash<unsigned short, DSocket*>LoadSocketIDMapper::loadIDMapper;
 unsigned short DSocket::count = 0;
 QHash<DSocket*, DSocket*> CopySocketMapper::socketMap;
+QHash<unsigned short, DSocket*> DSocket::socketIDHash;
 
 unsigned short LoadSocketIDMapper::getID(DSocket *socket)    
 {
@@ -81,27 +82,32 @@ void CopySocketMapper::remap()
 }
 
 DSocket::DSocket(QString name, socket_type type, DNode *node)
-	: name(name), type(type), ID(++count), Variable(false), socketVis(0x0), node(node)
+	: name(name), type(type), ID(++count), Variable(false), socketVis(0x0), node(node), is_array(false), index(0)
 {
+    socketIDHash.insert(ID, this);
 }
 
 DSocket::DSocket(DSocket* socket, DNode *node)
-    : name(socket->getName()), type(socket->getType()), ID(++count), node(node),
+: name(socket->getName()), type(socket->getType()), ID(++count), 
+    node(node), is_array(socket->isArray()),
     Variable(socket->getVariable()), socketVis(0)
 {
     CopySocketMapper::setSocketPair(socket, this);
+    socketIDHash.insert(ID, this);
 }
 
 DSocket::~DSocket()
 {
-    killSocketVis();
+    if(!is_array || (is_array && arrayID == ID))
+        killSocketVis();
+    socketIDHash.remove(ID);
 }
 
 bool DSocket::operator==(DSocket &socket)    
 {
     if(getVariable() != socket.getVariable()
-            ||getName() != socket.getName()
-            ||getType() != socket.getType())
+        ||getName() != socket.getName()
+        ||getType() != socket.getType())
         return false;
     return true;
 }
@@ -208,6 +214,66 @@ void DSocket::addTypeCB(Callback *cb)
 void DSocket::remTypeCB(Callback *cb)    
 {
     changeTypeCallbacks.remove(cb);
+}
+
+bool DSocket::isArray()    
+{
+    return is_array; 
+}
+
+void DSocket::setArray(unsigned short arrID)    
+{
+    if(arrID > 0)
+        is_array = true;
+    else
+        is_array = false;
+
+    arrayID = arrID;
+
+    if(arrayID  == ID)
+        node->addArray(this);
+    else if(arrayID > 0)
+        getSocket(arrayID)->getArray()->addSocket(this);
+}
+
+ArrayContainer* DSocket::getArray()    
+{
+    return array;
+}
+
+int DSocket::getIndex()    
+{
+    return index;
+}
+
+void DSocket::setIndex(int ind)    
+{
+    index = ind;
+}
+
+unsigned short DSocket::getArrayID()
+{
+    return arrayID;
+}
+
+DSocket* DSocket::getSocket(unsigned short ID)    
+{
+    return socketIDHash.value(ID);
+}
+
+ArrayContainer::ArrayContainer(DSocket *first)
+{
+    ID = first->getID();
+    addSocket(first);
+}
+
+void ArrayContainer::addSocket(DSocket *socket)    
+{
+    if(array.isEmpty())
+        socket->setIndex(0);
+    else
+        socket->setIndex(array.last()->getIndex()+1);
+    array.append(socket);
 }
 
 DinSocket::DinSocket(QString name, socket_type type, DNode *node)
@@ -342,7 +408,11 @@ void DSocket::setNode(DNode *node)
 
 void DSocket::createSocketVis(VNode *parent)
 {
-    if(!socketVis)socketVis = new VNSocket(this, parent);	
+    if(socketVis) return;
+    if(!is_array || (is_array && arrayID == ID))
+        socketVis = new VNSocket(this, parent);	
+    else
+        socketVis = getSocket(arrayID)->getSocketVis();
 }
 
 QString DSocket::getName() const

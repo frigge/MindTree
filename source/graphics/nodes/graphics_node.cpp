@@ -150,10 +150,7 @@ void VNode::setNodeHeight(int h)
 
 void VNode::cacheSocketSize()
 {
-	if(!data->getInSockets().isEmpty())
-		socket_size = data->getInSockets().first()->getSocketVis()->getHeight();
-    else if(!data->getOutSockets().isEmpty())
-		socket_size = data->getOutSockets().first()->getSocketVis()->getHeight();
+    socket_size = SOCKET_HEIGHT;
 }
 
 
@@ -247,15 +244,31 @@ void VNode::recalcNodeVis()
 	foreach(DinSocket *insocket, data->getInSockets())
     {
         //insocket->getSocketVis()->setPos((-node_width/2) + (4 + socket_size/2), socketPos+(socket_size/2));
-        insocket->getSocketVis()->setPos((-node_width/2) , socketPos+(socket_size/2));
-        socketPos += socket_size + space;
+        if(insocket->isArray() && insocket->getID() != insocket->getArrayID())
+        {
+            insocket->getSocketVis()->setPos(DSocket::getSocket(insocket->getArrayID())->getSocketVis()->pos());
+            insocket->getSocketVis()->setVisible(false);
+        }
+        else
+        {
+            insocket->getSocketVis()->setPos((-node_width/2) , socketPos+(socket_size/2));
+            socketPos += socket_size + space;
+        }
 	}
 
     foreach(DoutSocket *out, data->getOutSockets())
     {
         //out->getSocketVis()->setPos((node_width/2) - (4 + socket_size/2), socketPos+(socket_size/2));
-        out->getSocketVis()->setPos((node_width/2), socketPos+(socket_size/2));
-        socketPos += socket_size + space;
+        if(out->isArray() && out->getID() != out->getArrayID())
+        {
+            out->getSocketVis()->setPos(DSocket::getSocket(out->getArrayID())->getSocketVis()->pos());
+            out->getSocketVis()->setVisible(false);
+        }
+        else
+        {
+            out->getSocketVis()->setPos((node_width/2), socketPos+(socket_size/2));
+            socketPos += socket_size + space;
+        }
 	}
 }
 

@@ -974,6 +974,11 @@ void DNode::unpackContainerNode(DNode *node)
     FRG::SpaceDataInFocus->unregisterNode(node);
 }
 
+void DNode::addArray(DSocket *first)    
+{
+    arrays.append(new ArrayContainer(first));
+}
+
 FunctionNode::FunctionNode(QString name)
     : DNode(name)
 {}
@@ -1248,11 +1253,14 @@ void SocketNode::inc_var_socket()
 {
     DNode::inc_var_socket();
 	DSocket *newsocket;
+//    unsigned short arrID = container->getSocketOnContainer(getLastSocket())->getArrayID();
 	if(getLastSocket()->getDir() == IN)
 		newsocket = new DoutSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
 	else
 		newsocket = new DinSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
     container->mapOnToIn(newsocket, getLastSocket());
+ //   if(arrID > 0)
+ //       newsocket->setArray(arrID);
 }
 
 void SocketNode::dec_var_socket(DSocket *socket)

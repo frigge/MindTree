@@ -73,6 +73,7 @@ class VNode;
 class DinSocket;
 class DoutSocket;
 class DNodeLink;
+class ArrayContainer;
 
 class DSocket
 {
@@ -107,27 +108,52 @@ public:
     void addTypeCB(Callback *cb);
     void remTypeCB(Callback *cb);
 
+    bool isArray();
+    void setArray(unsigned short);
+    int getIndex();
+    void setIndex(int ind);
+    void setArrayID(unsigned short value);
+    unsigned short getArrayID();
+    ArrayContainer* getArray();
+
     static unsigned short count;
     static DNodeLink createLink(DSocket *socket1, DSocket *socket2);
     static void removeLink(DinSocket *in, DoutSocket *out);
     static bool isCompatible(DSocket *s1, DSocket *s2);
+    static DSocket* getSocket(unsigned short ID);
 
 private:
     QString name;
     socket_type type;
     socket_dir dir;
     DNode *node;
-    bool Variable;
+    bool Variable, is_array;
+    int index;
     VNSocket *socketVis;
     unsigned short ID;
+    unsigned short arrayID;
+    ArrayContainer *array;
     CallbackList renameCallbacks;
     CallbackList changeTypeCallbacks;
+
+    static QHash<unsigned short, DSocket*>socketIDHash;
 };
 
 class QDataStream;
 
 QDataStream& operator<<(QDataStream &stream, DSocket *socket);
 QDataStream& operator>>(QDataStream &stream, DSocket **socket);
+
+class ArrayContainer
+{
+public:
+    ArrayContainer(DSocket *frist);
+    void addSocket(DSocket *socket);
+
+private:
+    QList<DSocket*>array;
+    unsigned short ID;
+};
 
 class DoutSocket;
 

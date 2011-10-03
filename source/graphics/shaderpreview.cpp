@@ -205,13 +205,11 @@ PreviewScene PreviewSceneCache::getScene(QString dirname)
 }
 
 VShaderPreview::VShaderPreview(DShaderPreview *data)
-    : VNode(data)
+    : VNode(data), img(0)
 {
     preview = new QGraphicsPixmapItem(this);
     preview->setParentItem(this);
     preview->setZValue(preview->zValue() + .5);
-    updateNodeVis();
-    preview->setPos(2-getNodeWidth()/2, 4 + 4*(2 + SOCKET_HEIGHT) - getNodeHeight()/2);
 
     connect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)this, SLOT(render()));
     connect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)this, SLOT(render(DNode*)));
@@ -265,18 +263,22 @@ void VShaderPreview::updatePreview()
     DShaderPreview* prev = static_cast<DShaderPreview*>(data);
     img = new QImage(prev->getImageFile());
     preview->setPixmap(QPixmap::fromImage(*img));
-    delete img;
+    if(oldimg) delete oldimg;
+    updateNodeVis();
 }
 
 void VShaderPreview::NodeWidth()    
 {
     setNodeWidth(104);
+    if(img)
+        setNodeWidth(img->width() + 4);
 }
 
 void VShaderPreview::NodeHeight(int numSockets)    
 {
     VNode::NodeHeight(numSockets);
-    setNodeHeight(100 + getNodeHeight());
+    if(img)
+        setNodeHeight(img->height() + getNodeHeight());
 }
 
 void VShaderPreview::updateNodeVis()    
@@ -285,6 +287,7 @@ void VShaderPreview::updateNodeVis()
     NodeHeight(4);
     drawName();
     recalcNodeVis();
+    preview->setPos(2-getNodeWidth()/2, 4 + 4*(2 + SOCKET_HEIGHT) - getNodeHeight()/2);
 }
 
 DShaderPreview::DShaderPreview(bool raw)

@@ -33,12 +33,12 @@
 #include "source/data/base/project.h"
 
 VNSocket::VNSocket(DSocket *data, VNode *parent)
-	: data(data), width(SOCKET_WIDTH), height(SOCKET_HEIGHT), socketNameVis(0), drawName(true)
+	: data(data), width(SOCKET_WIDTH), height(SOCKET_HEIGHT), socketNameVis(0), drawName(true), visible(true)
 {
 	//setCacheMode(ItemCoordinateCache);
     setAcceptDrops(true);
     setAcceptHoverEvents(true);
-    setZValue(zValue()+0.1);
+    setZValue(zValue()+0.2);
     setFlag(ItemIsSelectable, false);
 //    setGraphicsEffect(new QGraphicsDropShadowEffect);
     createContextMenu();
@@ -47,6 +47,13 @@ VNSocket::VNSocket(DSocket *data, VNode *parent)
 
     cb = new VNodeUpdateCallback(parent);
     data->addRenameCB(cb);
+
+    if(data->isArray()) 
+    {
+        createArrCMEntry();
+        setWidth(width+4);
+        setHeight(height+4);
+    }
 }
 
 VNSocket::~VNSocket()
@@ -83,6 +90,13 @@ void VNSocket::setDrawName(bool draw)
 {
     drawName = draw;
     updateNameVis();
+}
+
+void VNSocket::setVisible(bool vis)    
+{
+    if(!vis && visible) setZValue(zValue() - 0.1);
+    else if(vis && !visible)setZValue(zValue() + 0.1);
+    visible = vis;
 }
 
 void VNSocket::setBlockContextMenu(bool block)    
@@ -124,9 +138,51 @@ void VNSocket::createContextMenu()
     contextMenu = new QMenu;
     QAction *changeNameAction = contextMenu->addAction("Rename Socket");
     QAction *changeTypeAction = contextMenu->addAction("change Type");
+    QAction *changeArrayAction = contextMenu->addAction("Array");
+    changeArrayAction->setCheckable(true);
+    changeArrayAction->setChecked(data->isArray());
 
     connect(changeNameAction, SIGNAL(triggered()), this, SLOT(changeName()));
     connect(changeTypeAction, SIGNAL(triggered()), this, SLOT(changeType()));
+    connect(changeArrayAction, SIGNAL(triggered()), this, SLOT(setArray()));
+}
+
+void VNSocket::createArrCMEntry()    
+{
+    expandAction = contextMenu->addAction("Expand");
+    connect(expandAction, SIGNAL(triggered()), this, SLOT(expand()));
+}
+
+void VNSocket::removeArrCMEntry()    
+{
+    contextMenu->removeAction(expandAction);
+}
+
+void VNSocket::setArray()    
+{
+    data->setArray(!data->isArray());
+    if(data->isArray()) 
+    {
+        createArrCMEntry();
+        setWidth(SOCKET_WIDTH+4);
+        setHeight(SOCKET_HEIGHT+4);
+        if(data->getArrayID() != data->getID())
+        {
+            setDrawName(false);
+            setVisible(false);
+        }
+    }
+    else
+    {
+        removeArrCMEntry();
+        setWidth(SOCKET_WIDTH);
+        setHeight(SOCKET_HEIGHT);
+        if(data->getArrayID() != data->getID())
+        {
+            setDrawName(true);
+            setVisible(true);
+        }
+    }
 }
 
 void VNSocket::changeName()
@@ -247,6 +303,9 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         else
             color = QColor(90, 40, 90);
     };
+    if(!visible)
+        color = QColor(0, 0, 0, 0);
+
     painter->setBrush(QBrush(color, Qt::SolidPattern));
     painter->setPen(Qt::NoPen);
     painter->drawRoundedRect(-width/2, -height/2, width, height, 2.5, 2.5);
@@ -278,3 +337,4 @@ void VNSocket::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     if(contextMenu)
         contextMenu->exec(event->screenPos());
 }
+

@@ -164,6 +164,8 @@ public:
     static ContainerNode *buildContainerNode(QList<DNode*>nodes);
     static void unpackContainerNode(DNode *node);
 
+    void addArray(DSocket *first);
+
 private:
     bool ghost;
     unsigned short ID;
@@ -177,6 +179,7 @@ private:
     DSocket *lastsocket;
     int varcnt;
     DNSpace *space;
+    QList<ArrayContainer*> arrays;
     CallbackList addSocketCallbacks;
 };
 
