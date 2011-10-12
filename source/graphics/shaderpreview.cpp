@@ -29,6 +29,7 @@
 #include "iostream"
 
 #include "source/data/base/frg.h"
+#include "source/data/base/frg_shader_author.h"
 
 unsigned short DShaderPreview::count = 0;
 
@@ -108,6 +109,7 @@ void PreviewSceneEditor::updateEditFields(QListWidgetItem *current, QListWidgetI
 void PreviewSceneEditor::updateFile(QString newval)    
 {
     QListWidgetItem *current = previewScenes->currentItem();
+
 
     PreviewScene prevsce;
     prevsce.dir = current->text();
@@ -223,18 +225,22 @@ void VShaderPreview::contextMenu()
     QAction *prvAct = cxtM->addAction("Change Preview Scene");
     QAction *extAct = cxtM->addAction("External Scene");
     QAction *updateSceneAct = cxtM->addAction("Update Scene");
+    QAction *detachPreview = cxtM->addAction("Detach Preview");
     connect(prvAct, SIGNAL(triggered()), this, SLOT(changePreview()));
     connect(extAct, SIGNAL(triggered()), this, SLOT(externalPreview()));
     connect(updateSceneAct, SIGNAL(triggered()), this, SLOT(updateScene()));
+    connect(detachPreview, SIGNAL(triggered()), this, SLOT(detachP()));
 }
 
 void VShaderPreview::updateScene()    
 {
     DShaderPreview *prev = data->getDerived<DShaderPreview>();
-    if(prev->isExtScene())
-        prev->createTmpPrevDir();
-    else
-        prev->createTmpExtPrevDir();
+    prev->updateScene();
+}
+
+void VShaderPreview::detachP()    
+{
+    FRG::Author->createPreviewDock(data->getDerived<DShaderPreview>()); 
 }
 
 void VShaderPreview::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -434,6 +440,16 @@ void DShaderPreview::createTmpExtPrevDir()
     prevShadFile += shadername;
     prevShadFile += ".sl";
     setFileName(prevShadFile);
+}
+
+void DShaderPreview::updateScene()    
+{
+    FRG::Utils::remove(QDir::tempPath() + "/" + QString::number(prevID));
+    if(!ext_scene)
+        createTmpPrevDir();
+    else
+        createTmpExtPrevDir();
+    render();
 }
 
 QString DShaderPreview::getImageFile()    

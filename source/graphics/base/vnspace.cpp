@@ -246,14 +246,14 @@ VNSpace::VNSpace()
     : newlink(0), nodelib(0), nodeedit(0), editNameMode(false), linkNodeMode(false)
 {
     qreal space_width, space_height;
-    if (itemsBoundingRect().width() < 1000)
-        space_width = 1000;
+    if (itemsBoundingRect().width() < 10000)
+        space_width = 10000;
     else
-        space_width = itemsBoundingRect().width();
-    if (itemsBoundingRect().height() < 1000)
-        space_height = 1000;
+        space_width = itemsBoundingRect().width() + 100;
+    if (itemsBoundingRect().height() < 10000)
+        space_height = 10000;
     else
-        space_height = itemsBoundingRect().height();
+        space_height = itemsBoundingRect().height() + 100;
     QRectF space_rect = QRectF(0-(space_width/2), 0-(space_height/2), space_width, space_height);
     setSceneRect(space_rect);
 }

@@ -35,6 +35,7 @@
 #include "source/data/nodes/data_node.h"
 #include "source/graphics/shader_view.h"
 #include "source/graphics/shaderpreview.h"
+#include "source/graphics/previewdock.h"
 
 ChangeSpaceAction::ChangeSpaceAction(DNSpace *space, QObject *parent)
     : QAction(parent)
@@ -95,6 +96,18 @@ void frg_Shader_Author::createDocks()
     FRG::lib = new NodeLib;
     nodelib->setWidget(FRG::lib);
     addDockWidget(Qt::LeftDockWidgetArea, nodelib); 
+}
+
+void frg_Shader_Author::createPreviewDock(DShaderPreview *prev)    
+{
+    QDockWidget *prevDock = new QDockWidget("");
+    PreviewView *preview = new PreviewView(prevDock);
+    preview->setPreview(prev);
+    prevDock->setWidget(preview);
+    preview->setMinimumWidth(10);
+    preview->resize(100, preview->height());
+    prevDock->resize(100, prevDock->height());
+    addDockWidget(Qt::RightDockWidgetArea, prevDock);
 }
 
 void frg_Shader_Author::moveIntoSpace(DNSpace *space)

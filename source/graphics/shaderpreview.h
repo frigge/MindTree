@@ -93,6 +93,7 @@ public slots:
     void changePreview();
     void externalPreview();
     void updateScene();
+    void detachP();
 
 protected:
     void NodeWidth();
@@ -122,6 +123,7 @@ public:
     PreviewScene getPrevScene() const;
     void createTmpPrevDir();
     void createTmpExtPrevDir();
+    void updateScene();
 
     static unsigned short count;
     bool isExtScene() const;

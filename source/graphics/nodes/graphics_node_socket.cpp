@@ -73,7 +73,7 @@ void VNSocket::createNameVis()
 	socketNameVis = new QGraphicsTextItem(data->getName());
 	socketNameVis->setParentItem(this);
 	socketNameVis->setZValue(zValue()+.2);
-	socketNameVis->setY(-height/2);
+	socketNameVis->setY(-3 * height/4);
     QFont font = socketNameVis->font();
     font.setPointSize(9);
     socketNameVis->setFont(font);

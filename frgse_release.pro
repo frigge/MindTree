@@ -31,6 +31,7 @@ HEADERS += source/data/callbacks.h \
            source/graphics/scenewidgetcontainer.h \
            source/graphics/shader_view.h \
            source/graphics/shaderpreview.h \
+           source/graphics/previewdock.h \
            source/data/base/dnspace.h \
            source/data/base/frg.h \
            source/data/base/frg_shader_author.h \
@@ -50,6 +51,7 @@ SOURCES += source/data/callbacks.cpp \
            source/graphics/scenewidgetcontainer.cpp \
            source/graphics/shader_view.cpp \
            source/graphics/shaderpreview.cpp \
+           source/graphics/previewdock.cpp \
            source/data/base/dnspace.cpp \
            source/data/base/frg.cpp \
            source/data/base/frg_shader_author.cpp \

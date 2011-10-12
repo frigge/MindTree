@@ -32,6 +32,8 @@
 #include "QTextCursor"
 #include "QGraphicsProxyWidget"
 
+#include "math.h"
+
 #include "source/data/base/frg.h"
 #include "source/data/base/frg_shader_author.h"
 #include "source/data/base/dnspace.h"
@@ -102,11 +104,11 @@ VNode::VNode(DNode *data)
 
     node_name->setDefaultTextColor(QColor(255, 255, 255));
 
-    //QGraphicsDropShadowEffect *dropshad = new QGraphicsDropShadowEffect;
-    //dropshad->setBlurRadius(10);
-    //dropshad->setOffset(5);
-    //dropshad->setColor(QColor(10, 10, 10, 200));
-    //setGraphicsEffect(dropshad);
+    QGraphicsDropShadowEffect *dropshad = new QGraphicsDropShadowEffect;
+    dropshad->setBlurRadius(4);
+    dropshad->setOffset(2);
+    dropshad->setColor(QColor(10, 10, 10, 200));
+    setGraphicsEffect(dropshad);
 
 	foreach(DinSocket *socket, data->getInSockets())
 		socket->createSocketVis(this);
@@ -176,7 +178,6 @@ void VNode::NodeWidth()
     {
         if(socket->getSocketVis())socket->getSocketVis()->updateNameVis();
         if((socket->getSocketVis())
-            &&socket->getSocketVis()->getSocketNameVisWidth()
             &&socket->getSocketVis()->getSocketNameVisWidth() > node_width)
             node_width = socket->getSocketVis()->getSocketNameVisWidth();
     }
@@ -185,7 +186,6 @@ void VNode::NodeWidth()
     {
         if(socket->getSocketVis())socket->getSocketVis()->updateNameVis();
         if((socket->getSocketVis())
-            &&socket->getSocketVis()->getSocketNameVisWidth()
             &&socket->getSocketVis()->getSocketNameVisWidth() > node_width)
             socket->getSocketVis()->updateNameVis();
         node_width = socket->getSocketVis()->getSocketNameVisWidth();
@@ -211,7 +211,14 @@ void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 {
     QColor textColor;
     QPen node_outline;
-    int nodePen = 2;
+    int nodePen = 1;
+    QPointF diagVec = QPointF(-node_width/2, node_height) - QPointF(node_width, -node_height/2);
+    float length = sqrt(pow(diagVec.x(), 2) + pow(diagVec.y(), 2));
+    QPointF ndiagVec(-diagVec.y() / length, diagVec.x() / length);
+
+    QLinearGradient outlineCol(ndiagVec , -1 * ndiagVec);
+    outlineCol.setColorAt(0, QColor(200, 200, 200));
+    outlineCol.setColorAt(1, QColor(0, 0, 0));
 
     if (isSelected())
     {
@@ -222,12 +229,14 @@ void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
     else
     {
         textColor = QColor(255, 255, 255, 255);
-        node_outline.setColor(QColor(30, 30, 30, 255));
-        node_outline.setWidth(nodePen);
+        //node_outline.setColor(QColor(30, 30, 30, 255));
+        node_outline = QPen(QBrush(outlineCol), 0.5);
+        //node_outline.setWidth(nodePen);
     };
     painter->setPen(node_outline);
     painter->setBrush(QBrush(nodeColor, Qt::SolidPattern));
-    painter->drawRect(-node_width/2, -node_height/2, node_width, node_height);
+//    painter->drawRect(-node_width/2, -node_height/2, node_width, node_height);
+    painter->drawRoundedRect(-node_width/2, -node_height/2, node_width, node_height, 5,5);
     drawName();
 };
 

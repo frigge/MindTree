@@ -48,6 +48,8 @@ private:
 
 };
 
+class DShaderPreview;
+
 class frg_Shader_Author : public QMainWindow
 {
     Q_OBJECT
@@ -77,6 +79,8 @@ public slots:
     void toggleNodeLib();
     void toggleNodeEditor();
     void openPreviewEditor();
+
+    void createPreviewDock(DShaderPreview *prev);
 
 protected:
     void createMenus();

@@ -16,16 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "shader_view.h"
-
-#include "QMouseEvent"
+#include "previewdock.h"
+#include "QDockWidget"
+#include "QGLWidget"
+#include "QWheelEvent"
 #include "math.h"
-#include "QtGui"
-#include "QtOpenGL/QtOpenGL"
-#include "QtOpenGL/QGLWidget"
+#include "source/graphics/shaderpreview.h"
 
-Shader_View::Shader_View(QMainWindow *parent)
-	: QGraphicsView(parent)
+PreviewView::PreviewView(QDockWidget *parent)
+    : QGraphicsView(parent)
 {
     QGLWidget *qgl = new QGLWidget(QGLFormat(QGL::SampleBuffers));
     setRenderHint(QPainter::Antialiasing);
@@ -33,29 +32,24 @@ Shader_View::Shader_View(QMainWindow *parent)
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setDragMode(ScrollHandDrag);
+
+    setScene(new QGraphicsScene);
+    scene()->setSceneRect(-500, -500, 1000, 1000);
 }
 
-void Shader_View::keyPressEvent(QKeyEvent *event)
+void PreviewView::setPreview(DShaderPreview *dprev)    
 {
-    if (event->key() == Qt::Key_Alt)
-        setDragMode(ScrollHandDrag);
-    QGraphicsView::keyPressEvent(event);
-};
+    if(!scene()->items().isEmpty())
+    {
+        QGraphicsItem *item = scene()->items().first();
+        scene()->removeItem(item);
+        delete item;
+    }
+    scene()->addPixmap(QPixmap::fromImage(QImage(dprev->getImageFile())));
+}
 
-void Shader_View::keyReleaseEvent(QKeyEvent *event)
-{
-    setDragMode(RubberBandDrag);
-};
-
-void Shader_View::mouseReleaseEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::MiddleButton)
-        setDragMode(RubberBandDrag);
-    else
-        QGraphicsView::mouseReleaseEvent(event);
-};
-
-void Shader_View::drawBackground(QPainter *painter, const QRectF &rect)
+void PreviewView::drawBackground(QPainter *painter, const QRectF &rect)
 {
 //    QRadialGradient *bggrad = new QRadialGradient(0, 0, rect.width());
 //    bggrad->setColorAt(0, QColor(50, 50, 50));
@@ -65,12 +59,12 @@ void Shader_View::drawBackground(QPainter *painter, const QRectF &rect)
     painter->drawRect(rect);
 };
 
-void Shader_View::wheelEvent(QWheelEvent *event)
+void PreviewView::wheelEvent(QWheelEvent *event)
 {
     scaleView(pow((double)2, -event->delta() / 240.0));
 };
 
-void Shader_View::scaleView(qreal scaleFactor)
+void PreviewView::scaleView(qreal scaleFactor)
 {
     qreal factor = transform().scale(scaleFactor, scaleFactor).mapRect(QRectF(0, 0, 1, 1)).width();
     if (factor < 0.01|| factor > 3)
@@ -78,14 +72,3 @@ void Shader_View::scaleView(qreal scaleFactor)
 
     scale(scaleFactor, scaleFactor);
 };
-
-void Shader_View::createSpace()
-{
-    DNSpace *newspace = new DNSpace();
-    space->moveIntoSpace(newspace);
-}
-
-VNSpace* Shader_View::getSpace()
-{
-    return space;
-}
