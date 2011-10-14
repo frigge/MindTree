@@ -81,6 +81,11 @@ void PreviewView::render()
     prev->render(); 
 }
 
+void PreviewView::render(DNode* node)    
+{
+    prev->render(node); 
+}
+
 void PreviewView::updatePixmap()    
 {
     prevPix->setPixmap(QPixmap::fromImage(QImage(prev->getImageFile())));

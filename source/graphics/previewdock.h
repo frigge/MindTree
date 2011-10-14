@@ -26,6 +26,7 @@
 
 class QDockWidget;
 class DShaderPreview;
+class DNode;
 
 class PreviewView : public QGraphicsView
 {
@@ -37,6 +38,7 @@ public:
 public slots:
     void updatePixmap();
     void render();
+    void render(DNode* node);
 
 protected:
     void drawBackground(QPainter *painter, const QRectF &rect);
