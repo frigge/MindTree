@@ -21,9 +21,10 @@
 
 #include "source/data/nodes/data_node.h"
 
-ShaderWriter::ShaderWriter(OutputNode *start)
+ShaderWriter::ShaderWriter(DNode *start)
     : start(start)
 {
+    setVariables();
     tabLevel = 1;
     QString outputvar;
 
@@ -32,22 +33,28 @@ ShaderWriter::ShaderWriter(OutputNode *start)
     case SURFACEOUTPUT:
     case PREVIEW:
         addToShaderHeader("surface ");
+        addToShaderHeader(start->getDerived<OutputNode>()->getShaderName());
+        addToShaderHeader("(");
         break;
     case DISPLACEMENTOUTPUT:
         addToShaderHeader("displacement ");
+        addToShaderHeader(start->getDerived<OutputNode>()->getShaderName());
+        addToShaderHeader("(");
         break;
     case VOLUMEOUTPUT:
         addToShaderHeader("volume ");
+        addToShaderHeader(start->getDerived<OutputNode>()->getShaderName());
+        addToShaderHeader("(");
         break;
     case LIGHTOUTPUT:
         addToShaderHeader("light ");
+        addToShaderHeader(start->getDerived<OutputNode>()->getShaderName());
+        addToShaderHeader("(");
         break;
     default:
         break;
     }
 
-    addToShaderHeader(start->getShaderName());
-    addToShaderHeader("(");
 
     foreach(const DinSocket *socket, start->getInSockets())
     {
@@ -67,6 +74,81 @@ ShaderWriter::ShaderWriter(OutputNode *start)
         code.append(outputvar);
         code.append(";");
     }
+}
+
+void ShaderWriter::setVariables(DNode *node)    
+{
+    if(!node)
+    {
+        variables.clear();
+        variableCnt.clear();
+        node = start;
+    }
+
+    foreach(DinSocket *socket, node->getInSockets())
+    {
+        DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
+        if(!cntdSocket)
+            continue;
+
+        if(variables.contains(cntdSocket))
+            continue;
+            
+        DNode *cntdNode = cntdSocket->getNode();
+        QString varname_raw = cntdSocket->getName().replace(" ", "_");
+        DoutSocket *simSocket = getSimilar(cntdSocket);
+        if(variableCnt.contains(varname_raw)
+            && simSocket)
+            insertVariable(cntdSocket, getVariable(simSocket));
+        else
+            insertVariable(cntdSocket, cntdSocket->setSocketVarName(&variableCnt));
+
+        setVariables(cntdNode);
+    }
+}
+
+QString ShaderWriter::getVariable(const DoutSocket* socket)const
+{
+    return variables.value(socket);
+}
+
+DoutSocket* ShaderWriter::getSimilar(DoutSocket *socket)    
+{
+    DNode *node = socket->getNode();
+    DNode *simnode = 0;
+    foreach(DNode *n, start->getAllInNodes())
+    {
+        if(n != node
+            && *n == *node)
+            {
+                simnode = n;
+                foreach(DNode *inn, n->getAllInNodes())
+                {
+                    bool hasSim = false;
+                    foreach(DNode *inNode, node->getAllInNodes())
+                        if(*inn == *inNode)
+                        {
+                            hasSim = true;
+                            for(int i=0; i<inn->getInSockets().size(); i++)
+                                if(*inn->getInSockets().at(i) != *inNode->getInSockets().at(i))
+                                    hasSim = false;
+                        }
+                    if(!hasSim) simnode = 0;
+                }
+            }
+        if(simnode)
+            break;
+    }
+    if(!simnode) return 0;
+
+    foreach(DoutSocket *out, simnode->getOutSockets())
+        if(*out == *socket)
+            return out;
+}
+
+void ShaderWriter::insertVariable(const DoutSocket *socket, QString variable)    
+{
+    variables.insert(socket, variable);
 }
 
 QString ShaderWriter::newline()
@@ -106,7 +188,7 @@ void ShaderWriter::initVar(const DoutSocket *socket)
          VDstr.append("normal ");
         break;
     }
-    VDstr.append(start->getVariable(socket));
+    VDstr.append(getVariable(socket));
     VDstr.append(";");
     addToVarDeclares(VDstr);
 }
@@ -117,7 +199,7 @@ bool ShaderWriter::isInputVar(const DoutSocket *socket)
     vars<<"P"<<"N"<<"I"<<"s"<<"t"<<"u"<<"v"<<"Cl"<<"Cs"<<"Os"<<"L"<<"Oi"<<"Ci"<<"Ps"<<"Ns"<<"du"<<"dv";
     foreach(QString var, vars)
     {
-        if(var == start->getVariable(socket))
+        if(var == getVariable(socket))
             return true;
     }
     return false;
@@ -230,7 +312,7 @@ QString ShaderWriter::writeVarName(const DinSocket *insocket)
     }
     else
     {
-        return start->getVariable(prevsocket);
+        return getVariable(prevsocket);
     }
 }
 
@@ -293,7 +375,7 @@ void ShaderWriter::writeMathToVar(const DoutSocket *socket)
     QString output;
     output.append(newline());
     output.append(" = ");
-    output.append(start->getVariable(socket));
+    output.append(getVariable(socket));
     output.append(createMath(socket));
     code.append(output);
 }
@@ -355,7 +437,7 @@ void ShaderWriter::writeFunction(const DoutSocket *socket)
     QString output;
     initVar(socket);
     output.append(newline());
-    output.append(start->getVariable(socket));
+    output.append(getVariable(socket));
     output.append(" = ");
     FunctionNode *fnode = (FunctionNode*)socket->getNode();
     output.append(fnode->getFunctionName());
@@ -389,7 +471,7 @@ void ShaderWriter::writeContainer(const DoutSocket *socket)
 //        {
 //            initVar(socket);
 //            output.append(newline());
-//            output.append(start->getVariable(socket));
+//            output.append(getVariable(socket));
 //            output.append(" = ");
 //            output.append(writeVarName(mapped_socket));
 //            output.append(";");
@@ -549,12 +631,12 @@ QString ShaderWriter::writeColor(const DoutSocket *socket)
     if(colornode->isShaderInput())
     {
         output.append("color ");
-        output.append(start->getVariable(socket));
+        output.append(getVariable(socket));
         output.append(" = ");
         output.append(value);
         output.append(";");
         addToShaderParameter(output);
-        output = start->getVariable(socket);
+        output = getVariable(socket);
         return output;
     }
     else
@@ -571,12 +653,12 @@ QString ShaderWriter::writeString(const DoutSocket *socket)
     if(stringnode->isShaderInput())
     {
         output.append("string ");
-        output.append(start->getVariable(socket));
+        output.append(getVariable(socket));
         output.append(" = ");
         output.append(value);
         output.append(";");
         addToShaderParameter(output);
-        return start->getVariable(socket);
+        return getVariable(socket);
     }
     else
         return value;
@@ -590,12 +672,12 @@ QString ShaderWriter::writeFloat(const DoutSocket *socket)
     if(floatnode->isShaderInput())
     {
         output.append("float ");
-        output.append(start->getVariable(socket));
+        output.append(getVariable(socket));
         output.append(" = ");
         output.append(value);
         output.append(";");
         addToShaderParameter(output);
-        return start->getVariable(socket);
+        return getVariable(socket);
     }
     else return value;
 }
@@ -615,12 +697,12 @@ QString ShaderWriter::writeVector(const DoutSocket *socket)
     if(node->isShaderInput())
     {
         output.append("vector ");
-        output.append(start->getVariable(socket));
+        output.append(getVariable(socket));
         output.append(" = ");
         output.append(value);
         output.append(";");
         addToShaderParameter(output);
-        return start->getVariable(socket);
+        return getVariable(socket);
     }
     else return value;
 }

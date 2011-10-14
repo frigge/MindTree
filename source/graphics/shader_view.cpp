@@ -28,7 +28,6 @@ Shader_View::Shader_View(QMainWindow *parent)
 	: QGraphicsView(parent)
 {
     QGLWidget *qgl = new QGLWidget(QGLFormat(QGL::SampleBuffers));
-    setRenderHint(QPainter::Antialiasing);
     setViewport(qgl);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -88,4 +87,11 @@ void Shader_View::createSpace()
 VNSpace* Shader_View::getSpace()
 {
     return space;
+}
+
+void Shader_View::paintEvent(QPaintEvent *event)    
+{
+    QPaintEvent *newEvent = new QPaintEvent(event->region().boundingRect());
+    QGraphicsView::paintEvent(event);
+    delete newEvent;
 }

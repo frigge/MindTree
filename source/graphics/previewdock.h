@@ -22,19 +22,34 @@
 
 #include "QGraphicsView"
 #include "QGraphicsScene"
+#include "QMenu"
 
 class QDockWidget;
 class DShaderPreview;
 
 class PreviewView : public QGraphicsView
 {
+Q_OBJECT
 public:
     PreviewView(QDockWidget *parent);
     void setPreview(DShaderPreview *dprev);
 
+public slots:
+    void updatePixmap();
+    void render();
+
 protected:
     void drawBackground(QPainter *painter, const QRectF &rect);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+    void contextMenuEvent(QContextMenuEvent *event);
     void scaleView(qreal scaleFactor);
     void wheelEvent(QWheelEvent *event);
+
+private:
+    DShaderPreview *prev;
+    QGraphicsPixmapItem *prevPix;
+    QMenu *cMenu;
 };
 #endif /* end of include guard: PREVIEWDOCK_HDP4EB16 */

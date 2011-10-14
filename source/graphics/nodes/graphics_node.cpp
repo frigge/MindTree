@@ -95,7 +95,7 @@ VNode::VNode(DNode *data)
     : data(data), node_name(new NodeName("", this)), node_width(30), node_height(30), nodeColor(100, 100, 100)
 {
     this->data = data;
-	setCacheMode(ItemCoordinateCache);
+	//setCacheMode(ItemCoordinateCache, QSize(10, 10));
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsFocusable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -188,7 +188,7 @@ void VNode::NodeWidth()
         if((socket->getSocketVis())
             &&socket->getSocketVis()->getSocketNameVisWidth() > node_width)
             socket->getSocketVis()->updateNameVis();
-        node_width = socket->getSocketVis()->getSocketNameVisWidth();
+            node_width = socket->getSocketVis()->getSocketNameVisWidth();
     }
 
 	node_width += 6 + socket_size; //Left/Right border margin
@@ -209,6 +209,8 @@ QRectF VNode::boundingRect() const
 
 void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setClipRect(option->exposedRect);
     QColor textColor;
     QPen node_outline;
     int nodePen = 1;
@@ -339,8 +341,6 @@ VValueNode::VValueNode(DNode *data)
     proxy->setParentItem(this);
     createContextMenu();
 
-    updateNodeVis();
-
     ValueNode *node = static_cast<ValueNode*>(data);
     if(node->isShaderInput())
         setNodeColor(QColor(255, 135, 0));
@@ -349,6 +349,7 @@ VValueNode::VValueNode(DNode *data)
 
     data->getOutSockets().first()->getSocketVis()->setDrawName(false);
     data->getOutSockets().first()->getSocketVis()->setBlockContextMenu(true);
+    updateNodeVis();
 }
 
 VValueNode::~VValueNode()

@@ -487,17 +487,10 @@ public:
     QString getFileName() const;
     void setFileName(QString);
 
-    void setVariables(DNode *node=0);
-    QString getVariable(const DoutSocket* socket)const;
-    void insertVariable(const DoutSocket *socket, QString variable);
-    DoutSocket* getSimilar(DoutSocket *socket);
-
 protected:
     virtual VNode* createNodeVis();
 
 private:
-    QHash<const DoutSocket*, QString> variables;
-    QHash<QString, unsigned short>variableCnt;
     QString filename;
     QString ShaderName;
 };

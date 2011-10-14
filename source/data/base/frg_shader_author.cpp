@@ -102,12 +102,12 @@ void frg_Shader_Author::createPreviewDock(DShaderPreview *prev)
 {
     QDockWidget *prevDock = new QDockWidget("");
     PreviewView *preview = new PreviewView(prevDock);
-    preview->setPreview(prev);
     prevDock->setWidget(preview);
-    preview->setMinimumWidth(10);
-    preview->resize(100, preview->height());
-    prevDock->resize(100, prevDock->height());
     addDockWidget(Qt::RightDockWidgetArea, prevDock);
+    preview->setPreview(prev);
+    prev->detach();
+    connect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)preview, SLOT(updatePixmap()));
+    //connect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)this, SLOT(render(DNode*)));
 }
 
 void frg_Shader_Author::moveIntoSpace(DNSpace *space)

@@ -20,6 +20,7 @@
 #include "QDockWidget"
 #include "QGLWidget"
 #include "QWheelEvent"
+#include "QContextMenuEvent"
 #include "math.h"
 #include "source/graphics/shaderpreview.h"
 
@@ -32,21 +33,57 @@ PreviewView::PreviewView(QDockWidget *parent)
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setDragMode(ScrollHandDrag);
 
     setScene(new QGraphicsScene);
-    scene()->setSceneRect(-500, -500, 1000, 1000);
+
+    cMenu = new QMenu();
+    QAction *refreshAction = cMenu->addAction("Refresh");
+    connect(refreshAction, SIGNAL(triggered()), this, SLOT(render()));
+}
+
+void PreviewView::contextMenuEvent(QContextMenuEvent *event)
+{
+    cMenu->exec(event->globalPos());
+}
+
+void PreviewView::mousePressEvent(QMouseEvent *event)    
+{
+    if(event->button() == Qt::LeftButton)
+        setDragMode(ScrollHandDrag);
+    else
+        setDragMode(NoDrag);
+    QGraphicsView::mousePressEvent(event);
+}
+
+void PreviewView::mouseReleaseEvent(QMouseEvent *event)    
+{
+    setDragMode(NoDrag);
+    QGraphicsView::mouseReleaseEvent(event);
 }
 
 void PreviewView::setPreview(DShaderPreview *dprev)    
 {
+    prev = dprev;
+    prev->getTimer()->connect(prev->getTimer(), SIGNAL(timeout()), this, SLOT(updatePixmap()));
+    prev->getTimer()->connect(prev->getRenderProcess(), SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(updatePixmap()));
     if(!scene()->items().isEmpty())
     {
         QGraphicsItem *item = scene()->items().first();
         scene()->removeItem(item);
         delete item;
     }
-    scene()->addPixmap(QPixmap::fromImage(QImage(dprev->getImageFile())));
+    prevPix = scene()->addPixmap(QPixmap::fromImage(QImage(dprev->getImageFile())));
+    scene()->setSceneRect(-500, -500, 1000, 1000);
+}
+
+void PreviewView::render()    
+{
+    prev->render(); 
+}
+
+void PreviewView::updatePixmap()    
+{
+    prevPix->setPixmap(QPixmap::fromImage(QImage(prev->getImageFile())));
 }
 
 void PreviewView::drawBackground(QPainter *painter, const QRectF &rect)

@@ -241,6 +241,35 @@ void VShaderPreview::updateScene()
 void VShaderPreview::detachP()    
 {
     FRG::Author->createPreviewDock(data->getDerived<DShaderPreview>()); 
+    preview->setPixmap(QPixmap());
+    delete img;
+    img = 0;
+    updateNodeVis();
+}
+
+void DShaderPreview::detach()    
+{
+    detached = true;
+}
+
+bool DShaderPreview::isDetached()    
+{
+    return detached;
+}
+
+QTimer* DShaderPreview::getTimer()    
+{
+    return &timer;
+}
+
+QProcess* DShaderPreview::getRenderProcess()    
+{
+    return &renderprocess;
+}
+
+void DShaderPreview::attach()    
+{
+    detached = false;
 }
 
 void VShaderPreview::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -292,14 +321,15 @@ void VShaderPreview::render()
 void VShaderPreview::render(DNode* node)    
 {
     DShaderPreview* prev = static_cast<DShaderPreview*>(data);
-    if(prev->getAllInNodes().contains(node))
-        prev->render();
+    prev->render(node);
 }
 
 void VShaderPreview::updatePreview()    
 {
     QImage *oldimg = img;
     DShaderPreview* prev = static_cast<DShaderPreview*>(data);
+    if(prev->isDetached())
+        return;
     img = new QImage(prev->getImageFile());
     preview->setPixmap(QPixmap::fromImage(*img));
     if(oldimg) delete oldimg;
@@ -308,7 +338,7 @@ void VShaderPreview::updatePreview()
 
 void VShaderPreview::NodeWidth()    
 {
-    setNodeWidth(104);
+    VNode::NodeWidth();
     if(img)
         setNodeWidth(img->width() + 4);
 }
@@ -330,7 +360,7 @@ void VShaderPreview::updateNodeVis()
 }
 
 DShaderPreview::DShaderPreview(bool raw)
-    : prevID(++count), ext_scene(false)
+    : prevID(++count), ext_scene(false), detached(false)
 {
     setNodeType(PREVIEW);
     shadername = "preview";
@@ -362,10 +392,12 @@ DShaderPreview::DShaderPreview(bool raw)
     else
         startsce = FRG::previewScenes.getScene(previews.first());
     prevScene = startsce;
+    timer.connect(&renderprocess, SIGNAL(started()), &timer, SLOT(start()));
+    timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), &timer, SLOT(stop()));
 }
 
 DShaderPreview::DShaderPreview(const DShaderPreview *preview)
-    : OutputNode(preview), prevID(++count), prevScene(preview->getPrevScene()), ext_scene(preview->isExtScene())
+    : OutputNode(preview), prevID(++count), prevScene(preview->getPrevScene()), ext_scene(preview->isExtScene()), detached(false)
 {
     setNodeType(PREVIEW);
     shadername = "preview";
@@ -381,6 +413,8 @@ DShaderPreview::DShaderPreview(const DShaderPreview *preview)
         appdir.mkdir("preview");
 
     renderprocess.setStandardErrorFile("render.log");
+    timer.connect(&renderprocess, SIGNAL(started()), &timer, SLOT(start()));
+    timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), &timer, SLOT(stop()));
 }
 
 DShaderPreview::~DShaderPreview()
@@ -468,8 +502,6 @@ VNode * DShaderPreview::createNodeVis()
 
     createTmpPrevDir();
     timer.setInterval(200);
-    timer.connect(&renderprocess, SIGNAL(started()), &timer, SLOT(start()));
-    timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), &timer, SLOT(stop()));
     timer.connect(&timer, SIGNAL(timeout()), getPreviewVis(), SLOT(updatePreview()));
     timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), getPreviewVis(), SLOT(updatePreview()));
 
@@ -479,12 +511,13 @@ VNode * DShaderPreview::createNodeVis()
 void DShaderPreview::deleteNodeVis()    
 {
     OutputNode::deleteNodeVis();
-    FRG::Utils::remove(QDir::tempPath() + "/" + QString::number(prevID));
+    if(!detached)FRG::Utils::remove(QDir::tempPath() + "/" + QString::number(prevID));
 }
 
-void DShaderPreview::render()    
+void DShaderPreview::render(DNode *node)    
 {
-    if(getAllInNodes().isEmpty())return;
+    if(node && !getAllInNodes().contains(node))
+        return;
     writeCode();
     compile();
     writeMaterial();

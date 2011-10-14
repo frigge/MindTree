@@ -1031,6 +1031,9 @@ ContainerNode::ContainerNode(const ContainerNode* node)
     setContainerData(new ContainerSpace(node->getContainerData()));
     foreach(DSocket *socket, node->getMappedSocketsOnContainer())
         mapOnToIn(CopySocketMapper::getCopy(socket), CopySocketMapper::getCopy(node->getSocketInContainer(socket)));
+
+    setInputs(CopyNodeMapper::getCopy(node->getInputs()));
+    setOutputs(CopyNodeMapper::getCopy(node->getOutputs()));
 }
 
 ContainerNode::~ContainerNode()
@@ -1821,85 +1824,10 @@ OutputNode::OutputNode(const OutputNode* node)
 {
 }
 
-void OutputNode::setVariables(DNode *node)    
-{
-    if(!node)
-    {
-        variables.clear();
-        variableCnt.clear();
-        node = this;
-    }
-
-    foreach(DinSocket *socket, node->getInSockets())
-    {
-        DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
-        if(!cntdSocket)
-            continue;
-
-        if(variables.contains(cntdSocket))
-            continue;
-            
-        DNode *cntdNode = cntdSocket->getNode();
-        QString varname_raw = cntdSocket->getName().replace(" ", "_");
-        DoutSocket *simSocket = getSimilar(cntdSocket);
-        if(variableCnt.contains(varname_raw)
-            && simSocket)
-            insertVariable(cntdSocket, getVariable(simSocket));
-        else
-            insertVariable(cntdSocket, cntdSocket->setSocketVarName(&variableCnt));
-
-        setVariables(cntdNode);
-    }
-}
-
-DoutSocket* OutputNode::getSimilar(DoutSocket *socket)    
-{
-    DNode *node = socket->getNode();
-    DNode *simnode = 0;
-    foreach(DNode *n, getAllInNodes())
-    {
-        if(n != node
-            && *n == *node)
-            {
-                simnode = n;
-                foreach(DNode *inn, n->getAllInNodes())
-                {
-                    bool hasSim = false;
-                    foreach(DNode *inNode, node->getAllInNodes())
-                        if(*inn == *inNode)
-                        {
-                            hasSim = true;
-                            for(int i=0; i<inn->getInSockets().size(); i++)
-                                if(*inn->getInSockets().at(i) != *inNode->getInSockets().at(i))
-                                    hasSim = false;
-                        }
-                    if(!hasSim) simnode = 0;
-                }
-            }
-        if(simnode)
-            break;
-    }
-    if(!simnode) return 0;
-
-    foreach(DoutSocket *out, simnode->getOutSockets())
-        if(*out == *socket)
-            return out;
-}
-
-void OutputNode::insertVariable(const DoutSocket *socket, QString variable)    
-{
-    variables.insert(socket, variable);
-}
-
 VNode* OutputNode::createNodeVis()
 {
     setNodeVis(new VOutputNode(this));
     return getNodeVis();
-}
-
-QString OutputNode::getVariable(const DoutSocket* socket)const
-{
-    return variables.value(socket);
 }
 
 QString OutputNode::getShaderName() const
@@ -1909,7 +1837,6 @@ QString OutputNode::getShaderName() const
 
 void OutputNode::writeCode()
 {
-    setVariables();
     QFile file(filename);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);

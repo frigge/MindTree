@@ -116,7 +116,7 @@ public:
     DShaderPreview(const DShaderPreview *preview);
     ~DShaderPreview();
 
-    void render();
+    void render(DNode *node=0);
     QString getImageFile();
     void writeMaterial();
     void setPrevScene(PreviewScene scene);
@@ -128,6 +128,11 @@ public:
     static unsigned short count;
     bool isExtScene() const;
     void setExtScene(bool ext);
+    void attach();
+    void detach();
+    bool isDetached();
+    QProcess* getRenderProcess();
+    QTimer* getTimer();
 
 protected:
     void setSockets();
@@ -143,6 +148,7 @@ private:
     QProcess renderprocess;
     QString shadername;
     bool ext_scene;
+    bool detached;
 };
 
 #endif /* FRGShaderPreview */

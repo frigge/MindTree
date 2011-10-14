@@ -252,6 +252,8 @@ QRectF VNSocket::boundingRect() const
 
 void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setClipRect(option->exposedRect);
     QColor color;
     switch(data->getType())
     {

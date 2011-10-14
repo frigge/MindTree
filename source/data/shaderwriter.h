@@ -21,16 +21,18 @@
 #define SHADERWRITER_H
 
 #include "QString"
+#include "QHash"
 #include "QStringList"
 
 class OutputNode;
 class DoutSocket;
 class DinSocket;
+class DNode;
 
 class ShaderWriter
 {
 public:
-    ShaderWriter(OutputNode *start);
+    ShaderWriter(DNode *start);
     QString getCode();
 
 private:
@@ -76,6 +78,12 @@ private:
 
     const DinSocket *stepUp(const DoutSocket *socket);
 
+    void setVariables(DNode *node=0);
+    QString getVariable(const DoutSocket* socket)const;
+    void insertVariable(const DoutSocket *socket, QString variable);
+    DoutSocket* getSimilar(DoutSocket *socket);
+
+
 private:
     QList<QString>written_sockets;
     QString var;
@@ -86,7 +94,9 @@ private:
     QStringList ShaderParameter;
     QStringList OutputVars;
     int tabLevel;
-    OutputNode *start;
+    DNode *start;
+    QHash<const DoutSocket*, QString> variables;
+    QHash<QString, unsigned short>variableCnt;
 };
 
 #endif // SHADERWRITER_H

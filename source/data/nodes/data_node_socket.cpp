@@ -369,7 +369,7 @@ QDataStream & operator>>(QDataStream &stream, DSocket **socket)
     stream>>name;
     stream>>type;
 
-	DSocket *newsocket;
+	DSocket *newsocket = *socket;
     newsocket->setType((socket_type)type);
     newsocket->setName(name);
     newsocket->setVariable(isVar);
@@ -383,7 +383,6 @@ QDataStream & operator>>(QDataStream &stream, DSocket **socket)
 		newsocket->toIn()->setToken(istoken); 
 	}
     LoadSocketIDMapper::setID(newsocket, ID);
-    *socket = newsocket;
     return stream;
 }
 

@@ -76,6 +76,7 @@ void VNodeLink::initVNodeLink()
     setZValue(zValue()-0.1);
     setFlag(ItemIsMovable, false);
     setFlag(ItemIsSelectable, false);
+    //setFlag(ItemIgnoresTransformations, true);
     setAcceptHoverEvents(true);
     setAcceptsHoverEvents(true);
     //setGraphicsEffect(new QGraphicsDropShadowEffect);
@@ -223,8 +224,10 @@ QPainterPath VNodeLink::drawPath()
 
 void VNodeLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    painter->setPen(Qt::white);
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setClipRect(option->exposedRect);
     QPen linkpen;
+    linkpen.setCosmetic(true);
     if (outSocket)
     {
         linkpen.setWidthF(1.5);
