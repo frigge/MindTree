@@ -200,34 +200,13 @@ NodeList DNode::getAllInNodes()
     NodeList nodes;
     foreach(DinSocket *socket, inSockets)
     {
-        DoutSocket *cntdSocket = socket->getCntdSocket();
+        DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
         if(cntdSocket)
         {
             DNode *cntdNode = cntdSocket->getNode();
-            if(cntdNode->getNodeType() == INSOCKETS
-                ||cntdNode->getNodeType() == LOOPINSOCKETS)
-            {
-                const ContainerNode *cont = cntdNode->getDerived<SocketNode>()->getContainer();
-                DinSocket *onCont = cont->getSocketOnContainer(cntdSocket)->toIn();
-                if(onCont->getCntdSocket())
-                {
-                    DNode *next = onCont->getCntdSocket()->getNode();
-                    nodes.append(next);
-                    nodes.append(next->getAllInNodes());
-                }
-            }
-            else
-                nodes.append(cntdNode);
+            nodes.append(cntdNode);
 
-            if(cntdNode->isContainer())
-            {
-                ContainerNode *cont = cntdNode->getDerived<ContainerNode>();
-                DNode *nextInCont = cont->getSocketInContainer(cntdSocket)->toIn()->getCntdSocket()->getNode();
-                nodes.append(nextInCont);
-                nodes.append(nextInCont->getAllInNodes());
-            }
-            else
-                nodes.append(cntdNode->getAllInNodes());
+            nodes.append(cntdNode->getAllInNodes());
         }
     }
     return nodes;
