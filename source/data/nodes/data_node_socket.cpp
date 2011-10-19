@@ -148,6 +148,8 @@ bool DSocket::isCompatible(DSocket *s1, DSocket *s2)
 {
     if(s1 == s2)
         return false;
+    if(s1->getNode() == s2->getNode())
+        return false;
     if(s1->getType() == VARIABLE || s2->getType() == VARIABLE)
         return true;
     if(s1->getType() == s2->getType())
