@@ -21,11 +21,27 @@
 #define PREVIEWDOCK_HDP4EB16
 
 #include "QGraphicsView"
+#include "QDockWidget"
 #include "QGraphicsScene"
 #include "QMenu"
 
 class QDockWidget;
 class DShaderPreview;
+class PreviewView;
+class PreviewDock : public QDockWidget
+{
+    Q_OBJECT
+public:
+    PreviewDock(DShaderPreview *prev);
+    virtual ~PreviewDock();
+
+public slots:
+    void adjustPreviewNode(bool vis);
+
+private:
+    DShaderPreview *preview;
+    PreviewView *pview;
+};
 class DNode;
 
 class PreviewView : public QGraphicsView

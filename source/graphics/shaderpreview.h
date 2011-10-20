@@ -109,6 +109,8 @@ private:
     QImage *img;
 };
 
+class PreviewDock;
+
 class DShaderPreview : public OutputNode
 {
 public:
@@ -133,6 +135,7 @@ public:
     bool isDetached();
     QProcess* getRenderProcess();
     QTimer* getTimer();
+    void showDock();
 
 protected:
     void setSockets();
@@ -149,6 +152,7 @@ private:
     QString shadername;
     bool ext_scene;
     bool detached;
+    PreviewDock *dock;
 };
 
 #endif /* FRGShaderPreview */

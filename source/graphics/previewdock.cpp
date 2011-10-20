@@ -17,12 +17,43 @@
 */
 
 #include "previewdock.h"
-#include "QDockWidget"
 #include "QGLWidget"
 #include "QWheelEvent"
 #include "QContextMenuEvent"
 #include "math.h"
 #include "source/graphics/shaderpreview.h"
+#include "source/data/base/frg.h"
+#include "source/data/base/frg_shader_author.h"
+
+PreviewDock::PreviewDock(DShaderPreview *prev)
+    : QDockWidget(prev->getNodeName()), pview(new PreviewView(this)), preview(prev)
+{
+    setWidget(pview);
+    pview->setPreview(prev);
+    connect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)pview, SLOT(render()));
+    connect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)pview, SLOT(render(DNode*)));
+    connect(this, SIGNAL(visibilityChanged(bool)), this, SLOT(adjustPreviewNode(bool)));
+    FRG::Author->addDockWidget(Qt::RightDockWidgetArea, this);
+    hide();
+}
+
+PreviewDock::~PreviewDock()
+{
+    FRG::Author->removeDockWidget(this);
+    preview->attach();
+}
+
+void PreviewDock::adjustPreviewNode(bool vis)    
+{
+    if(vis)
+    {
+        preview->detach();
+        preview->render();
+        pview->updatePixmap();
+    }
+    else
+        preview->attach();
+}
 
 PreviewView::PreviewView(QDockWidget *parent)
     : QGraphicsView(parent)

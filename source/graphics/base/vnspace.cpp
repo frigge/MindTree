@@ -620,6 +620,41 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
         addItem(dnode->createNodeVis());
         FRG::CurrentProject->setNodePosition(dnode, event->scenePos());
         dnode->getNodeVis()->setPos(event->scenePos());
+
+        //automatically connect nodes if CTRL is pressed while dropping
+        if(event->modifiers() & Qt::ControlModifier
+            &&!selectedNodes().isEmpty())
+        {
+            foreach(DNode *node, selectedNodes())
+            {
+                if(event->scenePos().x() < FRG::CurrentProject->getNodePosition(node).x())
+                {
+                    if(node->getInSockets().isEmpty() || dnode->getOutSockets().isEmpty())
+                        continue;
+                    DoutSocket *out = dnode->getOutSockets().first();
+                    foreach(DinSocket *socket, node->getInSockets())
+                        if(!socket->getCntdSocket()
+                            && DSocket::isCompatible(socket, out))
+                        {
+                            DSocket::createLink(socket, out);
+                            break;
+                        }
+                }
+                else
+                {
+                    if(dnode->getInSockets().isEmpty() || node->getOutSockets().isEmpty())
+                        continue;
+                    DoutSocket *out = node->getOutSockets().first();
+                    foreach(DinSocket *socket, dnode->getInSockets())
+                        if(!socket->getCntdSocket()
+                            && DSocket::isCompatible(socket, out))
+                        {
+                            DSocket::createLink(socket, out);
+                            break;
+                        }
+                }
+            }
+        }
     }
 }
 

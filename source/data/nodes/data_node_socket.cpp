@@ -164,6 +164,7 @@ DNodeLink DSocket::createLink(DSocket *socket1, DSocket *socket2)
 {
     DinSocket *in;
     DoutSocket *out;
+
     if(socket1->getDir() == IN)
     {
        in = socket1->toIn();
