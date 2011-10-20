@@ -138,6 +138,8 @@ public:
     QTimer* getTimer();
     void showDock();
 
+    virtual void setSpace(DNSpace* value);
+
 protected:
     void setSockets();
     const VShaderPreview* getPreviewVis();

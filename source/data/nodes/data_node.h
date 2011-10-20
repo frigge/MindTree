@@ -132,7 +132,7 @@ public:
     int getVarcnt() const;
     void setVarcnt(int value);
     DNSpace* getSpace() const;
-    void setSpace(DNSpace* value);
+    virtual void setSpace(DNSpace* value);
 
     void regAddSocketCB(Callback *cb);
     void remAddSocketCB(Callback *cb);

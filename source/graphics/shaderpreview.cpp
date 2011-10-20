@@ -367,12 +367,9 @@ void VShaderPreview::updateNodeVis()
 }
 
 DShaderPreview::DShaderPreview(bool raw)
-    : prevID(++count), ext_scene(false), detached(false), dock(0)
+    : prevID(0), ext_scene(false), detached(false), dock(0)
 {
     setNodeType(PREVIEW);
-    shadername = "preview";
-    shadername += QString::number(prevID);
-    changeName(shadername);
 
     QDir libdir("preview");
     QDir appdir;
@@ -399,21 +396,15 @@ DShaderPreview::DShaderPreview(bool raw)
     else
         startsce = FRG::previewScenes.getScene(previews.first());
     prevScene = startsce;
-    createTmpPrevDir();
     timer.connect(&renderprocess, SIGNAL(started()), &timer, SLOT(start()));
     timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), &timer, SLOT(stop()));
 
-    dock = new PreviewDock(this);
 }
 
 DShaderPreview::DShaderPreview(const DShaderPreview *preview)
-    : OutputNode(preview), prevID(++count), prevScene(preview->getPrevScene()), ext_scene(preview->isExtScene()), detached(false), dock(0)
+    : OutputNode(preview), prevID(0), prevScene(preview->getPrevScene()), ext_scene(preview->isExtScene()), detached(false), dock(0)
 {
     setNodeType(PREVIEW);
-    shadername = "preview";
-    shadername += QString::number(prevID);
-    changeName(shadername);
-
     QString appdirstr(QCoreApplication::applicationDirPath());
     QDir appdir(appdirstr);
     QDir::setCurrent(appdirstr);
@@ -421,20 +412,37 @@ DShaderPreview::DShaderPreview(const DShaderPreview *preview)
 
     if (!libdir.exists())
         appdir.mkdir("preview");
-    createTmpPrevDir();
 
     renderprocess.setStandardErrorFile("render.log");
     timer.connect(&renderprocess, SIGNAL(started()), &timer, SLOT(start()));
     timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), &timer, SLOT(stop()));
 
-    dock = new PreviewDock(this);
 }
 
 DShaderPreview::~DShaderPreview()
 {
-    delete dock;
-    --count;
-    FRG::Utils::remove(QDir::tempPath() + "/" + QString::number(prevID));
+}
+
+void DShaderPreview::setSpace(DNSpace *value)    
+{
+    DNode::setSpace(value);
+    if(value)
+    {
+        prevID = ++count;
+        shadername = "preview";
+        shadername += QString::number(prevID);
+        changeName(shadername);
+
+        createTmpPrevDir();
+        dock = new PreviewDock(this);
+    }
+    else
+    {
+        FRG::Utils::remove(QDir::tempPath() + "/" + QString::number(prevID));
+        delete dock;
+        --count;
+        dock = 0;
+    }
 }
 
 void DShaderPreview::showDock()    
