@@ -399,6 +399,7 @@ DShaderPreview::DShaderPreview(bool raw)
     else
         startsce = FRG::previewScenes.getScene(previews.first());
     prevScene = startsce;
+    createTmpPrevDir();
     timer.connect(&renderprocess, SIGNAL(started()), &timer, SLOT(start()));
     timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), &timer, SLOT(stop()));
 
@@ -420,6 +421,7 @@ DShaderPreview::DShaderPreview(const DShaderPreview *preview)
 
     if (!libdir.exists())
         appdir.mkdir("preview");
+    createTmpPrevDir();
 
     renderprocess.setStandardErrorFile("render.log");
     timer.connect(&renderprocess, SIGNAL(started()), &timer, SLOT(start()));
@@ -432,6 +434,7 @@ DShaderPreview::~DShaderPreview()
 {
     delete dock;
     --count;
+    FRG::Utils::remove(QDir::tempPath() + "/" + QString::number(prevID));
 }
 
 void DShaderPreview::showDock()    
@@ -530,7 +533,6 @@ void DShaderPreview::deleteNodeVis()
     OutputNode::deleteNodeVis();
     timer.connect(&timer, SIGNAL(timeout()), getPreviewVis(), SLOT(updatePreview()));
     timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), getPreviewVis(), SLOT(updatePreview()));
-    if(!detached)FRG::Utils::remove(QDir::tempPath() + "/" + QString::number(prevID));
 }
 
 void DShaderPreview::render(DNode *node)    

@@ -30,8 +30,6 @@ PreviewDock::PreviewDock(DShaderPreview *prev)
 {
     setWidget(pview);
     pview->setPreview(prev);
-    connect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)pview, SLOT(render()));
-    connect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)pview, SLOT(render(DNode*)));
     connect(this, SIGNAL(visibilityChanged(bool)), this, SLOT(adjustPreviewNode(bool)));
     FRG::Author->addDockWidget(Qt::RightDockWidgetArea, this);
     hide();
@@ -47,12 +45,18 @@ void PreviewDock::adjustPreviewNode(bool vis)
 {
     if(vis)
     {
+        connect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)pview, SLOT(render()));
+        connect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)pview, SLOT(render(DNode*)));
         preview->detach();
         preview->render();
         pview->updatePixmap();
     }
     else
+    {
+        disconnect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)pview, SLOT(render()));
+        disconnect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)pview, SLOT(render(DNode*)));
         preview->attach();
+    }
 }
 
 PreviewView::PreviewView(QDockWidget *parent)

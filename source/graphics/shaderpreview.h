@@ -84,6 +84,7 @@ class VShaderPreview : public VNode
     Q_OBJECT
 public:
     VShaderPreview(DShaderPreview *data);
+    virtual ~VShaderPreview();
     void updateNodeVis();
 
 public slots:
