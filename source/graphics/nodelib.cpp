@@ -142,16 +142,23 @@ void NodeLib::addBuildInNodes()
     QTreeWidgetItem *solarloop = new QTreeWidgetItem(QStringList() << "Solar" << "28");
     QTreeWidgetItem *gatherloop = new QTreeWidgetItem(QStringList() << "Gather" << "29");
 
+    QTreeWidgetItem *array = new QTreeWidgetItem(QStringList("Arrays"));
+    QTreeWidgetItem *getarray = new QTreeWidgetItem(QStringList() << "GetArray" << "32");
+    QTreeWidgetItem *setarray = new QTreeWidgetItem(QStringList() << "SetArray" << "33");
+
+    QTreeWidgetItem *varname = new QTreeWidgetItem(QStringList() << "varname" << "34");
     QTreeWidgetItem *preview = new QTreeWidgetItem(QStringList() << "Preview" << "30");
 
-    QList<QTreeWidgetItem*> hardgrps, ins, outs, maths, conditionals, values, loops;
-    hardgrps<<inputs<<outputs<<math<<cond<<value<<loop<<preview;
+
+    QList<QTreeWidgetItem*> hardgrps, ins, outs, maths, conditionals, values, loops, arrays;
+    hardgrps<<inputs<<outputs<<math<<cond<<value<<loop<<array<<varname<<preview;
     ins<<surfin<<dispin<<volin<<lin;
     outs<<surfout<<dispout<<volout<<lout;
     maths<<madd<<msub<<mmult<<mdiv<<mdot;
     conditionals<<ifcont<<cgr<<csm<<ceq<<cnot<<cand<<cor;
     values<<color<<string<<float_<<vector;
     loops<<forloop<<whileloop<<illuminateloop<<illuminanceloop<<solarloop<<gatherloop;
+    arrays<<getarray<<setarray;
 
     hardnodes->addChildren(hardgrps);
     inputs->addChildren(ins);
@@ -160,6 +167,7 @@ void NodeLib::addBuildInNodes()
     cond->addChildren(conditionals);
     value->addChildren(values);
     loop->addChildren(loops);
+    array->addChildren(arrays);
     hardnodes->setExpanded(true);
 }
 

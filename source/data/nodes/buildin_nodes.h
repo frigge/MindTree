@@ -25,6 +25,11 @@
 namespace BuildIn
 {
     //Standard starting nodes:
+    //Array
+    DNode* getArray(DNSpace *space);
+    DNode* setArray(DNSpace *space);
+    DNode* VarName(DNSpace *space);
+
     //Inputs
     DNode* surfaceInput(DNSpace *space);
     DNode* displacementInput(DNSpace *space);

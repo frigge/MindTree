@@ -612,6 +612,14 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
         case 31:
             dnode = BuildIn::VVecNode(FRG::SpaceDataInFocus);
             break;
+        case 32:
+            dnode = BuildIn::getArray(FRG::SpaceDataInFocus);
+            break;
+        case 33:
+            dnode = BuildIn::setArray(FRG::SpaceDataInFocus);
+            break;
+        case 34:
+            dnode = BuildIn::VarName(FRG::SpaceDataInFocus);
         }
     }
     if(dnode)

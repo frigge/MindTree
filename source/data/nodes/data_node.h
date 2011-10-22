@@ -75,7 +75,8 @@ enum NType
 
     COLORNODE,          FLOATNODE,
     STRINGNODE,         VECTORNODE,
-    PREVIEW
+    PREVIEW, GETARRAY,  SETARRAY,
+    VARNAME
 };
 
 class VNode;
@@ -500,6 +501,33 @@ class InputNode : public DNode
 public:
     InputNode();
     InputNode(const InputNode* node);
+};
+
+class GetArrayNode : public DNode
+{
+public:
+    GetArrayNode(bool raw=false);
+    GetArrayNode(const GetArrayNode* node);
+
+    virtual void addSocket(DSocket *socket);
+};
+
+class SetArrayNode : public DNode
+{
+public:
+    SetArrayNode(bool raw=false);
+    SetArrayNode(const SetArrayNode *node);
+
+    virtual void addSocket(DSocket *socket);
+};
+
+class VarNameNode : public DNode
+{
+public:
+    VarNameNode(bool raw=false);
+    VarNameNode(const VarNameNode* node);
+
+    virtual void addSocket(DSocket *socket);
 };
 
 #endif // DATA_NODE_H

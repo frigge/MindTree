@@ -328,65 +328,98 @@ QDataStream &operator <<(QDataStream &stream, DNode  *node)
 DNode *DNode::newNode(QString name, NType t, int insize, int outsize)
 {
     DNode *node;
-    if(t==CONTAINER)
-        node = new ContainerNode(name, true);
-    else if (t == FOR)
-        node = new ForNode(name, true);
-    else if (t == WHILE)
-        node = new WhileNode(name, true);
-    else if (t == GATHER)
-        node = new GatherNode(name, true);
-    else if (t == SOLAR)
-        node = new SolarNode(name, true);
-    else if (t == ILLUMINATE)
-        node = new IlluminateNode(name, true);
-    else if (t == ILLUMINANCE)
-        node = new IlluminanceNode(name, true);
-    else if (t == CONDITIONCONTAINER)
-        node = new ConditionContainerNode(name, true);
-    else if(t == FUNCTION)
-        node = new FunctionNode();
-    else if(t == MULTIPLY
-            ||t == DIVIDE
-            ||t == ADD
-            ||t == SUBTRACT
-            ||t == DOTPRODUCT)
-        node = new MathNode(t, true);
-    else if(t == GREATERTHAN
-            ||t == SMALLERTHAN
-            ||t == EQUAL
-            ||t == AND
-            ||t == OR
-            ||t == NOT)
-        node = new ConditionNode(t, true);
-    else if(t == COLORNODE)
-        node = new ColorValueNode(name, true);
-    else if(t == FLOATNODE)
-        node = new FloatValueNode(name, true);
-    else if(t == STRINGNODE)
-        node = new StringValueNode(name, true);
-    else if(t == VECTORNODE)
-        node = new VectorValueNode(name, true);
-    else if(t == INSOCKETS
-            ||t == OUTSOCKETS)
-        node = new SocketNode(insize == 0 ? OUT : IN, 0, true);
-    else if(t == LOOPINSOCKETS
-            ||t == LOOPOUTSOCKETS)
-        node = new LoopSocketNode(insize == 0 ? OUT : IN, 0, true);
-    else if(t == SURFACEOUTPUT
-            ||t == DISPLACEMENTOUTPUT
-            ||t == VOLUMEOUTPUT
-            ||t == LIGHTOUTPUT)
-        node = new OutputNode();
-    else if(t == SURFACEINPUT
-            ||t == DISPLACEMENTINPUT
-            ||t == VOLUMEINPUT
-            ||t == LIGHTINPUT)
-        node = new InputNode();
-    else if(t == PREVIEW)
-        node = new DShaderPreview(true);
-    else
-        node = new DNode();
+    switch(t)
+    {
+        case CONTAINER:
+            node = new ContainerNode(name, true);
+            break;
+        case FOR:
+            node = new ForNode(name, true);
+            break;
+        case WHILE:
+            node = new WhileNode(name, true);
+            break;
+        case GATHER:
+            node = new GatherNode(name, true);
+            break;
+        case SOLAR:
+            node = new SolarNode(name, true);
+            break;
+        case ILLUMINATE:
+            node = new IlluminateNode(name, true);
+            break;
+        case ILLUMINANCE:
+            node = new IlluminanceNode(name, true);
+            break;
+        case CONDITIONCONTAINER:
+            node = new ConditionContainerNode(name, true);
+            break;
+        case FUNCTION:
+            node = new FunctionNode();
+            break;
+        case MULTIPLY:
+        case DIVIDE:
+        case ADD:
+        case SUBTRACT:
+        case DOTPRODUCT:
+            node = new MathNode(t, true);
+            break;
+        case GREATERTHAN:
+        case SMALLERTHAN:
+        case EQUAL:
+        case AND:
+        case OR:
+        case NOT:
+            node = new ConditionNode(t, true);
+            break;
+        case COLORNODE:
+            node = new ColorValueNode(name, true);
+            break;
+        case FLOATNODE:
+            node = new FloatValueNode(name, true);
+            break;
+        case STRINGNODE:
+            node = new StringValueNode(name, true);
+            break;
+        case VECTORNODE:
+            node = new VectorValueNode(name, true);
+            break;
+        case INSOCKETS:
+        case OUTSOCKETS:
+            node = new SocketNode(insize == 0 ? OUT : IN, 0, true);
+            break;
+        case LOOPINSOCKETS:
+        case LOOPOUTSOCKETS:
+            node = new LoopSocketNode(insize == 0 ? OUT : IN, 0, true);
+            break;
+        case SURFACEINPUT:
+        case DISPLACEMENTINPUT:
+        case VOLUMEINPUT:
+        case LIGHTINPUT:
+            node = new InputNode();
+            break;
+        case SURFACEOUTPUT:
+        case DISPLACEMENTOUTPUT:
+        case VOLUMEOUTPUT:
+        case LIGHTOUTPUT:
+            node = new OutputNode();
+            break;
+        case GETARRAY:
+            node = new GetArrayNode(true);
+            break;
+        case SETARRAY:
+            node = new SetArrayNode(true);
+            break;
+        case VARNAME:
+            node = new VarNameNode(true);
+            break;
+        case PREVIEW:
+            node = new DShaderPreview(true);
+            break;
+        default:
+            node = new DNode();
+            break;
+    }
 
     node->setNodeName(name);
     node->setNodeType(t);
@@ -1883,3 +1916,54 @@ InputNode::InputNode(const InputNode* node)
     : DNode(node)
 {
 }
+
+GetArrayNode::GetArrayNode(bool raw)
+    : DNode("GetArray")
+{
+    setNodeType(GETARRAY);
+    if(!raw)
+    {
+        new DinSocket("Array", VARIABLE, this);
+        new DinSocket("Index", FLOAT, this);
+        new DoutSocket("value", VARIABLE, this);
+    }
+}
+
+void GetArrayNode::addSocket(DSocket *socket)    
+{
+   DNode::addSocket(socket); 
+   socket->addTypeCB(new SInTypeToOutTypeCB(socket));
+}
+
+SetArrayNode::SetArrayNode(bool raw)
+    : DNode("SetArray")
+{
+    setNodeType(SETARRAY);
+    if(!raw){
+        new DinSocket("value", VARIABLE, this);
+        new DinSocket("Index", FLOAT, this);
+        new DoutSocket("Array", VARIABLE, this);
+    }
+}
+
+void SetArrayNode::addSocket(DSocket *socket)    
+{
+   DNode::addSocket(socket); 
+   socket->addTypeCB(new SInTypeToOutTypeCB(socket));
+}
+
+VarNameNode::VarNameNode(bool raw)
+    : DNode("Var Name")
+{
+    setNodeType(VARNAME);
+    if(!raw){
+        new DinSocket("def", VARIABLE, this);
+        new DoutSocket("variable", VARIABLE, this);
+    }
+}
+void VarNameNode::addSocket(DSocket *socket)    
+{
+   DNode::addSocket(socket); 
+   socket->addTypeCB(new SInTypeToOutTypeCB(socket));
+}
+

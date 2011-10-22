@@ -21,8 +21,30 @@
 #include "data_node.h"
 #include "source/graphics/nodes/graphics_node.h"
 #include "source/graphics/base/vnspace.h"
+#include "source/data/nodes/data_node.h"
 #include "source/data/base/frg.h"
 #include "source/data/base/project.h"
+
+DNode* BuildIn::getArray(DNSpace *space)    
+{
+    GetArrayNode *node = new GetArrayNode();
+    space->addNode(node);
+    return node;
+};
+
+DNode* BuildIn::setArray(DNSpace *space)    
+{
+    SetArrayNode *node = new SetArrayNode();
+    space->addNode(node);
+    return node;
+};
+
+DNode* BuildIn::VarName(DNSpace *space)    
+{
+    VarNameNode *node = new VarNameNode();
+    space->addNode(node);
+    return node;
+};
 
 DNode* BuildIn::surfaceInput(DNSpace *space)
 {

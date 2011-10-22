@@ -75,6 +75,9 @@ private:
     QString writeFloat(const DoutSocket *socket);
     QString writeVector(const DoutSocket *socket);
     QString writeColor(const DoutSocket *socket);
+    void writeGetArray(const DoutSocket *socket);
+    void writeSetArray(const DoutSocket *socket);
+    void writeVariable(const DoutSocket *socket);
 
     const DinSocket *stepUp(const DoutSocket *socket);
 

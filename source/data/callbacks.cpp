@@ -67,3 +67,13 @@ void SNchangeTypeCB::exec()
     socket->setType(socket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketInContainer(socket)->getType());
 }
 
+SInTypeToOutTypeCB::SInTypeToOutTypeCB(DSocket *socket)
+    : socket(socket)
+{
+}
+
+void SInTypeToOutTypeCB::exec()    
+{
+    if(socket->getDir() == IN)
+        socket->getNode()->getOutSockets().first()->setType(socket->getType());
+}

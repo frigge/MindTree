@@ -40,6 +40,8 @@ private:
     std::list<Callback*> list;
 };
 
+/*  Callbacks */
+
 class VNodeUpdateCallback : public Callback
 {
 public:
@@ -64,6 +66,16 @@ class SNchangeTypeCB : public Callback
 {
 public:
     SNchangeTypeCB(DSocket *socket);
+    virtual void exec();
+
+private:
+    DSocket *socket;
+};
+
+class SInTypeToOutTypeCB : public Callback
+{
+public:
+    SInTypeToOutTypeCB(DSocket *socket);
     virtual void exec();
 
 private:

@@ -96,6 +96,10 @@ void ShaderWriter::setVariables(DNode *node)
             
         DNode *cntdNode = cntdSocket->getNode();
         QString varname_raw = cntdSocket->getName().replace(" ", "_");
+        int ar = varname_raw.indexOf("[");
+        if(ar >= 0)
+            varname_raw = varname_raw.left(ar);
+
         DoutSocket *simSocket = getSimilar(cntdSocket);
         if(variableCnt.contains(varname_raw)
             && simSocket)
@@ -427,9 +431,67 @@ void ShaderWriter::evalSocketValue(const DoutSocket *socket)
     case INSOCKETS:
         evalSocketValue(stepUp(socket)->getCntdSocket());
         break;
+    case GETARRAY:
+        writeGetArray(socket);
+        break;
+    case SETARRAY:
+        writeSetArray(socket);
+        break;
+    case VARNAME:
+        writeVariable(socket);
+        break;
     default:
         break;
     }
+}
+
+void ShaderWriter::writeGetArray(const DoutSocket *socket)    
+{
+    const DinSocket *array = socket->getNode()->getInSockets().at(0);
+    const DinSocket *index = socket->getNode()->getInSockets().at(1);
+    QString output;
+    output.append(newline());
+    initVar(socket);
+    output.append(getVariable(socket));
+    output.append(" = ");
+    output.append(writeVarName(array));
+    gotoNextNode(array);
+    output.append("[");
+    output.append(writeVarName(index));
+    gotoNextNode(index);
+    output.append("];");
+    code.append(output);
+}
+
+void ShaderWriter::writeSetArray(const DoutSocket *socket)    
+{
+    const DinSocket *array = socket->getNode()->getInSockets().at(0);
+    const DinSocket *index = socket->getNode()->getInSockets().at(1);
+    QString output;
+    output.append(newline());
+    initVar(socket);
+    output.append(writeVarName(array));
+    gotoNextNode(array);
+    output.append("[");
+    output.append(writeVarName(index));
+    gotoNextNode(index);
+    output.append("]");
+    output.append(" = ");
+    output.append(getVariable(socket));
+    output.append(";");
+    code.append(output);
+}
+
+void ShaderWriter::writeVariable(const DoutSocket *socket)    
+{
+    QString output;
+    output.append(newline());
+    initVar(socket);
+    output.append(getVariable(socket));
+    output.append(" = ");
+    output.append(writeVarName(socket->getNode()->getInSockets().first()));
+    output.append(";");
+    code.append(output);
 }
 
 void ShaderWriter::writeFunction(const DoutSocket *socket)
