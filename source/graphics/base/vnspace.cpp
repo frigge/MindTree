@@ -663,6 +663,9 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
                 }
             }
         }
+        foreach(DNode *node, selectedNodes())
+            node->getNodeVis()->setSelected(false);
+        dnode->getNodeVis()->setSelected(true);
     }
 }
 
