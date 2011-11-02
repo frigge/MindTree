@@ -73,7 +73,7 @@ void VNodeLink::initVNodeLink()
 {
     inSocket = 0;
     outSocket = 0;
-    setZValue(zValue()-0.1);
+    setZValue(0);
     setFlag(ItemIsMovable, false);
     setFlag(ItemIsSelectable, false);
     //setFlag(ItemIgnoresTransformations, true);
@@ -225,9 +225,9 @@ QPainterPath VNodeLink::drawPath()
 void VNodeLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     painter->setRenderHint(QPainter::Antialiasing);
-    painter->setClipRect(option->exposedRect);
+    //painter->setClipRect(option->exposedRect);
     QPen linkpen;
-    linkpen.setCosmetic(true);
+    //linkpen.setCosmetic(true);
     if (outSocket)
     {
         linkpen.setWidthF(1.5);
@@ -245,5 +245,6 @@ void VNodeLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     }
     painter->setPen(linkpen);
     painter->setBrush(Qt::NoBrush);
-    painter->drawPath(drawPath());
+    //painter->drawPath(drawPath());
+    painter->drawLine(out, in);
 };

@@ -235,6 +235,7 @@ public:
 
 public slots:
     void writeCode();
+    void viewCode();
     void changeName();
     void changeDir();
     void writeAndCompile();

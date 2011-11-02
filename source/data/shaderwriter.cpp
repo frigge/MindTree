@@ -21,44 +21,18 @@
 
 #include "source/data/nodes/data_node.h"
 
-ShaderWriter::ShaderWriter(DNode *start)
-    : start(start)
+ShaderCodeGenerator::ShaderCodeGenerator(DNode *start)
+    : start(start), tabLevel(1)
+{
+}
+
+void ShaderCodeGenerator::init()    
 {
     setVariables();
-    tabLevel = 1;
     QString outputvar;
-
-    switch(start->getNodeType())
-    {
-    case SURFACEOUTPUT:
-    case PREVIEW:
-        addToShaderHeader("surface ");
-        addToShaderHeader(start->getDerived<OutputNode>()->getShaderName());
-        addToShaderHeader("(");
-        break;
-    case DISPLACEMENTOUTPUT:
-        addToShaderHeader("displacement ");
-        addToShaderHeader(start->getDerived<OutputNode>()->getShaderName());
-        addToShaderHeader("(");
-        break;
-    case VOLUMEOUTPUT:
-        addToShaderHeader("volume ");
-        addToShaderHeader(start->getDerived<OutputNode>()->getShaderName());
-        addToShaderHeader("(");
-        break;
-    case LIGHTOUTPUT:
-        addToShaderHeader("light ");
-        addToShaderHeader(start->getDerived<OutputNode>()->getShaderName());
-        addToShaderHeader("(");
-        break;
-    default:
-        break;
-    }
-
-
     foreach(const DinSocket *socket, start->getInSockets())
     {
-        if(!socket->getCntdSocket())
+        if(!socket->getCntdFunctionalSocket())
             continue;
         if(!start->getInSockets().startsWith(const_cast<DinSocket*>(socket)))
             code.append(newline());
@@ -76,7 +50,7 @@ ShaderWriter::ShaderWriter(DNode *start)
     }
 }
 
-void ShaderWriter::setVariables(DNode *node)    
+void ShaderCodeGenerator::setVariables(DNode *node)    
 {
     if(!node)
     {
@@ -87,6 +61,13 @@ void ShaderWriter::setVariables(DNode *node)
 
     foreach(DinSocket *socket, node->getInSockets())
     {
+        DoutSocket *cntdWorkSocket = socket->getCntdWorkSocket();
+        if(cntdWorkSocket) {
+            DNode *cntdWorkNode = cntdWorkSocket->getNode();
+            if(cntdWorkSocket->getNode()->isContainer()
+                &&!cntdWorkNode->getNodeType() == CONTAINER)
+                setVariables(cntdWorkNode);
+        }
         DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
         if(!cntdSocket)
             continue;
@@ -111,12 +92,12 @@ void ShaderWriter::setVariables(DNode *node)
     }
 }
 
-QString ShaderWriter::getVariable(const DoutSocket* socket)const
+QString ShaderCodeGenerator::getVariable(const DoutSocket* socket)const
 {
     return variables.value(socket);
 }
 
-DoutSocket* ShaderWriter::getSimilar(DoutSocket *socket)    
+DoutSocket* ShaderCodeGenerator::getSimilar(DoutSocket *socket)    
 {
     DNode *node = socket->getNode();
     DNode *simnode = 0;
@@ -150,12 +131,12 @@ DoutSocket* ShaderWriter::getSimilar(DoutSocket *socket)
             return out;
 }
 
-void ShaderWriter::insertVariable(const DoutSocket *socket, QString variable)    
+void ShaderCodeGenerator::insertVariable(const DoutSocket *socket, QString variable)    
 {
     variables.insert(socket, variable);
 }
 
-QString ShaderWriter::newline()
+QString ShaderCodeGenerator::newline()
 {
     QString nl;
     nl.append("\n");
@@ -164,170 +145,73 @@ QString ShaderWriter::newline()
     return nl;
 }
 
-void ShaderWriter::initVar(const DoutSocket *socket)
-{
-    if(isInputVar(socket))return;
-    QString VDstr;
-    switch(socket->getType())
-    {
-	case VARIABLE:
-	case CONDITION:
-	break;
-    case COLOR:
-        VDstr.append("color ");
-        break;
-    case FLOAT:
-         VDstr.append("float ");
-        break;
-    case STRING:
-         VDstr.append("string ");
-        break;
-    case VECTOR:
-         VDstr.append("vector ");
-        break;
-    case POINT:
-         VDstr.append("point ");
-        break;
-    case NORMAL:
-         VDstr.append("normal ");
-        break;
-    }
-    VDstr.append(getVariable(socket));
-    VDstr.append(";");
-    addToVarDeclares(VDstr);
-}
-
-bool ShaderWriter::isInputVar(const DoutSocket *socket)
-{
-    QStringList vars;
-    vars<<"P"<<"N"<<"I"<<"s"<<"t"<<"u"<<"v"<<"Cl"<<"Cs"<<"Os"<<"L"<<"Oi"<<"Ci"<<"Ps"<<"Ns"<<"du"<<"dv";
-    foreach(QString var, vars)
-    {
-        if(var == getVariable(socket))
-            return true;
-    }
-    return false;
-}
-
-void ShaderWriter::incTabLevel()
+void ShaderCodeGenerator::incTabLevel()
 {
     tabLevel++;
 }
 
-void ShaderWriter::decTabLevel()
+void ShaderCodeGenerator::decTabLevel()
 {
     tabLevel--;
 }
 
-void ShaderWriter::outputVar(const DinSocket *socket)
-{
-    QString ending, OVstr;
-    OVstr.append("output ");
-    switch(socket->getType())
-    {
-	case CONDITION:
-	case VARIABLE:
-	break;
-    case COLOR:
-        OVstr.append("color ");
-        ending = "(0, 0, 0)";
-        break;
-    case FLOAT:
-         OVstr.append("float ");
-         ending = "0";
-        break;
-    case STRING:
-         OVstr.append("string ");
-         ending = "";
-        break;
-    case VECTOR:
-         OVstr.append("vector ");
-         ending = "(0, 0, 0)";
-        break;
-    case POINT:
-         OVstr.append("point ");
-         ending = "(0, 0, 0)";
-        break;
-    case NORMAL:
-         OVstr.append("normal ");
-         ending = "(0, 0, 0)";
-        break;
-    }
-
-    OVstr.append(socket->getName());
-    OVstr.append(" = ");
-    OVstr.append(ending);
-    OVstr.append(";");
-    addToOutputVars(OVstr);
-}
-
-void ShaderWriter::gotoNextNode(const DinSocket *socket)
+void ShaderCodeGenerator::gotoNextNode(const DinSocket *socket)
 {
     if(!socket->getCntdSocket())
         return;
 
     if(!written_sockets.contains(writeVarName(socket)))
     {
-        evalSocketValue(socket->getCntdSocketConst());
+        evalSocketValue(socket->getCntdSocket());
         written_sockets.append(writeVarName(socket));
     }
     return;
 }
 
-QString ShaderWriter::writeVarName(const DinSocket *insocket)
+QString ShaderCodeGenerator::writeVarName(const DinSocket *insocket)
 {
-    if(!insocket->getCntdSocket())
+    if(!insocket->getCntdFunctionalSocket())
         return "";
 
-    const DoutSocket *prevsocket = insocket->getCntdSocket();
-    const DinSocket *mapsocket = 0;
+    const DoutSocket *prevsocket = insocket->getCntdFunctionalSocket();
     const DNode *node = prevsocket->getNode();
 
-    ContainerNode *cnode = (ContainerNode*)node;
-    if(node->isContainer())
+    switch(node->getNodeType())
     {
-        mapsocket = cnode->getSocketInContainer(prevsocket)->toIn();
-        return writeVarName(mapsocket);
-    }
-    else if(node->getNodeType() == INSOCKETS
-            ||node->getNodeType() == LOOPINSOCKETS)
-    {
-        return writeVarName(stepUp(prevsocket));
-    }
-    else if(node->getNodeType() == COLORNODE)
-    {
-        return writeColor(prevsocket);
-    }
-    else if(node->getNodeType() == FLOATNODE)
-    {
-        return writeFloat(prevsocket);
-    }
-    else if(node->getNodeType() == STRINGNODE)
-    {
-        return writeString(prevsocket);
-    }
-    else if(node->getNodeType() == VECTORNODE)
-    {
-        return writeVector(prevsocket);
-    }
-    else if(DNode::isMathNode(node))
-    {
-        return createMath(prevsocket);
-    }
-    else
-    {
-        return getVariable(prevsocket);
+        case COLORNODE:
+            return writeColor(prevsocket);
+        case FLOATNODE:
+            return writeFloat(prevsocket);
+        case STRINGNODE:
+            return writeString(prevsocket);
+        case VECTORNODE:
+            return writeVector(prevsocket);
+        case ADD:
+        case SUBTRACT:
+        case MULTIPLY:
+        case DIVIDE:
+        case DOTPRODUCT:
+            return createMath(prevsocket);
+        case GREATERTHAN:
+        case SMALLERTHAN:
+        case EQUAL:
+        case AND:
+        case OR:
+        case NOT:
+            return createCondition(prevsocket);
+        default:
+            return getVariable(prevsocket);
     }
 }
 
-const DinSocket *ShaderWriter::stepUp(const DoutSocket *socket)
+const DinSocket *ShaderCodeGenerator::stepUp(const DoutSocket *socket)
 {
     const ContainerNode *node = static_cast<const SocketNode*>(socket->getNode())->getContainer();
     const DinSocket *mapsocket = static_cast<const DinSocket*>(node->getSocketOnContainer(socket));
     return mapsocket;
 }
 
-QString ShaderWriter::createCondition(const DoutSocket *socket)
+QString ShaderCodeGenerator::createCondition(const DoutSocket *socket)
 {
     switch(socket->getNode()->getNodeType())
     {
@@ -349,7 +233,7 @@ QString ShaderWriter::createCondition(const DoutSocket *socket)
 	return "";
 }
 
-QString ShaderWriter::createMath(const DoutSocket *socket)
+QString ShaderCodeGenerator::createMath(const DoutSocket *socket)
 {
     switch(socket->getNode()->getNodeType())
     {
@@ -374,7 +258,7 @@ QString ShaderWriter::createMath(const DoutSocket *socket)
 	return "";
 }
 
-void ShaderWriter::writeMathToVar(const DoutSocket *socket)    
+void ShaderCodeGenerator::writeMathToVar(const DoutSocket *socket)    
 {
     QString output;
     output.append(newline());
@@ -384,7 +268,7 @@ void ShaderWriter::writeMathToVar(const DoutSocket *socket)
     code.append(output);
 }
 
-void ShaderWriter::evalSocketValue(const DoutSocket *socket)
+void ShaderCodeGenerator::evalSocketValue(const DoutSocket *socket)
 {
     if(!socket)return;
     switch(socket->getNode()->getNodeType())
@@ -403,18 +287,6 @@ void ShaderWriter::evalSocketValue(const DoutSocket *socket)
         break;
     case WHILE:
         writeWhileLoop(socket);
-        break;
-    case GATHER:
-        writeRSLLoop(socket);
-        break;
-    case ILLUMINANCE:
-        writeRSLLoop(socket);
-        break;
-    case ILLUMINATE:
-        writeRSLLoop(socket);
-        break;
-    case SOLAR:
-        writeRSLLoop(socket);
         break;
     case COLORNODE:
         writeColor(socket);
@@ -441,11 +313,12 @@ void ShaderWriter::evalSocketValue(const DoutSocket *socket)
         writeVariable(socket);
         break;
     default:
+        writeCustom(socket);
         break;
     }
 }
 
-void ShaderWriter::writeGetArray(const DoutSocket *socket)    
+void ShaderCodeGenerator::writeGetArray(const DoutSocket *socket)    
 {
     const DinSocket *array = socket->getNode()->getInSockets().at(0);
     const DinSocket *index = socket->getNode()->getInSockets().at(1);
@@ -463,7 +336,7 @@ void ShaderWriter::writeGetArray(const DoutSocket *socket)
     code.append(output);
 }
 
-void ShaderWriter::writeSetArray(const DoutSocket *socket)    
+void ShaderCodeGenerator::writeSetArray(const DoutSocket *socket)    
 {
     const DinSocket *array = socket->getNode()->getInSockets().at(0);
     const DinSocket *index = socket->getNode()->getInSockets().at(1);
@@ -482,7 +355,7 @@ void ShaderWriter::writeSetArray(const DoutSocket *socket)
     code.append(output);
 }
 
-void ShaderWriter::writeVariable(const DoutSocket *socket)    
+void ShaderCodeGenerator::writeVariable(const DoutSocket *socket)    
 {
     QString output;
     output.append(newline());
@@ -494,7 +367,7 @@ void ShaderWriter::writeVariable(const DoutSocket *socket)
     code.append(output);
 }
 
-void ShaderWriter::writeFunction(const DoutSocket *socket)
+void ShaderCodeGenerator::writeFunction(const DoutSocket *socket)
 {
     QString output;
     initVar(socket);
@@ -522,29 +395,13 @@ void ShaderWriter::writeFunction(const DoutSocket *socket)
     code.append(output);
 }
 
-void ShaderWriter::writeContainer(const DoutSocket *socket)
+void ShaderCodeGenerator::writeContainer(const DoutSocket *socket)
 {
-    ContainerNode *cnode = (ContainerNode*)socket->getNode();
-    const DinSocket *mapped_socket = static_cast<const DinSocket*>(cnode->getSocketInContainer(socket));
-    QString output;
-//    if(cnode->getInSockets().isEmpty())
-//    {
-//        if (MathNode::isMathNode(mapped_socket->getCntdSocket()->getNode()))
-//        {
-//            initVar(socket);
-//            output.append(newline());
-//            output.append(getVariable(socket));
-//            output.append(" = ");
-//            output.append(writeVarName(mapped_socket));
-//            output.append(";");
-//        }
-//    }
-    gotoNextNode(mapped_socket);
-    if(output != "")
-        code.append(output);
+    const ContainerNode *cnode = socket->getNode()->getDerivedConst<ContainerNode>();
+    gotoNextNode(cnode->getSocketInContainer(socket)->toIn());
 }
 
-QString ShaderWriter::writeMath(const DoutSocket *socket, QString mathOperator)
+QString ShaderCodeGenerator::writeMath(const DoutSocket *socket, QString mathOperator)
 {
     QString output;
     output.append("(");
@@ -576,7 +433,7 @@ QString ShaderWriter::writeMath(const DoutSocket *socket, QString mathOperator)
     return output;
 }
 
-QString ShaderWriter::writeCondition(const DoutSocket *socket, QString conditionOperator)
+QString ShaderCodeGenerator::writeCondition(const DoutSocket *socket, QString conditionOperator)
 {
     QString output;
     output.append("(");
@@ -584,11 +441,18 @@ QString ShaderWriter::writeCondition(const DoutSocket *socket, QString condition
     foreach(const DinSocket *nsocket, socket->getNode()->getInSockets())
     {
         i++;
-        if(nsocket->getCntdSocket())
-        {
-            output.append(writeVarName(nsocket));
-            gotoNextNode(nsocket);
-        }
+		if(nsocket->getCntdFunctionalSocket())
+		{
+            DNode *nextNode = nsocket->getCntdFunctionalSocket()->getNode();
+			if(DNode::isConditionNode(nextNode))
+				output.append(createMath(nsocket->getCntdFunctionalSocket()));
+			else
+			{
+				output.append(writeVarName(nsocket));
+				gotoNextNode(nsocket);
+			}
+
+		}
         if(i < socket->getNode()->getInSockets().size())
         {
             output.append(" ");
@@ -600,7 +464,7 @@ QString ShaderWriter::writeCondition(const DoutSocket *socket, QString condition
     return output;
 }
 
-void ShaderWriter::writeConditionContainer(const DoutSocket *socket)
+void ShaderCodeGenerator::writeConditionContainer(const DoutSocket *socket)
 {
     const DinSocket *mapped_socket = 0, *condition = 0;
     const ConditionContainerNode *node = static_cast<const ConditionContainerNode*>(socket->getNode());
@@ -608,7 +472,7 @@ void ShaderWriter::writeConditionContainer(const DoutSocket *socket)
     output.append(newline());
     output.append("if(");
     condition = node->getInSockets().first();
-    output.append(createCondition(condition->getCntdSocket()));
+    output.append(writeVarName(condition));
     output.append(")");
     output.append(newline());
     output.append("{");
@@ -622,18 +486,18 @@ void ShaderWriter::writeConditionContainer(const DoutSocket *socket)
     code.append("}");
 }
 
-QString ShaderWriter::writeNot(const DoutSocket *socket)
+QString ShaderCodeGenerator::writeNot(const DoutSocket *socket)
 {
     QString output;
     const DinSocket *condition;
     const DNode *node = socket->getNode();
     condition = node->getInSockets().first();
     output.append("!");
-    output.append(createCondition(condition->getCntdSocket()));
+    output.append(createCondition(condition->getCntdFunctionalSocket()));
     return output;
 }
 
-void ShaderWriter::writeForLoop(const DoutSocket *socket)
+void ShaderCodeGenerator::writeForLoop(const DoutSocket *socket)
 {
     QString output;
     const DNode *node = socket->getNode();
@@ -650,62 +514,33 @@ void ShaderWriter::writeForLoop(const DoutSocket *socket)
     output.append("; step < ");
     output.append(writeVarName(end));
     gotoNextNode(end);
-    output.append(";");
-    output.append("; step++)");
+    output.append("; step+=");
+    output.append(writeVarName(step));
+    output.append(")");
     output.append(newline());
     output.append("{");
     incTabLevel();
-    output.append(newline());
     code.append(output);
     const ContainerNode *cnode = node->getDerivedConst<ContainerNode>();
     mapped_socket = cnode->getSocketInContainer(socket)->toIn();
     gotoNextNode(mapped_socket);
     decTabLevel();
+    code.append(newline());
     code.append("}");
 }
 
-void ShaderWriter::writeWhileLoop(const DoutSocket *socket)
+void ShaderCodeGenerator::writeWhileLoop(const DoutSocket *socket)
 {
     QString output;
     const DNode *node = socket->getNode();
     code.append(output);
 }
 
-void ShaderWriter::writeRSLLoop(const DoutSocket *socket)
+void ShaderCodeGenerator::writeCustom(const DoutSocket *socket)    
 {
-    QString output;
-    const DNode *node = socket->getNode();
 }
 
-QString ShaderWriter::writeColor(const DoutSocket *socket)
-{
-    QString output;
-    QString value;
-    ColorValueNode *colornode = (ColorValueNode*)socket->getNode();
-    value.append("color(");
-    QColor color = colornode->getValue();
-    value.append(QString::number(color.redF()));
-    value.append(", ");
-    value.append(QString::number(color.greenF()));
-    value.append(", ");
-    value.append(QString::number(color.blueF()));
-    value.append(")");
-    if(colornode->isShaderInput())
-    {
-        output.append("color ");
-        output.append(getVariable(socket));
-        output.append(" = ");
-        output.append(value);
-        output.append(";");
-        addToShaderParameter(output);
-        output = getVariable(socket);
-        return output;
-    }
-    else
-        return value;
-}
-
-QString ShaderWriter::writeString(const DoutSocket *socket)
+QString ShaderCodeGenerator::writeString(const DoutSocket *socket)
 {
     QString output, value;
     StringValueNode *stringnode = (StringValueNode*)socket->getNode();
@@ -716,6 +551,8 @@ QString ShaderWriter::writeString(const DoutSocket *socket)
     {
         output.append("string ");
         output.append(getVariable(socket));
+        if(socket->isArray())
+            output.append("[" + QString::number(socket->getArrayLength()) + "]");
         output.append(" = ");
         output.append(value);
         output.append(";");
@@ -726,7 +563,7 @@ QString ShaderWriter::writeString(const DoutSocket *socket)
         return value;
 }
 
-QString ShaderWriter::writeFloat(const DoutSocket *socket)
+QString ShaderCodeGenerator::writeFloat(const DoutSocket *socket)
 {
     QString output, value;
     FloatValueNode *floatnode = (FloatValueNode*)socket->getNode();
@@ -735,6 +572,8 @@ QString ShaderWriter::writeFloat(const DoutSocket *socket)
     {
         output.append("float ");
         output.append(getVariable(socket));
+        if(socket->isArray())
+            output.append("[" + QString::number(socket->getArrayLength()) + "]");
         output.append(" = ");
         output.append(value);
         output.append(";");
@@ -744,32 +583,7 @@ QString ShaderWriter::writeFloat(const DoutSocket *socket)
     else return value;
 }
 
-QString ShaderWriter::writeVector(const DoutSocket *socket)
-{
-    QString output, value;
-    const VectorValueNode *node = socket->getNode()->getDerivedConst<VectorValueNode>();
-    value.append("vector(");
-    Vector vec = node->getValue();
-    value.append(QString::number(vec.x));
-    value.append(", ");
-    value.append(QString::number(vec.y));
-    value.append(", ");
-    value.append(QString::number(vec.z));
-    value.append(")");
-    if(node->isShaderInput())
-    {
-        output.append("vector ");
-        output.append(getVariable(socket));
-        output.append(" = ");
-        output.append(value);
-        output.append(";");
-        addToShaderParameter(output);
-        return getVariable(socket);
-    }
-    else return value;
-}
-
-QString ShaderWriter::getCode()
+QString ShaderCodeGenerator::getCode()
 {
     QString returncode;
     returncode.append(ShaderHeader);
@@ -778,28 +592,28 @@ QString ShaderWriter::getCode()
     returncode.append(")\n{\n");
     returncode.append("    /*Variable declarations*/");
     returncode.append(createVarDeclares());
-    returncode.append("\n\n    /*Begin of the RSL Code*/");
+    returncode.append("\n\n    /*Begin Code*/");
     returncode.append(code);
     returncode.append("\n}");
     return returncode;
 }
 
-void ShaderWriter::addToCode(QString c)
+void ShaderCodeGenerator::addToCode(QString c)
 {
     code.append(c);
 }
-void ShaderWriter::addToShaderHeader(QString s)
+void ShaderCodeGenerator::addToShaderHeader(QString s)
 {
     ShaderHeader.append(s);
 }
 
-void ShaderWriter::addToShaderParameter(QString s)
+void ShaderCodeGenerator::addToShaderParameter(QString s)
 {
     if(!ShaderParameter.contains(s))
         ShaderParameter.append(s);
 }
 
-QString ShaderWriter::createShaderParameterCode()
+QString ShaderCodeGenerator::createShaderParameterCode()
 {
     QString parameters;
     foreach(QString parameter, ShaderParameter)
@@ -818,13 +632,13 @@ QString ShaderWriter::createShaderParameterCode()
     return parameters;
 }
 
-void ShaderWriter::addToOutputVars(QString ov)
+void ShaderCodeGenerator::addToOutputVars(QString ov)
 {
     if(!OutputVars.contains(ov))
         OutputVars.append(ov);
 }
 
-QString ShaderWriter::createOutputVars()
+QString ShaderCodeGenerator::createOutputVars()
 {
     QString vars;
     foreach(QString var, OutputVars)
@@ -841,14 +655,14 @@ QString ShaderWriter::createOutputVars()
     return vars;
 }
 
-void ShaderWriter::addToVarDeclares(QString vd)
+void ShaderCodeGenerator::addToVarDeclares(QString vd)
 {
 
     if(!VarDeclares.contains(vd))
         VarDeclares.append(vd);
 }
 
-QString ShaderWriter::createVarDeclares()
+QString ShaderCodeGenerator::createVarDeclares()
 {
     QString vars;
     foreach(QString var, VarDeclares)
@@ -859,3 +673,47 @@ QString ShaderWriter::createVarDeclares()
     return vars;
 }
 
+DNode* ShaderCodeGenerator::getStart()    
+{
+    return start;
+}
+
+QList<QString> ShaderCodeGenerator::getWrittenSockets()    
+{
+    return written_sockets;
+}
+
+QString ShaderCodeGenerator::getVar()    
+{
+    return var;
+}
+
+QList<QString> ShaderCodeGenerator::getSocketNames()    
+{
+    return socketnames; 
+}
+
+QString ShaderCodeGenerator::getCodeCache()    
+{
+    return code;
+}
+
+QStringList ShaderCodeGenerator::getVarDeclares()    
+{
+    return VarDeclares;
+}
+
+QString ShaderCodeGenerator::getShaderHeader()    
+{
+    return ShaderHeader;
+}
+
+QStringList ShaderCodeGenerator::getShaderParameter()    
+{
+    return ShaderParameter;
+}
+
+QStringList ShaderCodeGenerator::getOutputVars()    
+{
+    return OutputVars;
+}

@@ -21,6 +21,16 @@
 #include "source/graphics/nodes/graphics_node.h"
 #include "source/data/nodes/data_node.h"
 
+CallbackList::CallbackList()
+    : block(false)
+{
+}
+
+void CallbackList::setBlock(bool b)    
+{
+    block = b; 
+}
+
 void CallbackList::add(Callback *cb)    
 {
     list.push_back(cb);    
@@ -33,11 +43,18 @@ void CallbackList::remove(Callback *cb)
 
 void CallbackList::operator()()    
 {
+    if(block)
+        return;
     for(std::list<Callback*>::iterator cb = list.begin(); cb != list.end(); ++cb)
     {
         Callback *callback = *cb;
         callback->exec();
     }
+}
+
+void CallbackList::clear()    
+{
+    list.clear();
 }
 
 VNodeUpdateCallback::VNodeUpdateCallback(VNode *nodeVis)
@@ -49,31 +66,34 @@ void VNodeUpdateCallback::exec()
     nodeVis->updateNodeVis();
 }
 
-SNchangeNameCB::SNchangeNameCB(DSocket *socket)
-    : socket(socket)
-{}
-
-void SNchangeNameCB::exec()    
-{
-    socket->setName(socket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketInContainer(socket)->getName());
-}
-
-SNchangeTypeCB::SNchangeTypeCB(DSocket *socket)
-    : socket(socket)
-{}
-
-void SNchangeTypeCB::exec()    
-{
-    socket->setType(socket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketInContainer(socket)->getType());
-}
-
-SInTypeToOutTypeCB::SInTypeToOutTypeCB(DSocket *socket)
-    : socket(socket)
+ScpNameCB::ScpNameCB(DSocket *src, DSocket *dst)
+    : src(src), dst(dst)
 {
 }
 
-void SInTypeToOutTypeCB::exec()    
+void ScpNameCB::exec()    
 {
-    if(socket->getDir() == IN)
-        socket->getNode()->getOutSockets().first()->setType(socket->getType());
+    if(dst->getName() != src->getName())
+        dst->setName(src->getName());
+}
+
+ScpTypeCB::ScpTypeCB(DSocket *src, DSocket *dst)
+    : src(src), dst(dst)
+{
+}
+
+void ScpTypeCB::exec()    
+{
+    if(dst->getType() != src->getType())
+        dst->setType(src->getType());
+}
+
+SsetToVarCB::SsetToVarCB(DSocket  *socket)
+    : socket(socket)
+{
+}
+
+void SsetToVarCB::exec()    
+{
+    socket->setType(VARIABLE);
 }

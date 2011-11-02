@@ -26,6 +26,7 @@ INCLUDEPATH += . \
 # Input
 HEADERS += source/data/callbacks.h \
            source/data/shaderwriter.h \
+           source/data/rslwriter.h \
            source/graphics/newnodeeditor.h \
            source/graphics/nodelib.h \
            source/graphics/nodelink.h \
@@ -33,6 +34,7 @@ HEADERS += source/data/callbacks.h \
            source/graphics/shader_view.h \
            source/graphics/shaderpreview.h \
            source/graphics/previewdock.h \
+           source/graphics/sourcedock.h \
            source/data/base/dnspace.h \
            source/data/base/frg.h \
            source/data/base/frg_shader_author.h \
@@ -46,6 +48,7 @@ HEADERS += source/data/callbacks.h \
            source/graphics/nodes/graphics_node_socket.h
 SOURCES += source/data/callbacks.cpp \
            source/data/shaderwriter.cpp \
+           source/data/rslwriter.cpp \
            source/graphics/newnodeeditor.cpp \
            source/graphics/nodelib.cpp \
            source/graphics/nodelink.cpp \
@@ -53,6 +56,7 @@ SOURCES += source/data/callbacks.cpp \
            source/graphics/shader_view.cpp \
            source/graphics/shaderpreview.cpp \
            source/graphics/previewdock.cpp \
+           source/graphics/sourcedock.cpp \
            source/data/base/dnspace.cpp \
            source/data/base/frg.cpp \
            source/data/base/frg_shader_author.cpp \

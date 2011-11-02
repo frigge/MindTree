@@ -85,6 +85,7 @@ public slots:
 protected:
     void createMenus();
     void createDocks();
+    void createSpaceDock();
 
 private:
     QList<DNSpace*>spaces;

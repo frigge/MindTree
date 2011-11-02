@@ -31,6 +31,7 @@
 #include "source/data/base/frg.h"
 #include "source/data/base/frg_shader_author.h"
 #include "source/graphics/previewdock.h"
+#include "source/graphics/sourcedock.h"
 
 unsigned short DShaderPreview::count = 0;
 
@@ -86,6 +87,7 @@ QHash<QString, PreviewScene> PreviewSceneEditor::getPreviews()
 
 void PreviewSceneEditor::updateEditFields(QListWidgetItem *current, QListWidgetItem *previous)    
 {
+    QDir::setCurrent(QApplication::applicationDirPath());
     QString filename("preview/"+current->text()+".sce");
     QFileInfo fileInfo(filename);
     if(fileInfo.exists())
@@ -120,6 +122,7 @@ void PreviewSceneEditor::updateFile(QString newval)
 
     previews[current] = prevsce;
     
+    QDir::setCurrent(QApplication::applicationDirPath());
     QString filename("preview/"+current->text()+".sce");
 
     QFile file(filename);
@@ -130,6 +133,7 @@ void PreviewSceneEditor::updateFile(QString newval)
 
 void PreviewSceneEditor::brScene()    
 {
+    QDir::setCurrent(QApplication::applicationDirPath());
     QString text = QFileDialog::getOpenFileName(0, "", "preview/"+previewScenes->currentItem()->text());
     text.replace(QDir::currentPath()+"/preview/"+previewScenes->currentItem()->text()+"/", "");
     if(text!="") scene->setText(text);
@@ -137,6 +141,7 @@ void PreviewSceneEditor::brScene()
 
 void PreviewSceneEditor::brMat()    
 {
+    QDir::setCurrent(QApplication::applicationDirPath());
     QString text = QFileDialog::getOpenFileName(0, "", "preview/"+previewScenes->currentItem()->text());
     text.replace(QDir::currentPath()+"/preview/"+previewScenes->currentItem()->text()+"/", "");
     if(text!="") material->setText(text);
@@ -144,6 +149,7 @@ void PreviewSceneEditor::brMat()
 
 void PreviewSceneEditor::brImg()    
 {
+    QDir::setCurrent(QApplication::applicationDirPath());
     QString text = QFileDialog::getOpenFileName(0, "", "preview/"+previewScenes->currentItem()->text());
     text.replace(QDir::currentPath()+"/preview/"+previewScenes->currentItem()->text()+"/", "");
     if(text!="") image->setText(text);
@@ -151,7 +157,8 @@ void PreviewSceneEditor::brImg()
 
 void PreviewSceneEditor::show()    
 {
-    QDir previewDir("preview/");
+    QDir previewDir(QCoreApplication::applicationDirPath());
+    previewDir.cd("preview");
     previewScenes->clear();
     QStringList entrylist = previewDir.entryList();
     entrylist.removeAll(".");
@@ -174,7 +181,8 @@ PreviewSceneCache::PreviewSceneCache()
 
 void PreviewSceneCache::updateCache()    
 {
-    QDir dir("preview");
+    QDir dir(QCoreApplication::applicationDirPath());
+    dir.cd("preview");
     QStringList entries = dir.entryList().filter(QRegExp(".+\.sce$"));
     previews.clear();
 
@@ -222,6 +230,7 @@ VShaderPreview::VShaderPreview(DShaderPreview *data)
 
 VShaderPreview::~VShaderPreview()
 {
+    delete cxtM;
     disconnect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)this, SLOT(render()));
     disconnect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)this, SLOT(render(DNode*)));
 }
@@ -233,10 +242,17 @@ void VShaderPreview::contextMenu()
     QAction *extAct = cxtM->addAction("External Scene");
     QAction *updateSceneAct = cxtM->addAction("Update Scene");
     QAction *detachPreview = cxtM->addAction("Detach Preview");
+    QAction *codeAction = cxtM->addAction("view source code");
     connect(prvAct, SIGNAL(triggered()), this, SLOT(changePreview()));
     connect(extAct, SIGNAL(triggered()), this, SLOT(externalPreview()));
     connect(updateSceneAct, SIGNAL(triggered()), this, SLOT(updateScene()));
     connect(detachPreview, SIGNAL(triggered()), this, SLOT(detachP()));
+    connect(codeAction, SIGNAL(triggered()), this, SLOT(viewCode()));
+}
+
+void VShaderPreview::viewCode()    
+{
+    data->getDerived<OutputNode>()->getSourceEdit()->show();    
 }
 
 void VShaderPreview::updateScene()    
@@ -369,6 +385,7 @@ void VShaderPreview::updateNodeVis()
 DShaderPreview::DShaderPreview(bool raw)
     : prevID(0), ext_scene(false), detached(false), dock(0)
 {
+    QDir::setCurrent(QApplication::applicationDirPath());
     setNodeType(PREVIEW);
 
     QDir libdir("preview");
@@ -404,6 +421,7 @@ DShaderPreview::DShaderPreview(bool raw)
 DShaderPreview::DShaderPreview(const DShaderPreview *preview)
     : OutputNode(preview), prevID(0), prevScene(preview->getPrevScene()), ext_scene(preview->isExtScene()), detached(false), dock(0)
 {
+    QDir::setCurrent(QApplication::applicationDirPath());
     setNodeType(PREVIEW);
     QString appdirstr(QCoreApplication::applicationDirPath());
     QDir appdir(appdirstr);
@@ -433,7 +451,10 @@ void DShaderPreview::setSpace(DNSpace *value)
         shadername += QString::number(prevID);
         changeName(shadername);
 
-        createTmpPrevDir();
+        if(!ext_scene)
+            createTmpPrevDir();
+        else
+            createTmpExtPrevDir();
         dock = new PreviewDock(this);
     }
     else
@@ -472,6 +493,7 @@ void DShaderPreview::setPrevScene(PreviewScene scene)
 
 void DShaderPreview::createTmpPrevDir()    
 {
+    QDir::setCurrent(QApplication::applicationDirPath());
     QDir::temp().mkdir(QString::number(prevID));
     QDir tmpdir(QDir::tempPath() + "/" + QString::number(prevID));
     QString tmppath = tmpdir.absolutePath();
@@ -489,6 +511,7 @@ void DShaderPreview::createTmpPrevDir()
 
 void DShaderPreview::createTmpExtPrevDir()    
 {
+    QDir::setCurrent(QApplication::applicationDirPath());
     QDir::temp().mkdir(QString::number(prevID));
     QDir tmpdir(QDir::tempPath() + "/" + QString::number(prevID));
     QString tmppath = tmpdir.absolutePath();
@@ -528,7 +551,10 @@ VNode * DShaderPreview::createNodeVis()
 {
     setNodeVis(new VShaderPreview(this));
 
-    createTmpPrevDir();
+    if(!ext_scene)
+        createTmpPrevDir();
+    else
+        createTmpExtPrevDir();
     timer.setInterval(200);
     timer.connect(&timer, SIGNAL(timeout()), getPreviewVis(), SLOT(updatePreview()));
     timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), getPreviewVis(), SLOT(updatePreview()));

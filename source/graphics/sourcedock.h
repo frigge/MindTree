@@ -19,6 +19,8 @@
 #include "QTextEdit"
 #include "QDockWidget"
 
+class OutputNode;
+class DNode;
 class SourceEdit : public QTextEdit
 {
     Q_OBJECT
@@ -27,6 +29,7 @@ public:
 
 public slots:
     void load(DNode *node);
+    void load();
 
 private:
     OutputNode *outnode;

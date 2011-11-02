@@ -38,7 +38,7 @@ VNSocket::VNSocket(DSocket *data, VNode *parent)
 	//setCacheMode(ItemCoordinateCache);
     setAcceptDrops(true);
     setAcceptHoverEvents(true);
-    setZValue(zValue()+0.2);
+    setZValue(zValue()+2);
     setFlag(ItemIsSelectable, false);
 //    setGraphicsEffect(new QGraphicsDropShadowEffect);
     createContextMenu();
@@ -48,12 +48,12 @@ VNSocket::VNSocket(DSocket *data, VNode *parent)
     cb = new VNodeUpdateCallback(parent);
     data->addRenameCB(cb);
 
-    if(data->isArray()) 
-    {
-        createArrCMEntry();
-        setWidth(width+4);
-        setHeight(height+4);
-    }
+    //if(data->isArray()) 
+    //{
+    //    createArrCMEntry();
+    //    setWidth(width+4);
+    //    setHeight(height+4);
+    //}
 }
 
 VNSocket::~VNSocket()
@@ -138,13 +138,13 @@ void VNSocket::createContextMenu()
     contextMenu = new QMenu;
     QAction *changeNameAction = contextMenu->addAction("Rename Socket");
     QAction *changeTypeAction = contextMenu->addAction("change Type");
-    QAction *changeArrayAction = contextMenu->addAction("Array");
-    changeArrayAction->setCheckable(true);
-    changeArrayAction->setChecked(data->isArray());
+//    QAction *changeArrayAction = contextMenu->addAction("Array");
+//    changeArrayAction->setCheckable(true);
+//    changeArrayAction->setChecked(data->isArray());
 
     connect(changeNameAction, SIGNAL(triggered()), this, SLOT(changeName()));
     connect(changeTypeAction, SIGNAL(triggered()), this, SLOT(changeType()));
-    connect(changeArrayAction, SIGNAL(triggered()), this, SLOT(setArray()));
+//    connect(changeArrayAction, SIGNAL(triggered()), this, SLOT(setArray()));
 }
 
 void VNSocket::createArrCMEntry()    
@@ -310,7 +310,8 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
     painter->setBrush(QBrush(color, Qt::SolidPattern));
     painter->setPen(Qt::NoPen);
-    painter->drawRoundedRect(-width/2, -height/2, width, height, 2.5, 2.5);
+    //painter->drawRoundedRect(-width/2, -height/2, width, height, 2.5, 2.5);
+    painter->drawEllipse(-width/2, -height/2, width, height);
 };
 
 void VNSocket::hoverEnterEvent(QGraphicsSceneHoverEvent *event)

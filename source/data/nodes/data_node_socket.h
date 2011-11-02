@@ -24,6 +24,38 @@
 #include "source/data/callbacks.h"
 
 class  DSocket;
+class DinSocket;
+class DoutSocket;
+typedef QList<DinSocket*> DinSocketList;
+typedef QList<DoutSocket*> DoutSocketList;
+
+
+typedef struct LLsocket
+{
+    LLsocket() : prev(0), next(0), socket(0) {}
+    struct LLsocket *prev, *next;
+    DSocket *socket;
+} LLsocket;
+
+class DSocketList
+{
+public:
+    DSocketList();
+    void add(DSocket *socket);
+    void move(unsigned short oldpos, unsigned short newpos);
+    DinSocketList returnAsInSocketList()const;
+    DoutSocketList returnAsOutSocketList()const;
+    unsigned short len();
+    void rm(DSocket *socket);
+
+protected:
+    void initList(DSocket *socket);
+    LLsocket* getLLlastSocket()const;
+    LLsocket* getLLsocketAt(unsigned short pos);
+
+private:
+    LLsocket *first;
+};
 
 class LoadSocketIDMapper
 {
@@ -103,18 +135,28 @@ public:
 	VNSocket* getSocketVis();
 	unsigned short getID() const;
 
+    void setIDName(QString name);
+    QString getIDName();
+
     void remRenameCB(Callback *cb);
     void addRenameCB(Callback *cb);
     void addTypeCB(Callback *cb);
     void remTypeCB(Callback *cb);
+    void addLinkCB(Callback *cb);
+    void remLinkCB(Callback *cb);
+    void addRmLinkCB(Callback *cb);
+    void remRmLinkCB(Callback *cb);
+    virtual void unblockAllCB();
+    virtual void blockAllCB();
 
-    bool isArray();
+    bool isArray() const;
     void setArray(unsigned short);
-    int getIndex();
+    int getIndex()const;
     void setIndex(int ind);
     void setArrayID(unsigned short value);
-    unsigned short getArrayID();
-    ArrayContainer* getArray();
+    unsigned short getArrayID()const;
+    ArrayContainer* getArray()const;  
+    int getArrayLength() const;
 
     static unsigned short count;
     static DNodeLink createLink(DSocket *socket1, DSocket *socket2);
@@ -122,7 +164,12 @@ public:
     static bool isCompatible(DSocket *s1, DSocket *s2);
     static DSocket* getSocket(unsigned short ID);
 
+protected:
+    CallbackList linkCallbacks;
+    CallbackList removeLinkCallbacks;
+
 private:
+    QString idName;
     QString name;
     socket_type type;
     socket_dir dir;
@@ -132,6 +179,7 @@ private:
     VNSocket *socketVis;
     unsigned short ID;
     unsigned short arrayID;
+    int arrayLength;
     ArrayContainer *array;
     CallbackList renameCallbacks;
     CallbackList changeTypeCallbacks;
@@ -172,6 +220,7 @@ public:
 	const DoutSocket* getCntdSocketConst() const;
     DoutSocket* getCntdSocket() const;
     DoutSocket* getCntdFunctionalSocket() const;
+    DoutSocket* getCntdWorkSocket() const;
 	void setCntdSocket(DoutSocket *socket);
     void cntdSocketFromID();
 	bool getToken() const;
@@ -185,6 +234,8 @@ private:
 	unsigned short tempCntdID;
     DoutSocket* cntdSocket;
     bool Token;
+    ScpNameCB *linkedNameCB;
+    ScpTypeCB *linkedTypeCB;
 };
 
 QDataStream& operator<<(QDataStream &stream, DinSocket *socket);
@@ -209,8 +260,5 @@ private:
     QList<DinSocket*> cntdSockets;
 	QString varname;
 };
-
-typedef QList<DinSocket*> DinSocketList;
-typedef QList<DoutSocket*> DoutSocketList;
 
 #endif // DATA_NODE_SOCKET_H

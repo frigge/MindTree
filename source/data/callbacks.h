@@ -32,12 +32,16 @@ public:
 class CallbackList
 {
 public:
+    CallbackList();
     void add(Callback *cb);
     void remove(Callback *cb);
     void operator()();
+    void clear();
+    void setBlock(bool b);
 
 private:
     std::list<Callback*> list;
+    bool block;
 };
 
 /*  Callbacks */
@@ -52,30 +56,30 @@ private:
     VNode *nodeVis;
 };
 
-class SNchangeNameCB : public Callback
+class ScpNameCB : public Callback
 {
 public:
-    SNchangeNameCB(DSocket *socket);
+    ScpNameCB(DSocket *src, DSocket *dst);
     virtual void exec();
 
 private:
-    DSocket *socket;
+    DSocket *src, *dst;
 };
 
-class SNchangeTypeCB : public Callback
+class ScpTypeCB : public Callback
 {
 public:
-    SNchangeTypeCB(DSocket *socket);
+    ScpTypeCB(DSocket *src, DSocket *dst);
     virtual void exec();
 
 private:
-    DSocket *socket;
+    DSocket *src, *dst;
 };
 
-class SInTypeToOutTypeCB : public Callback
+class SsetToVarCB : public Callback
 {
 public:
-    SInTypeToOutTypeCB(DSocket *socket);
+    SsetToVarCB(DSocket *socket);
     virtual void exec();
 
 private:

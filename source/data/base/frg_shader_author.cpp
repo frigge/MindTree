@@ -28,6 +28,9 @@
 #include "QMenu"
 #include "QDockWidget"
 
+#include "QDir"
+#include "iostream"
+
 #include "math.h"
 
 #include "source/data/base/frg.h"
@@ -57,9 +60,28 @@ frg_Shader_Author::frg_Shader_Author(QWidget *parent)
     setWindowTitle("frg Shader Author");
     resize(1000, 600);
 
-	FRG::Space = new VNSpace();
 
-    QHBoxLayout *layout = new QHBoxLayout;
+    //QWidget *widget = new QWidget;
+    //widget->setMaximumSize(1, 1);
+    //setCentralWidget(widget);
+
+    setDockNestingEnabled(true);
+
+    createSpaceDock();
+    toolbar = addToolBar("Node Path");
+    updateToolBar();
+    createMenus();
+    createDocks();
+    FRG::previewEditor = new PreviewSceneEditor();
+    FRG::previewEditor->hide();
+
+    statusBar()->showMessage("Welcome to frg Shader Author");
+	newfile();
+};
+
+void frg_Shader_Author::createSpaceDock()    
+{
+	FRG::Space = new VNSpace();
 
     view = new Shader_View(this);
 
@@ -67,23 +89,10 @@ frg_Shader_Author::frg_Shader_Author(QWidget *parent)
     view->setDragMode(QGraphicsView::RubberBandDrag);
     view->setUpdatesEnabled(true);
 
-    toolbar = addToolBar("");
-    updateToolBar();
-
-    layout->addWidget(view);
-
-    QWidget *widget = new QWidget;
-    widget->setLayout(layout);
-
-    createMenus();
-    createDocks();
-    FRG::previewEditor = new PreviewSceneEditor();
-    FRG::previewEditor->hide();
-
-    statusBar()->showMessage("Welcome to frg Shader Author");
-    setCentralWidget(widget);
-	newfile();
-};
+    QDockWidget *spaceDock = new QDockWidget("Node Space");
+    spaceDock->setWidget(view);
+    addDockWidget(Qt::RightDockWidgetArea, spaceDock);
+}
 
 void frg_Shader_Author::createDocks()    
 {

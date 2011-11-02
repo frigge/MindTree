@@ -40,6 +40,7 @@
 #include "source/graphics/base/vnspace.h"
 #include "source/data/base/project.h"
 #include "source/data/callbacks.h"
+#include "source/graphics/sourcedock.h"
 
 NodeName::NodeName(QString name, QGraphicsItem *parent)
 {
@@ -95,6 +96,7 @@ VNode::VNode(DNode *data)
     : data(data), node_name(new NodeName("", this)), node_width(30), node_height(30), nodeColor(100, 100, 100)
 {
     this->data = data;
+    setZValue(1);
 	//setCacheMode(ItemCoordinateCache, QSize(10, 10));
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsFocusable, true);
@@ -254,13 +256,14 @@ void VNode::recalcNodeVis()
 
 	foreach(DinSocket *insocket, data->getInSockets())
     {
+        if(!insocket->getSocketVis()) continue;
         //insocket->getSocketVis()->setPos((-node_width/2) + (4 + socket_size/2), socketPos+(socket_size/2));
-        if(insocket->isArray() && insocket->getID() != insocket->getArrayID())
-        {
-            insocket->getSocketVis()->setPos(DSocket::getSocket(insocket->getArrayID())->getSocketVis()->pos());
-            insocket->getSocketVis()->setVisible(false);
-        }
-        else
+        //if(insocket->isArray() && insocket->getID() != insocket->getArrayID())
+        //{
+        //    insocket->getSocketVis()->setPos(DSocket::getSocket(insocket->getArrayID())->getSocketVis()->pos());
+        //    insocket->getSocketVis()->setVisible(false);
+        //}
+        //else
         {
             insocket->getSocketVis()->setPos((-node_width/2) , socketPos+(socket_size/2));
             socketPos += socket_size + space;
@@ -270,12 +273,13 @@ void VNode::recalcNodeVis()
     foreach(DoutSocket *out, data->getOutSockets())
     {
         //out->getSocketVis()->setPos((node_width/2) - (4 + socket_size/2), socketPos+(socket_size/2));
-        if(out->isArray() && out->getID() != out->getArrayID())
-        {
-            out->getSocketVis()->setPos(DSocket::getSocket(out->getArrayID())->getSocketVis()->pos());
-            out->getSocketVis()->setVisible(false);
-        }
-        else
+        if(!out->getSocketVis()) continue;
+        //if(out->isArray() && out->getID() != out->getArrayID())
+        //{
+        //    out->getSocketVis()->setPos(DSocket::getSocket(out->getArrayID())->getSocketVis()->pos());
+        //    out->getSocketVis()->setVisible(false);
+        //}
+        //else
         {
             out->getSocketVis()->setPos((node_width/2), socketPos+(socket_size/2));
             socketPos += socket_size + space;
@@ -606,10 +610,12 @@ void VOutputNode::createMenu()
     QAction *dirAction = contextMenu->addAction("set Shader Directory");
     QAction *writecodeAction = contextMenu->addAction("Create Code");
     QAction *compileAction = contextMenu->addAction("write and compile code");
+    QAction *codeAction = contextMenu->addAction("view source code");
 
     connect(writecodeAction, SIGNAL(triggered()), this, SLOT(writeCode()));
     connect(nameAction, SIGNAL(triggered()), this, SLOT(changeName()));
     connect(dirAction, SIGNAL(triggered()), this, SLOT(changeDir()));
+    connect(codeAction, SIGNAL(triggered()), this, SLOT(viewCode()));
 }
 
 void VOutputNode::changeName()
@@ -619,6 +625,11 @@ void VOutputNode::changeName()
     QString newname = QInputDialog::getText(FRG::Space->views().first(), "Shader Name", "Name", QLineEdit::Normal, "", &ok);
     if(ok)
         data->changeName(newname);
+}
+
+void VOutputNode::viewCode()    
+{
+    data->getDerived<OutputNode>()->getSourceEdit()->show();    
 }
 
 void VOutputNode::writeCode()

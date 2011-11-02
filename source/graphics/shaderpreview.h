@@ -95,6 +95,7 @@ public slots:
     void externalPreview();
     void updateScene();
     void detachP();
+    void viewCode();
 
 protected:
     void NodeWidth();

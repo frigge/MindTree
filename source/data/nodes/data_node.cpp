@@ -26,11 +26,12 @@
 
 #include "source/data/base/frg.h"
 #include "source/graphics/nodes/graphics_node.h"
-#include "source/data/shaderwriter.h"
+#include "source/data/rslwriter.h"
 #include "source/data/base/dnspace.h"
 #include "source/graphics/base/vnspace.h"
 #include "source/data/base/project.h"
 #include "source/graphics/shaderpreview.h"
+#include "source/graphics/sourcedock.h"
 
 unsigned short DNode::count = 1;
 QHash<unsigned short, DNode*>LoadNodeIDMapper::loadIDMapper;
@@ -68,21 +69,54 @@ DNode * CopyNodeMapper::getCopy(DNode *original)
 }
 
 DNode::DNode(QString name)
-    : space(0), varcnt(0), ID(count++), nodeVis(0), nodeName(name), varsocket(0), lastsocket(0)
+    : space(0), varcnt(0), ID(count++), nodeVis(0), nodeName(name), varsocket(0), lastsocket(0), blockCBregister(false)
 {};
 
 DNode::DNode(const DNode* node)
     : space(0), varcnt(0), ID(count++), nodeVis(0),
-    nodeName(node->getNodeName()), NodeType(node->getNodeType())
+    nodeName(node->getNodeName()), NodeType(node->getNodeType()), blockCBregister(false)
 {
-    foreach(DinSocket *socket, node->inSockets)
+    blockCB();
+    foreach(DinSocket *socket, node->getInSockets())
         new DinSocket(socket, this);
-    foreach(DoutSocket *socket, node->outSockets)
+    foreach(DoutSocket *socket, node->getOutSockets())
         new DoutSocket(socket, this);
     varsocket = CopySocketMapper::getCopy(node->getVarSocket());
     lastsocket = CopySocketMapper::getCopy(node->getLastSocket());
 
     CopyNodeMapper::setNodePair(const_cast<DNode*>(node), this);
+    unblockCB();
+}
+
+DSocket* DNode::getSocketByIDName(QString idname)    
+{
+    foreach(DinSocket *socket, getInSockets())
+        if(socket->getIDName() == idname)
+            return socket;
+    foreach(DoutSocket *socket, getOutSockets())
+        if(socket->getIDName() == idname)
+            return socket;
+    return 0;
+}
+
+void DNode::blockCB()    
+{
+    addSocketCallbacks.setBlock(true);
+}
+
+void DNode::unblockCB()    
+{
+    addSocketCallbacks.setBlock(false);
+}
+
+void DNode::blockRegCB()    
+{
+    blockCBregister = true; 
+}
+
+void DNode::unblockRegCB()    
+{
+    blockCBregister = false;
 }
 
 DNode* DNode::copy(const DNode *original)    
@@ -170,6 +204,15 @@ DNode* DNode::copy(const DNode *original)
     case PREVIEW:
         newNode = new DShaderPreview(original->getDerivedConst<DShaderPreview>());
         break;
+    case GETARRAY:
+        newNode = new GetArrayNode(original->getDerivedConst<GetArrayNode>());
+        break;
+    case SETARRAY:
+        newNode = new SetArrayNode(original->getDerivedConst<SetArrayNode>());
+        break;
+    case VARNAME:
+        newNode = new VarNameNode(original->getDerivedConst<VarNameNode>());
+        break;
     }
     FRG::CurrentProject->setNodePosition(newNode, FRG::CurrentProject->getNodePosition(original));
     return newNode;
@@ -186,27 +229,27 @@ QList<DNode*> DNode::copy(QList<DNode*>nodes)
 
 DNode::~DNode()
 {
-    foreach(DinSocket *socket, inSockets)
+    foreach(DinSocket *socket, getInSockets())
         delete socket;
-    foreach(DoutSocket *socket, outSockets)
+    foreach(DoutSocket *socket, getOutSockets())
         delete socket;
 
     if(nodeVis) deleteNodeVis();
     FRG::CurrentProject->clearNodePosition(this);
 }
 
-NodeList DNode::getAllInNodes()    
+NodeList DNode::getAllInNodes(NodeList nodes)
 {
-    NodeList nodes;
-    foreach(DinSocket *socket, inSockets)
+    foreach(DinSocket *socket, getInSockets())
     {
         DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
         if(cntdSocket)
         {
             DNode *cntdNode = cntdSocket->getNode();
+            if(nodes.contains(cntdNode)) return nodes;
             nodes.append(cntdNode);
 
-            nodes.append(cntdNode->getAllInNodes());
+            nodes.append(cntdNode->getAllInNodes(nodes));
         }
     }
     return nodes;
@@ -220,10 +263,10 @@ VNode* DNode::createNodeVis()
 
 void DNode::deleteNodeVis()    
 {
-    foreach(DinSocket *socket, inSockets)
+    foreach(DinSocket *socket, getInSockets())
         socket->setSocketVis(0);
 
-    foreach(DoutSocket *socket, outSockets)
+    foreach(DoutSocket *socket, getOutSockets())
         socket->setSocketVis(0);
 
     FRG::Space->removeItem(nodeVis);
@@ -334,25 +377,25 @@ DNode *DNode::newNode(QString name, NType t, int insize, int outsize)
             node = new ContainerNode(name, true);
             break;
         case FOR:
-            node = new ForNode(name, true);
+            node = new ForNode(true);
             break;
         case WHILE:
-            node = new WhileNode(name, true);
+            node = new WhileNode(true);
             break;
         case GATHER:
-            node = new GatherNode(name, true);
+            node = new GatherNode(true);
             break;
         case SOLAR:
-            node = new SolarNode(name, true);
+            node = new SolarNode(true);
             break;
         case ILLUMINATE:
-            node = new IlluminateNode(name, true);
+            node = new IlluminateNode(true);
             break;
         case ILLUMINANCE:
-            node = new IlluminanceNode(name, true);
+            node = new IlluminanceNode(true);
             break;
         case CONDITIONCONTAINER:
-            node = new ConditionContainerNode(name, true);
+            node = new ConditionContainerNode(true);
             break;
         case FUNCTION:
             node = new FunctionNode();
@@ -443,6 +486,8 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
     *node = newnode;
 
     DSocket *socket;
+    newnode->blockCB();
+    newnode->blockRegCB();
     for(int i=0; i<insocketsize; i++)
     {
         socket = new DinSocket("", VARIABLE, newnode);
@@ -453,6 +498,8 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
         socket = new DoutSocket("", VARIABLE, newnode);
         stream>>&socket;
     }
+    newnode->unblockCB();
+    newnode->unblockRegCB();
 
     if(newnode->getNodeType() == FUNCTION)
     {
@@ -550,6 +597,14 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
         PreviewScene scene = prev->getPrevScene();
         stream>>scene.image>>scene.material>>scene.scene>>scene.dir;
     }
+    if(MathNode::isMathNode(newnode)
+        ||newnode->getNodeType() == GETARRAY
+        ||newnode->getNodeType() == SETARRAY
+        ||newnode->getNodeType() == VARNAME) {
+        DinSocket *in = newnode->getInSockets().first();
+        DoutSocket *out = newnode->getOutSockets().first();
+        in->addTypeCB(new ScpTypeCB(in, out));
+    }
 
 
     return stream;
@@ -563,16 +618,16 @@ bool DNode::operator==(DNode &node)
     if(nodeName != node.nodeName)
         return false;
 
-    if(inSockets.size() != node.getInSockets().size()
-            ||outSockets.size() != node.getOutSockets().size())
+    if(getInSockets().size() != node.getInSockets().size()
+            ||getOutSockets().size() != node.getOutSockets().size())
         return false;
 
-    for(int i=0; i<inSockets.size(); i++)
-        if(*inSockets.at(i) != *node.getInSockets().at(i))
+    for(int i=0; i<getInSockets().size(); i++)
+        if(*getInSockets().at(i) != *node.getInSockets().at(i))
             return false;
 
-    for(int i=0; i<outSockets.size(); i++)
-        if(*outSockets.at(i) != *node.getOutSockets().at(i))
+    for(int i=0; i<getOutSockets().size(); i++)
+        if(*getOutSockets().at(i) != *node.getOutSockets().at(i))
             return false;
     return true;
 }
@@ -594,11 +649,33 @@ void DNode::setNodeName(QString name)
 
 void DNode::addSocket(DSocket *socket)
 {
-    if(socket->getDir()==IN) inSockets.append(socket->toIn());
+    setSocketIDName(socket);
+    if(socket->getDir()==IN) inSockets.add(socket);
     else 
-		outSockets.append(socket->toOut());
+		outSockets.add(socket);
 
+    if(socket->getType() == VARIABLE
+        &&!blockCBregister)
+        socket->addRmLinkCB(new SsetToVarCB(socket));
     addSocketCallbacks();
+}
+
+void DNode::setSocketIDName(DSocket *socket)    
+{
+    QStringList socketNames = getSocketNames();
+    for(int i = 1; socketNames.contains(socket->getIDName()); i++)
+        socket->setIDName(socket->getName() + QString::number(i));
+}
+
+QStringList DNode::getSocketNames()    
+{
+    QStringList names;
+    foreach(DinSocket *socket, getInSockets())
+        names.append(socket->getIDName());
+    foreach(DoutSocket *socket, getOutSockets())
+        names.append(socket->getIDName());
+
+    return names;
 }
 
 void DNode::regAddSocketCB(Callback *cb)
@@ -615,10 +692,9 @@ void DNode::removeSocket(DSocket *socket)
 {
     if(!socket)return;
     if(socket->getDir() == IN)
-        inSockets.removeAll(socket->toIn());
+        inSockets.rm(socket);
     else
-        outSockets.removeAll(socket->toOut());
-    delete socket;
+        outSockets.rm(socket);
 }
 
 void DNode::dec_var_socket(DSocket *socket)
@@ -640,7 +716,7 @@ void DNode::inc_var_socket()
 
 void DNode::clearSocketLinks()
 {
-    foreach(DinSocket *socket, inSockets)
+    foreach(DinSocket *socket, getInSockets())
        socket->clearLink();
 }
 
@@ -676,22 +752,30 @@ void DNode::setNodeVis(VNode* value)
 
 DoutSocketList DNode::getOutSockets() const
 {
-    return outSockets;
+    return outSockets.returnAsOutSocketList();
+}
+
+DSocketList *DNode::getOutSocketLlist() const
+{
+    return &outSockets;
 }
 
 void DNode::setOutSockets(DoutSocketList value)
 {
-    outSockets = value;
 }
 
 DinSocketList DNode::getInSockets() const
 {
-    return inSockets;
+    return inSockets.returnAsInSocketList();
+}
+
+DSocketList* DNode::getInSocketLlist()    const
+{
+    return &inSockets;
 }
 
 void DNode::setInSockets(DinSocketList value)
 {
-    inSockets = value;
 }
 
 NType DNode::getNodeType() const
@@ -1069,8 +1153,6 @@ void ContainerNode::addMappedSocket(DSocket *socket)
     else
         mapped_socket = new DinSocket(socket->getName(), socket->getType(), outSocketNode);
     mapOnToIn(socket, mapped_socket);     
-    socket->addRenameCB(new SNchangeNameCB(mapped_socket));
-    socket->addTypeCB(new SNchangeTypeCB(mapped_socket));
 }
 
 void ContainerNode::addtolib()
@@ -1155,6 +1237,8 @@ void ContainerNode::mapOnToIn(DSocket *on, DSocket *in)
 {
     if(!on &&!in) return;
     socket_map.insert(on, in);
+    in->addRenameCB(new ScpNameCB(in, on));
+    in->addTypeCB(new ScpTypeCB(in, on));
 }
 
 DSocket *ContainerNode::getSocketOnContainer(const DSocket *socket) const
@@ -1202,14 +1286,12 @@ bool ContainerNode::operator!=(DNode &node)
     return (!(operator==(node)));
 }
 
-ConditionContainerNode::ConditionContainerNode(QString name, bool raw)
-    : ContainerNode(name, true)
+ConditionContainerNode::ConditionContainerNode(bool raw)
+    : ContainerNode("Condition", raw)
 {
     setNodeType(CONDITIONCONTAINER);
     if(!raw)
     {
-        new SocketNode(IN, this);
-        new SocketNode(OUT, this);
         new DinSocket("Condition", CONDITION, this);
     }
 }
@@ -1285,7 +1367,7 @@ void SocketNode::dec_var_socket(DSocket *socket)
 }
 
 LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
-    :SocketNode(dir, contnode, raw)
+    :SocketNode(dir, contnode, raw), partner(0)
 {
     if (dir == IN)
     {
@@ -1299,18 +1381,21 @@ LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw
 }
 
 LoopSocketNode::LoopSocketNode(const LoopSocketNode* node)
-    : SocketNode(node)
+    : SocketNode(node), partner(0)
 {
     foreach(DSocket *original, node->getLoopedSockets())
         loopSocketMap.insert(CopySocketMapper::getCopy(original), CopySocketMapper::getCopy(node->getPartnerSocket(original)));        
 }
 
-void LoopSocketNode::dec_var_socket(DinSocket *socket)
+void LoopSocketNode::dec_var_socket(DSocket *socket)
 {
     SocketNode::dec_var_socket(socket);
     if(partner != 0)
     {
+        LoopSocketNode *tmpp = partner;
+        partner->setPartner(0);
         deletePartnerSocket(socket);
+        partner->setPartner(tmpp);
     }
 }
 
@@ -1332,6 +1417,7 @@ void LoopSocketNode::createPartnerSocket(DSocket *socket)
 	else
 		partnerSocket = new DinSocket(socket->getName(), socket->getType(), partner);
     loopSocketMap.insert(socket, partnerSocket);
+    partner->mapPartner(partnerSocket, socket);
 }
 
 void LoopSocketNode::deletePartnerSocket(DSocket *socket)
@@ -1351,9 +1437,11 @@ void LoopSocketNode::setPartner(LoopSocketNode *p)
     partner = p;
 }
 
-DSocket *LoopSocketNode::getPartnerSocket(const DSocket *socket) const
+DSocket *LoopSocketNode::getPartnerSocket(DSocket *socket) const
 {
-    return loopSocketMap.value(const_cast<DSocket*>(socket));
+    if(loopSocketMap.keys().contains(socket))
+        return loopSocketMap.value(socket);
+    else return 0;
 }
 
 void LoopSocketNode::inc_var_socket()
@@ -1435,20 +1523,18 @@ MathNode::MathNode(NType t, bool raw)
     if(!raw)
     {
         setDynamicSocketsNode(IN);
-        new DoutSocket("Result", VARIABLE, this);
+        DoutSocket *out = new DoutSocket("Result", VARIABLE, this);
+        DinSocket *in = getInSockets().first();
+        in->addTypeCB(new ScpTypeCB(getVarSocket(), out));
     }
 }
 
 MathNode::MathNode(const MathNode* node)
     : DNode(node)
 {
-}
-
-void MathNode::inc_var_socket()
-{
-    DNode::inc_var_socket();
-//    varsocket->type = lastsocket->type;
-    getOutSockets().first()->setType(getInSockets().first()->getType());
+    DoutSocket *out = getOutSockets().first();
+    DinSocket *in = getInSockets().first();
+    in->addTypeCB(new ScpTypeCB(in, out));
 }
 
 void MathNode::dec_var_socket(DSocket *socket)
@@ -1477,6 +1563,14 @@ bool DNode::isValueNode()    const
         || getNodeType() == STRINGNODE
         || getNodeType() == COLORNODE
         || getNodeType() == VECTORNODE;
+}
+
+bool DNode::isConditionNode(const DNode *node)    
+{
+    return node->getNodeType() == GREATERTHAN
+    || node->getNodeType() == SMALLERTHAN
+    || node->getNodeType() == NOT
+    || node->getNodeType() == EQUAL;
 }
 
 ValueNode::ValueNode(QString name)
@@ -1707,6 +1801,7 @@ LoopNode::LoopNode(QString name, bool raw)
 
         linNode = new LoopSocketNode(IN, this);
         loutNode = new LoopSocketNode(OUT, this);
+        linNode->setPartner(loutNode);
         loutNode->setPartner(linNode);
     }
 }
@@ -1725,12 +1820,16 @@ bool LoopNode::isLoopNode(DNode *node)
             ||node->getNodeType() == SOLAR
             ||node->getNodeType() == GATHER);
 }
-WhileNode::WhileNode(QString name, bool raw)
-    : LoopNode(name, raw)
+WhileNode::WhileNode(bool raw)
+    : LoopNode("While", raw)
 {
     setNodeType(WHILE);
     if(!raw)
+    {
         new DinSocket("Condition", CONDITION, getOutputs());
+        DSocketList *inputSocketList = getInputs()->getDerived<LoopSocketNode>()->getOutSocketLlist();
+        inputSocketList->move(0, inputSocketList->len() - 1);
+    }
 }
 
 WhileNode::WhileNode(const WhileNode* node)
@@ -1738,8 +1837,8 @@ WhileNode::WhileNode(const WhileNode* node)
 {
 }
 
-ForNode::ForNode(QString name, bool raw)
-    : LoopNode(name, raw)
+ForNode::ForNode(bool raw)
+    : LoopNode("For", raw)
 {
     setNodeType(FOR);
     if(!raw)
@@ -1747,6 +1846,8 @@ ForNode::ForNode(QString name, bool raw)
         addMappedSocket(new DinSocket("Start", FLOAT, this));
         addMappedSocket(new DinSocket("End", FLOAT, this));
         addMappedSocket(new DinSocket("Step", FLOAT, this));
+        DSocketList *inputSocketList = getInputs()->getDerived<LoopSocketNode>()->getOutSocketLlist();
+        inputSocketList->move(0, inputSocketList->len() - 1);
     }
 }
 
@@ -1755,8 +1856,8 @@ ForNode::ForNode(const ForNode* node)
 {
 }
 
-IlluminanceNode::IlluminanceNode(QString name, bool raw)
-    : LoopNode(name, raw)
+IlluminanceNode::IlluminanceNode(bool raw)
+    : LoopNode("Illuminance", raw)
 {
     setNodeType(ILLUMINANCE);
     if(!raw)
@@ -1766,6 +1867,8 @@ IlluminanceNode::IlluminanceNode(QString name, bool raw)
         addMappedSocket(new DinSocket("Direction", VECTOR, this));
         addMappedSocket(new DinSocket("Angle", FLOAT, this));
         addMappedSocket(new DinSocket("Message Passing", STRING, this));
+        DSocketList *inputSocketList = getInputs()->getDerived<LoopSocketNode>()->getOutSocketLlist();
+        inputSocketList->move(0, inputSocketList->len() - 1);
     }
 }
 
@@ -1774,8 +1877,8 @@ IlluminanceNode::IlluminanceNode(const IlluminanceNode* node)
 {
 }
 
-IlluminateNode::IlluminateNode(QString name, bool raw)
-    : LoopNode(name, raw)
+IlluminateNode::IlluminateNode(bool raw)
+    : LoopNode("Illuminate", raw)
 {
     setNodeType(ILLUMINATE);
     if(!raw)
@@ -1783,6 +1886,8 @@ IlluminateNode::IlluminateNode(QString name, bool raw)
         addMappedSocket(new DinSocket("Point", POINT, this));
         addMappedSocket(new DinSocket("Direction", VECTOR, this));
         addMappedSocket(new DinSocket("Angle", FLOAT, this));
+        DSocketList *inputSocketList = getInputs()->getDerived<LoopSocketNode>()->getOutSocketLlist();
+        inputSocketList->move(0, inputSocketList->len() - 1);
     }
 }
 
@@ -1791,8 +1896,8 @@ IlluminateNode::IlluminateNode(const IlluminateNode* node)
 {
 }
 
-GatherNode::GatherNode(QString name, bool raw)
-    : LoopNode(name, raw)
+GatherNode::GatherNode(bool raw)
+    : LoopNode("Gather", raw)
 {
     setNodeType(GATHER);
     if(!raw)
@@ -1803,7 +1908,10 @@ GatherNode::GatherNode(QString name, bool raw)
         addMappedSocket(new DinSocket("Angle", FLOAT, this));
         addMappedSocket(new DinSocket("Message Passing", STRING, this));
         addMappedSocket(new DinSocket("Samples", FLOAT, this));
+        DSocketList *inputSocketList = getInputs()->getDerived<LoopSocketNode>()->getOutSocketLlist();
+        inputSocketList->move(0, inputSocketList->len() - 1);
     }
+    getInSocketLlist()->move(0, getInSocketLlist()->len() - 1);
 }
 
 GatherNode::GatherNode(const GatherNode* node)
@@ -1811,14 +1919,16 @@ GatherNode::GatherNode(const GatherNode* node)
 {
 }
 
-SolarNode::SolarNode(QString name, bool raw)
-    : LoopNode(name, raw)
+SolarNode::SolarNode(bool raw)
+    : LoopNode("Solar", raw)
 {
     setNodeType(SOLAR);
     if(!raw)
     {
         addMappedSocket(new DinSocket("Axis", VECTOR, this));
         addMappedSocket(new DinSocket("Angle", FLOAT, this));
+        DSocketList *inputSocketList = getInputs()->getDerived<LoopSocketNode>()->getOutSocketLlist();
+        inputSocketList->move(0, inputSocketList->len() - 1);
     }
 }
 
@@ -1829,11 +1939,23 @@ SolarNode::SolarNode(const SolarNode* node)
 
 OutputNode::OutputNode()
 {
+    sedit = new SourceDock(this);
+}
+
+OutputNode::~OutputNode()
+{
+    delete sedit;
 }
 
 OutputNode::OutputNode(const OutputNode* node)
     : DNode(node), ShaderName(node->getShaderName())
 {
+    sedit = new SourceDock(this);
+}
+
+SourceDock* OutputNode::getSourceEdit()    
+{
+    return sedit; 
 }
 
 VNode* OutputNode::createNodeVis()
@@ -1923,16 +2045,19 @@ GetArrayNode::GetArrayNode(bool raw)
     setNodeType(GETARRAY);
     if(!raw)
     {
-        new DinSocket("Array", VARIABLE, this);
+        DinSocket *arr = new DinSocket("Array", VARIABLE, this);
         new DinSocket("Index", FLOAT, this);
-        new DoutSocket("value", VARIABLE, this);
+        DoutSocket *val = new DoutSocket("value", VARIABLE, this);
+        arr->addTypeCB(new ScpTypeCB(arr, val));
     }
 }
 
-void GetArrayNode::addSocket(DSocket *socket)    
+GetArrayNode::GetArrayNode(const GetArrayNode* node)
+    : DNode(node)
 {
-   DNode::addSocket(socket); 
-   socket->addTypeCB(new SInTypeToOutTypeCB(socket));
+    DinSocket *arr = getInSockets().first();
+    DoutSocket *val = getOutSockets().first();
+    arr->addTypeCB(new ScpTypeCB(arr, val));
 }
 
 SetArrayNode::SetArrayNode(bool raw)
@@ -1940,16 +2065,19 @@ SetArrayNode::SetArrayNode(bool raw)
 {
     setNodeType(SETARRAY);
     if(!raw){
-        new DinSocket("value", VARIABLE, this);
+        DinSocket *val = new DinSocket("value", VARIABLE, this);
         new DinSocket("Index", FLOAT, this);
-        new DoutSocket("Array", VARIABLE, this);
+        DoutSocket *arr = new DoutSocket("Array", VARIABLE, this);
+        val->addTypeCB(new ScpTypeCB(val, arr));
     }
 }
 
-void SetArrayNode::addSocket(DSocket *socket)    
+SetArrayNode::SetArrayNode(const SetArrayNode* node)
+    : DNode(node)
 {
-   DNode::addSocket(socket); 
-   socket->addTypeCB(new SInTypeToOutTypeCB(socket));
+    DinSocket *val = getInSockets().first();
+    DoutSocket *arr = getOutSockets().first();
+    val->addTypeCB(new ScpTypeCB(val, arr));
 }
 
 VarNameNode::VarNameNode(bool raw)
@@ -1957,13 +2085,16 @@ VarNameNode::VarNameNode(bool raw)
 {
     setNodeType(VARNAME);
     if(!raw){
-        new DinSocket("def", VARIABLE, this);
-        new DoutSocket("variable", VARIABLE, this);
+        DinSocket *in = new DinSocket("def", VARIABLE, this);
+        DoutSocket *out =  new DoutSocket("variable", VARIABLE, this);
+        in->addTypeCB(new ScpTypeCB(in, out));
     }
 }
-void VarNameNode::addSocket(DSocket *socket)    
-{
-   DNode::addSocket(socket); 
-   socket->addTypeCB(new SInTypeToOutTypeCB(socket));
-}
 
+VarNameNode::VarNameNode(const VarNameNode* node)
+    : DNode(node)
+{
+    DinSocket *in = getInSockets().first();
+    DoutSocket *out = getOutSockets().first();
+    in->addTypeCB(new ScpTypeCB(in, out));
+}

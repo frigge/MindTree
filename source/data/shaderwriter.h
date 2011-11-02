@@ -29,64 +29,76 @@ class DoutSocket;
 class DinSocket;
 class DNode;
 
-class ShaderWriter
+class ShaderCodeGenerator
 {
 public:
-    ShaderWriter(DNode *start);
-    QString getCode();
+    ShaderCodeGenerator(DNode *start);
+    virtual QString getCode();
 
-private:
-    void addToCode(QString);
-    void addToVarDeclares(QString);
-    QString createVarDeclares();
-    void addToShaderHeader(QString);
-    void addToShaderParameter(QString);
-    QString createShaderParameterCode();
-    void addToOutputVars(QString);
-    QString createOutputVars();
+protected:
+    virtual void init();
+    virtual void createHeader()=0;
 
-    inline bool isInputVar(const DoutSocket*);
+    virtual void addToCode(QString);
+    virtual void addToVarDeclares(QString);
+    virtual QString createVarDeclares();
+    virtual void addToShaderHeader(QString);
+    virtual void addToShaderParameter(QString);
+    virtual QString createShaderParameterCode();
 
-    void incTabLevel();
-    void decTabLevel();
+    virtual inline bool isInputVar(const DoutSocket*)=0;
 
-    void evalSocketValue(const DoutSocket *socket);
-    void initVar(const DoutSocket *socket);
-    void outputVar(const DinSocket *socket);
-    QString createCondition(const DoutSocket *socket);
-    QString createMath(const DoutSocket *);
+    virtual void incTabLevel();
+    virtual void decTabLevel();
 
-    void gotoNextNode(const DinSocket *socket);
-    QString writeVarName(const DinSocket *socket);
+    virtual void evalSocketValue(const DoutSocket *socket);
+    virtual void initVar(const DoutSocket *socket)=0;
+    virtual void outputVar(const DinSocket *socket)=0;
+    virtual QString createCondition(const DoutSocket *socket);
+    virtual QString createMath(const DoutSocket *);
 
-    QString newline();
+    virtual void gotoNextNode(const DinSocket *socket);
+    virtual QString writeVarName(const DinSocket *socket);
 
-    void writeFunction(const DoutSocket *socket);
-    void writeContainer(const DoutSocket *socket);
-    QString writeMath(const DoutSocket *socket, QString mathOperator);
-    void writeMathToVar(const DoutSocket *socket);
-    QString writeCondition(const DoutSocket *socket, QString conditionOperator);
-    QString writeNot(const DoutSocket *socket);
-    void writeConditionContainer(const DoutSocket *socket);
-    void writeForLoop(const DoutSocket *socket);
-    void writeWhileLoop(const DoutSocket *socket);
-    void writeRSLLoop(const DoutSocket *socket);
-    QString writeString(const DoutSocket *socket);
-    QString writeFloat(const DoutSocket *socket);
-    QString writeVector(const DoutSocket *socket);
-    QString writeColor(const DoutSocket *socket);
-    void writeGetArray(const DoutSocket *socket);
-    void writeSetArray(const DoutSocket *socket);
-    void writeVariable(const DoutSocket *socket);
+    virtual QString newline();
 
-    const DinSocket *stepUp(const DoutSocket *socket);
+    virtual void writeFunction(const DoutSocket *socket);
+    virtual void writeContainer(const DoutSocket *socket);
+    virtual QString writeMath(const DoutSocket *socket, QString mathOperator);
+    virtual void writeMathToVar(const DoutSocket *socket);
+    virtual QString writeCondition(const DoutSocket *socket, QString conditionOperator);
+    virtual QString writeNot(const DoutSocket *socket);
+    virtual void writeConditionContainer(const DoutSocket *socket);
+    virtual void writeForLoop(const DoutSocket *socket);
+    virtual void writeCustom(const DoutSocket *socket);
+    virtual void writeWhileLoop(const DoutSocket *socket);
+    virtual QString writeString(const DoutSocket *socket);
+    virtual QString writeFloat(const DoutSocket *socket);
+    virtual QString writeVector(const DoutSocket *socket)=0;
+    virtual QString writeColor(const DoutSocket *socket)=0;
+    virtual void writeGetArray(const DoutSocket *socket);
+    virtual void writeSetArray(const DoutSocket *socket);
+    virtual void writeVariable(const DoutSocket *socket);
 
-    void setVariables(DNode *node=0);
-    QString getVariable(const DoutSocket* socket)const;
-    void insertVariable(const DoutSocket *socket, QString variable);
-    DoutSocket* getSimilar(DoutSocket *socket);
+    virtual const DinSocket *stepUp(const DoutSocket *socket);
 
+    virtual void setVariables(DNode *node=0);
+    virtual QString getVariable(const DoutSocket* socket)const;
+    virtual void insertVariable(const DoutSocket *socket, QString variable);
+    virtual DoutSocket* getSimilar(DoutSocket *socket);
+    virtual QString createOutputVars();
+    virtual void addToOutputVars(QString);
 
+    DNode* getStart();
+    QList<QString> getWrittenSockets();
+    QString getVar();
+    QList<QString> getSocketNames();
+    QString getCodeCache();
+    QStringList getVarDeclares();
+    QString getShaderHeader();
+    QStringList getShaderParameter();
+    QStringList getOutputVars();
+    
 private:
     QList<QString>written_sockets;
     QString var;

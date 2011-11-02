@@ -18,17 +18,37 @@
 
 #include "source/graphics/sourcedock.h"
 
+#include "QTextStream"
+#include "QFile"
+
+#include "source/data/nodes/data_node.h"
+#include "source/data/base/frg.h"
+#include "source/data/base/frg_shader_author.h"
+
 SourceEdit::SourceEdit(QWidget *parent, OutputNode *node)
     : QTextEdit(parent), outnode(node)
 {
 }
 
+void SourceEdit::load()    
+{
+    outnode->writeCode();
+    QFile file(outnode->getFileName());
+    QTextStream stream(&file);
+    file.open(QIODevice::ReadOnly);
+    document()->setPlainText(stream.readAll());
+}
+
 void SourceEdit::load(DNode *node)    
 {
-    if(node && outnode.getAllInNodes().contains(node))
-     {
-
-     }
+    outnode->writeCode();
+    if(node && outnode->getAllInNodes().contains(node))
+    {
+        QFile file(outnode->getFileName());
+        QTextStream stream(&file);
+        file.open(QIODevice::ReadOnly);
+        document()->setPlainText(stream.readAll());
+    }
 }
 
 SourceDock::SourceDock(OutputNode *node)
@@ -38,6 +58,7 @@ SourceDock::SourceDock(OutputNode *node)
     FRG::Author->addDockWidget(Qt::RightDockWidgetArea, this);
     connect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)edit, SLOT(load()));
     connect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)edit, SLOT(load(DNode*)));
+    connect((QObject*)this, SIGNAL(visibilityChanged(bool)), (QObject*)edit, SLOT(load()));
     hide();
 }
 

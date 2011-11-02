@@ -261,9 +261,6 @@ VNSpace::VNSpace()
 void VNSpace::ContextAddMenu()
 {
     NContextMenu = new QMenu;
-
-    QAction *newNodeAction = NContextMenu->addAction("New Node");
-    connect(newNodeAction, SIGNAL(triggered()), this, SLOT(createNode()));
 };
 
 void VNSpace::removeNode(QList<DNode*>nodeList)
