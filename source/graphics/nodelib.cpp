@@ -26,9 +26,31 @@
 #include "QMimeData"
 #include "QMouseEvent"
 #include "QDrag"
+#include "QTreeWidgetItemIterator"
 
 #include	"source/graphics/base/vnspace.h"
 #include "source/data/base/frg.h"
+
+NodeLibWidget::NodeLibWidget(QWidget *parent)
+    : QWidget(parent)
+{
+    FRG::lib = new NodeLib(this);
+    QVBoxLayout *lay = new QVBoxLayout();
+    lay->setMargin(0);
+    lay->setSpacing(0);
+    setLayout(lay);
+    filteredit = new QLineEdit(this);
+    lay->addWidget(filteredit);
+
+    lay->addWidget(FRG::lib);
+
+    connect(filteredit, SIGNAL(textChanged(QString)), this, SLOT(filter()));
+}
+
+void NodeLibWidget::filter()    
+{
+    FRG::lib->filter(filteredit->text());
+}
 
 NodeLib::NodeLib(QWidget *parent):
     QTreeWidget(parent)
@@ -55,6 +77,28 @@ NodeLib::~NodeLib()
 //    nodelib_proxy->setParentItem(0);
 //    delete nodelib_proxy;
 //    delete container;
+}
+
+void NodeLib::filter(QString txt)    
+{
+    QTreeWidgetItemIterator it(this, QTreeWidgetItemIterator::NoChildren);
+    while(*it){
+        if(!(*it)->text(0).contains(txt))        
+            (*it)->setHidden(true);
+        else
+        {
+            (*it)->setHidden(false);
+            QTreeWidgetItem *parent = (*it)->parent();
+            while(parent){
+                if(txt == "" && parent->parent())
+                    parent->setExpanded(false);
+                else
+                    parent->setExpanded(true);
+                parent = parent->parent();
+            }
+        }
+        it++;
+    }
 }
 
 void NodeLib::createContextMenu()

@@ -22,8 +22,27 @@
 
 #include <QTreeWidget>
 #include "QGraphicsScene"
+#include "QWidget"
+#include "QLineEdit"
+#include "QVBoxLayout"
 #include "QDir"
 #include "QMenu"
+
+class NodeLib;
+
+class NodeLibWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    NodeLibWidget(QWidget *parent);
+
+public slots:
+    void filter();
+
+private:
+    QVBoxLayout *lay;
+    QLineEdit *filteredit;
+};
 
 class NodeLib : public QTreeWidget
 {
@@ -31,6 +50,7 @@ class NodeLib : public QTreeWidget
 public:
     NodeLib(QWidget *parent = 0);
     ~NodeLib();
+    void filter(QString txt);
 
 signals:
 
