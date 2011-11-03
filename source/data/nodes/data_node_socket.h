@@ -117,7 +117,7 @@ public:
     DinSocket* toIn();
     DoutSocket* toOut();
 
-    QString setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt);
+    QString setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt)const;
 	QString getVarName() const;
 
     void setSocketVis(VNSocket *vis);
@@ -188,7 +188,7 @@ private:
     CallbackList changeTypeCallbacks;
 
     static QHash<unsigned short, DSocket*>socketIDHash;
-	QString varname;
+	mutable QString varname;
 };
 
 class QDataStream;

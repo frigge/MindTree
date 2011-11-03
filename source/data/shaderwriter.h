@@ -105,7 +105,7 @@ protected:
     virtual void setVariables(const DNode *node=0);
     virtual QString getVariable(const DSocket* socket)const;
     virtual void insertVariable(const DSocket *socket, QString variable);
-    void insertLoopVar(const DNode *insocketNode, DSocket *socket);
+    void insertLoopVar(const DNode *n, const DSocket *socket);
     virtual DoutSocket* getSimilar(DoutSocket *socket);
     virtual QString createOutputVars();
     virtual void addToOutputVars(QString);
@@ -122,6 +122,7 @@ protected:
     
 private:
     const DNode *start;
+    int tabLevel;
     const ContainerNode *focus;
     QList<QString>written_sockets;
     QString var;
@@ -132,8 +133,7 @@ private:
     QString ShaderHeader;
     QStringList ShaderParameter;
     QStringList OutputVars;
-    int tabLevel;
-    QHash<QString, const DSocket*> variables;
+    QHash<const DSocket*, QString> variables;
     QHash<QString, unsigned short>variableCnt;
 };
 

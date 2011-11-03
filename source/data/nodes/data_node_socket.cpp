@@ -73,15 +73,15 @@ void DSocketList::rm(DSocket *socket)
 {
     if(first->socket == socket){
         //we want to remove the first entry
+        //so we need to reset the *first pointer
         if(first->next){
-            //set first to first->next
             first = first->next;
             delete first->prev->socket;
             delete first->prev;
             first->prev = 0;
             return;
         }
-        //there is only one entry, so set first to 0
+        //there is only one entry
         delete first->socket;
         delete first;
         first = 0;
@@ -93,7 +93,8 @@ void DSocketList::rm(DSocket *socket)
     while(f->socket != socket)
        f = f->next;
 
-    //check if we got it
+    //check if we got the right one
+    //and then relink the sorrounding items
     if(f->socket == socket){
         if(f->prev) f->prev->next = f->next;
         if(f->next) f->next->prev = f->prev;
@@ -700,7 +701,7 @@ void DoutSocket::setName(QString name)
     DSocket::setName(name);
 }
 
-QString DSocket::setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt)
+QString DSocket::setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt)const
 {
     QString name = getName();
     QString varname_raw = name.replace(" ", "_");

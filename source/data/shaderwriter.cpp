@@ -68,9 +68,7 @@ QString CodeCache::get()
     wholecode.append(first->code);
     while(cache->next) {
         cache = cache->next;
-        wholecode.append("{");
         wholecode.append(cache->code);
-        wholecode.append("}");
     }
     return wholecode;
 }
@@ -104,13 +102,17 @@ void ShaderCodeGenerator::init()
     }
 }
 
-void ShaderCodeGenerator::insertLoopVar(const DNode *insocketNode, DSocket *socket)    
+void ShaderCodeGenerator::insertLoopVar(const DNode *n, const DSocket *socket)    
 {
+    const ContainerNode *c = n->getDerivedConst<ContainerNode>();
     QString var = socket->setSocketVarName(&variableCnt);
-    std::cout << "setting variable:" << var.toStdString() << std::endl;
-    insertVariable(socket,  var);
-    insertVariable(insocketNode->getDerivedConst<LoopSocketNode>()->getContainer()->getSocketOnContainer(socket), var);
-    insertVariable(insocketNode->getDerivedConst<LoopSocketNode>()->getPartnerSocket(socket), var);
+    variables.insert(socket, var);
+    variables.insert(c->getSocketInContainer(socket), var);
+    if(c->getOutputs()->getNodeType() ==LOOPOUTSOCKETS){
+        const LoopSocketNode *l = c->getOutputs()->getDerivedConst<LoopSocketNode>();
+        DoutSocket *out = c->getSocketInContainer(socket)->toOut();
+        variables.insert(l->getPartnerSocket(out), var);
+    }
 }
 
 void ShaderCodeGenerator::setVariables(const DNode *node)    
@@ -120,12 +122,11 @@ void ShaderCodeGenerator::setVariables(const DNode *node)
         variableCnt.clear();
         node = start;
     }
-    if(node->getNodeType() == LOOPINSOCKETS) {
-        switch(node->getDerivedConst<LoopSocketNode>()->getContainer()->getNodeType())
+    if(node->isContainer() && node->getNodeType() != CONTAINER){
+        switch(node->getNodeType())
         {
             case FOR:
-                insertLoopVar(node, node->getOutSockets().at(0));
-                insertLoopVar(node, node->getOutSockets().at(2));
+                insertLoopVar(node, node->getInSockets().at(2));
                 break; 
             case WHILE:
                 break; 
@@ -148,7 +149,7 @@ void ShaderCodeGenerator::setVariables(const DNode *node)
         if(!cntdSocket)
             continue;
 
-        if(variables.values().contains(cntdSocket))
+        if(variables.keys().contains(cntdSocket))
             continue;
             
         DNode *cntdNode = cntdSocket->getNode();
@@ -170,7 +171,7 @@ void ShaderCodeGenerator::setVariables(const DNode *node)
 
 QString ShaderCodeGenerator::getVariable(const DSocket* socket)const
 {
-    return variables.key(socket);
+    return variables.value(socket);
 }
 
 DoutSocket* ShaderCodeGenerator::getSimilar(DoutSocket *socket)    
@@ -209,7 +210,11 @@ DoutSocket* ShaderCodeGenerator::getSimilar(DoutSocket *socket)
 
 void ShaderCodeGenerator::insertVariable(const DSocket *socket, QString variable)    
 {
-    variables.insert(variable, socket);
+    DNode *node = socket->getNode();
+    if(node->isContainer())
+        insertLoopVar(node, socket);
+    else
+        variables.insert(socket, variable);
 }
 
 QString ShaderCodeGenerator::newline()
@@ -586,7 +591,6 @@ void ShaderCodeGenerator::writeForLoop(const DoutSocket *socket)
     end = node->getInSockets().at(1);
     step = node->getInSockets().at(2);
     initVar(socket);
-    initVar(start);
     initVar(step);
     const ContainerNode *cnode = node->getDerivedConst<ContainerNode>();
     mapped_socket = cnode->getSocketInContainer(socket)->toIn();
@@ -594,7 +598,7 @@ void ShaderCodeGenerator::writeForLoop(const DoutSocket *socket)
     output.append(newline());
     output.append("for(");
     output.append("float ");
-    output.append(getVariable(start));
+    output.append(getVariable(step));
     output.append(" = ");
     output.append(writeVarName(start));
     gotoNextNode(start);
@@ -609,18 +613,20 @@ void ShaderCodeGenerator::writeForLoop(const DoutSocket *socket)
     output.append(writeVarName(step));
     output.append(")");
     output.append(newline());
+    output.append("{");
     incTabLevel();
+    output.append(newline());
     const ContainerNode *prevfocus = focus;
     focus = cnode;
     addToCode(output);
     gotoNextNode(mapped_socket);
     addToCode(getVariable(socket));
     addToCode(" = ");
-    addToCode(getVariable(socket));
-    addToCode(" = ");
     addToCode(writeVarName(mapped_socket));
     decTabLevel();
     focus = prevfocus;
+    addToCode(newline());
+    addToCode("}");
     addToCode(newline());
 }
 
