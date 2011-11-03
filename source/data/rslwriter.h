@@ -36,7 +36,7 @@ protected:
 
     inline bool isInputVar(const DoutSocket*);
 
-    void initVar(const DoutSocket *socket);
+    void initVar(const DSocket *socket);
     void outputVar(const DinSocket *socket);
 
     void writeGather(const DoutSocket *socket);

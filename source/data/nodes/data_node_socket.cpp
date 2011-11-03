@@ -700,7 +700,7 @@ void DoutSocket::setName(QString name)
     DSocket::setName(name);
 }
 
-QString DoutSocket::setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt)
+QString DSocket::setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt)
 {
     QString name = getName();
     QString varname_raw = name.replace(" ", "_");
@@ -715,11 +715,10 @@ QString DoutSocket::setSocketVarName(QHash<QString, unsigned short> *SocketNameC
         case VOLUMEINPUT:
         case LIGHTINPUT:
         case INSOCKETS:
-        case LOOPINSOCKETS:
             varname = name;
             break;
         default:
-            if(getNode()->isContainer())
+            if(getNode()->getNodeType() == CONTAINER)
                 break;
 
             if(SocketNameCnt->contains(varname_raw))
@@ -739,7 +738,7 @@ QString DoutSocket::setSocketVarName(QHash<QString, unsigned short> *SocketNameC
     return varname;
 }
 
-QString DoutSocket::getVarName() const
+QString DSocket::getVarName() const
 {
     return varname;
 }
@@ -827,6 +826,8 @@ DoutSocket* DinSocket::getCntdFunctionalSocket() const
         DSocket *ns=0;
         if(!cntdSocket)
             return 0;
+
+        DNode *cntdNode = cntdSocket->getNode();
         if(cntdSocket->getNode()->isContainer())
         {
             return cntdSocket->getNode()->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdFunctionalSocket();
@@ -856,12 +857,18 @@ DoutSocket* DinSocket::getCntdWorkSocket() const
         DSocket *ns=0;
         if(!cntdSocket)
             return 0;
-        if(cntdSocket->getNode()->getNodeType() == CONTAINER)
+
+        DNode *cntdNode = cntdSocket->getNode();
+        if(cntdSocket->getNode()->isContainer())
         {
-            return cntdSocket->getNode()->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdFunctionalSocket();
+            if (cntdNode->getNodeType() != CONTAINER)
+                return cntdSocket;
+            else
+                return cntdSocket->getNode()->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdWorkSocket();
         }
         else if(cntdSocket->getNode()->getNodeType() == INSOCKETS)
-            return cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket)->toIn()->getCntdFunctionalSocket();
+            return cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket)->toIn()->getCntdWorkSocket();
+        /*  
         else if (cntdSocket->getNode()->getNodeType() == LOOPINSOCKETS)
         {
             ns = cntdSocket->getNode()->getDerived<LoopSocketNode>()->getPartnerSocket(cntdSocket);
@@ -871,7 +878,7 @@ DoutSocket* DinSocket::getCntdWorkSocket() const
                 ns = cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket);
                 if(ns) return ns->toIn()->getCntdFunctionalSocket();
             }
-        }
+        }*/
 
         return cntdSocket;
 }

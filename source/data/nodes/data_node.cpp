@@ -255,6 +255,23 @@ NodeList DNode::getAllInNodes(NodeList nodes)
     return nodes;
 }
 
+NodeList DNode::getAllInNodesConst(NodeList nodes) const
+{
+    foreach(DinSocket *socket, getInSockets())
+    {
+        DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
+        if(cntdSocket)
+        {
+            DNode *cntdNode = cntdSocket->getNode();
+            if(nodes.contains(cntdNode)) return nodes;
+            nodes.append(cntdNode);
+
+            nodes.append(cntdNode->getAllInNodes(nodes));
+        }
+    }
+    return nodes;
+}
+
 VNode* DNode::createNodeVis()
 {
     nodeVis = new VNode(this);
@@ -610,7 +627,7 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
     return stream;
 }
 
-bool DNode::operator==(DNode &node)
+bool DNode::operator==(const DNode &node)const
 {
     if(getNodeType() != node.getNodeType())
         return false;
@@ -632,7 +649,7 @@ bool DNode::operator==(DNode &node)
     return true;
 }
 
-bool DNode::operator!=(DNode &node)
+bool DNode::operator!=(const DNode &node)const
 {
     return (!(*this == node));
 }
@@ -1094,15 +1111,15 @@ void FunctionNode::setFunctionName(QString value)
     function_name = value;
 }
 
-bool FunctionNode::operator==(DNode &node)
+bool FunctionNode::operator==(const DNode &node)const
 {
     if(!DNode::operator==(node)) return false;
-    if(function_name != node.getDerived<FunctionNode>()->function_name)
+    if(function_name != node.getDerivedConst<FunctionNode>()->function_name)
         return false;
     return true;
 }
 
-bool FunctionNode::operator!=(DNode &node)
+bool FunctionNode::operator!=(const DNode &node)const
 {
     return (!(operator==(node)));
 }
@@ -1273,15 +1290,15 @@ void ContainerNode::setContainerData(ContainerSpace* value)
     containerData->setContainer(this);
 }
 
-bool ContainerNode::operator==(DNode &node)
+bool ContainerNode::operator==(const DNode &node)const
 {
     if(!DNode::operator==(node)) return false;
-    if(*containerData != *node.getDerived<ContainerNode>()->containerData)
+    if(*containerData != *node.getDerivedConst<ContainerNode>()->containerData)
         return false;
     return true;
 }
 
-bool ContainerNode::operator!=(DNode &node)
+bool ContainerNode::operator!=(const DNode &node)const
 {
     return (!(operator==(node)));
 }
@@ -1639,15 +1656,15 @@ QColor ColorValueNode::getValue() const
     return colorvalue;
 }
 
-bool ColorValueNode::operator ==(DNode &node)
+bool ColorValueNode::operator ==(const DNode &node)const
 {
     if(!DNode::operator==(node)) return false;
-    if(colorvalue != node.getDerived<ColorValueNode>()->colorvalue)
+    if(colorvalue != node.getDerivedConst<ColorValueNode>()->colorvalue)
         return false;
     return true;
 }
 
-bool ColorValueNode::operator!=(DNode &node)
+bool ColorValueNode::operator!=(const DNode &node)const
 {
     return (!(operator==(node)));
 }
@@ -1684,15 +1701,15 @@ QString StringValueNode::getValue() const
     return stringvalue;
 }
 
-bool StringValueNode::operator ==(DNode &node)
+bool StringValueNode::operator ==(const DNode &node)const
 {
     if(!DNode::operator==(node)) return false;
-    if(stringvalue != node.getDerived<StringValueNode>()->stringvalue)
+    if(stringvalue != node.getDerivedConst<StringValueNode>()->stringvalue)
         return false;
     return true;
 }
 
-bool StringValueNode::operator!=(DNode &node)
+bool StringValueNode::operator!=(const DNode &node)const
 {
     return (!(operator==(node)));
 }
@@ -1729,15 +1746,15 @@ float FloatValueNode::getValue() const
     return floatvalue;
 }
 
-bool FloatValueNode::operator==(DNode &node)
+bool FloatValueNode::operator==(const DNode &node)const
 {
     if(!DNode::operator==(node)) return false;
-    if(floatvalue != node.getDerived<FloatValueNode>()->floatvalue)
+    if(floatvalue != node.getDerivedConst<FloatValueNode>()->floatvalue)
         return false;
     return true;
 }
 
-bool FloatValueNode::operator!=(DNode &node)
+bool FloatValueNode::operator!=(const DNode &node)const
 {
     return (!(operator==(node)));
 }
@@ -1774,10 +1791,10 @@ Vector VectorValueNode::getValue() const
     return vectorvalue;
 }
 
-bool VectorValueNode::operator==(DNode &node)
+bool VectorValueNode::operator==(const DNode &node)const
 {
     if(!DNode::operator==(node)) return false;
-    VectorValueNode *vnode = node.getDerived<VectorValueNode>();
+    const VectorValueNode *vnode = node.getDerivedConst<VectorValueNode>();
     if(vectorvalue.x != vnode->getValue().x
         ||vectorvalue.y != vnode->getValue().y
         ||vectorvalue.z != vnode->getValue().z)
@@ -1785,7 +1802,7 @@ bool VectorValueNode::operator==(DNode &node)
     return true;
 }
 
-bool VectorValueNode::operator!=(DNode &node)
+bool VectorValueNode::operator!=(const DNode &node)const
 {
     return (!(operator==(node)));
 }

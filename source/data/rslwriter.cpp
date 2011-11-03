@@ -32,22 +32,22 @@ void ShaderWriter::createHeader()
     case SURFACEOUTPUT:
     case PREVIEW:
         addToShaderHeader("surface ");
-        addToShaderHeader(getStart()->getDerived<OutputNode>()->getShaderName());
+        addToShaderHeader(getStart()->getDerivedConst<OutputNode>()->getShaderName());
         addToShaderHeader("(");
         break;
     case DISPLACEMENTOUTPUT:
         addToShaderHeader("displacement ");
-        addToShaderHeader(getStart()->getDerived<OutputNode>()->getShaderName());
+        addToShaderHeader(getStart()->getDerivedConst<OutputNode>()->getShaderName());
         addToShaderHeader("(");
         break;
     case VOLUMEOUTPUT:
         addToShaderHeader("volume ");
-        addToShaderHeader(getStart()->getDerived<OutputNode>()->getShaderName());
+        addToShaderHeader(getStart()->getDerivedConst<OutputNode>()->getShaderName());
         addToShaderHeader("(");
         break;
     case LIGHTOUTPUT:
         addToShaderHeader("light ");
-        addToShaderHeader(getStart()->getDerived<OutputNode>()->getShaderName());
+        addToShaderHeader(getStart()->getDerivedConst<OutputNode>()->getShaderName());
         addToShaderHeader("(");
         break;
     default:
@@ -56,10 +56,12 @@ void ShaderWriter::createHeader()
     init();
 }
 
-void ShaderWriter::initVar(const DoutSocket *socket)
+void ShaderWriter::initVar(const DSocket *socket)
 {
-    if(isInputVar(socket))return;
+    if(socket->getDir() == OUT && isInputVar(const_cast<DSocket*>(socket)->toOut()))return;
+
     QString VDstr;
+
     switch(socket->getType())
     {
 	case VARIABLE:

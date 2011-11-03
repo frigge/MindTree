@@ -19,10 +19,64 @@
 
 #include "shaderwriter.h"
 
-#include "source/data/nodes/data_node.h"
+#include "iostream"
 
-ShaderCodeGenerator::ShaderCodeGenerator(DNode *start)
-    : start(start), tabLevel(1)
+#include "source/data/nodes/data_node.h"
+#include "source/data/base/dnspace.h"
+
+CodeCache::CodeCache()
+    : cache(0)
+{
+}
+
+void CodeCache::add(QString s, const ContainerNode *n)
+{
+    if(!cache){
+        cache = new SubCache;
+        cache->next = 0;
+        cache->code = s;
+        cache->node = n;
+        return;
+    }
+
+    SubCache *c = cache;
+    if(c->node == n){
+        c->code.append(s);
+        return;
+    }
+    while(c->next) {
+        c = c->next;
+        if(c->node == n){
+            c->code.append(s);
+            return;
+        }
+    }
+
+    //only create new cache if there is no cache for this container
+    c->next = new SubCache;
+    SubCache *nc = c->next;
+    nc->code = s;
+    nc->node = n;
+    nc->next = 0;
+}
+
+QString CodeCache::get()    
+{
+    QString wholecode;
+    SubCache *first = cache;
+    if(!cache)return wholecode;
+    wholecode.append(first->code);
+    while(cache->next) {
+        cache = cache->next;
+        wholecode.append("{");
+        wholecode.append(cache->code);
+        wholecode.append("}");
+    }
+    return wholecode;
+}
+
+ShaderCodeGenerator::ShaderCodeGenerator(const DNode *start)
+    : start(start), tabLevel(1), focus(0)
 {
 }
 
@@ -32,10 +86,10 @@ void ShaderCodeGenerator::init()
     QString outputvar;
     foreach(const DinSocket *socket, start->getInSockets())
     {
-        if(!socket->getCntdFunctionalSocket())
+        if(!socket->getCntdWorkSocket())
             continue;
         if(!start->getInSockets().startsWith(const_cast<DinSocket*>(socket)))
-            code.append(newline());
+            addToCode(newline());
 
         if(socket->getVariable())
             outputVar(socket);
@@ -44,35 +98,57 @@ void ShaderCodeGenerator::init()
         outputvar.append(" = ");
         outputvar.append(writeVarName(socket));
         gotoNextNode(socket);
-        code.append("\n    ");
-        code.append(outputvar);
-        code.append(";");
+        addToCode("\n    ");
+        addToCode(outputvar);
+        addToCode(";");
     }
 }
 
-void ShaderCodeGenerator::setVariables(DNode *node)    
+void ShaderCodeGenerator::insertLoopVar(const DNode *insocketNode, DSocket *socket)    
 {
-    if(!node)
-    {
+    QString var = socket->setSocketVarName(&variableCnt);
+    std::cout << "setting variable:" << var.toStdString() << std::endl;
+    insertVariable(socket,  var);
+    insertVariable(insocketNode->getDerivedConst<LoopSocketNode>()->getContainer()->getSocketOnContainer(socket), var);
+    insertVariable(insocketNode->getDerivedConst<LoopSocketNode>()->getPartnerSocket(socket), var);
+}
+
+void ShaderCodeGenerator::setVariables(const DNode *node)    
+{
+    if(!node) {
         variables.clear();
         variableCnt.clear();
         node = start;
     }
+    if(node->getNodeType() == LOOPINSOCKETS) {
+        switch(node->getDerivedConst<LoopSocketNode>()->getContainer()->getNodeType())
+        {
+            case FOR:
+                insertLoopVar(node, node->getOutSockets().at(0));
+                insertLoopVar(node, node->getOutSockets().at(2));
+                break; 
+            case WHILE:
+                break; 
+            case ILLUMINANCE:
+                break; 
+            case ILLUMINATE:
+                break; 
+            case SOLAR:
+                break; 
+            case GATHER:
+                break; 
+            default:
+                break;
+        }
+    }
 
     foreach(DinSocket *socket, node->getInSockets())
     {
-        DoutSocket *cntdWorkSocket = socket->getCntdWorkSocket();
-        if(cntdWorkSocket) {
-            DNode *cntdWorkNode = cntdWorkSocket->getNode();
-            if(cntdWorkSocket->getNode()->isContainer()
-                &&!cntdWorkNode->getNodeType() == CONTAINER)
-                setVariables(cntdWorkNode);
-        }
-        DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
+        DoutSocket *cntdSocket = socket->getCntdWorkSocket();
         if(!cntdSocket)
             continue;
 
-        if(variables.contains(cntdSocket))
+        if(variables.values().contains(cntdSocket))
             continue;
             
         DNode *cntdNode = cntdSocket->getNode();
@@ -92,25 +168,25 @@ void ShaderCodeGenerator::setVariables(DNode *node)
     }
 }
 
-QString ShaderCodeGenerator::getVariable(const DoutSocket* socket)const
+QString ShaderCodeGenerator::getVariable(const DSocket* socket)const
 {
-    return variables.value(socket);
+    return variables.key(socket);
 }
 
 DoutSocket* ShaderCodeGenerator::getSimilar(DoutSocket *socket)    
 {
-    DNode *node = socket->getNode();
-    DNode *simnode = 0;
-    foreach(DNode *n, start->getAllInNodes())
+    const DNode *node = socket->getNode();
+    const DNode *simnode = 0;
+    foreach(const DNode *n, start->getAllInNodesConst())
     {
         if(n != node
             && *n == *node)
             {
                 simnode = n;
-                foreach(DNode *inn, n->getAllInNodes())
+                foreach(DNode *inn, n->getAllInNodesConst())
                 {
                     bool hasSim = false;
-                    foreach(DNode *inNode, node->getAllInNodes())
+                    foreach(DNode *inNode, node->getAllInNodesConst())
                         if(*inn == *inNode)
                         {
                             hasSim = true;
@@ -131,9 +207,9 @@ DoutSocket* ShaderCodeGenerator::getSimilar(DoutSocket *socket)
             return out;
 }
 
-void ShaderCodeGenerator::insertVariable(const DoutSocket *socket, QString variable)    
+void ShaderCodeGenerator::insertVariable(const DSocket *socket, QString variable)    
 {
-    variables.insert(socket, variable);
+    variables.insert(variable, socket);
 }
 
 QString ShaderCodeGenerator::newline()
@@ -157,12 +233,12 @@ void ShaderCodeGenerator::decTabLevel()
 
 void ShaderCodeGenerator::gotoNextNode(const DinSocket *socket)
 {
-    if(!socket->getCntdSocket())
+    if(!socket->getCntdWorkSocket())
         return;
 
     if(!written_sockets.contains(writeVarName(socket)))
     {
-        evalSocketValue(socket->getCntdSocket());
+        evalSocketValue(socket->getCntdWorkSocket());
         written_sockets.append(writeVarName(socket));
     }
     return;
@@ -170,10 +246,10 @@ void ShaderCodeGenerator::gotoNextNode(const DinSocket *socket)
 
 QString ShaderCodeGenerator::writeVarName(const DinSocket *insocket)
 {
-    if(!insocket->getCntdFunctionalSocket())
+    if(!insocket->getCntdWorkSocket())
         return "";
 
-    const DoutSocket *prevsocket = insocket->getCntdFunctionalSocket();
+    const DoutSocket *prevsocket = insocket->getCntdWorkSocket();
     const DNode *node = prevsocket->getNode();
 
     switch(node->getNodeType())
@@ -208,6 +284,10 @@ const DinSocket *ShaderCodeGenerator::stepUp(const DoutSocket *socket)
 {
     const ContainerNode *node = static_cast<const SocketNode*>(socket->getNode())->getContainer();
     const DinSocket *mapsocket = static_cast<const DinSocket*>(node->getSocketOnContainer(socket));
+    if(node->getSpace()->isContainerSpace())
+        focus = node->getSpace()->toContainer()->getContainer();
+    else
+        focus = 0;
     return mapsocket;
 }
 
@@ -265,7 +345,7 @@ void ShaderCodeGenerator::writeMathToVar(const DoutSocket *socket)
     output.append(" = ");
     output.append(getVariable(socket));
     output.append(createMath(socket));
-    code.append(output);
+    addToCode(output);
 }
 
 void ShaderCodeGenerator::evalSocketValue(const DoutSocket *socket)
@@ -333,7 +413,7 @@ void ShaderCodeGenerator::writeGetArray(const DoutSocket *socket)
     output.append(writeVarName(index));
     gotoNextNode(index);
     output.append("];");
-    code.append(output);
+    addToCode(output);
 }
 
 void ShaderCodeGenerator::writeSetArray(const DoutSocket *socket)    
@@ -352,7 +432,7 @@ void ShaderCodeGenerator::writeSetArray(const DoutSocket *socket)
     output.append(" = ");
     output.append(getVariable(socket));
     output.append(";");
-    code.append(output);
+    addToCode(output);
 }
 
 void ShaderCodeGenerator::writeVariable(const DoutSocket *socket)    
@@ -364,7 +444,7 @@ void ShaderCodeGenerator::writeVariable(const DoutSocket *socket)
     output.append(" = ");
     output.append(writeVarName(socket->getNode()->getInSockets().first()));
     output.append(";");
-    code.append(output);
+    addToCode(output);
 }
 
 void ShaderCodeGenerator::writeFunction(const DoutSocket *socket)
@@ -392,7 +472,7 @@ void ShaderCodeGenerator::writeFunction(const DoutSocket *socket)
     }
 
     output.append(");");
-    code.append(output);
+    addToCode(output);
 }
 
 void ShaderCodeGenerator::writeContainer(const DoutSocket *socket)
@@ -409,12 +489,12 @@ QString ShaderCodeGenerator::writeMath(const DoutSocket *socket, QString mathOpe
     foreach(const DinSocket *nsocket, socket->getNode()->getInSockets())
     {
         i++;
-		if(nsocket->getCntdFunctionalSocket())
+		if(nsocket->getCntdWorkSocket())
 		{
 
-            DNode *nextNode = nsocket->getCntdFunctionalSocket()->getNode();
+            DNode *nextNode = nsocket->getCntdWorkSocket()->getNode();
 			if(DNode::isMathNode(nextNode))
-				output.append(createMath(nsocket->getCntdFunctionalSocket()));
+				output.append(createMath(nsocket->getCntdWorkSocket()));
 			else
 			{
 				output.append(writeVarName(nsocket));
@@ -441,11 +521,11 @@ QString ShaderCodeGenerator::writeCondition(const DoutSocket *socket, QString co
     foreach(const DinSocket *nsocket, socket->getNode()->getInSockets())
     {
         i++;
-		if(nsocket->getCntdFunctionalSocket())
+		if(nsocket->getCntdWorkSocket())
 		{
-            DNode *nextNode = nsocket->getCntdFunctionalSocket()->getNode();
+            DNode *nextNode = nsocket->getCntdWorkSocket()->getNode();
 			if(DNode::isConditionNode(nextNode))
-				output.append(createMath(nsocket->getCntdFunctionalSocket()));
+				output.append(createMath(nsocket->getCntdWorkSocket()));
 			else
 			{
 				output.append(writeVarName(nsocket));
@@ -476,14 +556,14 @@ void ShaderCodeGenerator::writeConditionContainer(const DoutSocket *socket)
     output.append(")");
     output.append(newline());
     output.append("{");
-    code.append(output);
+    addToCode(output);
     incTabLevel();
     output.append(newline());
     mapped_socket = static_cast<const DinSocket*>(node->getSocketInContainer(socket));
     gotoNextNode(mapped_socket);
     decTabLevel();
-    code.append(newline());
-    code.append("}");
+    addToCode(newline());
+    addToCode("}");
 }
 
 QString ShaderCodeGenerator::writeNot(const DoutSocket *socket)
@@ -493,7 +573,7 @@ QString ShaderCodeGenerator::writeNot(const DoutSocket *socket)
     const DNode *node = socket->getNode();
     condition = node->getInSockets().first();
     output.append("!");
-    output.append(createCondition(condition->getCntdFunctionalSocket()));
+    output.append(createCondition(condition->getCntdWorkSocket()));
     return output;
 }
 
@@ -505,35 +585,50 @@ void ShaderCodeGenerator::writeForLoop(const DoutSocket *socket)
     start = node->getInSockets().at(0);
     end = node->getInSockets().at(1);
     step = node->getInSockets().at(2);
+    initVar(socket);
+    initVar(start);
+    initVar(step);
+    const ContainerNode *cnode = node->getDerivedConst<ContainerNode>();
+    mapped_socket = cnode->getSocketInContainer(socket)->toIn();
 
     output.append(newline());
     output.append("for(");
-    output.append("float step=");
+    output.append("float ");
+    output.append(getVariable(start));
+    output.append(" = ");
     output.append(writeVarName(start));
     gotoNextNode(start);
-    output.append("; step < ");
+    output.append(";");
+    output.append(getVariable(step));
+    output.append(" < ");
     output.append(writeVarName(end));
     gotoNextNode(end);
-    output.append("; step+=");
+    output.append(";");
+    output.append(getVariable(step));
+    output.append(" += ");
     output.append(writeVarName(step));
     output.append(")");
     output.append(newline());
-    output.append("{");
     incTabLevel();
-    code.append(output);
-    const ContainerNode *cnode = node->getDerivedConst<ContainerNode>();
-    mapped_socket = cnode->getSocketInContainer(socket)->toIn();
+    const ContainerNode *prevfocus = focus;
+    focus = cnode;
+    addToCode(output);
     gotoNextNode(mapped_socket);
+    addToCode(getVariable(socket));
+    addToCode(" = ");
+    addToCode(getVariable(socket));
+    addToCode(" = ");
+    addToCode(writeVarName(mapped_socket));
     decTabLevel();
-    code.append(newline());
-    code.append("}");
+    focus = prevfocus;
+    addToCode(newline());
 }
 
 void ShaderCodeGenerator::writeWhileLoop(const DoutSocket *socket)
 {
     QString output;
     const DNode *node = socket->getNode();
-    code.append(output);
+    addToCode(output);
 }
 
 void ShaderCodeGenerator::writeCustom(const DoutSocket *socket)    
@@ -593,14 +688,14 @@ QString ShaderCodeGenerator::getCode()
     returncode.append("    /*Variable declarations*/");
     returncode.append(createVarDeclares());
     returncode.append("\n\n    /*Begin Code*/");
-    returncode.append(code);
+    returncode.append(cache.get());
     returncode.append("\n}");
     return returncode;
 }
 
 void ShaderCodeGenerator::addToCode(QString c)
 {
-    code.append(c);
+    cache.add(c, focus);
 }
 void ShaderCodeGenerator::addToShaderHeader(QString s)
 {
@@ -673,7 +768,7 @@ QString ShaderCodeGenerator::createVarDeclares()
     return vars;
 }
 
-DNode* ShaderCodeGenerator::getStart()    
+const DNode* ShaderCodeGenerator::getStart()    
 {
     return start;
 }

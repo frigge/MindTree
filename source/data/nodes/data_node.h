@@ -102,6 +102,7 @@ public:
     C* getDerived();
 
     NodeList getAllInNodes(NodeList nodes=NodeList());
+    NodeList getAllInNodesConst(NodeList nodes=NodeList()) const;
 
     virtual VNode* createNodeVis();
     virtual void deleteNodeVis();
@@ -165,8 +166,8 @@ public:
     static bool isConditionNode(const DNode *node);
     bool isValueNode()const;
     
-    virtual bool operator==(DNode &node);
-    virtual bool operator!=(DNode &node);
+    virtual bool operator==(const DNode &node)const;
+    virtual bool operator!=(const DNode &node)const;
 
     bool isGhost();
 
@@ -178,21 +179,21 @@ public:
     void addArray(DSocket *first);
 
 private:
+    DNSpace *space;
+    VNode* nodeVis;
+    DSocket *varsocket;
+    DSocket *lastsocket;
     bool ghost;
     bool blockCBregister;
+    int varcnt;
     unsigned short ID;
     static unsigned short count;
-    VNode* nodeVis;
     QString nodeName;
     //DoutSocketList outSockets;
     //DinSocketList inSockets;
     mutable DSocketList outSockets;
     mutable DSocketList inSockets;
     NType NodeType;
-    DSocket *varsocket;
-    DSocket *lastsocket;
-    int varcnt;
-    DNSpace *space;
     QList<ArrayContainer*> arrays;
     CallbackList addSocketCallbacks;
 };
@@ -217,8 +218,8 @@ class FunctionNode : public DNode
 public:
     FunctionNode(QString name="");
     FunctionNode(const FunctionNode* node);
-    virtual bool operator==(DNode &node);
-    virtual bool operator!=(DNode &node);
+    virtual bool operator==(const DNode &node)const;
+    virtual bool operator!=(const DNode &node)const;
     QString getFunctionName() const;
     void setFunctionName(QString value);
 
@@ -258,8 +259,8 @@ public:
     SocketNode* getOutputs() const;
 
     void setNodeName(QString name);
-    virtual bool operator==(DNode &node);
-    virtual bool operator!=(DNode &node);
+    virtual bool operator==(const DNode &node)const;
+    virtual bool operator!=(const DNode &node)const;
 
     void newSocket(DSocket *socket);
     void killSocket(DSocket *socket);
@@ -361,8 +362,8 @@ class ColorValueNode : public ValueNode
 public:
     ColorValueNode(QString name="Color", bool raw=false);
     ColorValueNode(const ColorValueNode* node);
-    virtual bool operator==(DNode &node);
-    virtual bool operator!=(DNode &node);
+    virtual bool operator==(const DNode &node)const;
+    virtual bool operator!=(const DNode &node)const;
 
     void setValue(QColor);
     QColor getValue() const;
@@ -380,8 +381,8 @@ class StringValueNode : public ValueNode
 public:
     StringValueNode(QString name="String", bool raw=false);
     StringValueNode(const StringValueNode* node);
-    virtual bool operator==(DNode &node);
-    virtual bool operator!=(DNode &node);
+    virtual bool operator==(const DNode &node)const;
+    virtual bool operator!=(const DNode &node)const;
 
     void setValue(QString);
     QString getValue() const;
@@ -399,8 +400,8 @@ public:
     FloatValueNode(QString name="Float", bool raw=false);
     FloatValueNode(const FloatValueNode* node);
     void setValue(double);
-    virtual bool operator==(DNode &node);
-    virtual bool operator!=(DNode &node);
+    virtual bool operator==(const DNode &node)const;
+    virtual bool operator!=(const DNode &node)const;
 
     float getValue() const;
 
@@ -427,8 +428,8 @@ public:
     VectorValueNode(const VectorValueNode* node);
     Vector getValue() const;
     void setValue(Vector newvalue);
-    virtual bool operator==(DNode &node);
-    virtual bool operator!=(DNode &node);
+    virtual bool operator==(const DNode &node)const;
+    virtual bool operator!=(const DNode &node)const;
     VNode* createNodeVis();
 
 private:

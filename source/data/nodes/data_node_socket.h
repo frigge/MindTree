@@ -117,6 +117,9 @@ public:
     DinSocket* toIn();
     DoutSocket* toOut();
 
+    QString setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt);
+	QString getVarName() const;
+
     void setSocketVis(VNSocket *vis);
 	void  setNode(DNode*);
     void killSocketVis();
@@ -185,6 +188,7 @@ private:
     CallbackList changeTypeCallbacks;
 
     static QHash<unsigned short, DSocket*>socketIDHash;
+	QString varname;
 };
 
 class QDataStream;
@@ -253,12 +257,9 @@ public:
     void registerSocket(DSocket *socket);
     void unregisterSocket(DinSocket *socket, bool decr=true);
 	virtual void setName(QString value);
-    QString setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt);
-	QString getVarName() const;
 
 private:
     QList<DinSocket*> cntdSockets;
-	QString varname;
 };
 
 #endif // DATA_NODE_SOCKET_H

@@ -71,11 +71,11 @@ protected:
 private:
 	QGraphicsTextItem *socketNameVis;
     DSocket *data;
-	int width, height;
     VNodeUpdateCallback *cb;
+    QAction *expandAction;
+	int width, height;
     bool drawName;
     bool blockContextMenu;
-    QAction *expandAction;
     bool visible;
 };
 

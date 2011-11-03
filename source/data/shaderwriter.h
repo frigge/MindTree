@@ -27,12 +27,32 @@
 class OutputNode;
 class DoutSocket;
 class DinSocket;
+class DSocket;
 class DNode;
+class ContainerNode;
+
+struct SubCache
+{
+    SubCache *next;
+    const ContainerNode *node;
+    QString code;
+};
+
+class CodeCache
+{
+public:
+    CodeCache();
+    QString get();
+    void add(QString s, const ContainerNode *n);
+
+private:
+    SubCache *cache;
+};
 
 class ShaderCodeGenerator
 {
 public:
-    ShaderCodeGenerator(DNode *start);
+    ShaderCodeGenerator(const DNode *start);
     virtual QString getCode();
 
 protected:
@@ -52,7 +72,7 @@ protected:
     virtual void decTabLevel();
 
     virtual void evalSocketValue(const DoutSocket *socket);
-    virtual void initVar(const DoutSocket *socket)=0;
+    virtual void initVar(const DSocket *socket)=0;
     virtual void outputVar(const DinSocket *socket)=0;
     virtual QString createCondition(const DoutSocket *socket);
     virtual QString createMath(const DoutSocket *);
@@ -82,14 +102,15 @@ protected:
 
     virtual const DinSocket *stepUp(const DoutSocket *socket);
 
-    virtual void setVariables(DNode *node=0);
-    virtual QString getVariable(const DoutSocket* socket)const;
-    virtual void insertVariable(const DoutSocket *socket, QString variable);
+    virtual void setVariables(const DNode *node=0);
+    virtual QString getVariable(const DSocket* socket)const;
+    virtual void insertVariable(const DSocket *socket, QString variable);
+    void insertLoopVar(const DNode *insocketNode, DSocket *socket);
     virtual DoutSocket* getSimilar(DoutSocket *socket);
     virtual QString createOutputVars();
     virtual void addToOutputVars(QString);
 
-    DNode* getStart();
+    const DNode* getStart();
     QList<QString> getWrittenSockets();
     QString getVar();
     QList<QString> getSocketNames();
@@ -100,17 +121,19 @@ protected:
     QStringList getOutputVars();
     
 private:
+    const DNode *start;
+    const ContainerNode *focus;
     QList<QString>written_sockets;
     QString var;
     QList<QString> socketnames;
+    CodeCache cache;
     QString code;
     QStringList VarDeclares;
     QString ShaderHeader;
     QStringList ShaderParameter;
     QStringList OutputVars;
     int tabLevel;
-    DNode *start;
-    QHash<const DoutSocket*, QString> variables;
+    QHash<QString, const DSocket*> variables;
     QHash<QString, unsigned short>variableCnt;
 };
 
