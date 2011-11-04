@@ -40,6 +40,14 @@ void CodeCache::add(QString s, const ContainerNode *n)
     }
 
     SubCache *c = cache;
+    if(!n && c->node != n){
+        while(c->next) 
+            c = c->next;
+        c->next = new SubCache;
+        c->next->next = 0;
+        c->code = s;
+        c->node = n;
+    }
     if(c->node == n){
         c->code.append(s);
         return;
@@ -60,6 +68,19 @@ void CodeCache::add(QString s, const ContainerNode *n)
     nc->next = 0;
 }
 
+bool CodeCache::isCached(const ContainerNode *n)    
+{
+    if(!cache) return false;
+
+    SubCache *c = cache;
+    if(c->node == n) return true;
+    while(c->next) {
+        c = c->next;
+        if(c->node == n) return true;
+    }
+    return false;
+}
+
 QString CodeCache::get()    
 {
     QString wholecode;
@@ -68,7 +89,9 @@ QString CodeCache::get()
     wholecode.append(first->code);
     while(cache->next) {
         cache = cache->next;
+        wholecode.append("{");
         wholecode.append(cache->code);
+        wholecode.append("}");
     }
     return wholecode;
 }
@@ -153,17 +176,19 @@ void ShaderCodeGenerator::setVariables(const DNode *node)
             continue;
             
         DNode *cntdNode = cntdSocket->getNode();
-        QString varname_raw = cntdSocket->getName().replace(" ", "_");
-        int ar = varname_raw.indexOf("[");
-        if(ar >= 0)
-            varname_raw = varname_raw.left(ar);
-
-        DoutSocket *simSocket = getSimilar(cntdSocket);
-        if(variableCnt.contains(varname_raw)
-            && simSocket)
-            insertVariable(cntdSocket, getVariable(simSocket));
-        else
-            insertVariable(cntdSocket, cntdSocket->setSocketVarName(&variableCnt));
+        if(!DNode::isMathNode(cntdNode)) {
+            QString varname_raw = cntdSocket->getName().replace(" ", "_");
+            int ar = varname_raw.indexOf("[");
+            if(ar >= 0)
+                varname_raw = varname_raw.left(ar);
+    
+            DoutSocket *simSocket = getSimilar(cntdSocket);
+            if(variableCnt.contains(varname_raw)
+                && simSocket)
+                insertVariable(cntdSocket, getVariable(simSocket));
+            else
+                insertVariable(cntdSocket, cntdSocket->setSocketVarName(&variableCnt));
+        }
 
         setVariables(cntdNode);
     }
@@ -595,39 +620,41 @@ void ShaderCodeGenerator::writeForLoop(const DoutSocket *socket)
     const ContainerNode *cnode = node->getDerivedConst<ContainerNode>();
     mapped_socket = cnode->getSocketInContainer(socket)->toIn();
 
-    output.append(newline());
-    output.append("for(");
-    output.append("float ");
-    output.append(getVariable(step));
-    output.append(" = ");
-    output.append(writeVarName(start));
-    gotoNextNode(start);
-    output.append(";");
-    output.append(getVariable(step));
-    output.append(" < ");
-    output.append(writeVarName(end));
-    gotoNextNode(end);
-    output.append(";");
-    output.append(getVariable(step));
-    output.append(" += ");
-    output.append(writeVarName(step));
-    output.append(")");
-    output.append(newline());
-    output.append("{");
+    //little hack to only write loop header once no matter how many variables it outputs
+    if(!cache.isCached(cnode)){
+        output.append(newline());
+        output.append("for(");
+        output.append("float ");
+        output.append(getVariable(step));
+        output.append(" = ");
+        output.append(writeVarName(start));
+        gotoNextNode(start);
+        output.append(";");
+        output.append(getVariable(step));
+        output.append(" < ");
+        output.append(writeVarName(end));
+        gotoNextNode(end);
+        output.append(";");
+        output.append(getVariable(step));
+        output.append(" += ");
+        output.append(writeVarName(step));
+        output.append(")");
+        output.append(newline());
+    }
     incTabLevel();
     output.append(newline());
     const ContainerNode *prevfocus = focus;
     focus = cnode;
-    addToCode(output);
     gotoNextNode(mapped_socket);
-    addToCode(getVariable(socket));
-    addToCode(" = ");
-    addToCode(writeVarName(mapped_socket));
+    output.append((getVariable(socket)));
+    output.append(" = ");
+    output.append(writeVarName(mapped_socket));
+    output.append(";");
     decTabLevel();
+    output.append(newline());
+    output.append(newline());
+    addToCode(output);
     focus = prevfocus;
-    addToCode(newline());
-    addToCode("}");
-    addToCode(newline());
 }
 
 void ShaderCodeGenerator::writeWhileLoop(const DoutSocket *socket)
