@@ -243,6 +243,12 @@ NodeList DNode::getAllInNodes(NodeList nodes)
     foreach(DinSocket *socket, getInSockets())
     {
         DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
+
+        //try to not forget special containers and their default inputs
+        DoutSocket *wSocket = socket->getCntdWorkSocket();
+        if(wSocket != cntdSocket && wSocket->getNode()->isContainer())
+            nodes.append(wSocket->getNode()->getAllInNodes(nodes));
+
         if(cntdSocket)
         {
             DNode *cntdNode = cntdSocket->getNode();
