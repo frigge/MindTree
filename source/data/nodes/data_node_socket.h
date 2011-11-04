@@ -91,7 +91,11 @@ typedef enum
     POINT,
     STRING,
     VARIABLE,
-    CONDITION
+    CONDITION,
+    MATRIX,
+    POLYGON,
+    OBJECT,
+    INTEGER
 }socket_type;
 
 typedef enum

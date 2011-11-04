@@ -234,7 +234,7 @@ void VNodeLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         if(isUnderMouse())
             linkpen.setColor(QColor(255, 155, 155));
         else
-            linkpen.setColor(QColor(255, 255, 255, 150));
+            linkpen.setColor(QColor(200, 200, 200));
         linkpen.setStyle(Qt::SolidLine);
     }
     else

@@ -93,7 +93,7 @@ void NodeName::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 }
 
 VNode::VNode(DNode *data)
-    : data(data), node_name(new NodeName("", this)), node_width(30), node_height(30), nodeColor(100, 100, 100)
+    : data(data), node_name(new NodeName("", this)), node_width(30), node_height(30), nodeColor(50, 50, 50)
 {
     this->data = data;
     setZValue(1);
@@ -221,7 +221,7 @@ void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
     QPointF ndiagVec(-diagVec.y() / length, diagVec.x() / length);
 
     QLinearGradient outlineCol(ndiagVec , -1 * ndiagVec);
-    outlineCol.setColorAt(0, QColor(200, 200, 200));
+    outlineCol.setColorAt(0, QColor(150, 150, 150));
     outlineCol.setColorAt(1, QColor(0, 0, 0));
 
     if (isSelected())
@@ -240,7 +240,7 @@ void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
     painter->setPen(node_outline);
     painter->setBrush(QBrush(nodeColor, Qt::SolidPattern));
 //    painter->drawRect(-node_width/2, -node_height/2, node_width, node_height);
-    painter->drawRoundedRect(-node_width/2, -node_height/2, node_width, node_height, 5,5);
+    painter->drawRoundedRect(-node_width/2, -node_height/2, node_width, node_height, 3,3);
     drawName();
 };
 
@@ -349,7 +349,7 @@ VValueNode::VValueNode(DNode *data)
     if(node->isShaderInput())
         setNodeColor(QColor(255, 135, 0));
     else
-        setNodeColor(QColor(100, 100, 100));
+        setNodeColor(QColor(50, 50, 50));
 
     data->getOutSockets().first()->getSocketVis()->setDrawName(false);
     data->getOutSockets().first()->getSocketVis()->setBlockContextMenu(true);

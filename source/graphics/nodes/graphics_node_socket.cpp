@@ -71,6 +71,7 @@ void VNSocket::createNameVis()
 {
 	//create Name
 	socketNameVis = new QGraphicsTextItem(data->getName());
+    socketNameVis->setDefaultTextColor(QColor(255, 255, 255));
 	socketNameVis->setParentItem(this);
 	socketNameVis->setZValue(zValue()+.2);
 	socketNameVis->setY(-3 * height/4);
@@ -255,6 +256,8 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setClipRect(option->exposedRect);
     QColor color;
+    QPen spen;
+    spen.setColor(QColor(50, 50, 50));
     switch(data->getType())
     {
     case STRING:
@@ -309,7 +312,7 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         color = QColor(0, 0, 0, 0);
 
     painter->setBrush(QBrush(color, Qt::SolidPattern));
-    painter->setPen(Qt::NoPen);
+    painter->setPen(spen);
     //painter->drawRoundedRect(-width/2, -height/2, width, height, 2.5, 2.5);
     painter->drawEllipse(-width/2, -height/2, width, height);
 };

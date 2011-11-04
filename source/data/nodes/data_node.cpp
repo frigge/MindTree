@@ -730,9 +730,9 @@ void DNode::inc_var_socket()
 {
     lastsocket = varsocket;
     if(lastsocket->getDir() == IN)
-        varsocket = new DinSocket("Add Socket", VARIABLE, this);
+        varsocket = new DinSocket("+", VARIABLE, this);
     else
-        varsocket = new DoutSocket("Add Socket", VARIABLE, this);
+        varsocket = new DoutSocket("+", VARIABLE, this);
     varsocket->setVariable(true);
     varcnt +=1;
 }
@@ -939,9 +939,9 @@ void DNode::setDynamicSocketsNode(socket_dir dir, socket_type t)
 {
     DSocket *varsocket = 0;
     if(dir == IN)
-        varsocket = new DinSocket("Add Socket", t, this);
+        varsocket = new DinSocket("+", t, this);
     else
-        varsocket = new DoutSocket("Add Socket", t, this);
+        varsocket = new DoutSocket("+", t, this);
     varsocket->setVariable(true);
 }
 
