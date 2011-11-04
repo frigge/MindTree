@@ -44,6 +44,7 @@ public:
     CodeCache();
     QString get();
     void add(QString s, const ContainerNode *n);
+    bool isCached(const ContainerNode *n);
 
 private:
     SubCache *cache;
