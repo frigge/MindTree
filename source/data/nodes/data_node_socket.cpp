@@ -867,8 +867,14 @@ DoutSocket* DinSocket::getCntdWorkSocket() const
             else
                 return cntdSocket->getNode()->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdWorkSocket();
         }
-        else if(cntdSocket->getNode()->getNodeType() == INSOCKETS)
-            return cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket)->toIn()->getCntdWorkSocket();
+        else if(cntdSocket->getNode()->getNodeType() == INSOCKETS
+            ||cntdSocket->getNode()->getNodeType() == LOOPINSOCKETS){
+            DSocket *onContainer = cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket); 
+            if(onContainer)
+                return onContainer->toIn()->getCntdWorkSocket();
+            else 
+                return cntdSocket;
+        }
         /*  
         else if (cntdSocket->getNode()->getNodeType() == LOOPINSOCKETS)
         {
