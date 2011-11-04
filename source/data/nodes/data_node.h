@@ -189,8 +189,6 @@ private:
     unsigned short ID;
     static unsigned short count;
     QString nodeName;
-    //DoutSocketList outSockets;
-    //DinSocketList inSockets;
     mutable DSocketList outSockets;
     mutable DSocketList inSockets;
     NType NodeType;
