@@ -22,28 +22,72 @@
 
 #include "QDockWidget"
 #include "QGLWidget"
+#include "QVector3D"
+#include "QMatrix4x4"
 
 #include "source/data/nodes/data_node.h"
 #include "source/graphics/nodes/graphics_node.h"
 
-class Viewport;
+class Viewport : public QGLWidget
+{
+public:
+    Viewport(QWidget *parent);
+
+protected:
+    void resizeGL(int width, int height);
+    void paintGL();
+    void initializeGL();
+    void drawGrid();
+    void drawAxisGizmo();
+    void rotateView(qreal xdist, qreal ydist);
+    void panView(qreal xdist, qreal ydist);
+    void zoomView(qreal xdist, qreal ydist);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+
+private:
+    QVector3D camlookat;
+    QMatrix4x4 transform;
+    bool rotate, pan, zoom;
+    QPointF lastpos;
+};
+
 class ViewportDock;
+class QMenu;
+
+class VViewportNode : public VNode
+{
+public:
+    VViewportNode(DNode *node);
+
+protected:
+    void contextMenu();
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
+
+private:
+    QMenu *cxtM;
+};
 
 class ViewportNode : public DNode
 {
 public:
-    ViewportNode();
+    ViewportNode(bool raw=false);
+    ViewportDock* getDock();
+
+protected:
+    virtual VNode* createNodeVis();
 
 private:
     ViewportDock *dock;
     Viewport *view;
 };
 
-class ViewportDock
+class ViewportDock : public QDockWidget
 {
 public:
-    ViewportDock(arguments);
-    virtual ~ViewportDock();
+    ViewportDock(ViewportNode *node);
+    Viewport *getViewport();
 
 private:
     Viewport *viewport;

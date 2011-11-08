@@ -193,9 +193,11 @@ void NodeLib::addBuildInNodes()
     QTreeWidgetItem *varname = new QTreeWidgetItem(QStringList() << "varname" << "34");
     QTreeWidgetItem *preview = new QTreeWidgetItem(QStringList() << "Preview" << "30");
 
+    QTreeWidgetItem *data = new QTreeWidgetItem(QStringList("Dataflow"));
+    QTreeWidgetItem *viewport = new QTreeWidgetItem(QStringList() << "Viewport" << "35");
 
-    QList<QTreeWidgetItem*> hardgrps, ins, outs, maths, conditionals, values, loops, arrays;
-    hardgrps<<inputs<<outputs<<math<<cond<<value<<loop<<array<<varname<<preview;
+    QList<QTreeWidgetItem*> hardgrps, ins, outs, maths, conditionals, values, loops, arrays, datas;
+    hardgrps<<inputs<<outputs<<math<<cond<<value<<loop<<array<<varname<<preview<<data;
     ins<<surfin<<dispin<<volin<<lin;
     outs<<surfout<<dispout<<volout<<lout;
     maths<<madd<<msub<<mmult<<mdiv<<mdot;
@@ -203,6 +205,7 @@ void NodeLib::addBuildInNodes()
     values<<color<<string<<float_<<vector;
     loops<<forloop<<whileloop<<illuminateloop<<illuminanceloop<<solarloop<<gatherloop;
     arrays<<getarray<<setarray;
+    datas<<viewport;
 
     hardnodes->addChildren(hardgrps);
     inputs->addChildren(ins);
@@ -212,6 +215,7 @@ void NodeLib::addBuildInNodes()
     value->addChildren(values);
     loop->addChildren(loops);
     array->addChildren(arrays);
+    data->addChildren(datas);
     hardnodes->setExpanded(true);
 }
 

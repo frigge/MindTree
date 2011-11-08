@@ -20,6 +20,7 @@
 
 #include "data_node.h"
 #include "source/graphics/nodes/graphics_node.h"
+#include "source/graphics/viewport.h"
 #include "source/graphics/base/vnspace.h"
 #include "source/data/nodes/data_node.h"
 #include "source/data/base/frg.h"
@@ -260,6 +261,13 @@ DNode* BuildIn::CLilluminance(DNSpace *space)
 DNode* BuildIn::CLsolar(DNSpace *space)
 {
     SolarNode *node = new SolarNode(false);
+    space->addNode(node);
+    return node;
+}
+
+DNode* BuildIn::Viewport(DNSpace *space)
+{
+    ViewportNode *node = new ViewportNode(false);
     space->addNode(node);
     return node;
 }

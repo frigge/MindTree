@@ -302,6 +302,12 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         else
             color = QColor(140, 20, 20);
         break;
+    case OBJECT:
+        if (isUnderMouse())
+            color = QColor(255, 170, 0);
+        else
+            color = QColor(235, 105, 20);
+        break;
     case VARIABLE:
         if(isUnderMouse())
             color = QColor(255, 0, 255);

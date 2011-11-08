@@ -73,5 +73,8 @@ namespace BuildIn
     DNode* CLilluminance(DNSpace *space);
     DNode* CLsolar(DNSpace *space);
     DNode* CLgather(DNSpace *space);
+
+    //Data
+    DNode *Viewport(DNSpace *space);
 }
 #endif // BUILDIN_NODES_H
