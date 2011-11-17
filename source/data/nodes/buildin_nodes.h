@@ -24,57 +24,63 @@
 
 namespace BuildIn
 {
+    void registerNodes();
     //Standard starting nodes:
     //Array
-    DNode* getArray(DNSpace *space);
-    DNode* setArray(DNSpace *space);
-    DNode* VarName(DNSpace *space);
+    void* getArray(void *space);
+    void* setArray(void *space);
+    void* composeArray(void *space);
+    void* VarName(void *space);
 
     //Inputs
-    DNode* surfaceInput(DNSpace *space);
-    DNode* displacementInput(DNSpace *space);
-    DNode* lightInput(DNSpace *space);
-    DNode* volumeInput(DNSpace *space);
+    void* surfaceInput(void *space);
+    void* displacementInput(void *space);
+    void* lightInput(void *space);
+    void* volumeInput(void *space);
     //Outputs
-    DNode* surfaceOutput(DNSpace *space);
-    DNode* displacementOutput(DNSpace *space);
-    DNode* volumeOutput(DNSpace *space);
-    DNode* lightOutput(DNSpace *space);
+    void* surfaceOutput(void *space);
+    void* displacementOutput(void *space);
+    void* volumeOutput(void *space);
+    void* lightOutput(void *space);
 
     //Math
-    DNode* MaddNode(DNSpace *space);
-    DNode* MSubNode(DNSpace *space);
-    DNode* MmultNode(DNSpace *space);
-    DNode* MdivNode(DNSpace *space);
-    DNode* MdotNode(DNSpace *space);
+    void* MaddNode(void *space);
+    void* MSubNode(void *space);
+    void* MmultNode(void *space);
+    void* MdivNode(void *space);
+    void* MdotNode(void *space);
 
     //Booleans
-    DNode* CandNode(DNSpace *space);
-    DNode* CorNode(DNSpace *space);
-    DNode* CnotNode(DNSpace *space);
-    DNode* CgreaterNode(DNSpace *space);
-    DNode* CsmallerNode(DNSpace *space);
-    DNode* CeqNode(DNSpace *space);
+    void* CandNode(void *space);
+    void* CorNode(void *space);
+    void* CnotNode(void *space);
+    void* CgreaterNode(void *space);
+    void* CsmallerNode(void *space);
+    void* CeqNode(void *space);
 
     //Values
-    DNode* VColNode(DNSpace *space);
-    DNode* VStrNode(DNSpace *space);
-    DNode* VFlNode(DNSpace *space);
-    DNode* VVecNode(DNSpace *space);
-//    void VMatNode(DNSpace *space);
+    void* VColNode(void *space);
+    void* VStrNode(void *space);
+    void* VFlNode(void *space);
+    void* VIntNode(void *space);
+    void* VBoolNode(void *space);
+    void* VVecNode(void *space);
+//    void VMatNode(void *space);
 
     //Containers
-    DNode* ContIfNode(DNSpace *space);
-    DNode* ContForNode(DNSpace *space);
-    DNode* ContWhileNode(DNSpace *space);
+    void* ContIfNode(void *space);
+    void* ContForNode(void *space);
+    void* ContWhileNode(void *space);
 
     //RSL Loop Container
-    DNode* CLilluminate(DNSpace *space);
-    DNode* CLilluminance(DNSpace *space);
-    DNode* CLsolar(DNSpace *space);
-    DNode* CLgather(DNSpace *space);
+    void* CLilluminate(void *space);
+    void* CLilluminance(void *space);
+    void* CLsolar(void *space);
+    void* CLgather(void *space);
 
     //Data
-    DNode *Viewport(DNSpace *space);
+    void* Viewport(void *space);
+    void* ComposeObject(void *space);
+    void* ComposePolygon(void *space);
 }
 #endif // BUILDIN_NODES_H

@@ -22,6 +22,7 @@
 #include "QHash"
 
 #include "source/data/callbacks.h"
+#include "source/data/base/properties.h"
 
 class  DSocket;
 class DinSocket;
@@ -93,9 +94,9 @@ typedef enum
     VARIABLE,
     CONDITION,
     MATRIX,
+    SCENEOBJECT,
     POLYGON,
-    OBJECT,
-    INTEGER
+    INTEGER,
 }socket_type;
 
 typedef enum
@@ -133,7 +134,7 @@ public:
 	QString getName() const;
 	virtual void setName(QString value);
 	socket_type getType() const;
-	void setType(socket_type value);
+	virtual void setType(socket_type value);
 	socket_dir getDir() const;
 	void setDir(socket_dir value);
 	DNode* getNode() const;
@@ -238,12 +239,29 @@ public:
 	void setTempCntdID(unsigned short value);
 	unsigned short getTempCntdID() const;
 
+    bool getBool();
+    void setBool(bool value);
+    int getInt();
+    void setInt(int value);
+    double getFloat();
+    void setFloat(double value);
+    Vector getVector();
+    void setVector(Vector value);
+    QString getString();
+    void setString(QString value);
+
+    Property* getProperty();
+    void setProperty();
+    void setType(socket_type value);
+
 private:
 	unsigned short tempCntdID;
     DoutSocket* cntdSocket;
     bool Token;
     ScpNameCB *linkedNameCB;
     ScpTypeCB *linkedTypeCB;
+
+    Property *prop;
 };
 
 QDataStream& operator<<(QDataStream &stream, DinSocket *socket);

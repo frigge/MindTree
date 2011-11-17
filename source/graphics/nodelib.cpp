@@ -30,11 +30,14 @@
 
 #include	"source/graphics/base/vnspace.h"
 #include "source/data/base/frg.h"
+#include "source/data/nodes/buildin_nodes.h"
 
 NodeLibWidget::NodeLibWidget(QWidget *parent)
     : QWidget(parent)
 {
     FRG::lib = new NodeLib(this);
+    BuildIn::registerNodes();
+    FRG::lib->update();
     QVBoxLayout *lay = new QVBoxLayout();
     lay->setMargin(0);
     lay->setSpacing(0);
@@ -45,6 +48,7 @@ NodeLibWidget::NodeLibWidget(QWidget *parent)
     lay->addWidget(FRG::lib);
 
     connect(filteredit, SIGNAL(textChanged(QString)), this, SLOT(filter()));
+
 }
 
 void NodeLibWidget::filter()    
@@ -53,7 +57,7 @@ void NodeLibWidget::filter()
 }
 
 NodeLib::NodeLib(QWidget *parent):
-    QTreeWidget(parent)
+    QTreeWidget(parent), NodeID(0)
 {
     setMinimumHeight(1);
     resize(200, 1);
@@ -144,79 +148,39 @@ void NodeLib::addBuildInNodes()
     QTreeWidgetItem *hardnodes = new QTreeWidgetItem(QStringList("Build In"));
     addTopLevelItem(hardnodes);
 
-    QTreeWidgetItem *inputs = new QTreeWidgetItem(QStringList("Inputs"));
-    QTreeWidgetItem *surfin = new QTreeWidgetItem(QStringList() << "Surface Input" << "1");
-    QTreeWidgetItem *dispin = new QTreeWidgetItem(QStringList() << "Displacement Input" << "2");
-    QTreeWidgetItem *volin = new QTreeWidgetItem(QStringList() << "Volume Input" << "3");
-    QTreeWidgetItem *lin = new QTreeWidgetItem(QStringList() << "Light Input" << "4");
+    foreach(QTreeWidgetItem *item, NodeGroups.values())
+        if(!item->parent())
+            hardnodes->addChild(item);
+}
 
-    QTreeWidgetItem *outputs = new QTreeWidgetItem(QStringList("Outpus"));
-    QTreeWidgetItem *surfout = new QTreeWidgetItem(QStringList() << "Surface Output" << "5");
-    QTreeWidgetItem *dispout = new QTreeWidgetItem(QStringList() << "Displacement Output" << "6");
-    QTreeWidgetItem *volout = new QTreeWidgetItem(QStringList() << "Volume Output" << "7");
-    QTreeWidgetItem *lout = new QTreeWidgetItem(QStringList() << "Light Output" << "8");
+void NodeLib::addGroup(QString name, QString parent)    
+{
+    if(!NodeGroups.keys().contains(name)) {
+        QTreeWidgetItem *newgroup = new QTreeWidgetItem(QStringList(name));
+        if(parent != ""){
+            addGroup(parent);
+            NodeGroups.value(parent)->addChild(newgroup);
+        }
+        NodeGroups.insert(name, newgroup);
+    }
+}
 
-    QTreeWidgetItem *math = new QTreeWidgetItem(QStringList("Math"));
-    QTreeWidgetItem *madd = new QTreeWidgetItem(QStringList() << "Add" << "9");
-    QTreeWidgetItem *msub = new QTreeWidgetItem(QStringList() << "Subtract" << "10");
-    QTreeWidgetItem *mmult = new QTreeWidgetItem(QStringList() << "Multiply" << "11");
-    QTreeWidgetItem *mdiv = new QTreeWidgetItem(QStringList() << "Divide" << "12");
-    QTreeWidgetItem *mdot = new QTreeWidgetItem(QStringList() << "Dot Product" << "13");
+void NodeLib::addNode(QString name, QString group, void*(*createFunc)(void*))    
+{
+    addGroup(group);
+    QTreeWidgetItem *item = new QTreeWidgetItem(QStringList() << name << QString::number(NodeID));
 
-    QTreeWidgetItem *cond = new QTreeWidgetItem(QStringList("Conditions"));
-    QTreeWidgetItem *ifcont = new QTreeWidgetItem(QStringList() << "Condition Container" << "14");
-    QTreeWidgetItem *cgr = new QTreeWidgetItem(QStringList() << "Greater Than"<< "15");
-    QTreeWidgetItem *csm = new QTreeWidgetItem(QStringList() << "Smaller Than" << "16");
-    QTreeWidgetItem *ceq = new QTreeWidgetItem(QStringList() << "Equal" << "17");
-    QTreeWidgetItem *cnot = new QTreeWidgetItem(QStringList() << "Not" << "18");
-    QTreeWidgetItem *cand = new QTreeWidgetItem(QStringList() << "And" << "19");
-    QTreeWidgetItem *cor = new QTreeWidgetItem(QStringList() << "Or" << "20");
+    NodeLibItem *nli = new NodeLibItem;
+    nli->item = item;
+    nli->dropFunc = createFunc;
+    nodeLibItems.insert(NodeID, nli);
+    NodeGroups.value(group)->addChild(item);
+    NodeID++;
+}
 
-    QTreeWidgetItem *value = new QTreeWidgetItem(QStringList("Value"));
-    QTreeWidgetItem *color = new QTreeWidgetItem(QStringList() << "Color" << "21");
-    QTreeWidgetItem *string = new QTreeWidgetItem(QStringList() << "String" << "22");
-    QTreeWidgetItem *float_ = new QTreeWidgetItem(QStringList() << "Float" << "23");
-    QTreeWidgetItem *vector = new QTreeWidgetItem(QStringList() << "Vector" << "31");
-
-    QTreeWidgetItem *loop = new QTreeWidgetItem(QStringList("Loop"));
-    QTreeWidgetItem *forloop = new QTreeWidgetItem(QStringList() << "For" << "24");
-    QTreeWidgetItem *whileloop = new QTreeWidgetItem(QStringList() << "While" << "25");
-    QTreeWidgetItem *illuminateloop = new QTreeWidgetItem(QStringList() << "Illuminate" << "26");
-    QTreeWidgetItem *illuminanceloop = new QTreeWidgetItem(QStringList() << "Illuminance" << "27");
-    QTreeWidgetItem *solarloop = new QTreeWidgetItem(QStringList() << "Solar" << "28");
-    QTreeWidgetItem *gatherloop = new QTreeWidgetItem(QStringList() << "Gather" << "29");
-
-    QTreeWidgetItem *array = new QTreeWidgetItem(QStringList("Arrays"));
-    QTreeWidgetItem *getarray = new QTreeWidgetItem(QStringList() << "GetArray" << "32");
-    QTreeWidgetItem *setarray = new QTreeWidgetItem(QStringList() << "SetArray" << "33");
-
-    QTreeWidgetItem *varname = new QTreeWidgetItem(QStringList() << "varname" << "34");
-    QTreeWidgetItem *preview = new QTreeWidgetItem(QStringList() << "Preview" << "30");
-
-    QTreeWidgetItem *data = new QTreeWidgetItem(QStringList("Dataflow"));
-    QTreeWidgetItem *viewport = new QTreeWidgetItem(QStringList() << "Viewport" << "35");
-
-    QList<QTreeWidgetItem*> hardgrps, ins, outs, maths, conditionals, values, loops, arrays, datas;
-    hardgrps<<inputs<<outputs<<math<<cond<<value<<loop<<array<<varname<<preview<<data;
-    ins<<surfin<<dispin<<volin<<lin;
-    outs<<surfout<<dispout<<volout<<lout;
-    maths<<madd<<msub<<mmult<<mdiv<<mdot;
-    conditionals<<ifcont<<cgr<<csm<<ceq<<cnot<<cand<<cor;
-    values<<color<<string<<float_<<vector;
-    loops<<forloop<<whileloop<<illuminateloop<<illuminanceloop<<solarloop<<gatherloop;
-    arrays<<getarray<<setarray;
-    datas<<viewport;
-
-    hardnodes->addChildren(hardgrps);
-    inputs->addChildren(ins);
-    outputs->addChildren(outs);
-    math->addChildren(maths);
-    cond->addChildren(conditionals);
-    value->addChildren(values);
-    loop->addChildren(loops);
-    array->addChildren(arrays);
-    data->addChildren(datas);
-    hardnodes->setExpanded(true);
+NodeLibItem* NodeLib::getItem(int ID)    
+{
+    return nodeLibItems.value(ID); 
 }
 
 void NodeLib::update()

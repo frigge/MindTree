@@ -34,15 +34,22 @@ HEADERS += source/data/callbacks.h \
            source/graphics/shaderpreview.h \
            source/graphics/previewdock.h \
            source/graphics/sourcedock.h \
+           source/graphics/viewport.h \
+           source/graphics/properties_editor.h \
            source/data/base/dnspace.h \
            source/data/base/frg.h \
            source/data/base/frg_shader_author.h \
            source/data/base/project.h \
+           source/data/base/properties.h \
            source/data/nodes/buildin_nodes.h \
            source/data/nodes/data_node.h \
            source/data/nodes/data_node_socket.h \
            source/data/undo/frg_generic_undo.h \
+           source/data/scene/object.h \
+           source/data/scene/cache_main.h \
+           source/data/scene/cache_data.h \
            source/graphics/base/vnspace.h \
+           source/graphics/base/prop_vis.h \
            source/graphics/nodes/graphics_node.h \
            source/graphics/nodes/graphics_node_socket.h
 SOURCES += source/data/callbacks.cpp \
@@ -56,15 +63,22 @@ SOURCES += source/data/callbacks.cpp \
            source/graphics/shaderpreview.cpp \
            source/graphics/previewdock.cpp \
            source/graphics/sourcedock.cpp \
+           source/graphics/viewport.cpp \
+           source/graphics/properties_editor.cpp \
            source/data/base/dnspace.cpp \
            source/data/base/frg.cpp \
            source/data/base/frg_shader_author.cpp \
            source/data/base/main.cpp \
            source/data/base/project.cpp \
+           source/data/base/properties.cpp \
            source/data/nodes/buildin_nodes.cpp \
            source/data/nodes/data_node.cpp \
            source/data/nodes/data_node_socket.cpp \
            source/data/undo/frg_generic_undo.cpp \
+           source/data/scene/object.cpp \
+           source/data/scene/cache_main.cpp \
+           source/data/scene/cache_data.cpp \
            source/graphics/base/vnspace.cpp \
+           source/graphics/base/prop_vis.cpp \
            source/graphics/nodes/graphics_node.cpp \
            source/graphics/nodes/graphics_node_socket.cpp

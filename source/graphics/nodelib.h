@@ -28,6 +28,13 @@
 #include "QDir"
 #include "QMenu"
 
+class DNode;
+
+typedef struct NodeLibItem {
+    void* (*dropFunc)(void*);
+    QTreeWidgetItem *item;
+}NodeLibItem;
+
 class NodeLib;
 
 class NodeLibWidget : public QWidget
@@ -51,6 +58,8 @@ public:
     NodeLib(QWidget *parent = 0);
     ~NodeLib();
     void filter(QString txt);
+    NodeLibItem* getItem(int ID);
+    void addNode(QString name, QString group, void*(*createFunc)(void*));
 
 signals:
 
@@ -59,6 +68,7 @@ public slots:
     void addFolder();
     void renamed(QTreeWidgetItem *item);
     void update();
+    void addGroup(QString name, QString parent="");
 
 protected:
     void mouseMoveEvent(QMouseEvent *event);
@@ -68,7 +78,10 @@ protected:
     void dropEvent(QDropEvent *event);
 
 private:
+    int NodeID;
     QList<QTreeWidgetItem *> addNodeItems(QDir dir);
+    QHash<int, NodeLibItem*> nodeLibItems;
+    QHash<QString, QTreeWidgetItem*> NodeGroups;
     void createContextMenu();
 
     void addBuildInNodes();

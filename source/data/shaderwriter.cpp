@@ -673,7 +673,7 @@ QString ShaderCodeGenerator::writeString(const DoutSocket *socket)
     QString output, value;
     StringValueNode *stringnode = (StringValueNode*)socket->getNode();
     value.append("\"");
-    value.append(stringnode->getValue());
+    value.append(((StringProperty*)stringnode->getInSockets().first()->getProperty())->getValue());
     value.append("\"");
     if(stringnode->isShaderInput())
     {
@@ -695,7 +695,7 @@ QString ShaderCodeGenerator::writeFloat(const DoutSocket *socket)
 {
     QString output, value;
     FloatValueNode *floatnode = (FloatValueNode*)socket->getNode();
-    value.append(QString::number(floatnode->getValue()));
+    value.append(QString::number(((FloatProperty*)floatnode->getInSockets().first()->getProperty())->getValue()));
     if(floatnode->isShaderInput())
     {
         output.append("float ");

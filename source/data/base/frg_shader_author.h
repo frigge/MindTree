@@ -93,7 +93,7 @@ private:
     Shader_View *view;
     void change_window_title(QString);
     QList<ChangeSpaceAction*>spaceActions;
-    QDockWidget *nodelib, *nodeeditor;
+    QDockWidget *nodelib, *nodeeditor, *propeditor;
 };
 
 #endif // FRG_SHADER_AUTHOR_H

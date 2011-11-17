@@ -513,113 +513,119 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
         QByteArray itemData = event->mimeData()->data("FRGShaderAuthor/buildInNode");
         QDataStream stream(&itemData, QIODevice::ReadOnly);
         stream>>buildInType;
-        switch(buildInType)
-        {
-        case 1:
-            dnode = BuildIn::surfaceInput(FRG::SpaceDataInFocus);
-            break;
-        case 2:
-            dnode = BuildIn::displacementInput(FRG::SpaceDataInFocus);
-            break;
-        case 3:
-            dnode = BuildIn::volumeInput(FRG::SpaceDataInFocus);
-            break;
-        case 4:
-            dnode = BuildIn::lightInput(FRG::SpaceDataInFocus);
-            break;
-        case 5:
-            dnode = BuildIn::surfaceOutput(FRG::SpaceDataInFocus);
-            break;
-        case 6:
-            dnode = BuildIn::displacementOutput(FRG::SpaceDataInFocus);
-            break;
-        case 7:
-            dnode = BuildIn::volumeOutput(FRG::SpaceDataInFocus);
-            break;
-        case 8:
-            dnode = BuildIn::lightOutput(FRG::SpaceDataInFocus);
-            break;
-        case 9:
-            dnode = BuildIn::MaddNode(FRG::SpaceDataInFocus);
-            break;
-        case 10:
-            dnode = BuildIn::MSubNode(FRG::SpaceDataInFocus);
-            break;
-        case 11:
-            dnode = BuildIn::MmultNode(FRG::SpaceDataInFocus);
-            break;
-        case 12:
-            dnode = BuildIn::MdivNode(FRG::SpaceDataInFocus);
-            break;
-        case 13:
-            dnode = BuildIn::MdotNode(FRG::SpaceDataInFocus);
-            break;
-        case 14:
-            dnode = BuildIn::ContIfNode(FRG::SpaceDataInFocus);
-            break;
-        case 15:
-            dnode = BuildIn::CgreaterNode(FRG::SpaceDataInFocus);
-            break;
-        case 16:
-            dnode = BuildIn::CsmallerNode(FRG::SpaceDataInFocus);
-            break;
-        case 17:
-            dnode = BuildIn::CeqNode(FRG::SpaceDataInFocus);
-            break;
-        case 18:
-            dnode = BuildIn::CnotNode(FRG::SpaceDataInFocus);
-            break;
-        case 19:
-            dnode = BuildIn::CandNode(FRG::SpaceDataInFocus);
-            break;
-        case 20:
-            dnode = BuildIn::CorNode(FRG::SpaceDataInFocus);
-            break;
-        case 21:
-            dnode = BuildIn::VColNode(FRG::SpaceDataInFocus);
-            break;
-        case 22:
-            dnode = BuildIn::VStrNode(FRG::SpaceDataInFocus);
-            break;
-        case 23:
-            dnode = BuildIn::VFlNode(FRG::SpaceDataInFocus);
-            break;
-        case 24:
-            dnode = BuildIn::ContForNode(FRG::SpaceDataInFocus);
-            break;
-        case 25:
-            dnode = BuildIn::ContWhileNode(FRG::SpaceDataInFocus);
-            break;
-        case 26:
-            dnode = BuildIn::CLilluminate(FRG::SpaceDataInFocus);
-            break;
-        case 27:
-            dnode = BuildIn::CLilluminance(FRG::SpaceDataInFocus);
-            break;
-        case 28:
-            dnode = BuildIn::CLsolar(FRG::SpaceDataInFocus);
-            break;
-        case 29:
-            dnode = BuildIn::CLgather(FRG::SpaceDataInFocus);
-            break;
-        case 30:
-            dnode = new DShaderPreview();
-            FRG::SpaceDataInFocus->addNode(dnode);
-            break;
-        case 31:
-            dnode = BuildIn::VVecNode(FRG::SpaceDataInFocus);
-            break;
-        case 32:
-            dnode = BuildIn::getArray(FRG::SpaceDataInFocus);
-            break;
-        case 33:
-            dnode = BuildIn::setArray(FRG::SpaceDataInFocus);
-            break;
-        case 34:
-            dnode = BuildIn::VarName(FRG::SpaceDataInFocus);
-        case 35:
-            dnode = BuildIn::Viewport(FRG::SpaceDataInFocus);
-        }
+        dnode = (DNode*)FRG::lib->getItem(buildInType)->dropFunc(FRG::SpaceDataInFocus);
+        //switch(buildInType)
+        //{
+        //case 1:
+        //    dnode = BuildIn::surfaceInput(FRG::SpaceDataInFocus);
+        //    break;
+        //case 2:
+        //    dnode = BuildIn::displacementInput(FRG::SpaceDataInFocus);
+        //    break;
+        //case 3:
+        //    dnode = BuildIn::volumeInput(FRG::SpaceDataInFocus);
+        //    break;
+        //case 4:
+        //    dnode = BuildIn::lightInput(FRG::SpaceDataInFocus);
+        //    break;
+        //case 5:
+        //    dnode = BuildIn::surfaceOutput(FRG::SpaceDataInFocus);
+        //    break;
+        //case 6:
+        //    dnode = BuildIn::displacementOutput(FRG::SpaceDataInFocus);
+        //    break;
+        //case 7:
+        //    dnode = BuildIn::volumeOutput(FRG::SpaceDataInFocus);
+        //    break;
+        //case 8:
+        //    dnode = BuildIn::lightOutput(FRG::SpaceDataInFocus);
+        //    break;
+        //case 9:
+        //    dnode = BuildIn::MaddNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 10:
+        //    dnode = BuildIn::MSubNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 11:
+        //    dnode = BuildIn::MmultNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 12:
+        //    dnode = BuildIn::MdivNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 13:
+        //    dnode = BuildIn::MdotNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 14:
+        //    dnode = BuildIn::ContIfNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 15:
+        //    dnode = BuildIn::CgreaterNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 16:
+        //    dnode = BuildIn::CsmallerNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 17:
+        //    dnode = BuildIn::CeqNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 18:
+        //    dnode = BuildIn::CnotNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 19:
+        //    dnode = BuildIn::CandNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 20:
+        //    dnode = BuildIn::CorNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 21:
+        //    dnode = BuildIn::VColNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 22:
+        //    dnode = BuildIn::VStrNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 23:
+        //    dnode = BuildIn::VFlNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 24:
+        //    dnode = BuildIn::ContForNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 25:
+        //    dnode = BuildIn::ContWhileNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 26:
+        //    dnode = BuildIn::CLilluminate(FRG::SpaceDataInFocus);
+        //    break;
+        //case 27:
+        //    dnode = BuildIn::CLilluminance(FRG::SpaceDataInFocus);
+        //    break;
+        //case 28:
+        //    dnode = BuildIn::CLsolar(FRG::SpaceDataInFocus);
+        //    break;
+        //case 29:
+        //    dnode = BuildIn::CLgather(FRG::SpaceDataInFocus);
+        //    break;
+        //case 30:
+        //    dnode = new DShaderPreview();
+        //    FRG::SpaceDataInFocus->addNode(dnode);
+        //    break;
+        //case 31:
+        //    dnode = BuildIn::VVecNode(FRG::SpaceDataInFocus);
+        //    break;
+        //case 32:
+        //    dnode = BuildIn::getArray(FRG::SpaceDataInFocus);
+        //    break;
+        //case 33:
+        //    dnode = BuildIn::setArray(FRG::SpaceDataInFocus);
+        //    break;
+        //case 34:
+        //    dnode = BuildIn::VarName(FRG::SpaceDataInFocus);
+        //    break;
+        //case 35:
+        //    dnode = BuildIn::Viewport(FRG::SpaceDataInFocus);
+        //    break;
+        //case 36:
+        //    dnode = BuildIn::composeArray(FRG::SpaceDataInFocus);
+        //    break;
+        //}
     }
     if(dnode)
     {

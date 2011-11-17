@@ -193,7 +193,7 @@ QString ShaderWriter::writeColor(const DoutSocket *socket)
     QString value;
     ColorValueNode *colornode = (ColorValueNode*)socket->getNode();
     value.append("color(");
-    QColor color = colornode->getValue();
+    QColor color = ((ColorProperty*)colornode->getInSockets().first()->getProperty())->getValue();
     value.append(QString::number(color.redF()));
     value.append(", ");
     value.append(QString::number(color.greenF()));
@@ -222,7 +222,7 @@ QString ShaderWriter::writeVector(const DoutSocket *socket)
     QString output, value;
     const VectorValueNode *node = socket->getNode()->getDerivedConst<VectorValueNode>();
     value.append("vector(");
-    Vector vec = node->getValue();
+    Vector vec = ((VectorProperty*)node->getInSockets().first()->getProperty())->getValue();
     value.append(QString::number(vec.x));
     value.append(", ");
     value.append(QString::number(vec.y));

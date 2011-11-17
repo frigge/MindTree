@@ -32,6 +32,7 @@
 #include "source/data/base/project.h"
 #include "source/graphics/shaderpreview.h"
 #include "source/graphics/sourcedock.h"
+#include "source/data/scene/object.h"
 
 unsigned short DNode::count = 1;
 QHash<unsigned short, DNode*>LoadNodeIDMapper::loadIDMapper;
@@ -195,6 +196,9 @@ DNode* DNode::copy(const DNode *original)
     case FLOATNODE:
         newNode = new FloatValueNode(original->getDerivedConst<FloatValueNode>());
         break;
+    case INTNODE:
+        newNode = new IntValueNode(original->getDerivedConst<IntValueNode>());
+        break;
     case STRINGNODE:
         newNode = new StringValueNode(original->getDerivedConst<StringValueNode>());
         break;
@@ -209,6 +213,15 @@ DNode* DNode::copy(const DNode *original)
         break;
     case SETARRAY:
         newNode = new SetArrayNode(original->getDerivedConst<SetArrayNode>());
+        break;
+    case COMPOSEARRAY:
+        newNode = new ComposeArrayNode(original->getDerivedConst<ComposeArrayNode>());
+        break;
+    case POLYGONNODE:
+        newNode = new PolygonNode(original->getDerivedConst<PolygonNode>());
+        break;
+    case OBJECTNODE:
+        newNode = new ObjectNode(original->getDerivedConst<ObjectNode>());
         break;
     case VARNAME:
         newNode = new VarNameNode(original->getDerivedConst<VarNameNode>());
@@ -356,29 +369,29 @@ QDataStream &operator <<(QDataStream &stream, DNode  *node)
 
     }
 
-    if(node->getNodeType() == COLORNODE)
-    {
-        ColorValueNode *colornode = (ColorValueNode*)node;
-        stream<<colornode->getValue();
-    }
+    //if(node->getNodeType() == COLORNODE)
+    //{
+    //    ColorValueNode *colornode = (ColorValueNode*)node;
+    //    stream<<colornode->getValue();
+    //}
 
-    if(node->getNodeType() == FLOATNODE)
-    {
-        FloatValueNode *floatnode = (FloatValueNode*)node;
-        stream<<floatnode->getValue();
-    }
+    //if(node->getNodeType() == FLOATNODE)
+    //{
+    //    FloatValueNode *floatnode = (FloatValueNode*)node;
+    //    stream<<floatnode->getValue();
+    //}
 
-    if(node->getNodeType() == STRINGNODE)
-    {
-        StringValueNode *stringnode = (StringValueNode*)node;
-        stream<<stringnode->getValue();
-    }
+    //if(node->getNodeType() == STRINGNODE)
+    //{
+    //    StringValueNode *stringnode = (StringValueNode*)node;
+    //    stream<<stringnode->getValue();
+    //}
 
-    if(node->getNodeType() == VECTORNODE)
-    {
-        VectorValueNode *vectornode = (VectorValueNode*)node;
-        stream<<vectornode->getValue().x<<vectornode->getValue().y<<vectornode->getValue().z;
-    }
+    //if(node->getNodeType() == VECTORNODE)
+    //{
+    //    VectorValueNode *vectornode = (VectorValueNode*)node;
+    //    stream<<vectornode->getValue().x<<vectornode->getValue().y<<vectornode->getValue().z;
+    //}
 
     if(node->getNodeType() == PREVIEW)
     {
@@ -567,36 +580,36 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
         }
     }
 
-    if(newnode->getNodeType() == COLORNODE)
-    {
-        ColorValueNode *colornode = newnode->getDerived<ColorValueNode>();
-        QColor color;
-        stream>>color;
-        colornode->setValue(color);
-    }
+    //if(newnode->getNodeType() == COLORNODE)
+    //{
+    //    ColorValueNode *colornode = newnode->getDerived<ColorValueNode>();
+    //    QColor color;
+    //    stream>>color;
+    //    colornode->setValue(color);
+    //}
 
-    if(newnode->getNodeType() == FLOATNODE)
-    {
-        FloatValueNode *floatnode = newnode->getDerived<FloatValueNode>();
-        float fval;
-        stream>>fval;
-        floatnode->setValue(fval);
-    }
+    //if(newnode->getNodeType() == FLOATNODE)
+    //{
+    //    FloatValueNode *floatnode = newnode->getDerived<FloatValueNode>();
+    //    float fval;
+    //    stream>>fval;
+    //    floatnode->setValue(fval);
+    //}
 
-    if(newnode->getNodeType() == STRINGNODE)
-    {
-        StringValueNode *stringnode = newnode->getDerived<StringValueNode>();
-        QString string;
-        stream>>string;
-        stringnode->setValue(string);
-    }
+    //if(newnode->getNodeType() == STRINGNODE)
+    //{
+    //    StringValueNode *stringnode = newnode->getDerived<StringValueNode>();
+    //    QString string;
+    //    stream>>string;
+    //    stringnode->setValue(string);
+    //}
 
-    if(newnode->getNodeType() == VECTORNODE)
-    {
-        VectorValueNode *vectornode = newnode->getDerived<VectorValueNode>();
-        Vector vec(vectornode->getValue());
-        stream>>vec.x>>vec.y>>vec.z;
-    }
+    //if(newnode->getNodeType() == VECTORNODE)
+    //{
+    //    VectorValueNode *vectornode = newnode->getDerived<VectorValueNode>();
+    //    Vector vec(vectornode->getValue());
+    //    stream>>vec.x>>vec.y>>vec.z;
+    //}
 
 
     if(newnode->getNodeType() == LOOPINSOCKETS
@@ -1606,12 +1619,6 @@ ValueNode::ValueNode(const ValueNode* node)
 {
 }
 
-VNode* ValueNode::createNodeVis()
-{
-    setNodeVis(new VValueNode(this));
-    return getNodeVis();
-}
-
 void ValueNode::setNodeName(QString name)    
 {
     DNode::setNodeName(name);
@@ -1630,11 +1637,12 @@ bool ValueNode::isShaderInput() const
 }
 
 ColorValueNode::ColorValueNode(QString name, bool raw)
-    : ValueNode(name), colorvalue(QColor(255, 255, 255))
+    : ValueNode(name) 
 {
     setNodeType(COLORNODE);
     if(!raw)
     {
+        new DinSocket("Color", COLOR, this);
         new DoutSocket("Color", COLOR, this);
     }
 
@@ -1642,37 +1650,8 @@ ColorValueNode::ColorValueNode(QString name, bool raw)
 }
 
 ColorValueNode::ColorValueNode(const ColorValueNode* node)
-    : ValueNode(node), colorvalue(node->getValue())
+    : ValueNode(node)
 {
-}
-
-VNode* ColorValueNode::createNodeVis()
-{
-    setNodeVis(new VColorValueNode(this));
-    return getNodeVis();
-}
-
-void ColorValueNode::setValue(QColor newvalue)
-{
-    colorvalue = newvalue;
-}
-
-QColor ColorValueNode::getValue() const
-{
-    return colorvalue;
-}
-
-bool ColorValueNode::operator ==(const DNode &node)const
-{
-    if(!DNode::operator==(node)) return false;
-    if(colorvalue != node.getDerivedConst<ColorValueNode>()->colorvalue)
-        return false;
-    return true;
-}
-
-bool ColorValueNode::operator!=(const DNode &node)const
-{
-    return (!(operator==(node)));
 }
 
 StringValueNode::StringValueNode(QString name, bool raw)
@@ -1682,135 +1661,80 @@ StringValueNode::StringValueNode(QString name, bool raw)
     setNodeName("String");
     if(!raw)
     {
+        new DinSocket("String", STRING, this);
         new DoutSocket("String", STRING, this);
     }
 }
 
 StringValueNode::StringValueNode(const StringValueNode* node)
-    : ValueNode(node), stringvalue(node->getValue())
+    : ValueNode(node)
 {
-}
-
-VNode* StringValueNode::createNodeVis()
-{
-    setNodeVis(new VStringValueNode(this));
-    return getNodeVis();
-}
-
-void StringValueNode::setValue(QString newstring)
-{
-    stringvalue = newstring;
-}
-
-QString StringValueNode::getValue() const
-{
-    return stringvalue;
-}
-
-bool StringValueNode::operator ==(const DNode &node)const
-{
-    if(!DNode::operator==(node)) return false;
-    if(stringvalue != node.getDerivedConst<StringValueNode>()->stringvalue)
-        return false;
-    return true;
-}
-
-bool StringValueNode::operator!=(const DNode &node)const
-{
-    return (!(operator==(node)));
 }
 
 FloatValueNode::FloatValueNode(QString name, bool raw)
-    : ValueNode(name), floatvalue(1.0)
+    : ValueNode(name)
 {
     setNodeType(FLOATNODE);
     setNodeName("Float");
     if(!raw)
     {
+        new DinSocket("Float", FLOAT, this);
         new DoutSocket("Float", FLOAT, this);
     }
 }
 
 FloatValueNode::FloatValueNode(const FloatValueNode* node)
-    : ValueNode(node), floatvalue(node->getValue())
+    : ValueNode(node)
 {
 }
 
-VNode* FloatValueNode::createNodeVis()
+IntValueNode::IntValueNode(QString name, bool raw)
+    : ValueNode(name)
 {
-    setNodeVis(new VFloatValueNode(this));
-    return getNodeVis();
+    setNodeType(INTNODE);
+    setNodeName("Integer");
+    if(!raw){
+        new DinSocket("Integer", INTEGER, this);
+        new DoutSocket("Integer", INTEGER, this);
+    }
 }
 
-void FloatValueNode::setValue(double newval)
+IntValueNode::IntValueNode(const IntValueNode* node)
+    : ValueNode(node)
 {
-    floatvalue = newval;
 }
 
-float FloatValueNode::getValue() const
+BoolValueNode::BoolValueNode(QString name, bool raw)
+    : ValueNode(name)
 {
-    return floatvalue;
+    setNodeType(BOOLNODE);
+    setNodeName("Boolean");
+    if(!raw){
+        new DinSocket("Boolean", CONDITION, this);
+        new DoutSocket("Boolean", CONDITION, this);
+    }
 }
 
-bool FloatValueNode::operator==(const DNode &node)const
+BoolValueNode::BoolValueNode(const BoolValueNode* node)
+    : ValueNode(node)
 {
-    if(!DNode::operator==(node)) return false;
-    if(floatvalue != node.getDerivedConst<FloatValueNode>()->floatvalue)
-        return false;
-    return true;
-}
-
-bool FloatValueNode::operator!=(const DNode &node)const
-{
-    return (!(operator==(node)));
 }
 
 VectorValueNode::VectorValueNode(QString name, bool raw)
-    :ValueNode(name), vectorvalue(0, 0, 0)
+    :ValueNode(name)
 {
     setNodeType(VECTORNODE);
     setNodeName("Vector");
     if(!raw)
     {
+        new DinSocket("Vector", VECTOR, this);
         new DoutSocket("Vector", VECTOR, this);
     }
 }
 
 VectorValueNode::VectorValueNode(const VectorValueNode* node)
-    : ValueNode(node), vectorvalue(node->getValue())
+    : ValueNode(node)
 {
-}
-
-VNode* VectorValueNode::createNodeVis()
-{
-    setNodeVis(new VVectorValueNode(this));
-    return getNodeVis();
-}
-
-void VectorValueNode::setValue(Vector newvalue)
-{
-    vectorvalue = newvalue;
-}
-
-Vector VectorValueNode::getValue() const
-{
-    return vectorvalue;
-}
-
-bool VectorValueNode::operator==(const DNode &node)const
-{
-    if(!DNode::operator==(node)) return false;
-    const VectorValueNode *vnode = node.getDerivedConst<VectorValueNode>();
-    if(vectorvalue.x != vnode->getValue().x
-        ||vectorvalue.y != vnode->getValue().y
-        ||vectorvalue.z != vnode->getValue().z)
-        return false;
-    return true;
-}
-
-bool VectorValueNode::operator!=(const DNode &node)const
-{
-    return (!(operator==(node)));
 }
 
 LoopNode::LoopNode(QString name, bool raw)
@@ -2101,6 +2025,21 @@ SetArrayNode::SetArrayNode(const SetArrayNode* node)
     DinSocket *val = getInSockets().first();
     DoutSocket *arr = getOutSockets().first();
     val->addTypeCB(new ScpTypeCB(val, arr));
+}
+
+ComposeArrayNode::ComposeArrayNode(bool raw)
+    : DNode("Compose Array")
+{
+    setNodeType(COMPOSEARRAY);
+    if(!raw){
+        new DoutSocket("Array", VARIABLE, this);
+        setDynamicSocketsNode(IN);
+    }
+}
+
+ComposeArrayNode::ComposeArrayNode(const ComposeArrayNode* node)
+    : DNode(node)
+{
 }
 
 VarNameNode::VarNameNode(bool raw)

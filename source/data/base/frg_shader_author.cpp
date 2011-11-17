@@ -39,6 +39,7 @@
 #include "source/graphics/shader_view.h"
 #include "source/graphics/shaderpreview.h"
 #include "source/graphics/previewdock.h"
+#include "source/graphics/properties_editor.h"
 
 ChangeSpaceAction::ChangeSpaceAction(DNSpace *space, QObject *parent)
     : QAction(parent)
@@ -58,7 +59,7 @@ frg_Shader_Author::frg_Shader_Author(QWidget *parent)
 {
     FRG::Author = this;
     setWindowTitle("frg Shader Author");
-    resize(1000, 600);
+    resize(1500, 800);
 
 
     //QWidget *widget = new QWidget;
@@ -104,6 +105,10 @@ void frg_Shader_Author::createDocks()
     nodelib = new QDockWidget("Node Library");
     nodelib->setWidget(new NodeLibWidget(this));
     addDockWidget(Qt::LeftDockWidgetArea, nodelib); 
+
+    propeditor = new QDockWidget("Properties Editor");
+    propeditor->setWidget(new PropertiesEditor(this));
+    addDockWidget(Qt::LeftDockWidgetArea, propeditor);
 }
 
 void frg_Shader_Author::createPreviewDock(DShaderPreview *prev)    

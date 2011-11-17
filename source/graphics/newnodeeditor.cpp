@@ -47,6 +47,7 @@ SlotTypeEditor::SlotTypeEditor()
 RemoveButton::RemoveButton(int index)
 {
     setIndex(index);
+    setFlat(true);
     setText("X");
     connect(this, SIGNAL(clicked()), this, SLOT(emitClicked()));
 }
@@ -70,14 +71,14 @@ SocketEditor::SocketEditor()
 {
     QStringList inputheader;
     inputheader<<"Name"<<"Type"<<"Token"<<"Dynamic"<<"Remove";
-    setColumnCount(6);
+    setColumnCount(5);
     setHeaderLabels(inputheader);
     setAlternatingRowColors(true);
-    header()->resizeSection(0, 90);
+    header()->resizeSection(0, 120);
     header()->resizeSection(1, 70);
     header()->resizeSection(2, 40);
     header()->resizeSection(3, 40);
-    header()->resizeSection(5, 40);
+    header()->resizeSection(5, 20);
 }
 
 SocketEditor::~SocketEditor()
@@ -137,6 +138,8 @@ NewNodeEditor::~NewNodeEditor()
 void NewNodeEditor::createLayout()
 {
     grid = new QGridLayout;
+    grid->setMargin(0);
+    grid->setSpacing(0);
 
     QLabel *name_label = new QLabel("Node Name:");
     node_name = new QLineEdit;

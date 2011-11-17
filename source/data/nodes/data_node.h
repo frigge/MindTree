@@ -74,9 +74,11 @@ enum NType
     LOOPINSOCKETS,      LOOPOUTSOCKETS,
 
     COLORNODE,          FLOATNODE,
+    INTNODE, BOOLNODE,
     STRINGNODE,         VECTORNODE,
     PREVIEW, GETARRAY,  SETARRAY,
-    VARNAME
+    COMPOSEARRAY,       VARNAME,
+    OBJECTNODE,         POLYGONNODE
 };
 
 class VNode;
@@ -348,7 +350,7 @@ public:
     void setNodeName(QString name);
 
 protected:
-    virtual VNode* createNodeVis();
+    //virtual VNode* createNodeVis();
     //virtual void getValue() = 0;
 
 private:
@@ -360,18 +362,18 @@ class ColorValueNode : public ValueNode
 public:
     ColorValueNode(QString name="Color", bool raw=false);
     ColorValueNode(const ColorValueNode* node);
-    virtual bool operator==(const DNode &node)const;
-    virtual bool operator!=(const DNode &node)const;
+    //virtual bool operator==(const DNode &node)const;
+    //virtual bool operator!=(const DNode &node)const;
 
-    void setValue(QColor);
-    QColor getValue() const;
+    //void setValue(QColor);
+    //QColor getValue() const;
 
-protected:
-    void updateColorLabel();
-    virtual VNode* createNodeVis();
+//protected:
+    //void updateColorLabel();
+    //virtual VNode* createNodeVis();
 
-private:
-    QColor colorvalue;
+//private:
+    //QColor colorvalue;
 };
 
 class StringValueNode : public ValueNode
@@ -379,17 +381,6 @@ class StringValueNode : public ValueNode
 public:
     StringValueNode(QString name="String", bool raw=false);
     StringValueNode(const StringValueNode* node);
-    virtual bool operator==(const DNode &node)const;
-    virtual bool operator!=(const DNode &node)const;
-
-    void setValue(QString);
-    QString getValue() const;
-
-protected:
-    virtual VNode* createNodeVis();
-
-private:
-    QString stringvalue;
 };
 
 class FloatValueNode : public ValueNode
@@ -397,41 +388,35 @@ class FloatValueNode : public ValueNode
 public:
     FloatValueNode(QString name="Float", bool raw=false);
     FloatValueNode(const FloatValueNode* node);
-    void setValue(double);
-    virtual bool operator==(const DNode &node)const;
-    virtual bool operator!=(const DNode &node)const;
-
-    float getValue() const;
-
-private:
-    float floatvalue;
-
-protected:
-    virtual VNode* createNodeVis();
 };
 
-typedef struct Vector
+class IntValueNode : public ValueNode
 {
-    Vector(double x, double y, double z) : x(x), y(y), z(z) {}
-    Vector(const Vector &vec) : x(vec.x), y(vec.y), z(vec.z) {}
-    double x;
-    double y;
-    double z;
-}   Vector;
+public:
+    IntValueNode(QString name="Integer", bool raw=false);
+    IntValueNode(const IntValueNode* node);
+};
+
+class BoolValueNode : public ValueNode
+{
+public:
+    BoolValueNode(QString name="Boolean", bool raw=false);
+    BoolValueNode(const BoolValueNode* node);
+};
 
 class VectorValueNode : public ValueNode
 {
 public:
     VectorValueNode(QString name="Vector", bool raw=false);
     VectorValueNode(const VectorValueNode* node);
-    Vector getValue() const;
-    void setValue(Vector newvalue);
-    virtual bool operator==(const DNode &node)const;
-    virtual bool operator!=(const DNode &node)const;
-    VNode* createNodeVis();
+    //Vector getValue() const;
+    //void setValue(Vector newvalue);
+    //virtual bool operator==(const DNode &node)const;
+    //virtual bool operator!=(const DNode &node)const;
+    //VNode* createNodeVis();
 
-private:
-    Vector vectorvalue;
+//private:
+    //Vector vectorvalue;
 };
 
 class LoopNode : public ContainerNode
@@ -528,6 +513,14 @@ class SetArrayNode : public DNode
 public:
     SetArrayNode(bool raw=false);
     SetArrayNode(const SetArrayNode *node);
+};
+
+class ComposeArrayNode : public DNode
+{
+public:
+    ComposeArrayNode(bool raw=false);
+    ComposeArrayNode(const ComposeArrayNode* node);
+
 };
 
 class VarNameNode : public DNode

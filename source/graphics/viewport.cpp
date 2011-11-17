@@ -23,16 +23,26 @@
 #include "QMenu"
 #include "QGraphicsSceneContextMenuEvent"
 #include "QMouseEvent"
+#include "QMutexLocker"
 
 #include "math.h"
 
 #include "source/data/base/frg.h"
 #include "source/data/base/frg_shader_author.h"
+#include "source/data/scene/cache_data.h"
 
-Viewport::Viewport(QWidget *parent)
-    : QGLWidget(parent), camlookat(QVector3D(0, 0, 0)), rotate(false), zoom(false), pan(false)
+Viewport::Viewport(QWidget *parent, ViewportNode *node)
+    : QGLWidget(parent), camlookat(QVector3D(0, 0, 0)), rotate(false), zoom(false), pan(false), cache(0), viewnode(node)
 {
     transform.translate(QVector3D(0, 50, -50));
+
+    connect(&timer, SIGNAL(timeout()), this, SLOT(repaint()));
+    timer.start(1);
+}
+
+void Viewport::repaint()
+{
+    updateGL();
 }
 
 void Viewport::initializeGL()    
@@ -52,6 +62,77 @@ void Viewport::paintGL()
     gluLookAt((GLfloat)campos.x(), (GLfloat)campos.y(), (GLfloat)campos.z(), (GLfloat)camlookat.x(), (GLfloat)camlookat.y(), (GLfloat)camlookat.z(), 0.0f, 1.0f, 0.0f);
 
     drawGrid();
+
+    drawScene();
+    glFlush();
+}
+
+void Viewport::drawScene()    
+{
+    QMutex mutex;
+    if(!cache)
+        return;
+
+    QList<Object*> objects;
+    if(mutex.tryLock())
+        objects = cache->getData();
+
+    if(!objects.isEmpty())
+        foreach(Object *obj, objects)
+            drawObject(obj);
+}
+
+void Viewport::drawObject(Object* obj)    
+{
+    //draw Vertices
+    Vector* vertices = obj->getVertices();
+    int vertcnt = obj->getVertCnt();
+    
+    glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+    glPointSize(5.0);
+    glBegin(GL_POINTS);
+    int i = 0;
+    for(i=0; i<vertcnt; i++)
+        glVertex3f(vertices[i].x, vertices[i].y, vertices[i].z);
+    glEnd();
+
+    //draw Edges
+    Polygon* polygons = obj->getPolygons();
+    int polycnt = obj->getPolyCnt();
+    glBegin(GL_LINES);
+    glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+    int j=0, vi=0;
+    Vector *vert=0;
+    for(i=0; i<polycnt; i++)
+        for(j=0; j<polygons[i].vertexcount; j++){
+            vi = polygons[i].vertices[j];
+            if(vi >= vertcnt) continue;
+            vert = &vertices[vi];
+            glVertex3f(vert->x, vert->y, vert->z);
+            if(j > 0){
+                glVertex3f(vert->x, vert->y, vert->z);
+            }
+            if(j == polygons[i].vertexcount -1){
+                vi = polygons[i].vertices[0];
+                if(vi >= vertcnt) continue;
+                vert = &vertices[vi];
+                glVertex3f(vert->x, vert->y, vert->z);
+            }
+        }
+    glEnd();
+
+    //draw Polygons 
+    for(i=0; i<polycnt; i++) {
+        glBegin(GL_POLYGON);
+        glColor4f(0.6f, 0.6f, 0.6f, 1.0f);
+        for(j=0; j<polygons[i].vertexcount; j++){
+            vi = polygons[i].vertices[j];
+            if(vi >= vertcnt) continue;
+            vert = &vertices[vi];
+            glVertex3f(vert->x, vert->y, vert->z);
+        }
+        glEnd();
+    }
 }
 
 void Viewport::drawAxisGizmo()    
@@ -185,12 +266,41 @@ void Viewport::resizeGL(int width, int height)
     glLoadIdentity();
 }
 
+void Viewport::render()    
+{
+    viewnode->render(&cache);    
+    //cache = viewnode->render();    
+    updateGL();
+}
+
+void Viewport::render(DNode *node)    
+{
+    viewnode->render(&cache, node); 
+    //cache = viewnode->render(node); 
+    updateGL();
+}
+
 ViewportDock::ViewportDock(ViewportNode *node)
     : QDockWidget("viewport"), node(node)
 {
-    viewport = new Viewport(this);
+    viewport = new Viewport(this, node);
     setWidget(viewport);
+    connect(this, SIGNAL(visibilityChanged(bool)), this, SLOT(adjust(bool)));
     FRG::Author->addDockWidget(Qt::RightDockWidgetArea, this);
+}
+
+void ViewportDock::adjust(bool vis)    
+{
+    if(vis)
+    {
+        connect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)viewport, SLOT(render()));
+        connect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)viewport, SLOT(render(DNode*)));
+    }
+    else
+    {
+        disconnect((QObject*)FRG::Space, SIGNAL(linkChanged()), (QObject*)viewport, SLOT(render()));
+        disconnect((QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)), (QObject*)viewport, SLOT(render(DNode*)));
+    }
 }
 
 Viewport *ViewportDock::getViewport()    
@@ -216,10 +326,11 @@ void VViewportNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 }
 
 ViewportNode::ViewportNode(bool raw)
-    : DNode("viewport"), dock(new ViewportDock(this))
+    : DNode("viewport"), dock(new ViewportDock(this)), thread(new CacheThread())
 {
+    thread->setStart(this);
     if(!raw){
-        new DinSocket("Data", OBJECT, this);
+        new DinSocket("Data", SCENEOBJECT, this);
     }
 }
 
@@ -232,4 +343,53 @@ VNode* ViewportNode::createNodeVis()
 {
     setNodeVis(new VViewportNode(this));
     return getNodeVis();
+}
+
+void ViewportNode::render(SceneCache **cache, DNode *node)    
+{
+    thread->setNode(node);
+    thread->setCache(cache);
+    thread->setViewport(view);
+    thread->start();
+}
+
+CacheThread::CacheThread()
+{
+}
+
+void CacheThread::run()    
+{
+    if(node && !view->getAllInNodes().contains(node))
+        return;
+
+    DoutSocket *cntdSocket = view->getInSockets().first()->getCntdWorkSocket();
+    if(cntdSocket)
+    {
+        QMutex mutex;
+        SceneCache *sc = new SceneCache(cntdSocket);
+        QMutexLocker lock(&mutex);
+        *cache = sc;
+    }
+    else
+        return;
+}
+
+void CacheThread::setNode(DNode *node)    
+{
+    this->node = node;
+}
+
+void CacheThread::setCache(SceneCache **cache)    
+{
+    this->cache = cache; 
+}
+
+void CacheThread::setStart(ViewportNode *viewnode)    
+{
+    view = viewnode;
+}
+
+void CacheThread::setViewport(Viewport *view)    
+{
+   viewport = view; 
 }

@@ -469,25 +469,72 @@ void ArrayContainer::addSocket(DSocket *socket)
 }
 
 DinSocket::DinSocket(QString name, socket_type type, DNode *node)
-	: DSocket(name, type, node), cntdSocket(0), tempCntdID(0), Token(false), linkedNameCB(0), linkedTypeCB(0)
+	: DSocket(name, type, node), cntdSocket(0), tempCntdID(0), Token(false), linkedNameCB(0), linkedTypeCB(0),
+    prop(0)
 {
 	setDir(IN);
     getNode()->addSocket(this);
+
+    setProperty();
 };
 
 DinSocket::DinSocket(DinSocket* socket, DNode *node)
     : DSocket(socket, node), linkedNameCB(0), linkedTypeCB(0), 
     cntdSocket(socket->getCntdSocket()),
-    tempCntdID(0), Token(socket->getToken())
+    tempCntdID(0), Token(socket->getToken()),
+    prop(0)
 {
     setDir(IN);
     getNode()->addSocket(this);
+
+    setProperty();
 }
 
 DinSocket::~DinSocket()
 {
     if(cntdSocket)
         cntdSocket->unregisterSocket(this);
+}
+
+void DinSocket::setType(socket_type value)
+{
+    DSocket::setType(value);
+    setProperty();
+}
+
+Property* DinSocket::getProperty()
+{
+    return prop;
+}
+
+void DinSocket::setProperty()    
+{
+    if(prop) delete prop;
+    switch(getType())
+    {
+        case NORMAL:
+        case VECTOR:
+        case POINT:
+            prop = new VectorProperty(this);
+            break;
+        case COLOR:
+            prop = new ColorProperty(this);
+            break;
+        case STRING:
+            prop = new StringProperty(this);
+            break;
+        case FLOAT:
+            prop = new FloatProperty(this);
+            break;
+        case INTEGER:
+            prop = new IntProperty(this);
+            break;
+        case CONDITION:
+            prop = new BoolProperty(this);
+            break;
+        default:
+            break;
+    }
 }
 
 void DinSocket::addLink(DoutSocket *socket)
@@ -930,3 +977,4 @@ void DSocket::setIDName(QString value)
 {
     idName = value;
 }
+

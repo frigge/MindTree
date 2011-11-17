@@ -194,8 +194,8 @@ void VNSocket::changeName()
     newname = QInputDialog::getText(0, "Change Socket Name", "New Name", QLineEdit::Normal, "", &ok);
     if(ok)
 	{
-        data->setName(newname);
         if(socketNameVis)socketNameVis->setPlainText(newname);
+        data->setName(newname);
     }
 }
 
@@ -278,6 +278,12 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         else
             color = QColor(60, 110, 180);
         break;
+    case INTEGER:
+        if (isUnderMouse())
+            color = QColor(0, 255, 220);
+        else
+            color = QColor(40, 165, 165);
+        break;
     case FLOAT:
         if (isUnderMouse())
             color = QColor(0, 255, 0);
@@ -302,11 +308,17 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
         else
             color = QColor(140, 20, 20);
         break;
-    case OBJECT:
+    case SCENEOBJECT:
         if (isUnderMouse())
             color = QColor(255, 170, 0);
         else
             color = QColor(235, 105, 20);
+        break;
+    case POLYGON:
+        if (isUnderMouse())
+            color = QColor(255, 150, 170);
+        else
+            color = QColor(255, 50, 140);
         break;
     case VARIABLE:
         if(isUnderMouse())
