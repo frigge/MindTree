@@ -78,7 +78,8 @@ enum NType
     STRINGNODE,         VECTORNODE,
     PREVIEW, GETARRAY,  SETARRAY,
     COMPOSEARRAY,       VARNAME,
-    OBJECTNODE,         POLYGONNODE
+    OBJECTNODE,         POLYGONNODE,
+    FLOATTOVECTOR
 };
 
 class VNode;
@@ -300,10 +301,11 @@ private:
     ContainerNode *container;
 };
 
+class LoopNode;
 class LoopSocketNode : public SocketNode
 {
 public:
-    LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw=false);
+    LoopSocketNode(socket_dir dir, LoopNode *contnode, bool raw=false);
     LoopSocketNode(const LoopSocketNode* node);
 
     virtual void dec_var_socket(DSocket *socket);
@@ -312,7 +314,7 @@ public:
     void mapPartner(DSocket* here, DSocket *partner);
 
     void setPartner(LoopSocketNode* p);
-    DSocket *getPartnerSocket(DSocket *) const;
+    DSocket *getPartnerSocket(const DSocket *) const;
     QList<DSocket*> getLoopedSockets() const;
     qint16 getLoopedSocketsCount() const;
 
@@ -419,12 +421,23 @@ public:
     //Vector vectorvalue;
 };
 
+class FloatToVectorNode : public DNode
+{
+public:
+    FloatToVectorNode(bool raw=false);
+    FloatToVectorNode(const FloatToVectorNode* node);
+};
+
 class LoopNode : public ContainerNode
 {
 public:
     LoopNode(QString name="", bool raw=false);
     LoopNode(const LoopNode* node);
     static bool isLoopNode(DNode *);
+    void setLoopedSockets(LoopSocketNode *node);
+
+private:
+    SocketNode *loopSockets, *initSockets;
 };
 
 class ForNode : public LoopNode

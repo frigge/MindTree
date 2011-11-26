@@ -65,6 +65,7 @@ namespace BuildIn
     void* VIntNode(void *space);
     void* VBoolNode(void *space);
     void* VVecNode(void *space);
+    void* VFloatToVector(void *space);
 //    void VMatNode(void *space);
 
     //Containers

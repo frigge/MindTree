@@ -18,14 +18,15 @@
 
 #include "cache_main.h"
 
-QHash<AbstractDataCache*, DoutSocket*>CacheControl::caches;
+QHash<AbstractDataCache*, const DoutSocket*>CacheControl::caches;
+QHash<const LoopNode*, LoopCache*> LoopCacheControl::loops;
 
-bool CacheControl::isCached(DoutSocket *socket)    
+bool CacheControl::isCached(const DoutSocket *socket)    
 {
     return caches.values().contains(socket);
 }
 
-void CacheControl::addCache(DoutSocket *socket, AbstractDataCache *cache)    
+void CacheControl::addCache(const DoutSocket *socket, AbstractDataCache *cache)    
 {
     caches.insert(cache, socket); 
 }
@@ -35,10 +36,97 @@ void CacheControl::removeCache(AbstractDataCache *cache)
     caches.remove(cache);
 }
 
-AbstractDataCache::AbstractDataCache(DoutSocket *socket)
-    : start(socket)
+LoopCache::LoopCache()
+    : loopentry(0), stepValue(0)
 {
-    CacheControl::addCache(socket, this);
+}
+
+LoopCache::~LoopCache()
+{
+    free();
+}
+
+void LoopCache::free()    
+{
+    while(!cachedData.isEmpty())
+        foreach(const DoutSocket *socket, cachedData.keys())
+            delete cachedData.take(socket);
+}
+
+void LoopCache::setStep(int step)    
+{
+    stepValue = step;
+}
+
+int LoopCache::getStep()
+{
+    return stepValue;
+}
+
+
+void LoopCache::addData(AbstractDataCache *cache)    
+{
+    if(cachedData.isEmpty())
+        loopentry = cache->getStart();
+    if(cachedData.contains(cache->getStart()))
+        delete cachedData.take(cache->getStart());
+
+    cachedData.insert(cache->getStart(), cache);
+}
+
+AbstractDataCache* LoopCache::getCache(const DoutSocket *socket)    
+{
+    const DoutSocket *s;
+    if(!socket)
+        s = loopentry;
+    else
+        s = socket;
+
+    if(!cachedData.contains(s))
+        return 0;
+    return cachedData.value(s);
+}
+
+const LoopNode* LoopCache::getNode()
+{
+    return loopentry->getNode()->getDerivedConst<LoopSocketNode>()->getContainer()->getDerivedConst<LoopNode>();
+}
+
+LoopCache* LoopCacheControl::loop(const LoopNode *node)
+{
+    LoopCache *lc;
+    if(loops.contains(node))
+        lc = loops.value(node);
+    else {
+        lc = new LoopCache();
+        loops.insert(node, lc);
+    }
+    return lc;
+}
+
+void LoopCacheControl::del(const LoopNode *node)    
+{
+    delete loops.take(node);
+}
+
+AbstractDataCache::AbstractDataCache(const DinSocket *socket)
+    : start(socket->getCntdWorkSocket()), inSocket(socket), dataOwner(true)
+{
+    //CacheControl::addCache(socket, this);
+}
+
+AbstractDataCache::AbstractDataCache(const AbstractDataCache &cache)
+{
+    cache.setOwner(false);
+}
+
+AbstractDataCache::~AbstractDataCache()
+{
+}
+
+void AbstractDataCache::setOwner(bool owner)const
+{
+    dataOwner = owner;
 }
 
 void AbstractDataCache::cacheSocket(DoutSocket *socket)    
@@ -51,13 +139,15 @@ AbstractDataCache* AbstractDataCache::getDerived()
     return this; 
 }
 
-DoutSocket* AbstractDataCache::getStart()    
+const DoutSocket* AbstractDataCache::getStart()    
 {
     return start;
 }
 
 void AbstractDataCache::cacheInputs()    
 {
+    if(!start)
+        return;
     switch(start->getNode()->getNodeType())
     {
     case CONTAINER:
@@ -67,6 +157,7 @@ void AbstractDataCache::cacheInputs()
     case CONDITIONCONTAINER:
         break;
     case FOR:
+        forloop();
         break;
     case WHILE:
         break;
@@ -75,6 +166,7 @@ void AbstractDataCache::cacheInputs()
     case STRINGNODE:
         break;
     case FLOATNODE:
+        floatValue();
         break;
     case INTNODE:
         intValue();
@@ -82,11 +174,15 @@ void AbstractDataCache::cacheInputs()
     case VECTORNODE:
         vectorValue();
         break;
+    case FLOATTOVECTOR:
+        floattovector();
+        break;
     case INSOCKETS:
         break;
     case GETARRAY:
         break;
     case SETARRAY:
+        setArray();
         break;
     case COMPOSEARRAY:
         composeArray();
@@ -98,9 +194,17 @@ void AbstractDataCache::cacheInputs()
         composePolygon();
         break;
     case ADD:
+        add();
+        break;
     case SUBTRACT:
+        subtract();
+        break;
     case MULTIPLY:
+        multiply();
+        break;
     case DIVIDE:
+        divide();
+        break;
     case DOTPRODUCT:
     case GREATERTHAN:
     case SMALLERTHAN:
@@ -110,10 +214,16 @@ void AbstractDataCache::cacheInputs()
     case NOT:
     case VARNAME:
         break;
+    case LOOPINSOCKETS:
+        getLoopedCache();
     default:
         break;
             
     }
+}
+
+void AbstractDataCache::setArray()    
+{
 }
 
 void AbstractDataCache::composeArray()    
@@ -133,6 +243,39 @@ void AbstractDataCache::vectorValue()
 {
 }
 
+void AbstractDataCache::floattovector()    
+{
+}
+
 void AbstractDataCache::intValue()    
 {
 }
+
+void AbstractDataCache::floatValue()    
+{
+}
+
+void AbstractDataCache::forloop()    
+{
+}
+
+void AbstractDataCache::getLoopedCache()    
+{
+}
+
+void AbstractDataCache::add()    
+{
+}
+
+void AbstractDataCache::subtract()    
+{
+}
+
+void AbstractDataCache::multiply()    
+{
+}
+
+void AbstractDataCache::divide()    
+{
+}
+

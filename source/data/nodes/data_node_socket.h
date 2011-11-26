@@ -250,7 +250,7 @@ public:
     QString getString();
     void setString(QString value);
 
-    Property* getProperty();
+    Property* getProperty()const;
     void setProperty();
     void setType(socket_type value);
 

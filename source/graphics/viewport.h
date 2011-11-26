@@ -44,6 +44,7 @@ public slots:
     void render();
     void render(DNode *node);
     void repaint();
+    void clearCache();
 
 protected:
     void resizeGL(int width, int height);

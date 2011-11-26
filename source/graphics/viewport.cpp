@@ -25,6 +25,9 @@
 #include "QMouseEvent"
 #include "QMutexLocker"
 
+#include "iostream"
+#include "ctime"
+
 #include "math.h"
 
 #include "source/data/base/frg.h"
@@ -105,16 +108,23 @@ void Viewport::drawObject(Object* obj)
     Vector *vert=0;
     for(i=0; i<polycnt; i++)
         for(j=0; j<polygons[i].vertexcount; j++){
+            if(polygons[i].vertices) //prevent crash TODO: fix properly
+                vi = polygons[i].vertices[0];
+            else
+                continue;
             vi = polygons[i].vertices[j];
-            if(vi >= vertcnt) continue;
+            if(0 > vi || vi >= vertcnt) continue;
             vert = &vertices[vi];
             glVertex3f(vert->x, vert->y, vert->z);
             if(j > 0){
                 glVertex3f(vert->x, vert->y, vert->z);
             }
             if(j == polygons[i].vertexcount -1){
-                vi = polygons[i].vertices[0];
-                if(vi >= vertcnt) continue;
+                if(polygons[i].vertices) //prevent crash TODO: fix properly
+                    vi = polygons[i].vertices[0];
+                else
+                    continue;
+                if(0 > vi || vi >= vertcnt) continue;
                 vert = &vertices[vi];
                 glVertex3f(vert->x, vert->y, vert->z);
             }
@@ -126,8 +136,12 @@ void Viewport::drawObject(Object* obj)
         glBegin(GL_POLYGON);
         glColor4f(0.6f, 0.6f, 0.6f, 1.0f);
         for(j=0; j<polygons[i].vertexcount; j++){
+            if(polygons[i].vertices) //prevent crash TODO: fix properly
+                vi = polygons[i].vertices[0];
+            else
+                continue;
             vi = polygons[i].vertices[j];
-            if(vi >= vertcnt) continue;
+            if(0 > vi || vi >= vertcnt) continue;
             vert = &vertices[vi];
             glVertex3f(vert->x, vert->y, vert->z);
         }
@@ -140,22 +154,22 @@ void Viewport::drawAxisGizmo()
     //x-Axis
     glBegin(GL_LINES);
     glColor3f(1.f, .0f, .0f);
-    glVertex3f(2.f, 1.0f, 1.0f);
-    glVertex3f(1.0f, 1.0f, 1.0f);
+    glVertex3f(2.f, -1.0f, -5.0f);
+    glVertex3f(1.0f, -1.0f, -5.0f);
     glEnd();
 
     //y-Axis
     glBegin(GL_LINES);
     glColor3f(0.f, 1.0f, .0f);
-    glVertex3f(1.0f, 2.0f, 1.0f);
-    glVertex3f(1.0f, 1.0f, 1.0f);
+    glVertex3f(1.0f, -2.0f, -5.0f);
+    glVertex3f(1.0f, -1.0f, -5.0f);
     glEnd();
 
    //z-Axis
     glBegin(GL_LINES);
     glColor3f(0.f, .0f, 1.0f);
-    glVertex3f(1.0f, 1.0f, 2.0f);
-    glVertex3f(1.0f, 1.0f, 1.0f);
+    glVertex3f(1.0f, -1.0f, -6.0f);
+    glVertex3f(1.0f, -1.0f, -5.0f);
     glEnd();
 }
 
@@ -280,6 +294,11 @@ void Viewport::render(DNode *node)
     updateGL();
 }
 
+void Viewport::clearCache()    
+{
+    cache->clear();
+}
+
 ViewportDock::ViewportDock(ViewportNode *node)
     : QDockWidget("viewport"), node(node)
 {
@@ -359,16 +378,23 @@ CacheThread::CacheThread()
 
 void CacheThread::run()    
 {
+    SceneCache *oldcache=0;
     if(node && !view->getAllInNodes().contains(node))
         return;
 
-    DoutSocket *cntdSocket = view->getInSockets().first()->getCntdWorkSocket();
+    DinSocket *socket = view->getInSockets().first();
+    DoutSocket *cntdSocket = socket->getCntdWorkSocket();
     if(cntdSocket)
     {
         QMutex mutex;
-        SceneCache *sc = new SceneCache(cntdSocket);
+        SceneCache *sc = new SceneCache(socket);
         QMutexLocker lock(&mutex);
+        oldcache=*cache;
         *cache = sc;
+        if(oldcache){
+            oldcache->clear();
+            delete oldcache;
+        }
     }
     else
         return;

@@ -255,12 +255,9 @@ NodeList DNode::getAllInNodes(NodeList nodes)
 {
     foreach(DinSocket *socket, getInSockets())
     {
-        DoutSocket *cntdSocket = socket->getCntdFunctionalSocket();
+        DoutSocket *cntdSocket = socket->getCntdWorkSocket();
 
         //try to not forget special containers and their default inputs
-        DoutSocket *wSocket = socket->getCntdWorkSocket();
-        if(wSocket != cntdSocket && wSocket->getNode()->isContainer())
-            nodes.append(wSocket->getNode()->getAllInNodes(nodes));
 
         if(cntdSocket)
         {
@@ -268,7 +265,12 @@ NodeList DNode::getAllInNodes(NodeList nodes)
             if(nodes.contains(cntdNode)) return nodes;
             nodes.append(cntdNode);
 
-            nodes.append(cntdNode->getAllInNodes(nodes));
+            if(cntdNode->isContainer()){
+                NodeList nodesInContainer = cntdNode->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->getNode()->getAllInNodes(nodes);
+                nodes.append(nodesInContainer);
+            }
+
+            nodes = cntdNode->getAllInNodes(nodes);
         }
     }
     return nodes;
@@ -1338,154 +1340,6 @@ ConditionContainerNode::ConditionContainerNode(const ConditionContainerNode* nod
     setNodeType(CONDITIONCONTAINER);
 }
 
-SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
-    : container(0)
-{
-    if (dir == IN)
-    {
-        setNodeType(INSOCKETS);
-        if(!raw && contnode)setInSocketNode(contnode);
-    }
-    else
-    {
-        setNodeType(OUTSOCKETS);
-        if(!raw && contnode)setOutSocketNode(contnode);
-    }
-}
-
-SocketNode::SocketNode(const SocketNode* node)
-    : DNode(node), container(CopyNodeMapper::getCopy(static_cast<DNode*>(node->getContainer()))->getDerived<ContainerNode>())
-{
-}
-
-void SocketNode::setInSocketNode(ContainerNode *contnode)
-{
-    setDynamicSocketsNode(OUT);
-    setNodeName("Input");
-    contnode->setInputs(this);
-}
-
-void SocketNode::setOutSocketNode(ContainerNode *contnode)
-{
-    setDynamicSocketsNode(IN);
-    setNodeName("Output");
-    contnode->setOutputs(this);
-}
-
-void SocketNode::connectToContainer(ContainerNode *contnode)
-{
-    container = contnode;
-}
-
-ContainerNode* SocketNode::getContainer() const
-{
-    return container;
-}
-
-void SocketNode::inc_var_socket()
-{
-    DNode::inc_var_socket();
-	DSocket *newsocket;
-//    unsigned short arrID = container->getSocketOnContainer(getLastSocket())->getArrayID();
-	if(getLastSocket()->getDir() == IN)
-		newsocket = new DoutSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
-	else
-		newsocket = new DinSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
-    container->mapOnToIn(newsocket, getLastSocket());
- //   if(arrID > 0)
- //       newsocket->setArray(arrID);
-}
-
-void SocketNode::dec_var_socket(DSocket *socket)
-{
-    if(container)container->removeSocket(container->getSocketOnContainer(socket));
-    DNode::dec_var_socket(socket);
-}
-
-LoopSocketNode::LoopSocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
-    :SocketNode(dir, contnode, raw), partner(0)
-{
-    if (dir == IN)
-    {
-        setNodeType(LOOPINSOCKETS);
-    }
-    else
-    {
-        setNodeType(LOOPOUTSOCKETS);
-    }
-
-}
-
-LoopSocketNode::LoopSocketNode(const LoopSocketNode* node)
-    : SocketNode(node), partner(0)
-{
-    foreach(DSocket *original, node->getLoopedSockets())
-        loopSocketMap.insert(CopySocketMapper::getCopy(original), CopySocketMapper::getCopy(node->getPartnerSocket(original)));        
-}
-
-void LoopSocketNode::dec_var_socket(DSocket *socket)
-{
-    SocketNode::dec_var_socket(socket);
-    if(partner != 0)
-    {
-        LoopSocketNode *tmpp = partner;
-        partner->setPartner(0);
-        deletePartnerSocket(socket);
-        partner->setPartner(tmpp);
-    }
-}
-
-QList<DSocket*> LoopSocketNode::getLoopedSockets() const
-{
-    return loopSocketMap.keys();
-}
-
-qint16 LoopSocketNode::getLoopedSocketsCount() const
-{
-    return loopSocketMap.size();
-}
-
-void LoopSocketNode::createPartnerSocket(DSocket *socket)
-{
-	DSocket *partnerSocket;
-	if(socket->getDir() == IN)
-		partnerSocket = new DoutSocket(socket->getName(), socket->getType(), partner);
-	else
-		partnerSocket = new DinSocket(socket->getName(), socket->getType(), partner);
-    loopSocketMap.insert(socket, partnerSocket);
-    partner->mapPartner(partnerSocket, socket);
-}
-
-void LoopSocketNode::deletePartnerSocket(DSocket *socket)
-{
-    DinSocket *partnerSocket = getPartnerSocket(socket)->toIn();
-    partner->removeSocket(partnerSocket);
-    loopSocketMap.remove(socket);
-}
-
-void LoopSocketNode::mapPartner(DSocket* here, DSocket *partner)    
-{
-   loopSocketMap.insert(here, partner); 
-}
-
-void LoopSocketNode::setPartner(LoopSocketNode *p)
-{
-    partner = p;
-}
-
-DSocket *LoopSocketNode::getPartnerSocket(DSocket *socket) const
-{
-    if(loopSocketMap.keys().contains(socket))
-        return loopSocketMap.value(socket);
-    else return 0;
-}
-
-void LoopSocketNode::inc_var_socket()
-{
-    SocketNode::inc_var_socket();
-    if(partner) createPartnerSocket(getLastSocket());
-}
-
 ConditionNode::ConditionNode(NType t, bool raw)
 {
     setNodeType(t);
@@ -1737,25 +1591,212 @@ VectorValueNode::VectorValueNode(const VectorValueNode* node)
 {
 }
 
+FloatToVectorNode::FloatToVectorNode(bool raw)
+    :DNode("Vector")
+{
+    setNodeType(FLOATTOVECTOR);
+    if(!raw)
+    {
+        new DinSocket("X", FLOAT, this);
+        new DinSocket("Y", FLOAT, this);
+        new DinSocket("Z", FLOAT, this);
+        new DoutSocket("Vector", VECTOR, this);
+    }
+}
+
+FloatToVectorNode::FloatToVectorNode(const FloatToVectorNode* node)
+    : DNode(node)
+{
+}
+
+SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
+    : container(0)
+{
+    if (dir == IN)
+    {
+        setNodeType(INSOCKETS);
+        if(!raw && contnode)setInSocketNode(contnode);
+    }
+    else
+    {
+        setNodeType(OUTSOCKETS);
+        if(!raw && contnode)setOutSocketNode(contnode);
+    }
+}
+
+SocketNode::SocketNode(const SocketNode* node)
+    : DNode(node), container(CopyNodeMapper::getCopy(static_cast<DNode*>(node->getContainer()))->getDerived<ContainerNode>())
+{
+}
+
+void SocketNode::setInSocketNode(ContainerNode *contnode)
+{
+    setDynamicSocketsNode(OUT);
+    setNodeName("Input");
+    contnode->setInputs(this);
+}
+
+void SocketNode::setOutSocketNode(ContainerNode *contnode)
+{
+    setDynamicSocketsNode(IN);
+    setNodeName("Output");
+    contnode->setOutputs(this);
+}
+
+void SocketNode::connectToContainer(ContainerNode *contnode)
+{
+    container = contnode;
+}
+
+ContainerNode* SocketNode::getContainer() const
+{
+    return container;
+}
+
+void SocketNode::inc_var_socket()
+{
+    DNode::inc_var_socket();
+	DSocket *newsocket;
+//    unsigned short arrID = container->getSocketOnContainer(getLastSocket())->getArrayID();
+	if(getLastSocket()->getDir() == IN)
+		newsocket = new DoutSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
+	else
+		newsocket = new DinSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
+    container->mapOnToIn(newsocket, getLastSocket());
+ //   if(arrID > 0)
+ //       newsocket->setArray(arrID);
+}
+
+void SocketNode::dec_var_socket(DSocket *socket)
+{
+    if(container)container->removeSocket(container->getSocketOnContainer(socket));
+    DNode::dec_var_socket(socket);
+}
+
+LoopSocketNode::LoopSocketNode(socket_dir dir, LoopNode *contnode, bool raw)
+    :SocketNode(dir, contnode, true), partner(0)
+{
+    if (dir == IN) {
+        setNodeType(LOOPINSOCKETS);
+        if(!raw && contnode) {
+            //setDynamicSocketsNode(OUT);
+            setNodeName("Looped Sockets");
+        }
+    }
+    else {
+        setNodeType(LOOPOUTSOCKETS);
+        if(!raw && contnode)setOutSocketNode(contnode);
+    }
+}
+
+LoopSocketNode::LoopSocketNode(const LoopSocketNode* node)
+    : SocketNode(node), partner(0)
+{
+    foreach(DSocket *original, node->getLoopedSockets())
+        loopSocketMap.insert(CopySocketMapper::getCopy(original), CopySocketMapper::getCopy(node->getPartnerSocket(original)));        
+}
+
+void LoopSocketNode::dec_var_socket(DSocket *socket)
+{
+    SocketNode::dec_var_socket(socket);
+    if(partner != 0)
+    {
+        LoopSocketNode *tmpp = partner;
+        partner->setPartner(0);
+        deletePartnerSocket(socket);
+        partner->setPartner(tmpp);
+    }
+}
+
+QList<DSocket*> LoopSocketNode::getLoopedSockets() const
+{
+    return loopSocketMap.keys();
+}
+
+qint16 LoopSocketNode::getLoopedSocketsCount() const
+{
+    return loopSocketMap.size();
+}
+
+void LoopSocketNode::createPartnerSocket(DSocket *socket)
+{
+	DSocket *partnerSocket;
+	DSocket *newsocket;
+	if(socket->getDir() == IN)
+    {
+        partnerSocket = new DoutSocket(socket->getName(), socket->getType(), partner);
+		newsocket = new DinSocket(socket->getName(), socket->getType(), getContainer());
+        getContainer()->mapOnToIn(newsocket, partnerSocket);
+    }
+	else
+		partnerSocket = new DinSocket(socket->getName(), socket->getType(), partner);
+    loopSocketMap.insert(socket, partnerSocket);
+    //partner->mapPartner(partnerSocket, socket);
+}
+
+void LoopSocketNode::deletePartnerSocket(DSocket *socket)
+{
+    DinSocket *partnerSocket = getPartnerSocket(socket)->toIn();
+    partner->removeSocket(partnerSocket);
+    loopSocketMap.remove(socket);
+}
+
+void LoopSocketNode::mapPartner(DSocket* here, DSocket *partner)    
+{
+   loopSocketMap.insert(here, partner); 
+}
+
+void LoopSocketNode::setPartner(LoopSocketNode *p)
+{
+    partner = p;
+}
+
+DSocket *LoopSocketNode::getPartnerSocket(const DSocket *socket) const
+{
+    if(loopSocketMap.keys().contains(const_cast<DSocket*>(socket)))
+        return loopSocketMap.value(const_cast<DSocket*>(socket));
+    else return 0;
+}
+
+void LoopSocketNode::inc_var_socket()
+{
+    SocketNode::inc_var_socket();
+    if(getNodeType() == LOOPOUTSOCKETS)
+        createPartnerSocket(getLastSocket());
+}
+
 LoopNode::LoopNode(QString name, bool raw)
     : ContainerNode(name, true)
 {
     if(!raw)
     {
-        LoopSocketNode *loutNode, *linNode;
+        LoopSocketNode *loutNode, *linNode, *loopNode;
         setContainerData(new ContainerSpace);
         getContainerData()->setName(name);
 
+        loopNode = new LoopSocketNode(IN, this);
+        setLoopedSockets(loopNode);
         linNode = new LoopSocketNode(IN, this);
+        setInputs(linNode);
+        linNode->setDynamicSocketsNode(OUT);
         loutNode = new LoopSocketNode(OUT, this);
-        linNode->setPartner(loutNode);
-        loutNode->setPartner(linNode);
+
+        loopNode->setPartner(loutNode);
+        loutNode->setPartner(loopNode);
     }
 }
 
 LoopNode::LoopNode(const LoopNode* node)
     : ContainerNode(node)
 {
+}
+
+void LoopNode::setLoopedSockets(LoopSocketNode *node)    
+{
+    loopSockets = node;
+    if(!getContainerData()->getNodes().contains(node))
+        getContainerData()->addNode(node);
+    node->connectToContainer(this);
 }
 
 bool LoopNode::isLoopNode(DNode *node)
@@ -1790,9 +1831,9 @@ ForNode::ForNode(bool raw)
     setNodeType(FOR);
     if(!raw)
     {
-        addMappedSocket(new DinSocket("Start", FLOAT, this));
-        addMappedSocket(new DinSocket("End", FLOAT, this));
-        addMappedSocket(new DinSocket("Step", FLOAT, this));
+        addMappedSocket(new DinSocket("Start", INTEGER, this));
+        addMappedSocket(new DinSocket("End", INTEGER, this));
+        addMappedSocket(new DinSocket("Step", INTEGER, this));
         DSocketList *inputSocketList = getInputs()->getDerived<LoopSocketNode>()->getOutSocketLlist();
         inputSocketList->move(0, inputSocketList->len() - 1);
     }
@@ -2012,10 +2053,12 @@ SetArrayNode::SetArrayNode(bool raw)
 {
     setNodeType(SETARRAY);
     if(!raw){
+        DinSocket *inarr = new DinSocket("Array", VARIABLE, this);
         DinSocket *val = new DinSocket("value", VARIABLE, this);
-        new DinSocket("Index", FLOAT, this);
+        new DinSocket("Index", INTEGER, this);
         DoutSocket *arr = new DoutSocket("Array", VARIABLE, this);
-        val->addTypeCB(new ScpTypeCB(val, arr));
+        //val->addTypeCB(new ScpTypeCB(val, arr));
+        inarr->addTypeCB(new ScpTypeCB(inarr, arr));
     }
 }
 

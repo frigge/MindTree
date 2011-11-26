@@ -231,6 +231,13 @@ void* BuildIn::VVecNode(void *space)
     return node;
 }
 
+void* BuildIn::VFloatToVector(void *space)
+{
+    FloatToVectorNode *node = new FloatToVectorNode;
+    ((DNSpace*)space)->addNode(node);
+    return node;
+}
+
 void* BuildIn::VBoolNode(void *space)
 {
     BoolValueNode *node = new BoolValueNode;
@@ -341,6 +348,8 @@ void BuildIn::registerNodes()
     FRG::lib->addNode("Integer", "Value", VIntNode); 
     FRG::lib->addNode("Vector", "Value", VVecNode); 
     FRG::lib->addNode("Boolean", "Value", VBoolNode); 
+
+    FRG::lib->addNode("FloatToVector", "Conversion", VFloatToVector);
 
     FRG::lib->addNode("If", "Boolean", ContIfNode); 
     FRG::lib->addNode("For", "Loop", ContForNode); 

@@ -28,33 +28,76 @@ class AbstractDataCache;
 class CacheControl
 {
 public:
-    static bool isCached(DoutSocket *socket);
-    static void addCache(DoutSocket *socket, AbstractDataCache *cache);
+    static AbstractDataCache *cache(const DoutSocket *socket);
+    static bool isCached(const DoutSocket *socket);
+    static void addCache(const DoutSocket *socket, AbstractDataCache *cache);
     static void removeCache(AbstractDataCache *cache);
 
 private:
-    static QHash<AbstractDataCache*, DoutSocket*>caches;
+    static QHash<AbstractDataCache*, const DoutSocket*>caches;
+};
+
+class LoopCache
+{
+public:
+    LoopCache();
+    ~LoopCache();
+    void setStep(int step);
+    int getStep();
+    void addData(AbstractDataCache *cache);
+    AbstractDataCache* getCache(const DoutSocket *socket=0);
+    const LoopNode* getNode();
+    void free();
+
+private:
+    const DoutSocket *loopentry;
+    QHash<const DoutSocket*, AbstractDataCache*> cachedData;
+    int stepValue;
+};
+
+class LoopCacheControl
+{
+public:
+    static LoopCache* loop(const LoopNode *node);
+    static void del(const LoopNode *node);
+
+private:
+    static QHash<const LoopNode*, LoopCache*> loops;
 };
 
 class AbstractDataCache
 {
 public:
-    AbstractDataCache(DoutSocket *start);
+    AbstractDataCache(const DinSocket *start);
+    AbstractDataCache(const AbstractDataCache &cache);
+    virtual ~AbstractDataCache();
+    void setOwner(bool owner)const;
     void cacheSocket(DoutSocket *socket);
     virtual AbstractDataCache* getDerived();
     void cacheInputs();
+    const DoutSocket *getStart();
 
 protected:
-    DoutSocket *getStart();
+    virtual void setArray();
     virtual void composeArray();
     virtual void composePolygon();
     virtual void composeObject();
     virtual void vectorValue();
+    virtual void floattovector();
     virtual void intValue();
+    virtual void floatValue();
+    virtual void forloop();
+    virtual void getLoopedCache();
+    virtual void add();
+    virtual void subtract();
+    virtual void multiply();
+    virtual void divide();
 
 private:
-    DoutSocket *start;
+    const DoutSocket *start;
+    const DinSocket *inSocket;
     DSocketList cachedSockets;
+    mutable bool dataOwner;
 };
 
 

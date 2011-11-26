@@ -319,7 +319,10 @@ bool DSocket::isCompatible(DSocket *s1, DSocket *s2)
     if(s1->getType() == s2->getType())
         return true;
     if((s1->getType() == VECTOR && s2->getType() == NORMAL)
-        ||s2->getType() == VECTOR && s1->getType() == NORMAL)
+        ||(s2->getType() == VECTOR && s1->getType() == NORMAL))
+        return true;
+    if((s1->getType() == INTEGER && s2->getType() == FLOAT)
+        || (s1->getType() == FLOAT && s2->getType() == INTEGER))
         return true;
     return false;
 }
@@ -502,7 +505,7 @@ void DinSocket::setType(socket_type value)
     setProperty();
 }
 
-Property* DinSocket::getProperty()
+Property* DinSocket::getProperty()const
 {
     return prop;
 }
@@ -914,8 +917,8 @@ DoutSocket* DinSocket::getCntdWorkSocket() const
             else
                 return cntdSocket->getNode()->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdWorkSocket();
         }
-        else if(cntdSocket->getNode()->getNodeType() == INSOCKETS
-            ||cntdSocket->getNode()->getNodeType() == LOOPINSOCKETS){
+        else if(cntdSocket->getNode()->getNodeType() == INSOCKETS) {
+            //||cntdSocket->getNode()->getNodeType() == LOOPINSOCKETS){
             DSocket *onContainer = cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket); 
             if(onContainer)
                 return onContainer->toIn()->getCntdWorkSocket();

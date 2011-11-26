@@ -51,6 +51,8 @@ int Object::getPolyCnt()
 
 void Object::appendVertices(Vector *verts, int size)    
 {
+    if(!verts)
+        return;
     int oldcnt = vertexcount;
     vertexcount += size;
     Vector *newverts = new Vector[vertexcount];

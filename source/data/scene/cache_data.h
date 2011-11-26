@@ -27,9 +27,11 @@ class Polygon;
 class SceneCache : public AbstractDataCache
 {
 public:
-    SceneCache(DoutSocket *node);
+    SceneCache(const DinSocket *node);
+    ~SceneCache();
     QList<Object*> getData();
     virtual SceneCache* getDerived();
+    void clear();
 
 protected:
     virtual void composeArray();
@@ -42,9 +44,11 @@ private:
 class PolygonCache : public AbstractDataCache
 {
 public:
-    PolygonCache(DoutSocket *socket);
+    PolygonCache(const DinSocket *socket);
+    ~PolygonCache();
     virtual PolygonCache* getDerived();
     Polygon* getData(int *size=0);
+    void clear();
 
 protected:
     void composePolygon();
@@ -58,25 +62,45 @@ private:
 class FloatCache : public AbstractDataCache
 {
 public:
-    FloatCache(DoutSocket *socket);
+    FloatCache(const DinSocket *socket=0);
+    ~FloatCache();
     virtual FloatCache* getDerived();
-    float* getData(int* size=0);
+    void setData(double d);
+    double* getData(int* size=0);
+    void clear();
+
+protected:
+    void floatValue();
+    void intValue();
+    void getLoopedCache();
+    void add();
+    void subtract();
+    void multiply();
+    void divide();
 
 private:
-    float *data;
+    double *data;
     int arraysize;
 };
 
 class IntCache : public AbstractDataCache
 {
 public:
-    IntCache(DoutSocket *socket);
+    IntCache(const DinSocket *socket=0);
+    ~IntCache();
     virtual IntCache* getDerived();
+    void setData(int d);
     int* getData(int* size=0);
+    void clear();
 
 protected:
     void composeArray();
     void intValue();
+    void getLoopedCache();
+    void add();
+    void subtract();
+    void multiply();
+    void divide();
 
 private:
     int *data;
@@ -86,13 +110,20 @@ private:
 class VectorCache : public AbstractDataCache
 {
 public:
-    VectorCache(DoutSocket *socket);
+    VectorCache(const DinSocket *socket=0);
+    ~VectorCache();
     virtual VectorCache* getDerived();
+    void setData(Vector d);
     Vector* getData(int* size=0);
+    void clear();
 
 protected:
     void composeArray();
     void vectorValue();
+    void floattovector();
+    void setArray();
+    void forloop();
+    void getLoopedCache();
 
 private:
     Vector *data;
