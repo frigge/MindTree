@@ -76,13 +76,11 @@ void DSocketList::rm(DSocket *socket)
         //so we need to reset the *first pointer
         if(first->next){
             first = first->next;
-            delete first->prev->socket;
             delete first->prev;
             first->prev = 0;
             return;
         }
         //there is only one entry
-        delete first->socket;
         delete first;
         first = 0;
         return;
@@ -98,7 +96,6 @@ void DSocketList::rm(DSocket *socket)
     if(f->socket == socket){
         if(f->prev) f->prev->next = f->next;
         if(f->next) f->next->prev = f->prev;
-        delete f->socket;
         delete f;
     }
 }
@@ -118,8 +115,6 @@ void DSocketList::move(unsigned short oldpos, unsigned short newpos)
     atoldpos = getLLsocketAt(oldpos);
     atnewpos = getLLsocketAt(newpos);
 
-    unsigned short ln = len();
-
     oldnext = atoldpos->next;
     oldprev = atoldpos->prev;
     newprev = atnewpos->prev;
@@ -130,7 +125,6 @@ void DSocketList::move(unsigned short oldpos, unsigned short newpos)
     if(oldprev)oldprev->next = oldnext;
     if(oldnext)oldnext->prev = oldprev;
 
-    ln = len();
     if(len() <= newpos)
     {
         atnewpos->next = atoldpos;
@@ -267,7 +261,7 @@ void DSocket::unblockAllCB()
     changeTypeCallbacks.setBlock(false); 
 }
 
-bool DSocket::operator==(DSocket &socket)    
+bool DSocket::operator==(DSocket &socket)    const
 {
     if(getVariable() != socket.getVariable()
         ||getName() != socket.getName()
@@ -276,7 +270,7 @@ bool DSocket::operator==(DSocket &socket)
     return true;
 }
 
-bool DSocket::operator !=(DSocket &socket)
+bool DSocket::operator !=(DSocket &socket)const
 {
     return(!(*this == socket));
 }
@@ -497,6 +491,7 @@ DinSocket::~DinSocket()
 {
     if(cntdSocket)
         cntdSocket->unregisterSocket(this);
+    delete prop;
 }
 
 void DinSocket::setType(socket_type value)
@@ -536,6 +531,7 @@ void DinSocket::setProperty()
             prop = new BoolProperty(this);
             break;
         default:
+            prop = 0;
             break;
     }
 }
@@ -598,6 +594,33 @@ QDataStream & operator<<(QDataStream &stream, DSocket *socket)
             stream<<socket->toIn()->getCntdSocket()->getID();
         else
             stream<<(unsigned short)(0);
+        Vector vec;
+        switch(socket->getType())
+        {
+            case FLOAT:
+                stream<<((FloatProperty*)socket->toIn()->getProperty())->getValue();
+                break;
+            case INTEGER:
+                stream<<((IntProperty*)socket->toIn()->getProperty())->getValue();
+                break;
+            case STRING:
+                stream<<((StringProperty*)socket->toIn()->getProperty())->getValue();
+                break;
+            case CONDITION:
+                stream<<((BoolProperty*)socket->toIn()->getProperty())->getValue();
+                break;
+            case POINT:
+            case NORMAL:
+            case VECTOR:
+                vec = ((VectorProperty*)socket->toIn()->getProperty())->getValue();
+                stream<<vec.x<<vec.y<<vec.z;
+                break;
+            case COLOR:
+                stream<<((ColorProperty*)socket->toIn()->getProperty())->getValue();
+                break;
+            default:
+                break;
+        }
 	}
     return stream;
 }
@@ -621,16 +644,53 @@ QDataStream & operator>>(QDataStream &stream, DSocket **socket)
 	{
 		bool istoken;
 		unsigned short tempID;
+        bool bprop;
+        QString sprop;
+        Vector vprop;
+        double fprop;
+        int iprop;
+        QColor cprop;
 		stream>>istoken;
 		stream>>tempID;
 		newsocket->toIn()->setTempCntdID(tempID);
 		newsocket->toIn()->setToken(istoken); 
+        switch(type)
+        {
+            case FLOAT:
+                stream>>fprop;
+                ((FloatProperty*)newsocket->toIn()->getProperty())->setValue(fprop);
+                break;
+            case INTEGER:
+                stream>>iprop;
+                ((IntProperty*)newsocket->toIn()->getProperty())->setValue(iprop);
+                break;
+            case STRING:
+                stream>>sprop;
+                ((StringProperty*)newsocket->toIn()->getProperty())->setValue(sprop);
+                break;
+            case CONDITION:
+                stream>>bprop;
+                ((BoolProperty*)newsocket->toIn()->getProperty())->setValue(bprop);
+                break;
+            case POINT:
+            case NORMAL:
+            case VECTOR:
+                stream>>vprop.x>>vprop.y>>vprop.z;
+                ((VectorProperty*)newsocket->toIn()->getProperty())->setValue(vprop);
+                break;
+            case COLOR:
+                stream>>cprop;
+                ((ColorProperty*)newsocket->toIn()->getProperty())->setValue(cprop);
+                break;
+            default:
+                break;
+        }
 	}
     LoadSocketIDMapper::setID(newsocket, ID);
     return stream;
 }
 
-bool DinSocket::operator==(DinSocket &socket)
+bool DinSocket::operator==(DinSocket &socket)const
 {
     if(DSocket::operator!=(socket)
         ||getToken() != socket.getToken())
@@ -638,7 +698,7 @@ bool DinSocket::operator==(DinSocket &socket)
     return true;
 }
 
-bool DinSocket::operator !=(DinSocket &socket)
+bool DinSocket::operator !=(DinSocket &socket)const
 {
     return(!(*this == socket));
 }
@@ -734,14 +794,14 @@ DoutSocket::~DoutSocket()
         socket->clearLink(false);
 }
 
-bool DoutSocket::operator==(DoutSocket &socket)
+bool DoutSocket::operator==(DoutSocket &socket)const
 {
     if(DSocket::operator!=(socket))
         return false;
     return true;
 }
 
-bool DoutSocket::operator !=(DoutSocket &socket)
+bool DoutSocket::operator !=(DoutSocket &socket)const
 {
     return(!(*this == socket));
 }
@@ -879,23 +939,23 @@ DoutSocket* DinSocket::getCntdFunctionalSocket() const
             return 0;
 
         DNode *cntdNode = cntdSocket->getNode();
-        if(cntdSocket->getNode()->isContainer())
+        if(cntdNode->isContainer())
         {
-            return cntdSocket->getNode()->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdFunctionalSocket();
+            return cntdNode->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdFunctionalSocket();
         }
-        else if(cntdSocket->getNode()->getNodeType() == INSOCKETS)
+        else if(cntdNode->getNodeType() == INSOCKETS)
         {
-            DinSocket *ns = cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket)->toIn();
+            DinSocket *ns = cntdNode->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket)->toIn();
             if(ns) return ns->getCntdFunctionalSocket();
             else return 0;
         }
-        else if (cntdSocket->getNode()->getNodeType() == LOOPINSOCKETS)
+        else if (cntdNode->getNodeType() == LOOPINSOCKETS)
         {
-            ns = cntdSocket->getNode()->getDerived<LoopSocketNode>()->getPartnerSocket(cntdSocket);
+            ns = cntdNode->getDerived<LoopSocketNode>()->getPartnerSocket(cntdSocket);
             if(ns)return ns->toIn()->getCntdFunctionalSocket();
             else
             {
-                ns = cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket);
+                ns = cntdNode->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket);
                 if(ns) return ns->toIn()->getCntdFunctionalSocket();
             }
         }
