@@ -88,11 +88,18 @@ void SceneCache::composeObject()
     PolygonCache *pcache = new PolygonCache(parr);
     polys = pcache->getData(&size);
     if(polys)
-    {
         object->appendPolygons(polys, size);
-        delete pcache;
-    }
+
+    delete pcache;
     objects.append(object);
+}
+
+void SceneCache::container()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<ContainerNode>();
+    SceneCache *cache = new SceneCache(node->getSocketInContainer(getStart())->toIn());
+    objects = cache->getData();
+    delete cache;
 }
 
 PolygonCache::PolygonCache(const DinSocket *socket)
@@ -115,6 +122,7 @@ PolygonCache* PolygonCache::getDerived()
 Polygon* PolygonCache::getData(int *size)    
 {
     if(size)*size = arraysize;
+    setOwner(false);
     return data;
 }
 
@@ -129,6 +137,7 @@ void PolygonCache::composePolygon()
     foreach(DinSocket *socket, insockets){
         ic = new IntCache(socket);
         data->vertices[i] = *ic->getData();
+        ic->setOwner(true); //we copy data so IntCache needs to delete its original data
         delete ic;
         i++;
     }
@@ -136,7 +145,7 @@ void PolygonCache::composePolygon()
 
 void PolygonCache::clear()    
 {
-    if(data)
+    if(data && isOwner())
         delete [] data;
     data = 0;
 }
@@ -150,8 +159,10 @@ void PolygonCache::composeArray()
     int si = 0;
     PolygonCache *pc=0;
     foreach(DinSocket *socket, insockets){
+        if(!socket->getCntdSocket())continue;
         pc = new PolygonCache(socket);
         data[si] = *pc->getData(&data[si].vertexcount);
+        pc->setOwner(true);
         delete pc;
         si++;
     }
@@ -164,9 +175,14 @@ FloatCache::FloatCache(const DinSocket *socket)
         cacheInputs();
     else{
         data = new double[1];
+        data[0] = 0;
         arraysize = 1;
-        if(socket->getType() != VARIABLE)
-            *data = ((FloatProperty*)socket->getProperty())->getValue();
+        if(socket->getType() != VARIABLE) {
+            if(socket->getType() == FLOAT)
+                data[0] = ((FloatProperty*)socket->getProperty())->getValue();
+            else if(socket->getType() == INTEGER)
+                data[0] = ((IntProperty*)socket->getProperty())->getValue();
+        }
     }
 }
 
@@ -177,7 +193,7 @@ FloatCache::~FloatCache()
 
 void FloatCache::clear()
 {
-    if(data)
+    if(data && isOwner())
         delete [] data;
     data=0;
 }
@@ -189,6 +205,7 @@ FloatCache* FloatCache::getDerived()
 
 void FloatCache::setData(double d)    
 {
+    if(data) delete[] data;
     data = new double[1];
     *data = d;
 }
@@ -196,20 +213,25 @@ void FloatCache::setData(double d)
 double* FloatCache::getData(int *size)    
 {
     if(size)*size = arraysize;
+    setOwner(false);
     return data;
 }
 
 void FloatCache::floatValue()    
 {
-    data = new double[1];
-    *data = *FloatCache(getStart()->getNode()->getInSockets().first()).getData();
+    DinSocket *tmp = getStart()->getNode()->getInSockets().first();
+    FloatCache *cache = new FloatCache(tmp);
+    data = cache->getData();
+    delete cache;
     arraysize = 1;
 }
 
 void FloatCache::intValue()    
 {
-    data = new double[1];
-    *data = *IntCache(getStart()->getNode()->getInSockets().first()).getData();
+    data = new double;
+    IntCache *ic = new IntCache(getStart()->getNode()->getInSockets().first());
+    *data = *ic->getData();
+    delete ic;
     arraysize = 1;
 }
 
@@ -224,103 +246,50 @@ void FloatCache::getLoopedCache()
         }
         else{
             FloatCache *cache = new FloatCache(ls->getContainer()->getSocketOnContainer(getStart())->toIn());
-            double *d = cache->getData(&arraysize);
-            data = new double[arraysize];
-            for(int i=0; i<arraysize; i++)
-                data[i] = d[i];
+            data = cache->getData(&arraysize);
+            delete cache;
         }
     }
 }
 
-void FloatCache::add()    
+void FloatCache::math(eMathOp op)    
 {
     DNode *node = getStart()->getNode();
     DinSocketList insockets = node->getInSockets();
     FloatCache *fc=0;
-    int numcnt = insockets.size() - 1;
-    double *values = new double[numcnt];
     int i=0;
+    double tmpd=0;
     foreach(DinSocket *socket, insockets){
-        if (socket->getType() == VARIABLE) {
+        if(i == 0) {
             fc = new FloatCache(socket);
-            values[i] = *fc->getData();
+            data = fc->getData();
             delete fc; 
-            i++;
         }
-    }
-    data = new double[1];
-    *data = values[0];
-    for(i=1; i<numcnt; i++)
-        *data += values[i];
-    arraysize=1;
-}
-
-void FloatCache::subtract()    
-{
-    DNode *node = getStart()->getNode();
-    DinSocketList insockets = node->getInSockets();
-    FloatCache *fc=0;
-    int numcnt = insockets.size() - 1;
-    double *values = new double[numcnt];
-    int i=0;
-    foreach(DinSocket *socket, insockets){
-        if (socket->getType() == VARIABLE) {
+        else {
+            if(!socket->getCntdSocket() && socket->getType() == VARIABLE)
+                continue;
             fc = new FloatCache(socket);
-            values[i] = *fc->getData();
+            switch(op)
+            {
+                case OPADD:
+                    data[0] += fc->getData()[0];
+                    break;
+                case OPSUBTRACT:
+                    data[0] -= fc->getData()[0];
+                    break;
+                case OPMULTIPLY:
+                    data[0] *= fc->getData()[0];
+                    break;
+                case OPDIVIDE:
+                    tmpd = fc->getData()[0];
+                    data[0] /= fc->getData()[0];
+                    break;
+            }
+            fc->setOwner(true);
             delete fc; 
-            i++;
         }
+        i++;
     }
-    data = new double[1];
-    *data = values[0];
-    for(i=1; i<numcnt; i++)
-        *data -= values[i];
-    arraysize=1;
-}
-
-void FloatCache::multiply()    
-{
-    DNode *node = getStart()->getNode();
-    DinSocketList insockets = node->getInSockets();
-    FloatCache *fc=0;
-    int numcnt = insockets.size() - 1;
-    double *values = new double[numcnt];
-    int i=0;
-    foreach(DinSocket *socket, insockets){
-        if (socket->getType() == VARIABLE) {
-            fc = new FloatCache(socket);
-            values[i] = *fc->getData();
-            delete fc; 
-            i++;
-        }
-    }
-    data = new double[1];
-    *data = values[0];
-    for(i=1; i<numcnt; i++)
-        *data *= values[i];
-    arraysize=1;
-}
-
-void FloatCache::divide()    
-{
-    DNode *node = getStart()->getNode();
-    DinSocketList insockets = node->getInSockets();
-    FloatCache *fc=0;
-    int numcnt = insockets.size() - 1;
-    double *values = new double[numcnt];
-    int i=0;
-    foreach(DinSocket *socket, insockets){
-        if (socket->getType() == VARIABLE) {
-            fc = new FloatCache(socket);
-            values[i] = *fc->getData();
-            delete fc; 
-            i++;
-        }
-    }
-    data = new double[1];
-    *data = values[0];
-    for(i=1; i<numcnt; i++)
-        *data /= values[i];
     arraysize=1;
 }
 
@@ -344,19 +313,21 @@ IntCache::~IntCache()
 
 void IntCache::clear()
 {
-    if(data)
+    if(data && isOwner())
         delete [] data;
     data=0;
 }
 
 void IntCache::setData(int d)    
 {
+    if(data) delete[] data;
     data = new int[1];
     *data = d;
 }
 int* IntCache::getData(int* size)    
 {
     if(size)*size = arraysize;
+    setOwner(false);
     return data;
 }
 
@@ -371,8 +342,7 @@ void IntCache::composeArray()
 
 void IntCache::intValue()    
 {
-    data = new int[1];
-    *data = *IntCache(getStart()->getNode()->getInSockets().first()).getData();
+    data = IntCache(getStart()->getNode()->getInSockets().first()).getData();
     arraysize = 1;
 }
 
@@ -387,104 +357,48 @@ void IntCache::getLoopedCache()
         }
         else{
             IntCache *cache = new IntCache(ls->getContainer()->getSocketOnContainer(getStart())->toIn());
-            int *d = cache->getData(&arraysize);
-            data = new int[arraysize];
-            for(int i=0; i<arraysize; i++)
-                data[i] = d[i];
+            data = cache->getData(&arraysize);
+            delete cache;
         }
     }
 }
 
-void IntCache::add()    
+void IntCache::math(eMathOp op)    
 {
     DNode *node = getStart()->getNode();
     DinSocketList insockets = node->getInSockets();
     IntCache *fc=0;
-    int numcnt = insockets.size() - 1;
-    int *values = new int[numcnt];
     int i=0;
     foreach(DinSocket *socket, insockets){
-        if (socket->getType() != VARIABLE) {
+        if(i == 0) {
             fc = new IntCache(socket);
-            values[i] = *fc->getData();
+            data = fc->getData();
             delete fc; 
-            i++;
         }
-    }
-    data = new int[1];
-    *data = values[0];
-    for(i=1; i<numcnt; i++)
-        *data += values[i];
-    arraysize=1;
-}
-
-void IntCache::subtract()    
-{
-    DNode *node = getStart()->getNode();
-    DinSocketList insockets = node->getInSockets();
-    IntCache *fc=0;
-    int numcnt = insockets.size() - 1;
-    int *values = new int[numcnt];
-    int i=0;
-    foreach(DinSocket *socket, insockets){
-        if (socket->getType() != VARIABLE) {
+        else {
+            if(!socket->getCntdSocket() && socket->getType() == VARIABLE)
+                continue;
             fc = new IntCache(socket);
-            values[i] = *fc->getData();
+            switch(op)
+            {
+                case OPADD:
+                    *data += *fc->getData();
+                    break;
+                case OPSUBTRACT:
+                    *data -= *fc->getData();
+                    break;
+                case OPMULTIPLY:
+                    *data *= *fc->getData();
+                    break;
+                case OPDIVIDE:
+                    *data /= *fc->getData();
+                    break;
+            }
+            fc->setOwner(true);
             delete fc; 
-            i++;
         }
+        i++;
     }
-    data = new int[1];
-    *data = values[0];
-    for(i=1; i<numcnt; i++)
-        *data -= values[i];
-    arraysize=1;
-}
-
-void IntCache::multiply()    
-{
-    DNode *node = getStart()->getNode();
-    DinSocketList insockets = node->getInSockets();
-    IntCache *fc=0;
-    int numcnt = insockets.size() - 1;
-    int *values = new int[numcnt];
-    int i=0;
-    foreach(DinSocket *socket, insockets){
-        if (socket->getType() != VARIABLE) {
-            fc = new IntCache(socket);
-            values[i] = *fc->getData();
-            delete fc; 
-            i++;
-        }
-    }
-    data = new int[1];
-    *data = values[0];
-    for(i=1; i<numcnt; i++)
-        *data *= values[i];
-    arraysize=1;
-}
-
-void IntCache::divide()    
-{
-    DNode *node = getStart()->getNode();
-    DinSocketList insockets = node->getInSockets();
-    IntCache *fc=0;
-    int numcnt = insockets.size() - 1;
-    int *values = new int[numcnt];
-    int i=0;
-    foreach(DinSocket *socket, insockets){
-        if (socket->getType() != VARIABLE) {
-            fc = new IntCache(socket);
-            values[i] = *fc->getData();
-            delete fc; 
-            i++;
-        }
-    }
-    data = new int[1];
-    *data = values[0];
-    for(i=1; i<numcnt; i++)
-        if(values[i] != 0)
-            *data /= values[i];
     arraysize=1;
 }
 
@@ -508,7 +422,7 @@ VectorCache::~VectorCache()
 
 void VectorCache::clear()
 {
-    if(data)
+    if(data && isOwner())
         delete [] data;
 
     data=0;
@@ -523,6 +437,7 @@ void VectorCache::setData(Vector d)
 Vector* VectorCache::getData(int* size)    
 {
     if(size)*size = arraysize;
+    setOwner(false);
     return data;
 }
 
@@ -540,44 +455,45 @@ void VectorCache::setArray()
     DinSocket *indexSocket = inSockets.at(2);
     
     int index=0;
-    Vector *vectors = 0;
     Vector value;
-    index = *IntCache(indexSocket).getData();
+    IntCache *indexCache = new IntCache(indexSocket);
+    index = *indexCache->getData();
+    indexCache->setOwner(true);
+    delete indexCache;
     VectorCache *arrcache = new VectorCache(arrSocket);
-    vectors = arrcache->getData(&arraysize);
-    Vector *veccpy = new Vector[arraysize];
-    int i;
-    if(vectors)
-        for(i=0; i<arraysize; i++)
-            veccpy[i] = vectors[i];
+    data = arrcache->getData(&arraysize);
     delete arrcache;
-    vectors = veccpy;
-    value = *VectorCache(valSocket).getData();
+    VectorCache *valueCache = new VectorCache(valSocket);
+    value = *valueCache->getData();
+    valueCache->setOwner(true);
+    delete valueCache;
 
-    if(index >= arraysize)
-    {
+    if(index >= arraysize) {
+        Vector *newvec = new Vector[index + 1];
+        if(data) {
+            Vector *oldData = data;
+            for(int i=1; i<arraysize; i++)
+                newvec[i] = oldData[i];
+            delete [] data;
+        }
+        data = newvec;
         arraysize = index + 1;
-        vectors = (Vector*)realloc(vectors, sizeof(Vector) * arraysize);
     }
-    vectors[index] = value;
-
-    data = vectors;
+    data[index] = value;
 }
 
 void VectorCache::composeArray()    
 {
     ComposeArrayNode *node = getStart()->getNode()->getDerived<ComposeArrayNode>();
 
-    //guess the size of the vector array to be the size of the insocket list
-    //=>each input to be a single vector
     arraysize = node->getInSockets().size() - 1;
     int pos = 0;
     data = new Vector[arraysize];
     VectorCache *cache=0;
     foreach(DinSocket *socket, node->getInSockets()){
-        int size=0, i;
+        if(pos >= arraysize) break;
         cache = new VectorCache(socket);
-        data[pos] = *cache->getData(&size);
+        data[pos] = cache->getData()[0];
         delete cache;
         pos++;
     }
@@ -586,8 +502,9 @@ void VectorCache::composeArray()
 void VectorCache::vectorValue()    
 {
     const VectorValueNode *node = getStart()->getNode()->getDerivedConst<VectorValueNode>(); 
-    data = new Vector[1];
-    *data = (((VectorProperty*)node->getInSockets().first()->getProperty())->getValue());
+    VectorCache *vcache = new VectorCache(node->getInSockets().first());
+    data = vcache->getData();
+    delete vcache;
     arraysize = 1;
 }
 
@@ -604,13 +521,24 @@ void VectorCache::floattovector()
 
     double xval, yval, zval;
 
-    xval = *FloatCache(x).getData();
-    yval = *FloatCache(y).getData();
-    zval = *FloatCache(z).getData();
+    FloatCache *xcache, *ycache, *zcache;
+    xcache = new FloatCache(x);
+    ycache = new FloatCache(y);
+    zcache = new FloatCache(z);
+    xval = xcache->getData()[0];
+    yval = ycache->getData()[0];
+    zval = zcache->getData()[0];
+
+    xcache->setOwner(true);
+    ycache->setOwner(true);
+    zcache->setOwner(true);
+    delete xcache;
+    delete ycache;
+    delete zcache;
 
     arraysize = 1;
     data = new Vector[1];
-    *data = Vector(xval, yval, zval);
+    data[0] = Vector(xval, yval, zval);
 }
 
 void VectorCache::forloop()    
@@ -623,11 +551,11 @@ void VectorCache::forloop()
     end = insockets.at(1);
     step = insockets.at(2);
 
-    int startval, endval, stepval;
+    int *startval, *endval, *stepval;
 
-    startval = *IntCache(start).getData(); 
-    endval = *IntCache(end).getData(); 
-    stepval = *IntCache(step).getData(); 
+    startval = IntCache(start).getData(); 
+    endval = IntCache(end).getData(); 
+    stepval = IntCache(step).getData(); 
 
     const LoopSocketNode *innode, *outnode;
     innode = node->getInputs()->getDerivedConst<LoopSocketNode>();
@@ -637,42 +565,33 @@ void VectorCache::forloop()
     DinSocket *lin = node->getSocketInContainer(getStart())->toIn();
     LoopCache *c = LoopCacheControl::loop(node);
     VectorCache *vcache = 0;
-    for(stepping = startval; stepping < endval; stepping += stepval) {
+    for(stepping = *startval; stepping < *endval; stepping += *stepval) {
         c->setStep(stepping);
         vcache = new VectorCache(lin);
         c->addData(vcache);
     }
 
-    Vector *tmpvecs=0;
     VectorCache *finalvc = (VectorCache*)c->getCache();
-    if(finalvc) {
-        tmpvecs = finalvc->getData(&arraysize);
-        data = new Vector[arraysize];
-        int i;
-        for(i=0; i<arraysize; i++)
-            data[i] = tmpvecs[i];
-    
-    }
+    if(finalvc) 
+        data = finalvc->getData(&arraysize);
+
     LoopCacheControl::del(node);
+    delete[] startval;
+    delete[] endval;
+    delete[] stepval;
 }
 
 void VectorCache::getLoopedCache()    
 {
     LoopSocketNode *ls = getStart()->getNode()->getDerived<LoopSocketNode>();
     VectorCache* loopedCache = (VectorCache*)LoopCacheControl::loop(ls->getContainer()->getDerivedConst<LoopNode>())->getCache();
-    if(loopedCache) {
-        Vector *tmpvec = loopedCache->getData(&arraysize);
-        data = new Vector[arraysize];
-        for(int i=0; i<arraysize; i++)
-            data[i] = tmpvec[i];
-    }
+    if(loopedCache) 
+        data = loopedCache->getData(&arraysize);
+    
     else{
         VectorCache *vc = new VectorCache(ls->getContainer()->getSocketOnContainer(getStart())->toIn());
-        Vector *vectors = vc->getData(&arraysize);
-        data = new Vector[arraysize];
-        for(int i=0; i<arraysize; i++)
-            data[i] = vectors[i];
-        delete vectors;
+        data = vc->getData(&arraysize);
+        delete vc;
     }
 }
 

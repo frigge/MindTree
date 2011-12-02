@@ -226,6 +226,9 @@ DNode* DNode::copy(const DNode *original)
     case VARNAME:
         newNode = new VarNameNode(original->getDerivedConst<VarNameNode>());
         break;
+    case FLOATTOVECTOR:
+        newNode = new FloatToVectorNode(original->getDerivedConst<VarNameNode>());
+        break;
     }
     FRG::CurrentProject->setNodePosition(newNode, FRG::CurrentProject->getNodePosition(original));
     return newNode;
@@ -307,6 +310,7 @@ void DNode::deleteNodeVis()
     foreach(DoutSocket *socket, getOutSockets())
         socket->setSocketVis(0);
 
+    nodeVis->setSelected(false);
     FRG::Space->removeItem(nodeVis);
     delete nodeVis;
     nodeVis = 0;
@@ -729,10 +733,14 @@ void DNode::remAddSocketCB(Callback *cb)
 void DNode::removeSocket(DSocket *socket)
 {
     if(!socket)return;
-    if(socket->getDir() == IN)
+    if(socket->getDir() == IN) {
         inSockets.rm(socket);
-    else
+        delete socket;
+    }
+    else {
         outSockets.rm(socket);
+        delete socket;
+    }
 }
 
 void DNode::dec_var_socket(DSocket *socket)

@@ -26,7 +26,7 @@ public:
     void save(); 
     void saveAs(); 
 
-	QString getFilename();
+	QString getFilename()const;
 	void setFilename(QString value);
 	void setRootSpace(DNSpace* value);
 	DNSpace* getRootSpace();

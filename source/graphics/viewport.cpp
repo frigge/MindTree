@@ -35,8 +35,16 @@
 #include "source/data/scene/cache_data.h"
 
 Viewport::Viewport(QWidget *parent, ViewportNode *node)
-    : QGLWidget(parent), camlookat(QVector3D(0, 0, 0)), rotate(false), zoom(false), pan(false), cache(0), viewnode(node)
+    : QGLWidget(parent), camlookat(QVector3D(0, 0, 0)), rotate(false), zoom(false), pan(false), cache(0), viewnode(node),
+    zoomlvl(10)
 {
+    camData.edges = true;
+    camData.points = true;
+    camData.polys = true;
+    camData.perspective = true;
+    camData.fov = 45;
+    camData.nearclip = .1;
+    camData.farclip = 1000;
     transform.translate(QVector3D(0, 50, -50));
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(repaint()));
@@ -55,6 +63,17 @@ void Viewport::initializeGL()
     glEnable(GL_CULL_FACE);
 }
 
+void Viewport::resizeGL(int width, int height)    
+{
+    glViewport(0, 0, (GLint)width, (GLint)height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    GLdouble aspect = (GLdouble)width/(GLdouble)height;
+    gluPerspective(camData.fov, aspect, camData.nearclip, camData.farclip);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
 void Viewport::paintGL()    
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
@@ -67,18 +86,15 @@ void Viewport::paintGL()
     drawGrid();
 
     drawScene();
-    glFlush();
 }
 
 void Viewport::drawScene()    
 {
-    QMutex mutex;
     if(!cache)
         return;
 
     QList<Object*> objects;
-    if(mutex.tryLock())
-        objects = cache->getData();
+    objects = cache->getData();
 
     if(!objects.isEmpty())
         foreach(Object *obj, objects)
@@ -87,65 +103,70 @@ void Viewport::drawScene()
 
 void Viewport::drawObject(Object* obj)    
 {
-    //draw Vertices
     Vector* vertices = obj->getVertices();
     int vertcnt = obj->getVertCnt();
-    
-    glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-    glPointSize(5.0);
-    glBegin(GL_POINTS);
     int i = 0;
-    for(i=0; i<vertcnt; i++)
-        glVertex3f(vertices[i].x, vertices[i].y, vertices[i].z);
-    glEnd();
+    int j=0, vi=0;
+    //draw Vertices
+    if (camData.points) {
+        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+        glPointSize(5.0);
+        glBegin(GL_POINTS);
+        for(i=0; i<vertcnt; i++)
+            glVertex3f(vertices[i].x, vertices[i].y, vertices[i].z);
+        glEnd();
+    }
 
-    //draw Edges
     Polygon* polygons = obj->getPolygons();
     int polycnt = obj->getPolyCnt();
-    glBegin(GL_LINES);
-    glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-    int j=0, vi=0;
     Vector *vert=0;
-    for(i=0; i<polycnt; i++)
-        for(j=0; j<polygons[i].vertexcount; j++){
-            if(polygons[i].vertices) //prevent crash TODO: fix properly
-                vi = polygons[i].vertices[0];
-            else
-                continue;
-            vi = polygons[i].vertices[j];
-            if(0 > vi || vi >= vertcnt) continue;
-            vert = &vertices[vi];
-            glVertex3f(vert->x, vert->y, vert->z);
-            if(j > 0){
-                glVertex3f(vert->x, vert->y, vert->z);
-            }
-            if(j == polygons[i].vertexcount -1){
+    //draw Edges
+    if (camData.edges) {
+        glBegin(GL_LINES);
+        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+        for(i=0; i<polycnt; i++)
+            for(j=0; j<polygons[i].vertexcount; j++){
                 if(polygons[i].vertices) //prevent crash TODO: fix properly
                     vi = polygons[i].vertices[0];
                 else
                     continue;
+                vi = polygons[i].vertices[j];
+                if(0 > vi || vi >= vertcnt) continue;
+                vert = &vertices[vi];
+                glVertex3f(vert->x, vert->y, vert->z);
+                if(j > 0){
+                    glVertex3f(vert->x, vert->y, vert->z);
+                }
+                if(j == polygons[i].vertexcount -1){
+                    if(polygons[i].vertices) //prevent crash TODO: fix properly
+                        vi = polygons[i].vertices[0];
+                    else
+                        continue;
+                    if(0 > vi || vi >= vertcnt) continue;
+                    vert = &vertices[vi];
+                    glVertex3f(vert->x, vert->y, vert->z);
+                }
+            }
+        glEnd();
+    }
+
+    //draw Polygons 
+    if(camData.polys){
+        for(i=0; i<polycnt; i++) {
+            glBegin(GL_POLYGON);
+            glColor4f(0.6f, 0.6f, 0.6f, 1.0f);
+            for(j=0; j<polygons[i].vertexcount; j++){
+                if(polygons[i].vertices) //prevent crash TODO: fix properly
+                    vi = polygons[i].vertices[0];
+                else
+                    continue;
+                vi = polygons[i].vertices[j];
                 if(0 > vi || vi >= vertcnt) continue;
                 vert = &vertices[vi];
                 glVertex3f(vert->x, vert->y, vert->z);
             }
+            glEnd();
         }
-    glEnd();
-
-    //draw Polygons 
-    for(i=0; i<polycnt; i++) {
-        glBegin(GL_POLYGON);
-        glColor4f(0.6f, 0.6f, 0.6f, 1.0f);
-        for(j=0; j<polygons[i].vertexcount; j++){
-            if(polygons[i].vertices) //prevent crash TODO: fix properly
-                vi = polygons[i].vertices[0];
-            else
-                continue;
-            vi = polygons[i].vertices[j];
-            if(0 > vi || vi >= vertcnt) continue;
-            vert = &vertices[vi];
-            glVertex3f(vert->x, vert->y, vert->z);
-        }
-        glEnd();
     }
 }
 
@@ -267,30 +288,26 @@ void Viewport::zoomView(qreal xdist, qreal ydist)
     zvec = camlookat - campos;
     zvec.normalize();
     transform.translate(zvec * ydist);
-}
-
-void Viewport::resizeGL(int width, int height)    
-{
-    glViewport(0, 0, (GLint)width, (GLint)height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    //glFrustum(-1.0, 1.0, -1.0, 1.0, 1.5, 20);    
-    gluPerspective(45.0f, (GLfloat)width/(GLfloat)height, 0.1f, 100.0f);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    zoomlvl +=ydist;
 }
 
 void Viewport::render()    
 {
-    viewnode->render(&cache);    
+    if(cache) {
+        delete cache;
+        cache = 0;
+    }
+    viewnode->render(&cache, &camData, 0);
     //cache = viewnode->render();    
+    resizeGL(width(), height());
     updateGL();
 }
 
 void Viewport::render(DNode *node)    
 {
-    viewnode->render(&cache, node); 
+    viewnode->render(&cache, &camData, node);
     //cache = viewnode->render(node); 
+    resizeGL(width(), height());
     updateGL();
 }
 
@@ -349,7 +366,22 @@ ViewportNode::ViewportNode(bool raw)
 {
     thread->setStart(this);
     if(!raw){
+        DinSocket *fov, *nc, *fc, *pers, *poly, *vert, *edge;
         new DinSocket("Data", SCENEOBJECT, this);
+        pers = new DinSocket("Perspective", CONDITION, this);
+        ((BoolProperty*)pers->getProperty())->setValue(true);
+        fov = new DinSocket("Field Of View", FLOAT, this);
+        ((FloatProperty*)fov->getProperty())->setValue(45);
+        nc = new DinSocket("Near Clipping", FLOAT, this);
+        ((FloatProperty*)nc->getProperty())->setValue(0.1);
+        fc = new DinSocket("Far Clipping", FLOAT, this);
+        ((FloatProperty*)fc->getProperty())->setValue(1000);
+        poly = new DinSocket("Show Polygons", CONDITION, this);
+        ((BoolProperty*)poly->getProperty())->setValue(true);
+        edge = new DinSocket("Show Edges", CONDITION, this);
+        ((BoolProperty*)edge->getProperty())->setValue(true);
+        vert = new DinSocket("Show Points", CONDITION, this);
+        ((BoolProperty*)vert->getProperty())->setValue(true);
     }
 }
 
@@ -364,11 +396,10 @@ VNode* ViewportNode::createNodeVis()
     return getNodeVis();
 }
 
-void ViewportNode::render(SceneCache **cache, DNode *node)    
+void ViewportNode::render(SceneCache **cache, CameraData *data, DNode *node)    
 {
-    thread->setNode(node);
-    thread->setCache(cache);
-    thread->setViewport(view);
+    //view->connect(thread, SIGNAL(finished()), view, SLOT(repaint()));
+    thread->setData(cache, data, view, node);
     thread->start();
 }
 
@@ -378,44 +409,63 @@ CacheThread::CacheThread()
 
 void CacheThread::run()    
 {
-    SceneCache *oldcache=0;
-    if(node && !view->getAllInNodes().contains(node))
+    if((node) 
+        && (!view->getAllInNodes().contains(node)
+        && node != view))
         return;
 
-    DinSocket *socket = view->getInSockets().first();
-    DoutSocket *cntdSocket = socket->getCntdWorkSocket();
-    if(cntdSocket)
-    {
-        QMutex mutex;
-        SceneCache *sc = new SceneCache(socket);
-        QMutexLocker lock(&mutex);
-        oldcache=*cache;
-        *cache = sc;
-        if(oldcache){
-            oldcache->clear();
-            delete oldcache;
+    AbstractDataCache *tmpc = 0;
+    DinSocket *socket = 0;
+    
+    for(int i=0; i< view->getInSockets().size(); i++){
+        socket = view->getInSockets().at(i);
+        switch(i)
+        {
+            case 0:
+                tmpc = new SceneCache(socket);
+                *cache = (SceneCache*)tmpc;
+                break;
+            case 1:
+                break;
+            case 2:
+                tmpc = new FloatCache(socket);
+                camData->fov = ((FloatCache*)tmpc)->getData()[0];
+                tmpc->setOwner(true);
+                delete tmpc;
+                break;
+            case 3:
+                tmpc = new FloatCache(socket);
+                camData->nearclip = ((FloatCache*)tmpc)->getData()[0];
+                tmpc->setOwner(true);
+                delete tmpc;
+                break;
+            case 4:
+                tmpc = new FloatCache(socket);
+                camData->farclip = ((FloatCache*)tmpc)->getData()[0];
+                tmpc->setOwner(true);
+                delete tmpc;
+                break;
+            case 5:
+                break;
+            case 6:
+                break;
+            case 7:
+                break;
+            default:
+                break;
         }
     }
-    else
-        return;
 }
 
-void CacheThread::setNode(DNode *node)    
+void CacheThread::setData(SceneCache **cache, CameraData *data, Viewport *view, DNode *node)    
 {
+    this->cache = cache;
+    this->camData = data; 
+    this->viewport = view;
     this->node = node;
 }
 
-void CacheThread::setCache(SceneCache **cache)    
+void CacheThread::setStart(ViewportNode *start)    
 {
-    this->cache = cache; 
-}
-
-void CacheThread::setStart(ViewportNode *viewnode)    
-{
-    view = viewnode;
-}
-
-void CacheThread::setViewport(Viewport *view)    
-{
-   viewport = view; 
+    view = start;
 }

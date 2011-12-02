@@ -25,11 +25,13 @@ Object::Object()
 
 Object::~Object()
 {
-    delete [] vertices;
-    delete [] polygons;
+    if(vertices)
+        delete [] vertices;
+    if(polygons)
+        delete [] polygons;
 }
 
-int Object::getVertCnt()    
+int Object::getVertCnt()    const
 {
     return vertexcount;
 }
@@ -44,7 +46,7 @@ Polygon* Object::getPolygons()
     return polygons; 
 }
 
-int Object::getPolyCnt()    
+int Object::getPolyCnt()   const 
 {
     return polycount;
 }
@@ -53,22 +55,29 @@ void Object::appendVertices(Vector *verts, int size)
 {
     if(!verts)
         return;
+    
     int oldcnt = vertexcount;
     vertexcount += size;
-    Vector *newverts = new Vector[vertexcount];
-    Vector *oldverts = vertices;
-    Vector *vertstoappend = verts;
-    int i = 0;
-    if(oldverts)
-        for(i=0; i<vertexcount; i++)
-            newverts[i] = oldverts[i];
+    if(vertices) {
+        Vector *newverts = new Vector[vertexcount];
+        Vector *oldverts = vertices;
+        Vector *vertstoappend = verts;
+        int i = 0;
+        if(oldverts)
+            for(i=0; i<vertexcount; i++)
+                newverts[i] = oldverts[i];
 
-    for(i=vertexcount-size; i<vertexcount; i++)
-        newverts[i] = vertstoappend[i-oldcnt];
+        for(i=vertexcount-size; i<vertexcount; i++)
+            newverts[i] = vertstoappend[i-oldcnt];
 
-    delete[] vertices;
+        if(vertices)
+            delete[] vertices;
 
-    vertices = newverts;
+        vertices = newverts;
+    }
+    else{
+        vertices = verts;
+    }
 }
 
 void Object::appendPolygons(Polygon *polys, int size)    
@@ -113,6 +122,7 @@ ObjectNode::ObjectNode(bool raw)
         new DinSocket("Vertex Normals", VECTOR, this);
         new DinSocket("Polygons", POLYGON, this);
         new DinSocket("Polygon Normals", VECTOR, this);
+        new DinSocket("GLSL Shader", INTEGER, this);
         new DoutSocket("Object", SCENEOBJECT, this);
         setDynamicSocketsNode(IN);
     }

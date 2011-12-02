@@ -129,8 +129,8 @@ public:
 	void  setNode(DNode*);
     void killSocketVis();
 	void createSocketVis(VNode *parent);
-    bool operator==(DSocket &socket);
-    bool operator!=(DSocket &socket);
+    bool operator==(DSocket &socket)const;
+    bool operator!=(DSocket &socket)const;
 	QString getName() const;
 	virtual void setName(QString value);
 	socket_type getType() const;
@@ -234,8 +234,8 @@ public:
     void cntdSocketFromID();
 	bool getToken() const;
 	void setToken(bool value);
-    bool operator==(DinSocket &socket);
-    bool operator!=(DinSocket &socket);
+    bool operator==(DinSocket &socket)const;
+    bool operator!=(DinSocket &socket)const;
 	void setTempCntdID(unsigned short value);
 	unsigned short getTempCntdID() const;
 
@@ -273,8 +273,8 @@ public:
 	DoutSocket(QString, socket_type, DNode *node);
     DoutSocket(DoutSocket* socket, DNode *node);
     ~DoutSocket();
-    bool operator==(DoutSocket &socket);
-    bool operator!=(DoutSocket &socket);
+    bool operator==(DoutSocket &socket)const;
+    bool operator!=(DoutSocket &socket)const;
     QList<DNodeLink> getLinks() const;
     void registerSocket(DSocket *socket);
     void unregisterSocket(DinSocket *socket, bool decr=true);

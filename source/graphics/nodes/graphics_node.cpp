@@ -44,13 +44,11 @@
 #include "source/graphics/base/prop_vis.h"
 
 NodeName::NodeName(QString name, QGraphicsItem *parent)
+    : QGraphicsTextItem(name, parent)
 {
     setFlag(ItemIsMovable, false);
     setFlag(ItemIsSelectable, false);
     setFlag(ItemIsFocusable, true);
-
-    setPlainText(name);
-    setParentItem(parent);
 }
 
 void NodeName::focusOutEvent(QFocusEvent *event)
@@ -96,7 +94,6 @@ void NodeName::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 VNode::VNode(DNode *data)
     : data(data), node_name(new NodeName("", this)), node_width(30), node_height(30), nodeColor(50, 50, 50)
 {
-    this->data = data;
     setZValue(1);
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsFocusable, true);
@@ -128,7 +125,6 @@ VNode::VNode(DNode *data)
 VNode::~VNode()
 {
     data->remAddSocketCB(cb);
-    delete cb;
 }
 
 int VNode::getNodeWidth()

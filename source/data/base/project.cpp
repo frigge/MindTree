@@ -78,7 +78,7 @@ void Project::unregisterSpace(DNSpace *space)
     spaces.removeAll(space);
 }
 
-QString Project::getFilename()
+QString Project::getFilename()const
 {
 	return filename;
 }

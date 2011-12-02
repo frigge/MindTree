@@ -37,7 +37,7 @@ void CacheControl::removeCache(AbstractDataCache *cache)
 }
 
 LoopCache::LoopCache()
-    : loopentry(0), stepValue(0)
+    : loopentry(0), stepValue(0), startValue(0), endValue(0)
 {
 }
 
@@ -58,7 +58,7 @@ void LoopCache::setStep(int step)
     stepValue = step;
 }
 
-int LoopCache::getStep()
+int LoopCache::getStep()const
 {
     return stepValue;
 }
@@ -110,18 +110,20 @@ void LoopCacheControl::del(const LoopNode *node)
 }
 
 AbstractDataCache::AbstractDataCache(const DinSocket *socket)
-    : start(socket->getCntdWorkSocket()), inSocket(socket), dataOwner(true)
+    : start(socket->getCntdSocket()), inSocket(socket), dataOwner(true)
 {
-    //CacheControl::addCache(socket, this);
+    CacheControl::addCache(getStart(), this);
 }
 
 AbstractDataCache::AbstractDataCache(const AbstractDataCache &cache)
+    : start(0), inSocket(0)
 {
     cache.setOwner(false);
 }
 
 AbstractDataCache::~AbstractDataCache()
 {
+    CacheControl::removeCache(this);
 }
 
 void AbstractDataCache::setOwner(bool owner)const
@@ -129,9 +131,9 @@ void AbstractDataCache::setOwner(bool owner)const
     dataOwner = owner;
 }
 
-void AbstractDataCache::cacheSocket(DoutSocket *socket)    
+bool AbstractDataCache::isOwner()    const
 {
-    cachedSockets.add(socket);
+    return dataOwner;
 }
 
 AbstractDataCache* AbstractDataCache::getDerived()    
@@ -139,7 +141,7 @@ AbstractDataCache* AbstractDataCache::getDerived()
     return this; 
 }
 
-const DoutSocket* AbstractDataCache::getStart()    
+const DoutSocket* AbstractDataCache::getStart()    const
 {
     return start;
 }
@@ -151,8 +153,7 @@ void AbstractDataCache::cacheInputs()
     switch(start->getNode()->getNodeType())
     {
     case CONTAINER:
-        break;
-    case FUNCTION:
+        container();
         break;
     case CONDITIONCONTAINER:
         break;
@@ -178,6 +179,7 @@ void AbstractDataCache::cacheInputs()
         floattovector();
         break;
     case INSOCKETS:
+        stepup();
         break;
     case GETARRAY:
         break;
@@ -194,16 +196,18 @@ void AbstractDataCache::cacheInputs()
         composePolygon();
         break;
     case ADD:
-        add();
+        math(OPADD);
         break;
     case SUBTRACT:
-        subtract();
+        math(OPSUBTRACT);
         break;
     case MULTIPLY:
-        multiply();
+        math(OPMULTIPLY);
         break;
     case DIVIDE:
-        divide();
+        math(OPDIVIDE);
+        break;
+    case MODULO:
         break;
     case DOTPRODUCT:
     case GREATERTHAN:
@@ -263,19 +267,14 @@ void AbstractDataCache::getLoopedCache()
 {
 }
 
-void AbstractDataCache::add()    
+void AbstractDataCache::math(eMathOp op)    
 {
 }
 
-void AbstractDataCache::subtract()    
+void AbstractDataCache::stepup()    
 {
 }
 
-void AbstractDataCache::multiply()    
+void AbstractDataCache::container()    
 {
 }
-
-void AbstractDataCache::divide()    
-{
-}
-

@@ -168,7 +168,7 @@ ContainerSpace* DNSpace::toContainer()
 }
 
 ContainerSpace::ContainerSpace()
-    : DNSpace()
+    : DNSpace(), node(0)
 {
     setContainerSpace(true);
 }

@@ -36,6 +36,7 @@ public:
 protected:
     virtual void composeArray();
     void composeObject();
+    void container();
 
 private:
     QList<Object*> objects;
@@ -73,10 +74,7 @@ protected:
     void floatValue();
     void intValue();
     void getLoopedCache();
-    void add();
-    void subtract();
-    void multiply();
-    void divide();
+    void math(eMathOp op);
 
 private:
     double *data;
@@ -101,6 +99,7 @@ protected:
     void subtract();
     void multiply();
     void divide();
+    void math(eMathOp op);
 
 private:
     int *data;

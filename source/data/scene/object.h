@@ -34,8 +34,8 @@ class Object
 public:
     Object();
     ~Object();
-    int getVertCnt();
-    int getPolyCnt();
+    int getVertCnt()const;
+    int getPolyCnt()const;
     Polygon* getPolygons();
     Vector* getVertices();
     void appendPolygons(Polygon *polys, int size);

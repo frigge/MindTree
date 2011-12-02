@@ -121,9 +121,8 @@ void frg_Shader_Author::moveIntoSpace(DNSpace *space)
 {
     FRG::Space->moveIntoSpace(space);
 
-    DNSpace *tmp = 0;
     while(spaces.contains(space))
-        tmp = spaces.takeLast();
+        spaces.takeLast();
     spaces.append(space);
     updateToolBar();
 }

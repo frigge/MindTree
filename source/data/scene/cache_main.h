@@ -43,7 +43,7 @@ public:
     LoopCache();
     ~LoopCache();
     void setStep(int step);
-    int getStep();
+    int getStep()const;
     void addData(AbstractDataCache *cache);
     AbstractDataCache* getCache(const DoutSocket *socket=0);
     const LoopNode* getNode();
@@ -52,7 +52,7 @@ public:
 private:
     const DoutSocket *loopentry;
     QHash<const DoutSocket*, AbstractDataCache*> cachedData;
-    int stepValue;
+    int stepValue, startValue, endValue;
 };
 
 class LoopCacheControl
@@ -68,16 +68,20 @@ private:
 class AbstractDataCache
 {
 public:
+    typedef enum eMathOp {
+        OPADD, OPSUBTRACT, OPMULTIPLY, OPDIVIDE
+    } eMathOp;
     AbstractDataCache(const DinSocket *start);
     AbstractDataCache(const AbstractDataCache &cache);
     virtual ~AbstractDataCache();
     void setOwner(bool owner)const;
-    void cacheSocket(DoutSocket *socket);
+    bool isOwner()const;
     virtual AbstractDataCache* getDerived();
     void cacheInputs();
-    const DoutSocket *getStart();
+    const DoutSocket *getStart()const;
 
 protected:
+    virtual void container();
     virtual void setArray();
     virtual void composeArray();
     virtual void composePolygon();
@@ -88,15 +92,12 @@ protected:
     virtual void floatValue();
     virtual void forloop();
     virtual void getLoopedCache();
-    virtual void add();
-    virtual void subtract();
-    virtual void multiply();
-    virtual void divide();
+    virtual void math(eMathOp op);
+    virtual void stepup();
 
 private:
     const DoutSocket *start;
     const DinSocket *inSocket;
-    DSocketList cachedSockets;
     mutable bool dataOwner;
 };
 

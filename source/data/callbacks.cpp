@@ -22,7 +22,7 @@
 #include "source/data/nodes/data_node.h"
 
 CallbackList::CallbackList()
-    : block(false)
+    : block(false), cblist(0)
 {
 }
 
@@ -33,28 +33,62 @@ void CallbackList::setBlock(bool b)
 
 void CallbackList::add(Callback *cb)    
 {
-    list.push_back(cb);    
+    if(!cblist){
+        cblist = new CBstruct;
+        cblist->next = 0;
+        cblist->cb = cb;
+        return;
+    }
+    CBstruct *f = cblist;
+    while(f->next) f = f->next;
+    f->next = new CBstruct;
+    f->next->cb = cb;
+    f->next->next = 0;
 }
 
 void CallbackList::remove(Callback *cb)    
 {
-    list.remove(cb); 
+    if(!cblist ||!cb) return;
+    CBstruct *f = cblist;
+    if(f->cb == cb){
+        cblist = f->next;
+        delete f;
+        return;
+    }
+
+    while(f->next){
+        if(f->next->cb == cb)
+            break;
+        f = f->next;
+    }
+
+    if(!f->next || f->next->cb != cb) return;
+    CBstruct *toremove = f->next;
+    f->next = toremove->next;
+    delete toremove;
 }
 
 void CallbackList::operator()()    
 {
-    if(block)
+    if(block || !cblist)
         return;
-    for(std::list<Callback*>::iterator cb = list.begin(); cb != list.end(); ++cb)
-    {
-        Callback *callback = *cb;
-        callback->exec();
-    }
+
+    CBstruct *f = cblist;
+    do{
+        f->cb->exec();
+        f = f->next;
+    }while(f);
 }
 
 void CallbackList::clear()    
 {
-    list.clear();
+    CBstruct *f = cblist;
+    while(f){
+        CBstruct *tmp = f;
+        f = f->next;
+        delete tmp->cb;
+        delete tmp;
+    }
 }
 
 VNodeUpdateCallback::VNodeUpdateCallback(VNode *nodeVis)

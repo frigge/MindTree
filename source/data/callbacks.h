@@ -19,15 +19,20 @@
 #ifndef FRGCALLBACKS
 #define FRGCALLBACKS
 
-#include "list"
-
 class VNode;
 class DSocket;
+
 class Callback
 {
 public:
     virtual void exec()=0;
 };
+
+typedef struct CBstruct 
+{
+    Callback *cb;
+    CBstruct *next;
+} CBstruct;
 
 class CallbackList
 {
@@ -40,8 +45,8 @@ public:
     void setBlock(bool b);
 
 private:
-    std::list<Callback*> list;
     bool block;
+    CBstruct *cblist;
 };
 
 /*  Callbacks */

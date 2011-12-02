@@ -31,6 +31,12 @@
 #include "source/graphics/nodes/graphics_node.h"
 #include "source/data/scene/object.h"
 
+typedef struct CameraData
+{
+    double fov, nearclip, farclip;
+    bool edges, polys, points, perspective;
+} CameraData;
+
 class SceneCache;
 class ViewportNode;
 
@@ -67,8 +73,10 @@ private:
     bool rotate, pan, zoom;
     QPointF lastpos;
     SceneCache *cache;
+    double zoomlvl;
     ViewportNode *viewnode;
     QTimer timer;
+    CameraData camData;
 };
 
 class ViewportDock;
@@ -93,13 +101,12 @@ class CacheThread : public QThread
 public:
     CacheThread();
     void run();
-    void setNode(DNode *node);
-    void setCache(SceneCache **cache);
-    void setStart(ViewportNode *viewnode);
-    void setViewport(Viewport *view);
+    void setData(SceneCache **cache, CameraData *data, Viewport *view, DNode *node);
+    void setStart(ViewportNode *start);
 
 private:
     SceneCache **cache;
+    CameraData *camData;
     ViewportNode *view;
     Viewport* viewport;
     DNode *node;
@@ -110,7 +117,7 @@ class ViewportNode : public DNode
 public:
     ViewportNode(bool raw=false);
     ViewportDock* getDock();
-    void render(SceneCache **cache, DNode *node=0);
+    void render(SceneCache **cache, CameraData *data, DNode *node);
 
 protected:
     virtual VNode* createNodeVis();

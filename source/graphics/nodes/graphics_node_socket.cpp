@@ -59,7 +59,9 @@ VNSocket::VNSocket(DSocket *data, VNode *parent)
 VNSocket::~VNSocket()
 {
     data->remRenameCB(cb);
+    delete cb;
     FRG::Space->removeLink(data);
+    delete contextMenu;
 }
 
 DSocket* VNSocket::getData() const

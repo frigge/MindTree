@@ -54,7 +54,7 @@ enum NType
     CONTAINER,          FUNCTION,
     MULTIPLY,           DIVIDE,
     ADD,                SUBTRACT,
-    DOTPRODUCT,
+    DOTPRODUCT,         MODULO,
 
     GREATERTHAN,        SMALLERTHAN,
     EQUAL,              AND,OR,

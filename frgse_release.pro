@@ -11,12 +11,14 @@ DEPENDPATH += . \
               source/data/base \
               source/data/nodes \
               source/data/undo \
+              source/data/scene \
               source/graphics/base \
               source/graphics/nodes
 INCLUDEPATH += . \
                source/data \
                source/graphics/nodes \
                source/data/nodes \
+               source/data/scene \
                source/graphics \
                source/graphics/base \
                source/data/base \
