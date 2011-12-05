@@ -20,6 +20,7 @@
 
 #include "QVBoxLayout"
 #include "QColorDialog"
+#include "QFileDialog"
 
 #include "source/data/base/frg.h"
 #include "source/data/nodes/data_node_socket.h"
@@ -46,6 +47,47 @@ void StringPropWidget::setProp(QString text)
 {
     ((StringProperty*)prop)->setValue(text);
     emit change(prop->getSocket()->getNode()); 
+}
+
+DirPropWidget::DirPropWidget(StringProperty *prop)    
+    : prop(prop), textBox(new StringPropWidget(prop)), dirButton(new QPushButton("..."))
+{
+    setLayout(&lay);
+    lay.setMargin(0);
+    lay.setSpacing(0);
+    dirButton->resize(10, 18);
+    connect(dirButton, SIGNAL(clicked()), this, SLOT(browse()));
+    lay.addWidget(textBox);
+    lay.addWidget(dirButton);
+}
+
+DirPropWidget::~DirPropWidget()
+{
+    delete textBox;
+    delete dirButton; 
+}
+
+QSize DirPropWidget::sizeHint()    const
+{
+    return QSize(10, 18);
+}
+
+void DirPropWidget::browse()    
+{
+    QString newdir;
+    bool ok;
+    switch(prop->getPath()) {
+        case StringProperty::DIRPATH:
+            newdir = QFileDialog::getExistingDirectory();
+            break;
+        case StringProperty::FILEPATH:
+            newdir = QFileDialog::getOpenFileName(); 
+            break;
+        default:
+            break;
+    }
+
+    textBox->setText(newdir);
 }
 
 IntPropWidget::IntPropWidget(IntProperty *prop)
@@ -218,7 +260,7 @@ void ColorPropWidget::setProp(QColor col)
 
 void ColorPropWidget::setColor()
 {
-    QColor newcolor = QColorDialog::getColor(((ColorProperty*)prop)->getValue());
+    QColor newcolor = QColorDialog::getColor(((ColorProperty*)prop)->getValue(), 0, "Choose Color", QColorDialog::ShowAlphaChannel);
     if(!newcolor.isValid()) return;
     setPalette(QPalette(newcolor));
     emit clicked(newcolor);

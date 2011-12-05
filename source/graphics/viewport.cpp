@@ -77,6 +77,7 @@ void Viewport::resizeGL(int width, int height)
 void Viewport::paintGL()    
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
+    glEnable(GL_POINT_SMOOTH);
     glLoadIdentity();
     QVector3D campos;
     campos = transform.map(campos);
@@ -305,6 +306,10 @@ void Viewport::render()
 
 void Viewport::render(DNode *node)    
 {
+    if(cache) {
+        delete cache;
+        cache = 0;
+    }
     viewnode->render(&cache, &camData, node);
     //cache = viewnode->render(node); 
     resizeGL(width(), height());
@@ -364,6 +369,7 @@ void VViewportNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 ViewportNode::ViewportNode(bool raw)
     : DNode("viewport"), dock(new ViewportDock(this)), thread(new CacheThread())
 {
+    setNodeType(VIEWPORTNODE);
     thread->setStart(this);
     if(!raw){
         DinSocket *fov, *nc, *fc, *pers, *poly, *vert, *edge;

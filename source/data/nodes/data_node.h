@@ -79,7 +79,7 @@ enum NType
     PREVIEW, GETARRAY,  SETARRAY,
     COMPOSEARRAY,       VARNAME,
     OBJECTNODE,         POLYGONNODE,
-    FLOATTOVECTOR
+    FLOATTOVECTOR,      VIEWPORTNODE
 };
 
 class VNode;
@@ -435,9 +435,10 @@ public:
     LoopNode(const LoopNode* node);
     static bool isLoopNode(DNode *);
     void setLoopedSockets(LoopSocketNode *node);
+    LoopSocketNode* getLoopedInputs();
 
 private:
-    SocketNode *loopSockets, *initSockets;
+    LoopSocketNode *loopSockets;
 };
 
 class ForNode : public LoopNode
@@ -491,19 +492,14 @@ public:
     virtual ~OutputNode();
     QString getShaderName() const;
 
-    void writeCode();
+    virtual void writeCode();
     SourceDock* getSourceEdit();
-    void compile();
-    void changeName(QString);
-    QString getFileName() const;
-    void setFileName(QString);
+    virtual void compile();
 
 protected:
     virtual VNode* createNodeVis();
 
 private:
-    QString filename;
-    QString ShaderName;
     SourceDock *sedit;
 };
 

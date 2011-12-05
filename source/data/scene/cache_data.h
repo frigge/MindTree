@@ -37,6 +37,7 @@ protected:
     virtual void composeArray();
     void composeObject();
     void container();
+    void stepup();
 
 private:
     QList<Object*> objects;
@@ -54,6 +55,8 @@ public:
 protected:
     void composePolygon();
     void composeArray();
+    void container();
+    void stepup();
 
 private:
     Polygon *data;
@@ -75,6 +78,8 @@ protected:
     void intValue();
     void getLoopedCache();
     void math(eMathOp op);
+    void container();
+    void stepup();
 
 private:
     double *data;
@@ -100,6 +105,8 @@ protected:
     void multiply();
     void divide();
     void math(eMathOp op);
+    void container();
+    void stepup();
 
 private:
     int *data;
@@ -123,6 +130,8 @@ protected:
     void setArray();
     void forloop();
     void getLoopedCache();
+    void container();
+    void stepup();
 
 private:
     Vector *data;

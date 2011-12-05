@@ -44,7 +44,8 @@ SceneCache::SceneCache(const DinSocket *socket)
 
 SceneCache::~SceneCache()
 {
-   clear(); 
+   if(isOwner())
+       clear(); 
 }
 
 void SceneCache::clear()    
@@ -60,6 +61,7 @@ SceneCache* SceneCache::getDerived()
 
 QList<Object*> SceneCache::getData()    
 {
+    setOwner(false);
     return objects;
 }
 
@@ -98,6 +100,14 @@ void SceneCache::container()
 {
     const ContainerNode *node = getStart()->getNode()->getDerivedConst<ContainerNode>();
     SceneCache *cache = new SceneCache(node->getSocketInContainer(getStart())->toIn());
+    objects = cache->getData();
+    delete cache;
+}
+
+void SceneCache::stepup()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
+    SceneCache *cache = new SceneCache(node->getSocketOnContainer(getStart())->toIn());
     objects = cache->getData();
     delete cache;
 }
@@ -166,6 +176,22 @@ void PolygonCache::composeArray()
         delete pc;
         si++;
     }
+}
+
+void PolygonCache::container()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<ContainerNode>();
+    PolygonCache *cache = new PolygonCache(node->getSocketInContainer(getStart())->toIn());
+    data = cache->getData(&arraysize);
+    delete cache;
+}
+
+void PolygonCache::stepup()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
+    PolygonCache *cache = new PolygonCache(node->getSocketOnContainer(getStart())->toIn());
+    data = cache->getData(&arraysize);
+    delete cache;
 }
 
 FloatCache::FloatCache(const DinSocket *socket)
@@ -293,6 +319,22 @@ void FloatCache::math(eMathOp op)
     arraysize=1;
 }
 
+void FloatCache::container()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<ContainerNode>();
+    FloatCache *cache = new FloatCache(node->getSocketInContainer(getStart())->toIn());
+    data = cache->getData(&arraysize);
+    delete cache;
+}
+
+void FloatCache::stepup()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
+    FloatCache *cache = new FloatCache(node->getSocketOnContainer(getStart())->toIn());
+    data = cache->getData(&arraysize);
+    delete cache;
+}
+
 IntCache::IntCache(const DinSocket *socket)
     : AbstractDataCache(socket), data(0), arraysize(0)
 {
@@ -400,6 +442,22 @@ void IntCache::math(eMathOp op)
         i++;
     }
     arraysize=1;
+}
+
+void IntCache::container()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<ContainerNode>();
+    IntCache *cache = new IntCache(node->getSocketInContainer(getStart())->toIn());
+    data = cache->getData(&arraysize);
+    delete cache;
+}
+
+void IntCache::stepup()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
+    IntCache *cache = new IntCache(node->getSocketOnContainer(getStart())->toIn());
+    data = cache->getData(&arraysize);
+    delete cache;
 }
 
 VectorCache::VectorCache(const DinSocket *socket)
@@ -593,5 +651,21 @@ void VectorCache::getLoopedCache()
         data = vc->getData(&arraysize);
         delete vc;
     }
+}
+
+void VectorCache::container()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<ContainerNode>();
+    VectorCache *cache = new VectorCache(node->getSocketInContainer(getStart())->toIn());
+    data = cache->getData(&arraysize);
+    delete cache;
+}
+
+void VectorCache::stepup()    
+{
+    const ContainerNode *node = getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
+    VectorCache *cache = new VectorCache(node->getSocketOnContainer(getStart())->toIn());
+    data = cache->getData(&arraysize);
+    delete cache;
 }
 

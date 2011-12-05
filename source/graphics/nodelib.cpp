@@ -59,6 +59,7 @@ void NodeLibWidget::filter()
 NodeLib::NodeLib(QWidget *parent):
     QTreeWidget(parent), NodeID(0)
 {
+    buildIns = new QTreeWidgetItem(QStringList() << "Build In");
     setMinimumHeight(1);
     resize(200, 1);
 
@@ -145,27 +146,27 @@ void NodeLib::renamed(QTreeWidgetItem *item)
 
 void NodeLib::addBuildInNodes()
 {
-    QTreeWidgetItem *hardnodes = new QTreeWidgetItem(QStringList("Build In"));
-    addTopLevelItem(hardnodes);
-
-    foreach(QTreeWidgetItem *item, NodeGroups.values())
-        if(!item->parent())
-            hardnodes->addChild(item);
+    addTopLevelItem(buildIns);
 }
 
 void NodeLib::addGroup(QString name, QString parent)    
 {
     if(!NodeGroups.keys().contains(name)) {
         QTreeWidgetItem *newgroup = new QTreeWidgetItem(QStringList(name));
+        NodeGroups.insert(name, newgroup);
         if(parent != ""){
             addGroup(parent);
-            NodeGroups.value(parent)->addChild(newgroup);
+            QTreeWidgetItem *parentItem = NodeGroups.value(parent);
+            if(parentItem)
+                parentItem->addChild(newgroup);
         }
-        NodeGroups.insert(name, newgroup);
+        else{
+            buildIns->addChild(newgroup);
+        }
     }
 }
 
-void NodeLib::addNode(QString name, QString group, void*(*createFunc)(void*))    
+void NodeLib::addNode(QString name, QString group, DNode*(*createFunc)())    
 {
     addGroup(group);
     QTreeWidgetItem *item = new QTreeWidgetItem(QStringList() << name << QString::number(NodeID));
@@ -174,13 +175,21 @@ void NodeLib::addNode(QString name, QString group, void*(*createFunc)(void*))
     nli->item = item;
     nli->dropFunc = createFunc;
     nodeLibItems.insert(NodeID, nli);
-    NodeGroups.value(group)->addChild(item);
+    QTreeWidgetItem *parentItem = NodeGroups.value(group);
+    if(parentItem)
+        parentItem->addChild(item);
     NodeID++;
 }
 
 NodeLibItem* NodeLib::getItem(int ID)    
 {
     return nodeLibItems.value(ID); 
+}
+
+void NodeLib::clear()    
+{
+    takeTopLevelItem(0);
+    QTreeWidget::clear();
 }
 
 void NodeLib::update()
@@ -269,7 +278,7 @@ void NodeLib::mouseMoveEvent(QMouseEvent *event)
     }
     drag->setMimeData(mimeData);
     
-    Qt::DropAction dropaction = drag->exec();
+    drag->exec();
 }
 
 void NodeLib::dragEnterEvent(QDragEnterEvent *event)    

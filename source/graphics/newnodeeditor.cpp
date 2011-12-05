@@ -27,21 +27,34 @@
 
 SlotTypeEditor::SlotTypeEditor()
 {
-    insertItem(0, "Color");
-    insertItem(1, "Float");
-    insertItem(2, "String");
-    insertItem(3, "Point");
-    insertItem(4, "Normal");
-    insertItem(5, "Vector");
-    insertItem(6, "Variable");
+    setMinimumSize(10, 10);
+    resize(10, 10);
+    insertItem(0, "Normal");
+    insertItem(1, "Vector");
+    insertItem(2, "Float");
+    insertItem(3, "Integer");
+    insertItem(4, "Color");
+    insertItem(5, "Point");
+    insertItem(6, "String");
+    insertItem(7, "Matrix");
+    insertItem(8, "Condition");
+    insertItem(9, "Variable");
 
-    setItemData(0,  COLOR);
-    setItemData(1, FLOAT);
-    setItemData(2, STRING);
-    setItemData(3, POINT);
-    setItemData(4, NORMAL);
-    setItemData(5, VECTOR);
-    setItemData(6, VARIABLE);
+    setItemData(0, NORMAL);
+    setItemData(1, VECTOR);
+    setItemData(2, FLOAT);
+    setItemData(3, INTEGER);
+    setItemData(4, COLOR);
+    setItemData(5, POINT);
+    setItemData(6, STRING);
+    setItemData(7, MATRIX);
+    setItemData(8, CONDITION);
+    setItemData(9, VARIABLE);
+}
+
+QSize SlotTypeEditor::sizeHint()    const
+{
+    return QSize(10, 10);
 }
 
 RemoveButton::RemoveButton(int index)
@@ -65,6 +78,11 @@ void RemoveButton::emitClicked()
 void RemoveButton::setIndex(int index)
 {
     this->index = index;
+}
+
+QSize RemoveButton::sizeHint()    const
+{
+    return QSize(10, 10);
 }
 
 SocketEditor::SocketEditor()
@@ -207,6 +225,31 @@ void NewNodeEditor::addtoLib()
 
         out<<(unsigned short)0<<isVar->isChecked();
         out<<socketname<<stype<<isToken->isChecked()<<(unsigned short)0;
+        switch(stype)
+        {
+            case FLOAT:
+                out<<(double)0;
+                break;
+            case INTEGER:
+                out<<(int)0;
+                break;
+            case STRING:
+                out<<QString();
+                break;
+            case CONDITION:
+                out<<false;
+                break;
+            case POINT:
+            case NORMAL:
+            case VECTOR:
+                out<<(double)0<<(double)0<<double(0);
+                break;
+            case COLOR:
+                out<<QColor();
+                break;
+            default:
+                break;
+        }
         item = inputsockets->itemBelow(item);
     }
     item = outputsockets->topLevelItem(0);

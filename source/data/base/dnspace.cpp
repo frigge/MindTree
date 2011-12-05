@@ -104,6 +104,7 @@ bool DNSpace::operator!=(DNSpace &space)
 
 void DNSpace::addNode(DNode *node)
 {
+    if(!node)return;
     node->setSpace(this);
     if(!nodes.contains(node))nodes.append(node);
 }

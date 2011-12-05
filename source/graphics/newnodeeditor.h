@@ -34,6 +34,7 @@ class SlotTypeEditor : public QComboBox
     Q_OBJECT
 public:
     SlotTypeEditor();
+    QSize sizeHint()const;
 };
 
 class RemoveButton : public QPushButton
@@ -43,6 +44,7 @@ public:
     RemoveButton(int);
     ~RemoveButton();
     void setIndex(int);
+    QSize sizeHint()const;
 
 protected:
     int index;

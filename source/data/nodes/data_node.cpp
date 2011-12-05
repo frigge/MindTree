@@ -33,6 +33,7 @@
 #include "source/graphics/shaderpreview.h"
 #include "source/graphics/sourcedock.h"
 #include "source/data/scene/object.h"
+#include "source/graphics/viewport.h"
 
 unsigned short DNode::count = 1;
 QHash<unsigned short, DNode*>LoadNodeIDMapper::loadIDMapper;
@@ -229,6 +230,11 @@ DNode* DNode::copy(const DNode *original)
     case FLOATTOVECTOR:
         newNode = new FloatToVectorNode(original->getDerivedConst<VarNameNode>());
         break;
+    case VIEWPORTNODE:
+        newNode = new ViewportNode(original->getDerivedConst<VarNameNode>());
+        break;
+    default:
+        break;
     }
     FRG::CurrentProject->setNodePosition(newNode, FRG::CurrentProject->getNodePosition(original));
     return newNode;
@@ -258,7 +264,7 @@ NodeList DNode::getAllInNodes(NodeList nodes)
 {
     foreach(DinSocket *socket, getInSockets())
     {
-        DoutSocket *cntdSocket = socket->getCntdWorkSocket();
+        DoutSocket *cntdSocket = socket->getCntdSocket();
 
         //try to not forget special containers and their default inputs
 
@@ -346,61 +352,33 @@ QDataStream &operator <<(QDataStream &stream, DNode  *node)
     foreach(DoutSocket *socket, node->getOutSockets())
         stream<<(DSocket*)socket;
 
-    if(node->getNodeType() == FUNCTION)
-    {
+    if(node->getNodeType() == FUNCTION) {
         FunctionNode *fnode = (FunctionNode*) node;
         stream<<fnode->getFunctionName();
     }
 
-    if(node->isContainer())
-    {
+    if(node->isContainer()) {
         ContainerNode *cnode =(ContainerNode*) node;
         stream<<cnode->getInputs()->getID()<<cnode->getOutputs()->getID();
         stream<<cnode->getSocketMapSize();
         foreach(DSocket *socket, cnode->getMappedSocketsOnContainer())
             stream<<socket->getID()<<cnode->getSocketInContainer(socket)->getID();
         stream<<cnode->getContainerData();
+        if(LoopNode::isLoopNode(node)){
+            LoopNode *lnode = node->getDerived<LoopNode>();
+            stream<<lnode->getLoopedInputs()->getID();
+        }
     }
 
-    if(     node->getNodeType() == LOOPINSOCKETS
-          ||node->getNodeType() == LOOPOUTSOCKETS)
-    {
+    if(node->getNodeType() == LOOPINSOCKETS) {
 
         LoopSocketNode *lsnode = (LoopSocketNode*)node;
         stream<<lsnode->getLoopedSocketsCount();
         foreach(DSocket *socket, lsnode->getLoopedSockets())
-        {
             stream<<socket->getID()<<lsnode->getPartnerSocket(socket)->getID();
-        }
-
     }
 
-    //if(node->getNodeType() == COLORNODE)
-    //{
-    //    ColorValueNode *colornode = (ColorValueNode*)node;
-    //    stream<<colornode->getValue();
-    //}
-
-    //if(node->getNodeType() == FLOATNODE)
-    //{
-    //    FloatValueNode *floatnode = (FloatValueNode*)node;
-    //    stream<<floatnode->getValue();
-    //}
-
-    //if(node->getNodeType() == STRINGNODE)
-    //{
-    //    StringValueNode *stringnode = (StringValueNode*)node;
-    //    stream<<stringnode->getValue();
-    //}
-
-    //if(node->getNodeType() == VECTORNODE)
-    //{
-    //    VectorValueNode *vectornode = (VectorValueNode*)node;
-    //    stream<<vectornode->getValue().x<<vectornode->getValue().y<<vectornode->getValue().z;
-    //}
-
-    if(node->getNodeType() == PREVIEW)
-    {
+    if(node->getNodeType() == PREVIEW) {
         PreviewScene scene;
         DShaderPreview *prev = node->getDerived<DShaderPreview>();
         stream<<scene.image<<scene.material<<scene.scene<<scene.dir;
@@ -412,7 +390,7 @@ QDataStream &operator <<(QDataStream &stream, DNode  *node)
 
 DNode *DNode::newNode(QString name, NType t, int insize, int outsize)
 {
-    DNode *node;
+    DNode *node=0;
     switch(t)
     {
         case CONTAINER:
@@ -460,6 +438,12 @@ DNode *DNode::newNode(QString name, NType t, int insize, int outsize)
         case COLORNODE:
             node = new ColorValueNode(name, true);
             break;
+        case INTNODE:
+            node = new IntValueNode(name, true);
+            break;
+        case BOOLNODE:
+            node = new BoolValueNode(name, true);
+            break;
         case FLOATNODE:
             node = new FloatValueNode(name, true);
             break;
@@ -488,6 +472,21 @@ DNode *DNode::newNode(QString name, NType t, int insize, int outsize)
         case VOLUMEOUTPUT:
         case LIGHTOUTPUT:
             node = new OutputNode();
+            break;
+        case COMPOSEARRAY:
+            node = new ComposeArrayNode(true);
+            break;
+        case OBJECTNODE:
+            node = new ObjectNode(true);
+            break;
+        case VIEWPORTNODE:
+            node = new ViewportNode(true);
+            break;
+        case POLYGONNODE:
+            node = new PolygonNode(true);
+            break;
+        case FLOATTOVECTOR:
+            node = new FloatToVectorNode(true);
             break;
         case GETARRAY:
             node = new GetArrayNode(true);
@@ -572,57 +571,31 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
         contnode->setInputs(innode);
         SocketNode *outnode = LoadNodeIDMapper::getNode(outSocketID)->getDerived<SocketNode>();
         contnode->setOutputs(outnode);
-        for(int j = 0; j < smapsize; j++)
-        {
+        if(LoopNode::isLoopNode(newnode)) {
+            unsigned short loopedNodeID;
+            stream >> loopedNodeID;
+            LoopSocketNode *loopedNode = LoadNodeIDMapper::getNode(loopedNodeID)->getDerived<LoopSocketNode>();
+            LoopSocketNode *loutnode = outnode->getDerived<LoopSocketNode>();
+            LoopSocketNode *linnode = innode->getDerived<LoopSocketNode>();
+            LoopNode *lnode = contnode->getDerived<LoopNode>();
+            lnode->setLoopedSockets(loopedNode);
+            loutnode->setPartner(loopedNode);
+            loopedNode->setPartner(loutnode);
+        }
+
+        for(int j = 0; j < smapsize; j++) {
             keyID = cont_socket_map_ID_mapper[j].first;
             valueID = cont_socket_map_ID_mapper[j].second;
             contnode->mapOnToIn(LoadSocketIDMapper::getSocket(keyID), LoadSocketIDMapper::getSocket(valueID));
         }
-        if(LoopNode::isLoopNode(newnode))
-        {
-            LoopSocketNode *loutnode = outnode->getDerived<LoopSocketNode>();
-            LoopSocketNode *linnode = innode->getDerived<LoopSocketNode>();
-            loutnode->setPartner(linnode);
-        }
     }
 
-    //if(newnode->getNodeType() == COLORNODE)
-    //{
-    //    ColorValueNode *colornode = newnode->getDerived<ColorValueNode>();
-    //    QColor color;
-    //    stream>>color;
-    //    colornode->setValue(color);
-    //}
-
-    //if(newnode->getNodeType() == FLOATNODE)
-    //{
-    //    FloatValueNode *floatnode = newnode->getDerived<FloatValueNode>();
-    //    float fval;
-    //    stream>>fval;
-    //    floatnode->setValue(fval);
-    //}
-
-    //if(newnode->getNodeType() == STRINGNODE)
-    //{
-    //    StringValueNode *stringnode = newnode->getDerived<StringValueNode>();
-    //    QString string;
-    //    stream>>string;
-    //    stringnode->setValue(string);
-    //}
-
-    //if(newnode->getNodeType() == VECTORNODE)
-    //{
-    //    VectorValueNode *vectornode = newnode->getDerived<VectorValueNode>();
-    //    Vector vec(vectornode->getValue());
-    //    stream>>vec.x>>vec.y>>vec.z;
-    //}
-
-
-    if(newnode->getNodeType() == LOOPINSOCKETS
-            ||newnode->getNodeType() == LOOPOUTSOCKETS)
+    if(newnode->getNodeType() == LOOPINSOCKETS)
+            //||newnode->getNodeType() == LOOPOUTSOCKETS)
     {
         LoopSocketNode *lsnode = newnode->getDerived<LoopSocketNode>();
-        int partnerSockets, socketID, partnerID;
+        int socketID, partnerID;
+        qint16 partnerSockets; 
         stream>>partnerSockets;
         for(int i = 0; i < partnerSockets; i++)
         {
@@ -925,6 +898,9 @@ void DNode::setlightInput(DNode *node)
 
 void DNode::setsurfaceOutput(DNode *node)
 {
+    new DinSocket("Name", STRING, node);
+    DinSocket *dirsocket = new DinSocket("Directory", STRING, node);
+    ((StringProperty*)dirsocket->getProperty())->setPath(StringProperty::DIRPATH);
     new DinSocket("Ci", COLOR, node);
     new DinSocket("Oi", COLOR, node);
     node->setNodeName("Surface Output");
@@ -1797,6 +1773,11 @@ LoopNode::LoopNode(QString name, bool raw)
 LoopNode::LoopNode(const LoopNode* node)
     : ContainerNode(node)
 {
+}
+
+LoopSocketNode* LoopNode::getLoopedInputs()    
+{
+    return loopSockets; 
 }
 
 void LoopNode::setLoopedSockets(LoopSocketNode *node)    

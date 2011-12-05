@@ -379,7 +379,7 @@ VOutputNode::VOutputNode(DNode *data)
     this->data = data;
     createMenu();
 
-    changeDir();
+    //changeDir();
 }
 
 void VOutputNode::createMenu()

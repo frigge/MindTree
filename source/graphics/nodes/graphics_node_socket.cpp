@@ -206,7 +206,9 @@ void VNSocket::changeType()
     socket_type newtype;
     QStringList typelist;
     bool ok;
-    typelist<<"Normal" << "Vector"<<"Float"<<"Color"<< "Point"<<"String"<<"Variable";
+    typelist<<"Normal" << "Vector" <<"Float"<<"Integer"
+            <<"Condition"<<"Color" <<"Point"<<"String"
+            <<"Matrix"<<"Object"<<"Polygon"<<"Variable";
     QString newtypestr(QInputDialog::getItem(0, "Change Socket Type", "New Type", typelist, 0, false, &ok));
 
     if (newtypestr == "Normal")
@@ -223,6 +225,16 @@ void VNSocket::changeType()
         newtype = STRING;
     else if (newtypestr == "Variable")
         newtype = VARIABLE;
+    else if (newtypestr == "Condition")
+        newtype = CONDITION;
+    else if (newtypestr == "Matrix")
+        newtype = MATRIX;
+    else if (newtypestr == "Object")
+        newtype = SCENEOBJECT;
+    else if (newtypestr == "Polygon")
+        newtype = POLYGON;
+    else if (newtypestr == "Integer")
+        newtype = INTEGER;
 
     if(ok)
         data->setType(newtype);

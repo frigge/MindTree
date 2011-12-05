@@ -832,15 +832,13 @@ QString DSocket::setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt)
             if(getNode()->getNodeType() == CONTAINER)
                 break;
 
-            if(SocketNameCnt->contains(varname_raw))
-            {
+            if(SocketNameCnt->contains(varname_raw)) {
                 unsigned short cnt = SocketNameCnt->value(varname_raw);
                 SocketNameCnt->remove(varname_raw);
                 SocketNameCnt->insert(varname_raw, ++cnt);
                 varname = varname_raw + QString::number(SocketNameCnt->value(varname_raw));
             }
-            else
-            {
+            else {
                 SocketNameCnt->insert(varname_raw, 1);
                 varname = varname_raw;
             }
@@ -880,16 +878,13 @@ void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
 
 void DinSocket::setCntdSocket(DoutSocket *socket)
 {
-    if(!socket)
-    {
+    if(!socket) {
         clearLink();
         return;
     }
-    if(cntdSocket)
-    {
+    if(cntdSocket) {
         cntdSocket->unregisterSocket(this, false);
-        if(linkedNameCB) 
-        {
+        if(linkedNameCB) {
             cntdSocket->remRenameCB(linkedNameCB);
         }
         if(linkedTypeCB) {
@@ -899,13 +894,11 @@ void DinSocket::setCntdSocket(DoutSocket *socket)
 
 	cntdSocket = socket;
     linkCallbacks();
-    if(socket->getType() == VARIABLE)
-    {
+    if(socket->getType() == VARIABLE) {
         socket->setType(getType());
         socket->setName(getName());
     }
-    if(getType() == VARIABLE)
-    {
+    if(getType() == VARIABLE) {
         linkedNameCB = new ScpNameCB(socket, this);
         linkedTypeCB = new ScpTypeCB(socket, this);
         socket->addRenameCB(linkedNameCB);

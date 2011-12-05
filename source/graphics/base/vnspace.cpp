@@ -513,7 +513,7 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
         QByteArray itemData = event->mimeData()->data("FRGShaderAuthor/buildInNode");
         QDataStream stream(&itemData, QIODevice::ReadOnly);
         stream>>buildInType;
-        dnode = (DNode*)FRG::lib->getItem(buildInType)->dropFunc(FRG::SpaceDataInFocus);
+        dnode = FRG::lib->getItem(buildInType)->dropFunc();
         //switch(buildInType)
         //{
         //case 1:

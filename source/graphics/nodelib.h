@@ -31,7 +31,7 @@
 class DNode;
 
 typedef struct NodeLibItem {
-    void* (*dropFunc)(void*);
+    DNode* (*dropFunc)();
     QTreeWidgetItem *item;
 }NodeLibItem;
 
@@ -59,7 +59,7 @@ public:
     ~NodeLib();
     void filter(QString txt);
     NodeLibItem* getItem(int ID);
-    void addNode(QString name, QString group, void*(*createFunc)(void*));
+    void addNode(QString name, QString group, DNode*(*createFunc)());
 
 signals:
 
@@ -71,6 +71,7 @@ public slots:
     void addGroup(QString name, QString parent="");
 
 protected:
+    void clear();
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
@@ -79,6 +80,7 @@ protected:
 
 private:
     int NodeID;
+    QTreeWidgetItem *buildIns;
     QList<QTreeWidgetItem *> addNodeItems(QDir dir);
     QHash<int, NodeLibItem*> nodeLibItems;
     QHash<QString, QTreeWidgetItem*> NodeGroups;

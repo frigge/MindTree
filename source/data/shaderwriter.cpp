@@ -276,10 +276,60 @@ void ShaderCodeGenerator::gotoNextNode(const DinSocket *socket)
 
 QString ShaderCodeGenerator::writeVarName(const DinSocket *insocket)
 {
-    if(!insocket->getCntdWorkSocket())
-        return "";
+    if(!insocket->getCntdSocket()){
+        QString value;
+        QColor col;
+        double fl;
+        int i;
+        Vector v;
+        switch(insocket->getType())
+        {
+            case COLOR:
+                col = ((ColorProperty*)insocket->getProperty())->getValue();
+                value = "color(";
+                value += QString::number(col.redF()) + ", ";
+                value += QString::number(col.greenF()) + ", ";
+                value += QString::number(col.blueF()) + ")";
+                break;
+            case FLOAT:
+                fl = ((FloatProperty*)insocket->getProperty())->getValue();
+                value = QString::number(fl);
+                break;
+            case STRING:
+                value = ((StringProperty*)insocket->getProperty())->getValue();
+                break;
+            case INTEGER:
+                i = ((IntProperty*)insocket->getProperty())->getValue();
+                value = QString::number(fl);
+                break;
+            case VECTOR:
+                v = ((VectorProperty*)insocket->getProperty())->getValue();
+                value = "vector(";
+                value += QString::number(v.x) + ", ";
+                value += QString::number(v.y) + ", ";
+                value += QString::number(v.z) + ")";
+                break;
+            case POINT:
+                v = ((VectorProperty*)insocket->getProperty())->getValue();
+                value = "point(";
+                value += QString::number(v.x) + ", ";
+                value += QString::number(v.y) + ", ";
+                value += QString::number(v.z) + ")";
+                break;
+            case NORMAL:
+                v = ((VectorProperty*)insocket->getProperty())->getValue();
+                value = "normal(";
+                value += QString::number(v.x) + ", ";
+                value += QString::number(v.y) + ", ";
+                value += QString::number(v.z) + ")";
+                break;
+            default:
+                break;
+        }
+        return value;
+    }
 
-    const DoutSocket *prevsocket = insocket->getCntdWorkSocket();
+    const DoutSocket *prevsocket = insocket->getCntdSocket();
     const DNode *node = prevsocket->getNode();
 
     switch(node->getNodeType())
@@ -305,6 +355,10 @@ QString ShaderCodeGenerator::writeVarName(const DinSocket *insocket)
         case OR:
         case NOT:
             return createCondition(prevsocket);
+        case CONTAINER:
+            return writeVarName(node->getDerivedConst<ContainerNode>()->getSocketInContainer(prevsocket)->toIn());
+        case INSOCKETS:
+            return writeVarName(node->getDerivedConst<SocketNode>()->getContainer()->getSocketOnContainer(prevsocket)->toIn());
         default:
             return getVariable(prevsocket);
     }
@@ -521,10 +575,9 @@ QString ShaderCodeGenerator::writeMath(const DoutSocket *socket, QString mathOpe
         i++;
 		if(nsocket->getCntdWorkSocket())
 		{
-
             DNode *nextNode = nsocket->getCntdWorkSocket()->getNode();
 			if(DNode::isMathNode(nextNode))
-				output.append(createMath(nsocket->getCntdWorkSocket()));
+				output.append(createMath(nsocket->getCntdSocket()));
 			else
 			{
 				output.append(writeVarName(nsocket));
@@ -532,6 +585,9 @@ QString ShaderCodeGenerator::writeMath(const DoutSocket *socket, QString mathOpe
 			}
 
 		}
+        else if(nsocket->getType() != VARIABLE)
+            output.append(writeVarName(nsocket));
+
         if(i < socket->getNode()->getInSockets().size())
         {
             output.append(" ");
