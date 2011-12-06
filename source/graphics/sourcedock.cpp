@@ -24,8 +24,9 @@
 #include "source/data/nodes/data_node.h"
 #include "source/data/base/frg.h"
 #include "source/data/base/frg_shader_author.h"
+#include "source/data/code_generator/outputs.h"
 
-SourceEdit::SourceEdit(QWidget *parent, OutputNode *node)
+SourceEdit::SourceEdit(QWidget *parent, AbstractOutputNode *node)
     : QTextEdit(parent), outnode(node)
 {
 }
@@ -41,17 +42,10 @@ void SourceEdit::load()
 
 void SourceEdit::load(DNode *node)    
 {
-    outnode->writeCode();
-    if(node && outnode->getAllInNodes().contains(node))
-    {
-        QFile file(outnode->getFileName());
-        QTextStream stream(&file);
-        file.open(QIODevice::ReadOnly);
-        document()->setPlainText(stream.readAll());
-    }
+    document()->setPlainText(outnode->writeCode());
 }
 
-SourceDock::SourceDock(OutputNode *node)
+SourceDock::SourceDock(AbstractOutputNode *node)
     : QDockWidget("Source: "+ node->getNodeName()), edit(new SourceEdit(this, node)) 
 {
     setWidget(edit);

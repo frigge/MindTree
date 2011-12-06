@@ -23,109 +23,11 @@
 #include "source/graphics/viewport.h"
 #include "source/graphics/base/vnspace.h"
 #include "source/data/nodes/data_node.h"
-#include "source/data/base/frg.h"
 #include "source/data/base/project.h"
 #include "source/data/scene/object.h"
 #include "source/graphics/shaderpreview.h"
-
-DNode* BuildIn::getArray()
-{
-    GetArrayNode *node = new GetArrayNode();
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-};
-
-DNode* BuildIn::setArray()
-{
-    SetArrayNode *node = new SetArrayNode();
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-};
-
-DNode* BuildIn::composeArray()
-{
-    ComposeArrayNode *node = new ComposeArrayNode();
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::VarName()
-{
-    VarNameNode *node = new VarNameNode();
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-};
-
-DNode* BuildIn::surfaceInput()
-{
-    InputNode *node = new InputNode();
-    DNode::setsurfaceInput(node);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-};
-
-DNode* BuildIn::displacementInput()
-{
-    InputNode *node = new InputNode();
-    DNode::setdisplacementInput(node);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-};
-
-DNode* BuildIn::volumeInput()
-{
-    InputNode *node = new InputNode();
-    DNode::setvolumeInput(node);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-};
-
-DNode* BuildIn::lightInput()
-{
-    InputNode *node = new InputNode();
-    DNode::setlightInput(node);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-};
-
-DNode* BuildIn::surfaceOutput()
-{
-    OutputNode *node = new OutputNode();
-    DNode::setsurfaceOutput(node);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-};
-
-DNode* BuildIn::displacementOutput()
-{
-    OutputNode *node = new OutputNode();
-    DNode::setdisplacementOutput(node);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::volumeOutput()
-{
-    OutputNode *node = new OutputNode();
-    DNode::setvolumeOutput(node);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::lightOutput()
-{
-    OutputNode *node = new OutputNode();
-    DNode::setlightOutput(node);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::preview()    
-{
-    DShaderPreview *node = new DShaderPreview();
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
+#include "source/data/code_generator/inputs.h"
+#include "source/data/code_generator/outputs.h"
 
 DNode* BuildIn::MaddNode()
 {
@@ -204,139 +106,25 @@ DNode* BuildIn::CeqNode()
     return node;
 }
 
-DNode* BuildIn::VColNode()
-{
-    ColorValueNode *node = new ColorValueNode;
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::VStrNode()
-{
-    StringValueNode *node = new StringValueNode;
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::VFlNode()
-{
-    FloatValueNode *node = new FloatValueNode;
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::VIntNode()
-{
-    IntValueNode *node = new IntValueNode;
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::VVecNode()
-{
-    VectorValueNode *node = new VectorValueNode;
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::VFloatToVector()
-{
-    FloatToVectorNode *node = new FloatToVectorNode;
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::VBoolNode()
-{
-    BoolValueNode *node = new BoolValueNode;
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::ContIfNode()
-{
-    ConditionContainerNode *node = new ConditionContainerNode;
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::ContForNode()
-{
-    ForNode *node = new ForNode(false);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::ContWhileNode()
-{
-    WhileNode *node = new WhileNode(false);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::CLilluminate()
-{
-    IlluminateNode *node = new IlluminateNode(false);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::CLgather()
-{
-    GatherNode *node = new GatherNode(false);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::CLilluminance()
-{
-    IlluminanceNode *node = new IlluminanceNode(false);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::CLsolar()
-{
-    SolarNode *node = new SolarNode(false);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::Viewport()
-{
-    ViewportNode *node = new ViewportNode(false);
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::ComposePolygon()
-{
-    PolygonNode *node = new PolygonNode();
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
-DNode* BuildIn::ComposeObject()
-{
-    ObjectNode *node = new ObjectNode();
-    FRG::SpaceDataInFocus->addNode(node);
-    return node;
-}
-
 void BuildIn::registerNodes()    
 {
-    FRG::lib->addGroup("Inputs", "Shading");
-    FRG::lib->addNode("Surface Input", "Inputs", &surfaceInput); 
-    FRG::lib->addNode("Displacement Input", "Inputs", &displacementInput); 
-    FRG::lib->addNode("Light Input", "Inputs", &lightInput); 
-    FRG::lib->addNode("Volume Input", "Inputs", &volumeInput); 
+    FRG::lib->addGroup("RSL Inputs", "Shading");
+    FRG::lib->addNode("Surface Input", "RSL Inputs", createNode<SurfaceInputNode>); 
+    FRG::lib->addNode("Displacement Input", "RSL Inputs", createNode<DisplacementInputNode>); 
+    FRG::lib->addNode("Light Input", "RSL Inputs", createNode<LightInputNode>); 
+    FRG::lib->addNode("Volume Input", "RSL Inputs", createNode<VolumeInputNode>); 
 
-    FRG::lib->addGroup("Outputs", "Shading");
-    FRG::lib->addNode("Surface Output", "Outputs", &surfaceOutput); 
-    FRG::lib->addNode("Displacement Output", "Outputs", &displacementOutput); 
-    FRG::lib->addNode("Volume Output", "Outputs", &volumeOutput); 
-    FRG::lib->addNode("Light Output", "Outputs", &lightOutput); 
-    FRG::lib->addNode("Preview", "Outputs", &preview); 
+    FRG::lib->addGroup("RSL Outputs", "Shading");
+    FRG::lib->addNode("Surface Output", "RSL Outputs", createNode<SurfaceOutputNode>); 
+    FRG::lib->addNode("Displacement Output", "RSL Outputs", createNode<DisplacementOutputNode>); 
+    FRG::lib->addNode("Volume Output", "RSL Outputs", createNode<VolumeOutputNode>); 
+    FRG::lib->addNode("Light Output", "RSL Outputs", createNode<LightOutputNode>); 
+    FRG::lib->addNode("Preview", "RSL Outputs", createNode<DShaderPreview>); 
+
+    FRG::lib->addGroup("GLSL Outputs", "Shading");
+    FRG::lib->addNode("Fragment Output", "GLSL Outputs", createNode<FragmentOutputNode>); 
+    //FRG::lib->addNode("Vertex Output", "GLSL Outputs", createNode<VertexOutputNode>); 
+    //FRG::lib->addNode("Geometry Output", "GLSL Outputs", createNode<GeometryOutputNode>); 
 
     FRG::lib->addNode("Add", "Math", &MaddNode); 
     FRG::lib->addNode("Subtract", "Math", &MSubNode); 
@@ -351,32 +139,32 @@ void BuildIn::registerNodes()
     FRG::lib->addNode("Smaller Than", "Boolean", &CsmallerNode); 
     FRG::lib->addNode("Equal", "Boolean", &CeqNode); 
 
-    FRG::lib->addNode("Color", "Value", &VColNode); 
-    FRG::lib->addNode("String", "Value", &VStrNode); 
-    FRG::lib->addNode("Float", "Value", &VFlNode); 
-    FRG::lib->addNode("Integer", "Value", &VIntNode); 
-    FRG::lib->addNode("Vector", "Value", &VVecNode); 
-    FRG::lib->addNode("Boolean", "Value", &VBoolNode); 
+    FRG::lib->addNode("Color", "Value", createNode<ColorValueNode>); 
+    FRG::lib->addNode("String", "Value", createNode<StringValueNode>); 
+    FRG::lib->addNode("Float", "Value", createNode<FloatValueNode>); 
+    FRG::lib->addNode("Integer", "Value", createNode<IntValueNode>); 
+    FRG::lib->addNode("Vector", "Value", createNode<VectorValueNode>); 
+    FRG::lib->addNode("Boolean", "Value", createNode<BoolValueNode>); 
 
-    FRG::lib->addNode("FloatToVector", "Conversion", &VFloatToVector);
+    FRG::lib->addNode("FloatToVector", "Conversion", createNode<FloatToVectorNode>);
 
-    FRG::lib->addNode("If", "Boolean", &ContIfNode); 
-    FRG::lib->addNode("For", "Loop", &ContForNode); 
-    FRG::lib->addNode("While", "Loop", &ContWhileNode); 
+    FRG::lib->addNode("If", "Boolean", createNode<ConditionContainerNode>); 
+    FRG::lib->addNode("For", "Loop", createNode<ForNode>); 
+    FRG::lib->addNode("While", "Loop", createNode<WhileNode>); 
     
     FRG::lib->addGroup("Shading Loop", "Shading");
-    FRG::lib->addNode("Illuminate", "Shading Loop", &CLilluminate); 
-    FRG::lib->addNode("Illuminance", "Shading Loop", &CLilluminance); 
-    FRG::lib->addNode("Solar", "Shading Loop", &CLsolar); 
-    FRG::lib->addNode("Gather", "Shading Loop", &CLgather); 
+    FRG::lib->addNode("Illuminate", "Shading Loop", createNode<IlluminateNode>); 
+    FRG::lib->addNode("Illuminance", "Shading Loop", createNode<IlluminanceNode>); 
+    FRG::lib->addNode("Solar", "Shading Loop", createNode<SolarNode>); 
+    FRG::lib->addNode("Gather", "Shading Loop", createNode<GatherNode>); 
 
-    FRG::lib->addNode("Get Array", "Array", &getArray);
-    FRG::lib->addNode("Set Array", "Array", &setArray);
-    FRG::lib->addNode("Compose Array", "Array", &composeArray);
+    FRG::lib->addNode("Get Array", "Array", createNode<GetArrayNode>);
+    FRG::lib->addNode("Set Array", "Array", createNode<SetArrayNode>);
+    FRG::lib->addNode("Compose Array", "Array", createNode<ComposeArrayNode>);
 
-    FRG::lib->addNode("Varname", "Misc", &VarName);
+    FRG::lib->addNode("Varname", "Misc", createNode<VarNameNode>);
     
-    FRG::lib->addNode("Viewport", "Data", &Viewport); 
-    FRG::lib->addNode("Compose Object", "Data", &ComposeObject); 
-    FRG::lib->addNode("Compose Polygon", "Data", &ComposePolygon); 
+    FRG::lib->addNode("Viewport", "Data", createNode<ViewportNode>); 
+    FRG::lib->addNode("Compose Object", "Data", createNode<ObjectNode>); 
+    FRG::lib->addNode("Compose Polygon", "Data", createNode<PolygonNode>); 
 }

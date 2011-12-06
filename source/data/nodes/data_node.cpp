@@ -26,7 +26,7 @@
 
 #include "source/data/base/frg.h"
 #include "source/graphics/nodes/graphics_node.h"
-#include "source/data/rslwriter.h"
+#include "source/data/code_generator/rslwriter.h"
 #include "source/data/base/dnspace.h"
 #include "source/graphics/base/vnspace.h"
 #include "source/data/base/project.h"
@@ -34,6 +34,8 @@
 #include "source/graphics/sourcedock.h"
 #include "source/data/scene/object.h"
 #include "source/graphics/viewport.h"
+#include "source/data/code_generator/inputs.h"
+#include "source/data/code_generator/outputs.h"
 
 unsigned short DNode::count = 1;
 QHash<unsigned short, DNode*>LoadNodeIDMapper::loadIDMapper;
@@ -169,19 +171,37 @@ DNode* DNode::copy(const DNode *original)
         newNode = new SolarNode(original->getDerivedConst<SolarNode>());
         break;
     case SURFACEINPUT:
+        newNode = new SurfaceInputNode(original->getDerivedConst<SurfaceInputNode>());
+        break;
     case DISPLACEMENTINPUT:
+        newNode = new DisplacementInputNode(original->getDerivedConst<DisplacementInputNode>());
+        break;
     case VOLUMEINPUT:
+        newNode = new VolumeInputNode(original->getDerivedConst<VolumeInputNode>());
+        break;
     case LIGHTINPUT:
+        newNode = new LightInputNode(original->getDerivedConst<LightInputNode>());
+        break;
     case ILLUMINANCEINPUT:
+        newNode = new InputNode(original->getDerivedConst<InputNode>());
+        break;
     case SOLARINPUT:
+        newNode = new InputNode(original->getDerivedConst<InputNode>());
+        break;
     case ILLUMINATEINPUT:
         newNode = new InputNode(original->getDerivedConst<InputNode>());
         break;
     case SURFACEOUTPUT:
+        newNode = new SurfaceOutputNode(original->getDerivedConst<SurfaceOutputNode>());
+        break;
     case DISPLACEMENTOUTPUT:
+        newNode = new DisplacementOutputNode(original->getDerivedConst<DisplacementOutputNode>());
+        break;
     case VOLUMEOUTPUT:
+        newNode = new VolumeOutputNode(original->getDerivedConst<VolumeOutputNode>());
+        break;
     case LIGHTOUTPUT:
-        newNode = new OutputNode(original->getDerivedConst<OutputNode>());
+        newNode = new LightOutputNode(original->getDerivedConst<LightOutputNode>());
         break;
     case INSOCKETS:
     case OUTSOCKETS:
@@ -462,16 +482,28 @@ DNode *DNode::newNode(QString name, NType t, int insize, int outsize)
             node = new LoopSocketNode(insize == 0 ? OUT : IN, 0, true);
             break;
         case SURFACEINPUT:
+            node = new SurfaceInputNode(true);
+            break;
         case DISPLACEMENTINPUT:
+            node = new DisplacementInputNode(true);
+            break;
         case VOLUMEINPUT:
+            node = new VolumeInputNode(true);
+            break;
         case LIGHTINPUT:
-            node = new InputNode();
+            node = new LightInputNode(true);
             break;
         case SURFACEOUTPUT:
+            node = new SurfaceOutputNode(true);
+            break;
         case DISPLACEMENTOUTPUT:
+            node = new DisplacementOutputNode(true);
+            break;
         case VOLUMEOUTPUT:
+            node = new VolumeOutputNode(true);
+            break;
         case LIGHTOUTPUT:
-            node = new OutputNode();
+            node = new LightOutputNode(true);
             break;
         case COMPOSEARRAY:
             node = new ComposeArrayNode(true);
@@ -840,98 +872,6 @@ DNSpace* DNode::getSpace() const
 void DNode::setSpace(DNSpace* value)
 {
     space = value;
-}
-
-void DNode::setsurfaceInput(DNode *node)
-{
-    new DoutSocket("P", POINT, node);
-    new DoutSocket("N", NORMAL, node);
-    new DoutSocket("Cs", COLOR, node);
-    new DoutSocket("Os", COLOR, node);
-    new DoutSocket("u", FLOAT, node);
-    new DoutSocket("v", FLOAT, node);
-    new DoutSocket("du", FLOAT, node);
-    new DoutSocket("dv", FLOAT, node);
-    new DoutSocket("s", FLOAT, node);
-    new DoutSocket("t", FLOAT, node);
-    new DoutSocket("I", VECTOR, node);
-    node->setNodeName("Surface Input");
-    node->setNodeType(SURFACEINPUT);
-}
-
-void DNode::setdisplacementInput(DNode *node)
-{
-    new DoutSocket("P", POINT, node);
-    new DoutSocket("N", NORMAL, node);
-    new DoutSocket("u", FLOAT, node);
-    new DoutSocket("v", FLOAT, node);
-    new DoutSocket("du", FLOAT, node);
-    new DoutSocket("dv", FLOAT, node);
-    new DoutSocket("s", FLOAT, node);
-    new DoutSocket("t", FLOAT, node);
-    node->setNodeName("Displacement Input");
-    node->setNodeType(DISPLACEMENTINPUT);
-}
-
-void DNode::setvolumeInput(DNode *node)
-{
-    new DoutSocket("P", POINT, node);
-    new DoutSocket("I", VECTOR, node);
-    new DoutSocket("Ci", COLOR, node);
-    new DoutSocket("Oi", COLOR, node);
-    new DoutSocket("Cs", COLOR, node);
-    new DoutSocket("Os", COLOR, node);
-    new DoutSocket("L", VECTOR, node);
-    new DoutSocket("Cl", COLOR, node);
-    node->setNodeName("Volume Input");
-    node->setNodeType(VOLUMEINPUT);
-}
-
-void DNode::setlightInput(DNode *node)
-{
-    new DoutSocket("P", POINT, node);
-    new DoutSocket("Ps", POINT, node);
-    new DoutSocket("L", VECTOR, node);
-    node->setNodeName("Light Input");
-    node->setNodeType(LIGHTINPUT);
-}
-
-void DNode::setsurfaceOutput(DNode *node)
-{
-    new DinSocket("Name", STRING, node);
-    DinSocket *dirsocket = new DinSocket("Directory", STRING, node);
-    ((StringProperty*)dirsocket->getProperty())->setPath(StringProperty::DIRPATH);
-    new DinSocket("Ci", COLOR, node);
-    new DinSocket("Oi", COLOR, node);
-    node->setNodeName("Surface Output");
-    node->setNodeType(SURFACEOUTPUT);
-    node->setDynamicSocketsNode(IN);
-}
-
-void DNode::setdisplacementOutput(DNode *node)
-{
-    new DinSocket("P", POINT, node);
-    new DinSocket("N", NORMAL, node);
-    node->setNodeName("Displacement Output");
-    node->setNodeType(DISPLACEMENTOUTPUT);
-    node->setDynamicSocketsNode(IN);
-}
-
-void DNode::setvolumeOutput(DNode *node)
-{
-    new DinSocket("Ci", COLOR, node);
-    new DinSocket("Oi", COLOR, node);
-    node->setNodeName("Volume Output");
-    node->setNodeType(VOLUMEOUTPUT);
-    node->setDynamicSocketsNode(IN);
-}
-
-void DNode::setlightOutput(DNode *node)
-{
-    new DinSocket("Cl", COLOR, node);
-    node->setNodeName("Light Output");
-    node->setNodeType(LIGHTOUTPUT);
-    node->setDynamicSocketsNode(IN);
 }
 
 void DNode::setDynamicSocketsNode(socket_dir dir, socket_type t)
@@ -1911,108 +1851,6 @@ SolarNode::SolarNode(bool raw)
 
 SolarNode::SolarNode(const SolarNode* node)
     : LoopNode(node)
-{
-}
-
-OutputNode::OutputNode()
-{
-    sedit = new SourceDock(this);
-}
-
-OutputNode::~OutputNode()
-{
-    delete sedit;
-}
-
-OutputNode::OutputNode(const OutputNode* node)
-    : DNode(node), ShaderName(node->getShaderName())
-{
-    sedit = new SourceDock(this);
-}
-
-SourceDock* OutputNode::getSourceEdit()    
-{
-    return sedit; 
-}
-
-VNode* OutputNode::createNodeVis()
-{
-    setNodeVis(new VOutputNode(this));
-    return getNodeVis();
-}
-
-QString OutputNode::getShaderName() const
-{
-    return ShaderName;
-}
-
-void OutputNode::writeCode()
-{
-    QFile file(filename);
-    file.open(QIODevice::WriteOnly);
-    QTextStream stream(&file);
-    ShaderWriter sw(this);
-    QString code = sw.getCode();
-    stream<<code;
-    file.close();
-}
-
-void OutputNode::compile()    
-{
-    QProcess *process = new QProcess();
-    QStringList arguments;
-    arguments << filename;
-    process->setStandardErrorFile("compiler.log");
-    process->setWorkingDirectory(QFileInfo(filename).canonicalPath());
-    process->start("shaderdl", arguments);
-    process->waitForFinished(10000);
-}
-
-QString OutputNode::getFileName() const
-{
-    return filename;
-}
-
-void OutputNode::setFileName(QString name)
-{
-    filename = name;
-}
-
-void OutputNode::changeName(QString newname)
-{
-    QString shadertype, newnodename;
-    switch(getNodeType())
-    {
-    case SURFACEOUTPUT:
-        shadertype = "Surface Output";
-        break;
-    case DISPLACEMENTOUTPUT:
-        shadertype = "Displacement Output";
-        break;
-    case VOLUMEOUTPUT:
-        shadertype = "Volume Output";
-        break;
-    case LIGHTOUTPUT:
-        shadertype = "Light Output";
-        break;
-    default:
-	break;	
-    }
-
-    ShaderName = newname;
-    newnodename = shadertype;
-    newnodename += " (";
-    newnodename += ShaderName;
-    newnodename += " )";
-    setNodeName(newnodename);
-}
-
-InputNode::InputNode()
-{
-}
-
-InputNode::InputNode(const InputNode* node)
-    : DNode(node)
 {
 }
 

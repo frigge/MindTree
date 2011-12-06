@@ -8,6 +8,7 @@
 #include "source/data/base/dnspace.h"
 
 class DNode;
+class GLShaderCode;
 
 class Project 
 {
@@ -35,11 +36,17 @@ public:
 	QPointF getNodePosition(const DNode *node);
     void clearNodePosition(const DNode *node);
 
+    int regGLSLShader(GLShaderCode *shader);
+    void remGLSLShader(int ID);
+    GLShaderCode* getGLSLShader(int ID);
+
 private:
     QString filename;
     DNSpace *root_scene;
 	QHash<const DNode*, QPointF> nodePositions;
     QList<DNSpace*>spaces;
+    QHash<int, GLShaderCode*> glslshaders;
+    int glShaderID;
 };
 
 #endif // PROJECT_H

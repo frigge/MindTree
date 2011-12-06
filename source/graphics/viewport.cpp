@@ -24,6 +24,7 @@
 #include "QGraphicsSceneContextMenuEvent"
 #include "QMouseEvent"
 #include "QMutexLocker"
+#include "QGLShaderProgram"
 
 #include "iostream"
 #include "ctime"
@@ -99,11 +100,21 @@ void Viewport::drawScene()
 
     if(!objects.isEmpty())
         foreach(Object *obj, objects)
-            drawObject(obj);
+                drawObject(obj);
 }
 
 void Viewport::drawObject(Object* obj)    
 {
+    QGLShaderProgram program(context());
+    if(obj->getGLFrag())
+        program.addShaderFromSourceCode(QGLShader::Fragment, obj->getGLFrag()->code);
+    if(obj->getGLVertex())
+        program.addShaderFromSourceCode(QGLShader::Vertex, obj->getGLVertex()->code);
+    if(obj->getGLGeo())
+        program.addShaderFromSourceCode(QGLShader::Geometry, obj->getGLGeo()->code);
+    program.link();
+    program.bind();
+
     Vector* vertices = obj->getVertices();
     int vertcnt = obj->getVertCnt();
     int i = 0;
@@ -169,6 +180,7 @@ void Viewport::drawObject(Object* obj)
             glEnd();
         }
     }
+    program.release();
 }
 
 void Viewport::drawAxisGizmo()    

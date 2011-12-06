@@ -42,6 +42,7 @@
 #include "source/data/callbacks.h"
 #include "source/graphics/sourcedock.h"
 #include "source/graphics/base/prop_vis.h"
+#include "source/data/code_generator/outputs.h"
 
 NodeName::NodeName(QString name, QGraphicsItem *parent)
     : QGraphicsTextItem(name, parent)
@@ -385,50 +386,28 @@ VOutputNode::VOutputNode(DNode *data)
 void VOutputNode::createMenu()
 {
     contextMenu = new QMenu;
-    QAction *nameAction = contextMenu->addAction("set Shader Name");
-    QAction *dirAction = contextMenu->addAction("set Shader Directory");
     QAction *writecodeAction = contextMenu->addAction("Create Code");
     QAction *compileAction = contextMenu->addAction("write and compile code");
     QAction *codeAction = contextMenu->addAction("view source code");
 
     connect(writecodeAction, SIGNAL(triggered()), this, SLOT(writeCode()));
-    connect(nameAction, SIGNAL(triggered()), this, SLOT(changeName()));
-    connect(dirAction, SIGNAL(triggered()), this, SLOT(changeDir()));
     connect(codeAction, SIGNAL(triggered()), this, SLOT(viewCode()));
-}
-
-void VOutputNode::changeName()
-{
-    OutputNode *data = (OutputNode*)this->data;
-    bool ok;
-    QString newname = QInputDialog::getText(FRG::Space->views().first(), "Shader Name", "Name", QLineEdit::Normal, "", &ok);
-    if(ok)
-        data->changeName(newname);
 }
 
 void VOutputNode::viewCode()    
 {
-    data->getDerived<OutputNode>()->getSourceEdit()->show();    
+    data->getDerived<AbstractOutputNode>()->getSourceEdit()->show();    
 }
 
 void VOutputNode::writeCode()
 {
-    OutputNode *data = static_cast<OutputNode*>(this->data);
-    if(data->getFileName() == "")
-        data->setFileName(QFileDialog::getExistingDirectory() + data->getShaderName() + ".sl");
+    AbstractOutputNode *data = static_cast<AbstractOutputNode*>(this->data);
     data->writeCode();
-}
-
-void VOutputNode::changeDir()
-{
-    OutputNode *data = static_cast<OutputNode*>(this->data);
-    if(data->getShaderName() == "")changeName();
-    data->setFileName(QFileDialog::getExistingDirectory() + data->getShaderName() + ".sl");
 }
 
 void VOutputNode::writeAndCompile()    
 {
-    OutputNode *data = static_cast<OutputNode*>(this->data);
+    AbstractOutputNode *data = static_cast<AbstractOutputNode*>(this->data);
     writeCode();
     data->compile();
 }

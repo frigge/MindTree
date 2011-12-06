@@ -1,12 +1,13 @@
 #include "project.h"
 
 #include "QFileDialog"
+#include "QGLShader"
 
 #include "source/data/base/frg.h"
 #include "source/graphics/base/vnspace.h"
 
 Project::Project(QString filename)
-    : filename(filename)
+    : filename(filename), glShaderID(0)
 {
     FRG::CurrentProject = this;
     DNSpace *space = 0;
@@ -156,4 +157,20 @@ void Project::setNodePosition(const DNode *node, QPointF value)
 void Project::clearNodePosition(const DNode *node)    
 {
     nodePositions.remove(node);
+}
+
+int Project::regGLSLShader(GLShaderCode *shader)    
+{
+    glslshaders.insert(++glShaderID, shader);
+    return glShaderID;
+}
+
+void Project::remGLSLShader(int ID)    
+{
+    delete glslshaders.take(ID);
+}
+
+GLShaderCode* Project::getGLSLShader(int ID)    
+{
+    return glslshaders.value(ID);
 }

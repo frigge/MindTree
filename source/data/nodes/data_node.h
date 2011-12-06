@@ -79,7 +79,10 @@ enum NType
     PREVIEW, GETARRAY,  SETARRAY,
     COMPOSEARRAY,       VARNAME,
     OBJECTNODE,         POLYGONNODE,
-    FLOATTOVECTOR,      VIEWPORTNODE
+    FLOATTOVECTOR,      VIEWPORTNODE,
+
+    FRAGMENTOUTPUT,     VERTEXOUTPUT,
+    GEOMETRYOUTPUT
 };
 
 class VNode;
@@ -150,17 +153,6 @@ public:
     void blockCB();
     void unblockRegCB();
     void blockRegCB();
-
-    static void setsurfaceOutput(DNode *node);
-    static void setdisplacementOutput(DNode *node);
-    static void setvolumeOutput(DNode *node);
-    static void setlightOutput(DNode *node);
-    static void setsurfaceInput(DNode *node);
-    static void setdisplacementInput(DNode *node);
-    static void setlightInput(DNode *node);
-    static void setvolumeInput(DNode *node);
-    static void setIlluminanceInput(DNode *node);
-    static void setIlluminateInput(DNode *node);
 
     static DNode *newNode(QString name, NType t, int insize, int outsize);
 
@@ -484,32 +476,6 @@ public:
 };
 
 class SourceDock;
-class OutputNode : public DNode
-{
-public:
-    OutputNode();
-    OutputNode(const OutputNode* node);
-    virtual ~OutputNode();
-    QString getShaderName() const;
-
-    virtual void writeCode();
-    SourceDock* getSourceEdit();
-    virtual void compile();
-
-protected:
-    virtual VNode* createNodeVis();
-
-private:
-    SourceDock *sedit;
-};
-
-class InputNode : public DNode
-{
-public:
-    InputNode();
-    InputNode(const InputNode* node);
-};
-
 class GetArrayNode : public DNode
 {
 public:

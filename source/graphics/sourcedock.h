@@ -19,26 +19,26 @@
 #include "QTextEdit"
 #include "QDockWidget"
 
-class OutputNode;
+class AbstractOutputNode;
 class DNode;
 class SourceEdit : public QTextEdit
 {
     Q_OBJECT
 public:
-    SourceEdit(QWidget *parent, OutputNode *node);
+    SourceEdit(QWidget *parent, AbstractOutputNode *node);
 
 public slots:
     void load(DNode *node);
     void load();
 
 private:
-    OutputNode *outnode;
+    AbstractOutputNode *outnode;
 };
 
 class SourceDock : public QDockWidget
 {
 public:
-    SourceDock(OutputNode *node);
+    SourceDock(AbstractOutputNode *node);
     virtual ~SourceDock();
 
 private:

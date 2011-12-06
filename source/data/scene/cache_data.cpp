@@ -21,6 +21,7 @@
 #include "ctime"
 #include "iostream"
 #include "source/data/scene/object.h"
+#include "source/data/code_generator/outputs.h"
 
 int counter = 0;
 void inc_counter(std::string name)
@@ -75,7 +76,7 @@ void SceneCache::composeObject()
 
     Object *object = new Object;
 
-    //First Input: Vertex Array
+    //1.Vertices
     DinSocket *varr = node->getInSockets().at(0);
     Vector *vertices = 0;
     int size=0;
@@ -84,15 +85,43 @@ void SceneCache::composeObject()
     object->appendVertices(vertices, size);
     delete vcache;
 
-    //Second Input: Polygon Array: Array of Vertex Indices
-    DinSocket *parr = node->getInSockets().at(2);
+    //2.Poly Index Array
+    DinSocket *parr = node->getInSockets().at(1);
     Polygon *polys=0;
     PolygonCache *pcache = new PolygonCache(parr);
     polys = pcache->getData(&size);
     if(polys)
         object->appendPolygons(polys, size);
-
     delete pcache;
+
+    int glfragID, glvertID, glgeoID;
+    DinSocket *glsin=0;
+    IntCache *glShaderCache=0;
+    //3.GLSL Fragment Shader
+    glsin = node->getInSockets().at(2);
+    glShaderCache = new IntCache(glsin);
+    glfragID = glShaderCache->getData()[0];
+    glShaderCache->setOwner(true);
+    delete glShaderCache;
+
+    //4.GLSL Vertex Shader
+    glsin = node->getInSockets().at(3);
+    glShaderCache = new IntCache(glsin);
+    glvertID = glShaderCache->getData()[0];
+    glShaderCache->setOwner(true);
+    delete glShaderCache;
+
+    //5.GLSL Geometry Shader
+    glsin = node->getInSockets().at(4);
+    glShaderCache = new IntCache(glsin);
+    glgeoID = glShaderCache->getData()[0];
+    glShaderCache->setOwner(true);
+    delete glShaderCache;
+
+    object->setGLFragID(glfragID);
+    object->setGLVertexID(glvertID);
+    object->setGLGeoID(glgeoID);
+
     objects.append(object);
 }
 
@@ -458,6 +487,14 @@ void IntCache::stepup()
     IntCache *cache = new IntCache(node->getSocketOnContainer(getStart())->toIn());
     data = cache->getData(&arraysize);
     delete cache;
+}
+
+void IntCache::glShader()    
+{
+    const GLSLOutputNode *node = getStart()->getNode()->getDerivedConst<GLSLOutputNode>();
+    data = new int;
+    *data = node->compile();
+    arraysize=1;
 }
 
 VectorCache::VectorCache(const DinSocket *socket)

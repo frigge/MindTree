@@ -18,8 +18,12 @@
 
 #include "object.h"
 
+#include "source/data/base/frg.h"
+#include "source/data/base/project.h"
+
 Object::Object()
-    : vertices(0), polygons(0), polycount(0), vertexcount(0)
+    : vertices(0), polygons(0), polycount(0), vertexcount(0),
+    frag(0), vert(0), geo(0)
 {
 }
 
@@ -98,6 +102,36 @@ void Object::appendPolygons(Polygon *polys, int size)
    polycount += size;
 }
 
+void Object::setGLFragID(int ID)    
+{
+    frag = FRG::CurrentProject->getGLSLShader(ID);
+}
+
+void Object::setGLVertexID(int ID)    
+{
+    vert = FRG::CurrentProject->getGLSLShader(ID);
+}
+
+void Object::setGLGeoID(int ID)    
+{
+    geo = FRG::CurrentProject->getGLSLShader(ID);
+}
+
+GLShaderCode* Object::getGLFrag()    
+{
+    return frag;
+}
+
+GLShaderCode* Object::getGLVertex()    
+{
+    return vert;
+}
+
+GLShaderCode* Object::getGLGeo()    
+{
+    return geo;
+}
+
 PolygonNode::PolygonNode(bool raw)
     : DNode("Object")
 {
@@ -119,10 +153,10 @@ ObjectNode::ObjectNode(bool raw)
     setNodeType(OBJECTNODE);
     if(!raw){
         new DinSocket("Vertices", VECTOR, this);
-        new DinSocket("Vertex Normals", VECTOR, this);
         new DinSocket("Polygons", POLYGON, this);
-        new DinSocket("Polygon Normals", VECTOR, this);
-        new DinSocket("GLSL Shader", INTEGER, this);
+        new DinSocket("GLSL Fragment Shader", INTEGER, this);
+        new DinSocket("GLSL Vertex Shader", INTEGER, this);
+        new DinSocket("GLSL Geometry Shader", INTEGER, this);
         new DoutSocket("Object", SCENEOBJECT, this);
         setDynamicSocketsNode(IN);
     }

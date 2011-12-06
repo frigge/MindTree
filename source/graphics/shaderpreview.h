@@ -30,6 +30,7 @@
 #include "QLabel"
 
 #include "source/data/nodes/data_node.h"
+#include "source/data/code_generator/outputs.h"
 #include "source/graphics/nodes/graphics_node.h"
 
 typedef struct _PreviewScene 
@@ -113,7 +114,7 @@ private:
 
 class PreviewDock;
 
-class DShaderPreview : public OutputNode
+class DShaderPreview : public RSLOutputNode
 {
 public:
     DShaderPreview(bool raw=false);
@@ -128,6 +129,7 @@ public:
     void createTmpPrevDir();
     void createTmpExtPrevDir();
     void updateScene();
+    void setFileName(QString name);
 
     static unsigned short count;
     bool isExtScene() const;
@@ -138,6 +140,7 @@ public:
     QProcess* getRenderProcess();
     QTimer* getTimer();
     void showDock();
+    void changeName(QString name);
 
     virtual void setSpace(DNSpace* value);
 

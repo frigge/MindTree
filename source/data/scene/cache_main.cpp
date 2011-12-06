@@ -220,6 +220,12 @@ void AbstractDataCache::cacheInputs()
         break;
     case LOOPINSOCKETS:
         getLoopedCache();
+        break;
+    case FRAGMENTOUTPUT:
+    case VERTEXOUTPUT:
+    case GEOMETRYOUTPUT:
+        glShader();
+        break;
     default:
         break;
             
@@ -276,5 +282,9 @@ void AbstractDataCache::stepup()
 }
 
 void AbstractDataCache::container()    
+{
+}
+
+void AbstractDataCache::glShader()    
 {
 }

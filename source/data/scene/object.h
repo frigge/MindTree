@@ -23,6 +23,17 @@
 #include "source/data/nodes/data_node.h"
 #include "source/data/scene/cache_main.h"
 
+typedef struct GLShaderCode
+{
+    enum shaderType {
+        Fragment,
+        Vertex,
+        Geometry
+    } type;
+    GLShaderCode(QString code, shaderType type) : code(code), type(type) {};
+    QString code;
+} GLShaderCode;
+
 typedef struct Polygon
 {
     int *vertices;
@@ -40,11 +51,18 @@ public:
     Vector* getVertices();
     void appendPolygons(Polygon *polys, int size);
     void appendVertices(Vector *verts, int size);
+    void setGLFragID(int ID);
+    void setGLVertexID(int ID);
+    void setGLGeoID(int ID);
+    GLShaderCode* getGLFrag();
+    GLShaderCode* getGLVertex();
+    GLShaderCode* getGLGeo();
 
 private:
     Vector *vertices;
     Polygon *polygons;
     int polycount, vertexcount;
+    GLShaderCode *frag, *vert, *geo;
 };
 
 class PolygonNode : public DNode

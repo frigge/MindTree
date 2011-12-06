@@ -94,6 +94,7 @@ protected:
     virtual void getLoopedCache();
     virtual void math(eMathOp op);
     virtual void stepup();
+    virtual void glShader();
 
 private:
     const DoutSocket *start;

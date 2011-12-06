@@ -21,30 +21,19 @@
 #define BUILDIN_NODES_H
 
 #include "source/data/base/dnspace.h"
+#include "source/data/base/frg.h"
 
 namespace BuildIn
 {
     void registerNodes();
-    //Standard starting nodes:
-    //Array
-    DNode* getArray();
-    DNode* setArray();
-    DNode* composeArray();
-    DNode* VarName();
-
-    //Inputs
-    DNode* surfaceInput();
-    DNode* displacementInput();
-    DNode* lightInput();
-    DNode* volumeInput();
-
-    //Outputs
-    DNode* surfaceOutput();
-    DNode* displacementOutput();
-    DNode* volumeOutput();
-    DNode* lightOutput();
-    DNode* preview();
-
+    template<class T> 
+    DNode* createNode()
+    {
+        T* node = new T();
+        FRG::SpaceDataInFocus->addNode(node);
+        return node;
+    }
+    //
     //Math
     DNode* MaddNode();
     DNode* MSubNode();
@@ -59,31 +48,5 @@ namespace BuildIn
     DNode* CgreaterNode();
     DNode* CsmallerNode();
     DNode* CeqNode();
-
-    //Values
-    DNode* VColNode();
-    DNode* VStrNode();
-    DNode* VFlNode();
-    DNode* VIntNode();
-    DNode* VBoolNode();
-    DNode* VVecNode();
-    DNode* VFloatToVector();
-//    void VMatNode(void *space);
-
-    //Containers
-    DNode* ContIfNode();
-    DNode* ContForNode();
-    DNode* ContWhileNode();
-
-    //RSL Loop Container
-    DNode* CLilluminate();
-    DNode* CLilluminance();
-    DNode* CLsolar();
-    DNode* CLgather();
-
-    //Data
-    DNode* Viewport();
-    DNode* ComposeObject();
-    DNode* ComposePolygon();
 }
 #endif // BUILDIN_NODES_H

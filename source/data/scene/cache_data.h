@@ -107,6 +107,7 @@ protected:
     void math(eMathOp op);
     void container();
     void stepup();
+    void glShader();
 
 private:
     int *data;

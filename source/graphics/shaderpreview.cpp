@@ -252,7 +252,7 @@ void VShaderPreview::contextMenu()
 
 void VShaderPreview::viewCode()    
 {
-    data->getDerived<OutputNode>()->getSourceEdit()->show();    
+    data->getDerived<RSLOutputNode>()->getSourceEdit()->show();    
 }
 
 void VShaderPreview::updateScene()    
@@ -383,7 +383,7 @@ void VShaderPreview::updateNodeVis()
 }
 
 DShaderPreview::DShaderPreview(bool raw)
-    : prevID(0), ext_scene(false), detached(false), dock(0)
+    : RSLOutputNode("preview"), prevID(0), ext_scene(false), detached(false), dock(0)
 {
     QDir::setCurrent(QApplication::applicationDirPath());
     setNodeType(PREVIEW);
@@ -396,6 +396,9 @@ DShaderPreview::DShaderPreview(bool raw)
 
     if (!raw)
     {
+        new DinSocket("Name", STRING, this);
+        DinSocket *dirsocket = new DinSocket("Directory", STRING, this);
+        ((StringProperty*)dirsocket->getProperty())->setPath(StringProperty::DIRPATH);
         new DinSocket("Ci", COLOR, this);
         new DinSocket("Oi", COLOR, this);
         new DinSocket("P", POINT, this);
@@ -419,7 +422,7 @@ DShaderPreview::DShaderPreview(bool raw)
 }
 
 DShaderPreview::DShaderPreview(const DShaderPreview *preview)
-    : OutputNode(preview), prevID(0), prevScene(preview->getPrevScene()), ext_scene(preview->isExtScene()), detached(false), dock(0)
+    : RSLOutputNode(preview), prevID(0), prevScene(preview->getPrevScene()), ext_scene(preview->isExtScene()), detached(false), dock(0)
 {
     QDir::setCurrent(QApplication::applicationDirPath());
     setNodeType(PREVIEW);
@@ -466,6 +469,11 @@ void DShaderPreview::setSpace(DNSpace *value)
     }
 }
 
+void DShaderPreview::changeName(QString name)    
+{
+    ((StringProperty*)getInSockets().first()->getProperty())->setValue(name);
+}
+
 void DShaderPreview::showDock()    
 {
     dock->show();
@@ -507,6 +515,11 @@ void DShaderPreview::createTmpPrevDir()
     prevShadFile += shadername;
     prevShadFile += ".sl";
     setFileName(prevShadFile);
+}
+
+void DShaderPreview::setFileName(QString name)    
+{
+    ((StringProperty*)getInSockets().at(1)->getProperty())->setValue(name);
 }
 
 void DShaderPreview::createTmpExtPrevDir()    
@@ -564,7 +577,7 @@ VNode * DShaderPreview::createNodeVis()
 
 void DShaderPreview::deleteNodeVis()    
 {
-    OutputNode::deleteNodeVis();
+    RSLOutputNode::deleteNodeVis();
     timer.connect(&timer, SIGNAL(timeout()), getPreviewVis(), SLOT(updatePreview()));
     timer.connect(&renderprocess, SIGNAL(finished(int, QProcess::ExitStatus)), getPreviewVis(), SLOT(updatePreview()));
 }

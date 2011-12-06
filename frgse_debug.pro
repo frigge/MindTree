@@ -12,6 +12,7 @@ DEPENDPATH += . \
               source/data/base \
               source/data/nodes \
               source/data/undo \
+              source/data/code_generator \
               source/graphics/base \
               source/graphics/nodes
 INCLUDEPATH += . \
@@ -21,12 +22,16 @@ INCLUDEPATH += . \
                source/graphics \
                source/graphics/base \
                source/data/base \
-               source/data/undo
+               source/data/undo \
+               source/data/code_generator \
 
 # Input
 HEADERS += source/data/callbacks.h \
-           source/data/shaderwriter.h \
-           source/data/rslwriter.h \
+           source/data/code_generator/shaderwriter.h \
+           source/data/code_generator/rslwriter.h \
+           source/data/code_generator/glslwriter.h \
+           source/data/code_generator/inputs.h \
+           source/data/code_generator/outputs.h \
            source/graphics/newnodeeditor.h \
            source/graphics/nodelib.h \
            source/graphics/nodelink.h \
@@ -54,8 +59,11 @@ HEADERS += source/data/callbacks.h \
            source/graphics/nodes/graphics_node.h \
            source/graphics/nodes/graphics_node_socket.h
 SOURCES += source/data/callbacks.cpp \
-           source/data/shaderwriter.cpp \
-           source/data/rslwriter.cpp \
+           source/data/code_generator/shaderwriter.cpp \
+           source/data/code_generator/rslwriter.cpp \
+           source/data/code_generator/glslwriter.cpp \
+           source/data/code_generator/inputs.cpp \
+           source/data/code_generator/outputs.cpp \
            source/graphics/newnodeeditor.cpp \
            source/graphics/nodelib.cpp \
            source/graphics/nodelink.cpp \
