@@ -211,6 +211,8 @@ FragmentOutputNode::FragmentOutputNode(bool raw)
         DinSocket *dirsocket = new DinSocket("Directory", STRING, this);
         ((StringProperty*)dirsocket->getProperty())->setPath(StringProperty::DIRPATH);
         new DinSocket("gl_FragColor", COLOR, this);
+        new DinSocket("gl_FragData", POINT, this);
+        new DinSocket("gl_FragDepth", FLOAT, this);
         new DoutSocket("ID", INTEGER, this);
     }
 }

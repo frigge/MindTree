@@ -72,5 +72,28 @@ public:
     IlluminateInputNode(const IlluminateInputNode *node);
 };
 //RSL Input Nodes <<
+
+//GLSL Input Nodes >>
+class GLFragmentInputNode : public InputNode
+{
+public:
+    GLFragmentInputNode(bool raw=false);
+    GLFragmentInputNode(const GLFragmentInputNode *node);
+};
+
+class GLVertexInputNode : public InputNode
+{
+public:
+    GLVertexInputNode(bool raw=false);
+    GLVertexInputNode(const GLVertexInputNode *node);
+};
+
+class GLGeometryInputNode : public InputNode
+{
+public:
+    GLGeometryInputNode(bool raw=false);
+    GLGeometryInputNode(const GLGeometryInputNode *node);
+};
+//GLSL Input Nodes <<
 #endif /* end of include guard: INPUTS_4BXR1560 */
 

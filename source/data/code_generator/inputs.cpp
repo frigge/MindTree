@@ -129,3 +129,72 @@ IlluminateInputNode::IlluminateInputNode(const IlluminateInputNode *node)
     : InputNode(node)
 {
 }
+
+GLFragmentInputNode::GLFragmentInputNode(bool raw)
+    : InputNode("Fragment Shader Input")
+{
+    setNodeType(GLFRAGMENTINPUT);
+    if(!raw){
+        new DoutSocket("gl_Color", COLOR, this);
+        new DoutSocket("gl_SecondaryColor", COLOR, this);
+        new DoutSocket("gl_TexCoord[]", COLOR, this);
+        new DoutSocket("gl__FogFragCoord", FLOAT, this);
+        new DoutSocket("gl_FragCoord", POINT, this);
+        new DoutSocket("gl_FrontFacing", CONDITION, this);
+    }
+}
+
+GLFragmentInputNode::GLFragmentInputNode(const GLFragmentInputNode *node)
+    : InputNode(node)
+{
+}
+
+GLVertexInputNode::GLVertexInputNode(bool raw)
+    : InputNode("Vertex Shader Input")
+{
+    setNodeType(GLVERTEXINPUT);
+    if(!raw){
+        new DoutSocket("gl_Vertex", VECTOR, this);
+        new DoutSocket("gl_Normal", NORMAL, this);
+        new DoutSocket("gl_Color", COLOR, this);
+        new DoutSocket("gl_SecondaryColor", COLOR, this);
+        new DoutSocket("gl_MultiTexCoord0", POINT, this);
+        new DoutSocket("gl_MultiTexCoord1", POINT, this);
+        new DoutSocket("gl_MultiTexCoord2", POINT, this);
+        new DoutSocket("gl_MultiTexCoord3", POINT, this);
+        new DoutSocket("gl_MultiTexCoord4", POINT, this);
+        new DoutSocket("gl_MultiTexCoord5", POINT, this);
+        new DoutSocket("gl_MultiTexCoord6", POINT, this);
+        new DoutSocket("gl_MultiTexCoord7", POINT, this);
+        new DoutSocket("gl_FogCoord", FLOAT, this);
+    }
+}
+
+GLVertexInputNode::GLVertexInputNode(const GLVertexInputNode *node)
+    : InputNode(node)
+{
+}
+
+GLGeometryInputNode::GLGeometryInputNode(bool raw)
+    : InputNode("Geometry Shader Input")
+{
+    setNodeType(GLGEOMETRYINPUT);
+    if(!raw){
+        new DoutSocket("gl_VerticesIn", INTEGER, this);
+        new DoutSocket("gl_FrontColorIn", COLOR, this);
+        new DoutSocket("gl_BackColorIn", COLOR, this);
+        new DoutSocket("gl_FrontSecondaryColorIn", COLOR, this);
+        new DoutSocket("gl_BackSecondaryColorIn", COLOR, this);
+        new DoutSocket("gl_TexCoordIn", POINT, this);
+        new DoutSocket("gl_FogFragCoordIn", POINT, this);
+        new DoutSocket("gl_PositionIn", POINT, this);
+        new DoutSocket("gl_PointSizeIn", POINT, this);
+        new DoutSocket("gl_ClipVertexIn", POINT, this);
+    }
+}
+
+GLGeometryInputNode::GLGeometryInputNode(const GLGeometryInputNode *node)
+    : InputNode(node)
+{
+}
+

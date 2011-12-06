@@ -97,6 +97,17 @@ typedef enum
     SCENEOBJECT,
     POLYGON,
     INTEGER,
+
+    VEC2,
+    MAT2,
+    MAT3,
+
+    SAMPLER1D,
+    SAMPLER2D,
+    SAMPLER3D,
+    SAMPLERCUBE,
+    SAMPLER1DSHADOW,
+    SAMPLER2DSHADOW
 }socket_type;
 
 typedef enum

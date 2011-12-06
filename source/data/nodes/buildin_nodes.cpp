@@ -121,10 +121,15 @@ void BuildIn::registerNodes()
     FRG::lib->addNode("Light Output", "RSL Outputs", createNode<LightOutputNode>); 
     FRG::lib->addNode("Preview", "RSL Outputs", createNode<DShaderPreview>); 
 
+    FRG::lib->addGroup("GLSL Inputs", "Shading");
+    FRG::lib->addNode("Fragment Input", "GLSL Inputs", createNode<GLFragmentInputNode>); 
+    FRG::lib->addNode("Vertex Input", "GLSL Inputs", createNode<GLVertexInputNode>); 
+    FRG::lib->addNode("Geometry Input", "GLSL Inputs", createNode<GLGeometryInputNode>); 
+
     FRG::lib->addGroup("GLSL Outputs", "Shading");
     FRG::lib->addNode("Fragment Output", "GLSL Outputs", createNode<FragmentOutputNode>); 
-    //FRG::lib->addNode("Vertex Output", "GLSL Outputs", createNode<VertexOutputNode>); 
-    //FRG::lib->addNode("Geometry Output", "GLSL Outputs", createNode<GeometryOutputNode>); 
+    FRG::lib->addNode("Vertex Output", "GLSL Outputs", createNode<VertexOutputNode>); 
+    FRG::lib->addNode("Geometry Output", "GLSL Outputs", createNode<GeometryOutputNode>); 
 
     FRG::lib->addNode("Add", "Math", &MaddNode); 
     FRG::lib->addNode("Subtract", "Math", &MSubNode); 
