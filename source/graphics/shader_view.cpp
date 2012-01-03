@@ -32,6 +32,7 @@ Shader_View::Shader_View(QMainWindow *parent)
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setViewportUpdateMode(BoundingRectViewportUpdate);
 }
 
 void Shader_View::keyPressEvent(QKeyEvent *event)
@@ -48,7 +49,7 @@ void Shader_View::keyReleaseEvent(QKeyEvent *event)
 
 void Shader_View::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::MiddleButton)
+    if (event->buttons() & Qt::MiddleButton)
         setDragMode(RubberBandDrag);
     else
         QGraphicsView::mouseReleaseEvent(event);
@@ -60,7 +61,7 @@ void Shader_View::drawBackground(QPainter *painter, const QRectF &rect)
 //    bggrad->setColorAt(0, QColor(50, 50, 50));
 //    bggrad->setColorAt(1, QColor(20, 20, 20));
 //    painter->setBrush(QBrush(*bggrad));
-    painter->setBrush(QBrush(QColor(70, 70, 70)));
+    painter->setBrush(QBrush(QColor(40, 40, 40)));
     painter->drawRect(rect);
 };
 
@@ -91,7 +92,7 @@ VNSpace* Shader_View::getSpace()
 
 void Shader_View::paintEvent(QPaintEvent *event)    
 {
-    QPaintEvent *newEvent = new QPaintEvent(event->region().boundingRect());
+    //QPaintEvent *newEvent = new QPaintEvent(event->region().boundingRect());
     QGraphicsView::paintEvent(event);
-    delete newEvent;
+    //delete newEvent;
 }
