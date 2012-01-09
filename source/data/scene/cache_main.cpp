@@ -17,9 +17,14 @@
 */
 
 #include "cache_main.h"
+#include "QMutex"
+#include "QMutexLocker"
+
+#include "source/graphics/viewport.h"
 
 QHash<AbstractDataCache*, const DoutSocket*>CacheControl::caches;
 QHash<const LoopNode*, LoopCache*> LoopCacheControl::loops;
+QList<DNode*> CacheControl::updateNodes;
 
 bool CacheControl::isCached(const DoutSocket *socket)    
 {
@@ -28,12 +33,42 @@ bool CacheControl::isCached(const DoutSocket *socket)
 
 void CacheControl::addCache(const DoutSocket *socket, AbstractDataCache *cache)    
 {
+    if(caches.contains(caches.key(socket))) {
+        delete caches.key(socket);
+        caches.remove(caches.key(socket));
+    }
     caches.insert(cache, socket); 
 }
 
 void CacheControl::removeCache(AbstractDataCache *cache)    
 {
     caches.remove(cache);
+}
+
+AbstractDataCache* CacheControl::getCache(const DoutSocket *socket)    
+{
+    return caches.key(socket); 
+}
+
+void CacheControl::analyse(ViewportNode *viewnode, DNode *changedNode)    
+{
+    updateNodes.clear();
+    NodeList active_network = viewnode->getAllInNodes(); 
+    if(!changedNode){
+        updateNodes = active_network;
+        return;
+    }
+    NodeList before_changed = changedNode->getAllInNodes();
+    updateNodes.append(changedNode);
+
+    foreach(DNode *node, active_network) 
+        if(!before_changed.contains(node))
+            updateNodes.append(node);
+}
+
+bool CacheControl::isOutDated(DNode *node)    
+{
+    return updateNodes.contains(node);
 }
 
 LoopCache::LoopCache()
@@ -94,6 +129,8 @@ const LoopNode* LoopCache::getNode()
 
 LoopCache* LoopCacheControl::loop(const LoopNode *node)
 {
+    QMutex mutex;
+    QMutexLocker lock(&mutex);
     LoopCache *lc;
     if(loops.contains(node))
         lc = loops.value(node);
@@ -106,24 +143,34 @@ LoopCache* LoopCacheControl::loop(const LoopNode *node)
 
 void LoopCacheControl::del(const LoopNode *node)    
 {
+    QMutex mutex;
+    QMutexLocker lock(&mutex);
     delete loops.take(node);
 }
 
 AbstractDataCache::AbstractDataCache(const DinSocket *socket)
-    : start(socket->getCntdSocket()), inSocket(socket), dataOwner(true)
+    : startsocket(socket->getCntdSocket()), inSocket(socket), dataOwner(true)
 {
-    CacheControl::addCache(getStart(), this);
-}
-
-AbstractDataCache::AbstractDataCache(const AbstractDataCache &cache)
-    : start(0), inSocket(0)
-{
-    cache.setOwner(false);
 }
 
 AbstractDataCache::~AbstractDataCache()
 {
-    CacheControl::removeCache(this);
+}
+
+void AbstractDataCache::update()    
+{
+    startsocket = inSocket->getCntdSocket();
+    cacheInputs();
+}
+
+AbstractDataCache::cacheType AbstractDataCache::getType()
+{
+    return type;
+}
+
+void AbstractDataCache::setType(AbstractDataCache::cacheType value)
+{
+    type = value;
 }
 
 void AbstractDataCache::setOwner(bool owner)const
@@ -143,14 +190,14 @@ AbstractDataCache* AbstractDataCache::getDerived()
 
 const DoutSocket* AbstractDataCache::getStart()    const
 {
-    return start;
+    return startsocket;
 }
 
 void AbstractDataCache::cacheInputs()    
 {
-    if(!start)
+    if(!startsocket)
         return;
-    switch(start->getNode()->getNodeType())
+    switch(startsocket->getNode()->getNodeType())
     {
     case CONTAINER:
         container();
@@ -208,6 +255,7 @@ void AbstractDataCache::cacheInputs()
         math(OPDIVIDE);
         break;
     case MODULO:
+        modulo();
         break;
     case DOTPRODUCT:
     case GREATERTHAN:
@@ -225,6 +273,12 @@ void AbstractDataCache::cacheInputs()
     case VERTEXOUTPUT:
     case GEOMETRYOUTPUT:
         glShader();
+        break;
+    case TRANSFORM:
+        transform();
+        break;
+    case FOREACHNODE:
+        foreachloop();
         break;
     default:
         break;
@@ -277,6 +331,10 @@ void AbstractDataCache::math(eMathOp op)
 {
 }
 
+void AbstractDataCache::modulo()
+{
+}
+
 void AbstractDataCache::stepup()    
 {
 }
@@ -286,5 +344,13 @@ void AbstractDataCache::container()
 }
 
 void AbstractDataCache::glShader()    
+{
+}
+
+void AbstractDataCache::transform()    
+{
+}
+
+void AbstractDataCache::foreachloop()    
 {
 }

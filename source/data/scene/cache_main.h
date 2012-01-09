@@ -22,8 +22,10 @@
 
 #include "cache_main.h"
 #include "source/data/nodes/data_node.h"
+#include "QThread"
 
 class AbstractDataCache;
+class ViewportNode;
 
 class CacheControl
 {
@@ -31,10 +33,14 @@ public:
     static AbstractDataCache *cache(const DoutSocket *socket);
     static bool isCached(const DoutSocket *socket);
     static void addCache(const DoutSocket *socket, AbstractDataCache *cache);
+    static AbstractDataCache* getCache(const DoutSocket *socket);
     static void removeCache(AbstractDataCache *cache);
+    static void analyse(ViewportNode *viewnode, DNode *changedNode);
+    static bool isOutDated(DNode *node);
 
 private:
     static QHash<AbstractDataCache*, const DoutSocket*>caches;
+    static QList<DNode*> updateNodes;
 };
 
 class LoopCache
@@ -68,6 +74,9 @@ private:
 class AbstractDataCache
 {
 public:
+    enum cacheType {
+        FLOATCACHE, INTEGERCACHE, SCENECACHE, STRINGCACHE, BOOLCACHE, VECTORCACHE, COLORCACHE, POLYGONCACHE
+    };
     typedef enum eMathOp {
         OPADD, OPSUBTRACT, OPMULTIPLY, OPDIVIDE
     } eMathOp;
@@ -79,6 +88,9 @@ public:
     virtual AbstractDataCache* getDerived();
     void cacheInputs();
     const DoutSocket *getStart()const;
+    cacheType getType();
+    void setType(AbstractDataCache::cacheType value);
+    void update();
 
 protected:
     virtual void container();
@@ -93,11 +105,15 @@ protected:
     virtual void forloop();
     virtual void getLoopedCache();
     virtual void math(eMathOp op);
+    virtual void modulo();
     virtual void stepup();
     virtual void glShader();
+    virtual void transform();
+    virtual void foreachloop();
 
 private:
-    const DoutSocket *start;
+    cacheType type;
+    const DoutSocket *startsocket;
     const DinSocket *inSocket;
     mutable bool dataOwner;
 };
