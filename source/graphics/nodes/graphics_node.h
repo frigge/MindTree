@@ -45,6 +45,7 @@ protected:
 
 class VNode : public QGraphicsObject
 {
+    Q_OBJECT
 public:
     VNode(DNode *data);
     virtual ~VNode();
@@ -60,8 +61,10 @@ public:
 	void setNodeWidth(int w);
 	void setNodeHeight(int h);
 	int getNodeHeight();
-    virtual void updateNodeVis();
     void setNodeColor(QColor col);
+
+public slots:
+    virtual void updateNodeVis();
 
 protected:
 	virtual void recalcNodeVis();
@@ -94,22 +97,6 @@ protected:
 private:
     void createContextMenu();
     QMenu *contextMenu;
-};
-
-class VValueNode : public VNode
-{
-    Q_OBJECT
-public:
-    VValueNode(DNode *);
-    ~VValueNode();
-
-public slots:
-    void setShaderInput(bool tgl);
-
-protected:
-    QMenu *contextMenu;
-    void createContextMenu();
-    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 };
 
 class VOutputNode : public VNode

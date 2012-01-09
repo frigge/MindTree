@@ -80,7 +80,6 @@ DNode::DNode(const DNode* node)
     : space(0), varcnt(0), ID(count++), nodeVis(0),
     nodeName(node->getNodeName()), NodeType(node->getNodeType()), blockCBregister(false)
 {
-    blockCB();
     foreach(DinSocket *socket, node->getInSockets())
         new DinSocket(socket, this);
     foreach(DoutSocket *socket, node->getOutSockets())
@@ -89,7 +88,6 @@ DNode::DNode(const DNode* node)
     lastsocket = CopySocketMapper::getCopy(node->getLastSocket());
 
     CopyNodeMapper::setNodePair(const_cast<DNode*>(node), this);
-    unblockCB();
 }
 
 DSocket* DNode::getSocketByIDName(QString idname)    
@@ -650,7 +648,6 @@ QDataStream &operator >>(QDataStream &stream, DNode  **node)
         ||newnode->getNodeType() == VARNAME) {
         DinSocket *in = newnode->getInSockets().first();
         DoutSocket *out = newnode->getOutSockets().first();
-        in->addTypeCB(new ScpTypeCB(in, out));
     }
 
 
@@ -701,9 +698,6 @@ void DNode::addSocket(DSocket *socket)
     else 
 		outSockets.add(socket);
 
-    if(socket->getType() == VARIABLE
-        &&!blockCBregister)
-        socket->addRmLinkCB(new SsetToVarCB(socket));
     addSocketCallbacks();
 }
 
@@ -1199,8 +1193,10 @@ void ContainerNode::mapOnToIn(DSocket *on, DSocket *in)
 {
     if(!on &&!in) return;
     socket_map.insert(on, in);
-    in->addRenameCB(new ScpNameCB(in, on));
-    in->addTypeCB(new ScpTypeCB(in, on));
+    DSocket::nameCB(on, in);
+    DSocket::typeCB(on, in);
+    DSocket::nameCB(in, on);
+    DSocket::typeCB(in, on);
 }
 
 DSocket *ContainerNode::getSocketOnContainer(const DSocket *socket) const
@@ -1341,7 +1337,10 @@ MathNode::MathNode(NType t, bool raw)
         setDynamicSocketsNode(IN);
         DoutSocket *out = new DoutSocket("Result", VARIABLE, this);
         DinSocket *in = getInSockets().first();
-        in->addTypeCB(new ScpTypeCB(getVarSocket(), out));
+        DSocket::nameCB(out, in);
+        DSocket::nameCB(in, out);
+        DSocket::typeCB(out, in);
+        DSocket::typeCB(in, out);
     }
 }
 
@@ -1350,7 +1349,10 @@ MathNode::MathNode(const MathNode* node)
 {
     DoutSocket *out = getOutSockets().first();
     DinSocket *in = getInSockets().first();
-    in->addTypeCB(new ScpTypeCB(in, out));
+    DSocket::nameCB(out, in);
+    DSocket::nameCB(in, out);
+    DSocket::typeCB(out, in);
+    DSocket::typeCB(in, out);
 }
 
 void MathNode::dec_var_socket(DSocket *socket)
@@ -1370,6 +1372,7 @@ bool DNode::isMathNode(const DNode *node)
        || node->getNodeType() == SUBTRACT
        || node->getNodeType() == MULTIPLY
        || node->getNodeType() == DIVIDE
+       || node->getNodeType() == MODULO
        || node->getNodeType() == DOTPRODUCT;
 }
 
@@ -1887,7 +1890,6 @@ GetArrayNode::GetArrayNode(bool raw)
         DinSocket *arr = new DinSocket("Array", VARIABLE, this);
         new DinSocket("Index", FLOAT, this);
         DoutSocket *val = new DoutSocket("value", VARIABLE, this);
-        arr->addTypeCB(new ScpTypeCB(arr, val));
     }
 }
 
@@ -1896,7 +1898,6 @@ GetArrayNode::GetArrayNode(const GetArrayNode* node)
 {
     DinSocket *arr = getInSockets().first();
     DoutSocket *val = getOutSockets().first();
-    arr->addTypeCB(new ScpTypeCB(arr, val));
 }
 
 SetArrayNode::SetArrayNode(bool raw)
@@ -1908,8 +1909,6 @@ SetArrayNode::SetArrayNode(bool raw)
         DinSocket *val = new DinSocket("value", VARIABLE, this);
         new DinSocket("Index", INTEGER, this);
         DoutSocket *arr = new DoutSocket("Array", VARIABLE, this);
-        //val->addTypeCB(new ScpTypeCB(val, arr));
-        inarr->addTypeCB(new ScpTypeCB(inarr, arr));
     }
 }
 
@@ -1918,7 +1917,6 @@ SetArrayNode::SetArrayNode(const SetArrayNode* node)
 {
     DinSocket *val = getInSockets().first();
     DoutSocket *arr = getOutSockets().first();
-    val->addTypeCB(new ScpTypeCB(val, arr));
 }
 
 ComposeArrayNode::ComposeArrayNode(bool raw)
@@ -1943,7 +1941,6 @@ VarNameNode::VarNameNode(bool raw)
     if(!raw){
         DinSocket *in = new DinSocket("def", VARIABLE, this);
         DoutSocket *out =  new DoutSocket("variable", VARIABLE, this);
-        in->addTypeCB(new ScpTypeCB(in, out));
     }
 }
 
@@ -1952,5 +1949,4 @@ VarNameNode::VarNameNode(const VarNameNode* node)
 {
     DinSocket *in = getInSockets().first();
     DoutSocket *out = getOutSockets().first();
-    in->addTypeCB(new ScpTypeCB(in, out));
 }

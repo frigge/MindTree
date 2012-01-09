@@ -28,9 +28,9 @@
 StringPropWidget::StringPropWidget(StringProperty *prop)
     : prop(prop)
 {
+    setText(prop->getValue());
     connect(this, SIGNAL(textChanged(QString)), this, SLOT(setProp(QString)));
     connect(this, SIGNAL(change(DNode*)), (QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)));
-    setText(prop->getValue());
 }
 
 StringPropWidget::~StringPropWidget()
@@ -96,9 +96,9 @@ IntPropWidget::IntPropWidget(IntProperty *prop)
     setRange(-1000000, 1000000);
     setMaximum(1000000);
     setMinimum(-1000000);
+    setValue(prop->getValue());
     connect(this, SIGNAL(valueChanged(int)), this, SLOT(setProp(int)));
     connect(this, SIGNAL(change(DNode*)), (QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)));
-    setValue(prop->getValue());
 }
 
 QSize IntPropWidget::sizeHint()    const
@@ -120,9 +120,9 @@ void IntPropWidget::setProp(int val)
 BoolPropWidget::BoolPropWidget(BoolProperty *prop)
     : prop(prop)
 {
+    setChecked(prop->getValue());
     connect(this, SIGNAL(stateChanged(int)), this, SLOT(setProp(int)));
     connect(this, SIGNAL(change(DNode*)), (QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)));
-    setChecked(prop->getValue());
 }
 
 BoolPropWidget::~BoolPropWidget()
@@ -147,11 +147,9 @@ FloatPropWidget::FloatPropWidget(FloatProperty *prop)
     setRange(-1000000, 1000000);
     setDecimals(3);
     setSingleStep(0.1);
-
+    setValue(prop->getValue());
     connect(this, SIGNAL(valueChanged(double)), this, SLOT(setProp(double)));
     connect(this, SIGNAL(change(DNode*)), (QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)));
-
-    setValue(prop->getValue());
 }
 
 FloatPropWidget::~FloatPropWidget()
@@ -208,9 +206,9 @@ void VectorValue::setValue(Vector value)
 VectorPropWidget::VectorPropWidget(VectorProperty *prop)
     : prop(prop)
 {
+    setValue(prop->getValue());
     connect(this, SIGNAL(valueChanged(Vector)), this, SLOT(setProp(Vector)));
     connect(this, SIGNAL(change(DNode*)), (QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)));
-    setValue(prop->getValue());
 }
 
 VectorPropWidget::~VectorPropWidget()
@@ -235,11 +233,11 @@ ColorPropWidget::ColorPropWidget(ColorProperty *prop)
     setAutoFillBackground(true);
     setPalette(QPalette(prop->getValue()));
     setFlat(true);
+    setPalette(QPalette(prop->getValue()));
     connect(this, SIGNAL(clicked()), this, SLOT(setColor()));
 
     connect(this, SIGNAL(clicked(QColor)), this, SLOT(setProp(QColor)));
     connect(this, SIGNAL(change(DNode*)), (QObject*)FRG::Space, SIGNAL(linkChanged(DNode*)));
-    setPalette(QPalette(prop->getValue()));
 }
 
 ColorPropWidget::~ColorPropWidget()

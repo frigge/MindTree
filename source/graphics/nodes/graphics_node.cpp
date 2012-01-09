@@ -99,6 +99,7 @@ VNode::VNode(DNode *data)
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsFocusable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
+    //setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
     setAcceptHoverEvents(true);
     setAcceptsHoverEvents(true);
 
@@ -213,7 +214,7 @@ QRectF VNode::boundingRect() const
 void VNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     painter->setRenderHint(QPainter::Antialiasing);
-    painter->setClipRect(option->exposedRect);
+    //painter->setClipRect(option->exposedRect);
     QColor textColor;
     QPen node_outline;
     int nodePen = 1;
@@ -324,54 +325,6 @@ void VContainerNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     if(data->getNodeType() == CONTAINER)
         contextMenu->exec(event->screenPos());
-}
-
-VValueNode::VValueNode(DNode *data)
-    :VNode(data) 
-{
-    createContextMenu();
-
-    ValueNode *node = static_cast<ValueNode*>(data);
-    if(node->isShaderInput())
-        setNodeColor(QColor(255, 135, 0));
-    else
-        setNodeColor(QColor(50, 50, 50));
-
-    //data->getOutSockets().first()->getSocketVis()->setDrawName(false);
-    data->getOutSockets().first()->getSocketVis()->setBlockContextMenu(true);
-    updateNodeVis();
-}
-
-VValueNode::~VValueNode()
-{
-    delete contextMenu;
-}
-
-
-void VValueNode::setShaderInput(bool tgl)
-{
-    ValueNode *node = static_cast<ValueNode*>(data);
-    node->setShaderInput(tgl);
-    if(tgl)
-        setNodeColor(QColor(255, 135, 0));
-    else
-        setNodeColor(QColor(100, 100, 100));
-}
-
-void VValueNode::createContextMenu()
-{
-    ValueNode *node = static_cast<ValueNode*>(data);
-
-    contextMenu = new QMenu;
-    QAction *shaderinputAction =  contextMenu->addAction("Shader Parameter");
-    shaderinputAction->setCheckable(true);
-    shaderinputAction->setChecked(node->isShaderInput());
-    connect(shaderinputAction, SIGNAL(toggled(bool)), this, SLOT(setShaderInput(bool)));
-}
-
-void VValueNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
-{
-    contextMenu->exec(event->screenPos());
 }
 
 VOutputNode::VOutputNode(DNode *data)
