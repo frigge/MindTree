@@ -48,10 +48,8 @@ void Shader_View::keyReleaseEvent(QKeyEvent *event)
 
 void Shader_View::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::MiddleButton)
-        setDragMode(RubberBandDrag);
-    else
-        QGraphicsView::mouseReleaseEvent(event);
+    setDragMode(RubberBandDrag);
+    QGraphicsView::mouseReleaseEvent(event);
 };
 
 void Shader_View::drawBackground(QPainter *painter, const QRectF &rect)
