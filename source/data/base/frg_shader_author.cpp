@@ -40,6 +40,8 @@
 #include "source/graphics/shaderpreview.h"
 #include "source/graphics/previewdock.h"
 #include "source/graphics/properties_editor.h"
+#include "source/data/data_info_box.h"
+#include "source/graphics/vis_info_box.h"
 
 ChangeSpaceAction::ChangeSpaceAction(DNSpace *space, QObject *parent)
     : QAction(parent)
@@ -61,12 +63,8 @@ frg_Shader_Author::frg_Shader_Author(QWidget *parent)
     setWindowTitle("frg Shader Author");
     resize(1500, 800);
 
-
-    //QWidget *widget = new QWidget;
-    //widget->setMaximumSize(1, 1);
-    //setCentralWidget(widget);
-
     setDockNestingEnabled(true);
+    setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
 
     createSpaceDock();
     toolbar = addToolBar("Node Path");
@@ -90,7 +88,7 @@ void frg_Shader_Author::createSpaceDock()
     view->setDragMode(QGraphicsView::RubberBandDrag);
     view->setUpdatesEnabled(true);
 
-    QDockWidget *spaceDock = new QDockWidget("Node Space");
+    spaceDock = new QDockWidget("Node Space");
     spaceDock->setWidget(view);
     addDockWidget(Qt::RightDockWidgetArea, spaceDock);
 }
@@ -184,6 +182,7 @@ void frg_Shader_Author::createMenus()
     pasteAction->setShortcuts(QKeySequence::Paste);
 
     QMenu *nodeMenu = new QMenu("&Nodes");
+    QAction *infoBoxAction = nodeMenu->addAction("&Info Box");
     QAction *containerAction = nodeMenu->addAction("&Build Container");
     containerAction->setShortcut(QString("c"));
     QAction *unpackAction = nodeMenu->addAction("&Unpack Container");
@@ -213,6 +212,7 @@ void frg_Shader_Author::createMenus()
     connect(cutAction, SIGNAL(triggered()), FRG::Space, SLOT(cut()));
     connect(pasteAction, SIGNAL(triggered()), FRG::Space, SLOT(paste()));
 
+    connect(infoBoxAction, SIGNAL(triggered()), this, SLOT(addInfoBox()));
     connect(containerAction, SIGNAL(triggered()), this, SLOT(buildContainer()));
     connect(unpackAction, SIGNAL(triggered()), this, SLOT(unpackContainer()));
     connect(nodeEditorAction, SIGNAL(triggered()), this, SLOT(toggleNodeEditor()));
@@ -223,6 +223,12 @@ void frg_Shader_Author::createMenus()
     menuBar()->addMenu(nodeMenu);
     menuBar()->addMenu(previewMenu);
 };
+
+void frg_Shader_Author::addInfoBox()    
+{
+    DInfoBox *infoBox = new DInfoBox();
+    infoBox->getVis();
+}
 
 void frg_Shader_Author::toggleNodeLib()    
 {
