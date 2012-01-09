@@ -69,6 +69,11 @@ void DSocketList::add(DSocket *socket)
     newLLs->socket = socket;
 }
 
+LLsocket* DSocketList::getFirst()    
+{
+    return first; 
+}
+
 void DSocketList::rm(DSocket *socket)    
 {
     if(first->socket == socket){
@@ -232,10 +237,8 @@ DSocket::DSocket(DSocket* socket, DNode *node)
     node(node), is_array(socket->isArray()),
     Variable(socket->getVariable()), socketVis(0)
 {
-    blockAllCB();
     CopySocketMapper::setSocketPair(socket, this);
     socketIDHash.insert(ID, this);
-    unblockAllCB();
 }
 
 DSocket::~DSocket()
@@ -243,22 +246,7 @@ DSocket::~DSocket()
     if(!is_array || (is_array && arrayID == ID))
         killSocketVis();
     socketIDHash.remove(ID);
-}
-
-void DSocket::blockAllCB()    
-{
-    linkCallbacks.setBlock(true); 
-    removeLinkCallbacks.setBlock(true); 
-    renameCallbacks.setBlock(true); 
-    changeTypeCallbacks.setBlock(true); 
-}
-
-void DSocket::unblockAllCB()    
-{
-    linkCallbacks.setBlock(false); 
-    removeLinkCallbacks.setBlock(false); 
-    renameCallbacks.setBlock(false); 
-    changeTypeCallbacks.setBlock(false); 
+    emit removed();
 }
 
 bool DSocket::operator==(DSocket &socket)    const
@@ -308,15 +296,20 @@ bool DSocket::isCompatible(DSocket *s1, DSocket *s2)
         return false;
     if(s1->getNode() == s2->getNode())
         return false;
-    if(s1->getType() == VARIABLE || s2->getType() == VARIABLE)
+    return isCompatible(s1->getType(), s2->getType());
+}
+
+bool DSocket::isCompatible(socket_type s1, socket_type s2)    
+{
+    if(s1 == VARIABLE || s2 == VARIABLE)
         return true;
-    if(s1->getType() == s2->getType())
+    if(s1 == s2)
         return true;
-    if((s1->getType() == VECTOR && s2->getType() == NORMAL)
-        ||(s2->getType() == VECTOR && s1->getType() == NORMAL))
+    if((s1 == VECTOR && s2 == NORMAL)
+        ||(s2 == VECTOR && s1 == NORMAL))
         return true;
-    if((s1->getType() == INTEGER && s2->getType() == FLOAT)
-        || (s1->getType() == FLOAT && s2->getType() == INTEGER))
+    if((s1 == INTEGER && s2 == FLOAT)
+        || (s1 == FLOAT && s2 == INTEGER))
         return true;
     return false;
 }
@@ -335,6 +328,18 @@ DNodeLink DSocket::createLink(DSocket *socket1, DSocket *socket2)
     {
        out = socket1->toOut(); 
        in = socket2->toIn();
+    }
+    if ( in->getType() == VARIABLE ) {
+        in->setType(out->getType());
+        in->setName(out->getName());
+        nameCB(in, out);
+        typeCB(in, out);
+    }
+    if ( out->getType() == VARIABLE ) {
+        out->setType(in->getType());
+        out->setName(in->getName());
+        nameCB(out, in);
+        typeCB(out, in);
     }
     in->addLink(out);
     return DNodeLink(in, out);
@@ -358,46 +363,6 @@ void DSocket::removeLink(DinSocket *in, DoutSocket *out)
 //        return;
 //    }
     in->clearLink();
-}
-
-void DSocket::addRenameCB(Callback *cb)    
-{
-    renameCallbacks.add(cb);
-}
-
-void DSocket::remRenameCB(Callback *cb)    
-{
-    renameCallbacks.remove(cb);
-}
-
-void DSocket::addTypeCB(Callback *cb)    
-{
-    changeTypeCallbacks.add(cb);
-}
-
-void DSocket::remTypeCB(Callback *cb)    
-{
-    changeTypeCallbacks.remove(cb);
-}
-
-void DSocket::addLinkCB(Callback *cb)    
-{
-    linkCallbacks.add(cb);
-}
-
-void DSocket::remLinkCB(Callback *cb)    
-{
-    linkCallbacks.remove(cb);
-}
-
-void DSocket::addRmLinkCB(Callback *cb)    
-{
-    removeLinkCallbacks.add(cb);
-}
-
-void DSocket::remRmLinkCB(Callback *cb)    
-{
-    removeLinkCallbacks.remove(cb);
 }
 
 bool DSocket::isArray() const
@@ -450,6 +415,16 @@ DSocket* DSocket::getSocket(unsigned short ID)
     return socketIDHash.value(ID);
 }
 
+void DSocket::nameCB(DSocket *first, DSocket *last)    
+{
+    first->connect(first, SIGNAL(nameChanged(QString)), last, SLOT(setName(QString)));
+}
+
+void DSocket::typeCB(DSocket *first, DSocket *last)    
+{
+    first->connect(first, SIGNAL(typeChanged(socket_type)), last, SLOT(setType(socket_type)));
+}
+
 ArrayContainer::ArrayContainer(DSocket *first)
 {
     ID = first->getID();
@@ -466,7 +441,7 @@ void ArrayContainer::addSocket(DSocket *socket)
 }
 
 DinSocket::DinSocket(QString name, socket_type type, DNode *node)
-	: DSocket(name, type, node), cntdSocket(0), tempCntdID(0), Token(false), linkedNameCB(0), linkedTypeCB(0),
+	: DSocket(name, type, node), cntdSocket(0), tempCntdID(0), Token(false),
     prop(0)
 {
 	setDir(IN);
@@ -476,7 +451,7 @@ DinSocket::DinSocket(QString name, socket_type type, DNode *node)
 };
 
 DinSocket::DinSocket(DinSocket* socket, DNode *node)
-    : DSocket(socket, node), linkedNameCB(0), linkedTypeCB(0), 
+    : DSocket(socket, node),
     cntdSocket(socket->getCntdSocket()),
     tempCntdID(0), Token(socket->getToken()),
     prop(0)
@@ -544,31 +519,18 @@ void DinSocket::addLink(DoutSocket *socket)
     if(!isCompatible(this, socket))
         return;
 
-    if(cntdSocket)
-    {
-        setCntdSocket(socket);
-        return;
-    }
-
     //here we set the actual link
     setCntdSocket(socket);
-
-    if (getType() == VARIABLE)
-    {
-        setType(socket->getType());
-        setName(socket->getName());
-    }
     if (getVariable())
         getNode()->inc_var_socket();
 }
 
-void DinSocket::clearLink(bool unregister)
+void DinSocket::clearLink()
 {
-    if(cntdSocket&&unregister)cntdSocket->unregisterSocket(this);
+    if(cntdSocket)cntdSocket->unregisterSocket(this);
 	cntdSocket = 0;
-    removeLinkCallbacks();
-    removeLinkCallbacks.clear();
 
+    emit disconnected();
     if(getVariable())
         getNode()->dec_var_socket(this);
 }
@@ -725,6 +687,7 @@ QString DSocket::getName() const
 
 void DSocket::setName(QString value)
 {
+    if(value == name) return;
 	name = value;
     bool ok=false;
     int ar = name.indexOf("[");
@@ -743,7 +706,9 @@ void DSocket::setName(QString value)
     }
     else
         is_array = false;
-    renameCallbacks();
+
+    if(name != "+")
+        emit nameChanged(name);
 }
 
 socket_type DSocket::getType() const
@@ -753,8 +718,11 @@ socket_type DSocket::getType() const
 
 void DSocket::setType(socket_type value)
 {
+    if(value == type) return;
 	type = value;
-    changeTypeCallbacks();
+
+    if(type != VARIABLE)
+        emit typeChanged(type);
 }
 
 socket_dir DSocket::getDir() const
@@ -791,7 +759,7 @@ DoutSocket::DoutSocket(DoutSocket* socket, DNode *node)
 DoutSocket::~DoutSocket()
 {
     foreach(DinSocket *socket, cntdSockets)
-        socket->clearLink(false);
+        socket->clearLink();
 }
 
 bool DoutSocket::operator==(DoutSocket &socket)const
@@ -804,11 +772,6 @@ bool DoutSocket::operator==(DoutSocket &socket)const
 bool DoutSocket::operator !=(DoutSocket &socket)const
 {
     return(!(*this == socket));
-}
-
-void DoutSocket::setName(QString name)    
-{
-    DSocket::setName(name);
 }
 
 QString DSocket::setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt)const
@@ -854,7 +817,6 @@ QString DSocket::getVarName() const
 
 void DoutSocket::registerSocket(DSocket *socket)    
 {
-    linkCallbacks();
     if(this == getNode()->getVarSocket()) 
         getNode()->inc_var_socket();
     if(!cntdSockets.contains(socket->toIn()))
@@ -871,7 +833,7 @@ QList<DNodeLink> DoutSocket::getLinks() const
 
 void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
 {
-    removeLinkCallbacks();
+    emit disconnected();
     cntdSockets.removeAll(socket); 
     if(cntdSockets.isEmpty() && getVariable() && decr) getNode()->dec_var_socket(this);
 }
@@ -882,31 +844,11 @@ void DinSocket::setCntdSocket(DoutSocket *socket)
         clearLink();
         return;
     }
-    if(cntdSocket) {
-        cntdSocket->unregisterSocket(this, false);
-        if(linkedNameCB) {
-            cntdSocket->remRenameCB(linkedNameCB);
-        }
-        if(linkedTypeCB) {
-            cntdSocket->remTypeCB(linkedTypeCB);
-        }
-    }
+    if(cntdSocket) cntdSocket->unregisterSocket(this, false);
 
 	cntdSocket = socket;
-    linkCallbacks();
-    if(socket->getType() == VARIABLE) {
-        socket->setType(getType());
-        socket->setName(getName());
-    }
-    if(getType() == VARIABLE) {
-        linkedNameCB = new ScpNameCB(socket, this);
-        linkedTypeCB = new ScpTypeCB(socket, this);
-        socket->addRenameCB(linkedNameCB);
-        socket->addTypeCB(linkedTypeCB);
-        setType(socket->getType());
-        setName(socket->getName());
-    }
     cntdSocket->registerSocket(this);
+    emit linked(socket);
 }
 
 void DinSocket::cntdSocketFromID()

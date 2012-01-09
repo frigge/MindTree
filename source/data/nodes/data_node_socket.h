@@ -20,6 +20,7 @@
 #define DATA_NODE_SOCKET_H
 
 #include "QHash"
+#include "QObject"
 
 #include "source/data/callbacks.h"
 #include "source/data/base/properties.h"
@@ -48,11 +49,12 @@ public:
     DoutSocketList returnAsOutSocketList()const;
     unsigned short len();
     void rm(DSocket *socket);
+    LLsocket* getFirst();
+    LLsocket* getLLsocketAt(unsigned short pos);
 
 protected:
     void initList(DSocket *socket);
     LLsocket* getLLlastSocket()const;
-    LLsocket* getLLsocketAt(unsigned short pos);
 
 private:
     LLsocket *first;
@@ -123,8 +125,9 @@ class DoutSocket;
 class DNodeLink;
 class ArrayContainer;
 
-class DSocket
+class DSocket : public QObject
 {
+    Q_OBJECT
 public:
 	DSocket(QString, socket_type, DNode *node);
     DSocket(DSocket* socket, DNode *node);
@@ -143,9 +146,7 @@ public:
     bool operator==(DSocket &socket)const;
     bool operator!=(DSocket &socket)const;
 	QString getName() const;
-	virtual void setName(QString value);
 	socket_type getType() const;
-	virtual void setType(socket_type value);
 	socket_dir getDir() const;
 	void setDir(socket_dir value);
 	DNode* getNode() const;
@@ -156,17 +157,6 @@ public:
 
     void setIDName(QString name);
     QString getIDName();
-
-    void remRenameCB(Callback *cb);
-    void addRenameCB(Callback *cb);
-    void addTypeCB(Callback *cb);
-    void remTypeCB(Callback *cb);
-    void addLinkCB(Callback *cb);
-    void remLinkCB(Callback *cb);
-    void addRmLinkCB(Callback *cb);
-    void remRmLinkCB(Callback *cb);
-    virtual void unblockAllCB();
-    virtual void blockAllCB();
 
     bool isArray() const;
     void setArray(unsigned short);
@@ -181,11 +171,20 @@ public:
     static DNodeLink createLink(DSocket *socket1, DSocket *socket2);
     static void removeLink(DinSocket *in, DoutSocket *out);
     static bool isCompatible(DSocket *s1, DSocket *s2);
+    static bool isCompatible(socket_type s1, socket_type s2);
     static DSocket* getSocket(unsigned short ID);
+    static void typeCB(DSocket *first, DSocket *last);
+    static void nameCB(DSocket *first, DSocket *last);
 
-protected:
-    CallbackList linkCallbacks;
-    CallbackList removeLinkCallbacks;
+public slots:
+	virtual void setType(socket_type value);
+	void setName(QString value);
+
+signals:
+    void nameChanged(QString);
+    void typeChanged(socket_type);
+    void disconnected();
+    void removed();
 
 private:
     QString idName;
@@ -200,8 +199,6 @@ private:
     unsigned short arrayID;
     int arrayLength;
     ArrayContainer *array;
-    CallbackList renameCallbacks;
-    CallbackList changeTypeCallbacks;
 
     static QHash<unsigned short, DSocket*>socketIDHash;
 	mutable QString varname;
@@ -227,6 +224,7 @@ class DoutSocket;
 
 class DinSocket : public DSocket
 {
+    Q_OBJECT
 public:
     DinSocket(QString, socket_type, DNode *node);
     DinSocket(DinSocket* socket, DNode *node);
@@ -234,7 +232,6 @@ public:
 
     void setNode(DNode*);
     void addLink(DoutSocket*);
-    void clearLink(bool unregister=true);
 
     static void createLink(DinSocket *in, DinSocket *out);
 	const DoutSocket* getCntdSocketConst() const;
@@ -263,14 +260,18 @@ public:
 
     Property* getProperty()const;
     void setProperty();
+
+public slots:
     void setType(socket_type value);
+    void clearLink();
+
+signals:
+    void linked(DoutSocket *);
 
 private:
 	unsigned short tempCntdID;
     DoutSocket* cntdSocket;
     bool Token;
-    ScpNameCB *linkedNameCB;
-    ScpTypeCB *linkedTypeCB;
 
     Property *prop;
 };
@@ -289,7 +290,6 @@ public:
     QList<DNodeLink> getLinks() const;
     void registerSocket(DSocket *socket);
     void unregisterSocket(DinSocket *socket, bool decr=true);
-	virtual void setName(QString value);
 
 private:
     QList<DinSocket*> cntdSockets;
