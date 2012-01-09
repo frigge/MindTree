@@ -319,8 +319,9 @@ QGraphicsItem* VNodeLink::getEnd()    const
 
 VNodeLink::~VNodeLink()
 {
+    FRG::Space->rmLink(this);
+    emit removed(this);
     delete cMenu;
-    disconnect();
 }
 
 void VNodeLink::initVNodeLink()
@@ -337,6 +338,13 @@ void VNodeLink::initVNodeLink()
     QAction *removeAction = cMenu->addAction("Remove Link");
     connect(removeAction, SIGNAL(triggered()), this, SLOT(remove()));
     connect(removeAction, SIGNAL(triggered()), FRG::Space, SIGNAL(linkChanged()));
+    if(data)
+    {
+        connect(data->in->toIn(), SIGNAL(linked(DoutSocket*)), this, SLOT(remove()));
+        connect(data->in->toIn(), SIGNAL(removed()), this, SLOT(remove()));
+        connect(data->out->toOut(), SIGNAL(removed()), this, SLOT(remove()));
+    }
+    FRG::Space->regLink(this);
 }
 
 void VNodeLink::remove()
@@ -523,13 +531,13 @@ void VNodeLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     //painter->setClipRect(option->exposedRect);
     QPen linkpen;
     //linkpen.setCosmetic(true);
-    if (outSocket)
+    if (data)
     {
         linkpen.setWidthF(1.5);
         if(isUnderMouse())
             linkpen.setColor(QColor(255, 155, 155));
         else
-            linkpen.setColor(QColor(200, 200, 200));
+            linkpen.setColor(data->out->getSocketVis()->getColor());
         linkpen.setStyle(Qt::SolidLine);
     }
     else
@@ -541,5 +549,5 @@ void VNodeLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     painter->setPen(linkpen);
     painter->setBrush(Qt::NoBrush);
     //painter->drawPath(drawPath());
-    painter->drawLine(out, in);
+    painter->drawPath(drawStraightPath());
 };

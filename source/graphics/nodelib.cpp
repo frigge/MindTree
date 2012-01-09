@@ -71,7 +71,7 @@ NodeLib::NodeLib(QWidget *parent):
     setAcceptDrops(true);
     setDragEnabled(true);
 
-    setAlternatingRowColors(true);
+    //setAlternatingRowColors(true);
     //setFrameStyle(QFrame::NoFrame);
 
     connect(this, SIGNAL(itemChanged(QTreeWidgetItem*,int)), this, SLOT(renamed(QTreeWidgetItem*)));
