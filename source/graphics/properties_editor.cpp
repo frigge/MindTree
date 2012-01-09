@@ -30,6 +30,7 @@
 PropertiesEditor::PropertiesEditor(QWidget *parent)
     : QTreeWidget(parent)
 {
+    FRG::propEditor = this;
     setColumnCount(2);
     setAlternatingRowColors(true);
     setHeaderHidden(true);

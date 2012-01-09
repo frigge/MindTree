@@ -24,6 +24,7 @@ class NodeLib;
 class frg_Shader_Author; 
 class PreviewSceneEditor;
 class PreviewSceneCache;
+class PropertiesEditor;
 
 namespace FRG
 {
@@ -34,6 +35,7 @@ namespace FRG
     extern NodeLib *lib;
     extern PreviewSceneEditor *previewEditor;
     extern PreviewSceneCache previewScenes;
+    extern PropertiesEditor *propEditor;
 
     namespace Utils
     {

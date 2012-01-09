@@ -10,6 +10,7 @@ frg_Shader_Author *FRG::Author = 0;
 NodeLib *FRG::lib = 0;
 PreviewSceneEditor *FRG::previewEditor = 0;
 PreviewSceneCache FRG::previewScenes;
+PropertiesEditor *FRG::propEditor = 0;
 
 void FRG::Utils::moveDir(QDir source, QDir destination)
 {
