@@ -23,13 +23,20 @@
 #include "QString"
 #include "QHash"
 #include "QStringList"
+#include "vector"
+
+#include "source/data/nodes/data_node_socket.h"
 
 class OutputNode;
-class DoutSocket;
-class DinSocket;
-class DSocket;
 class DNode;
 class ContainerNode;
+
+struct Parameter {
+    Parameter(QString name, socket_type t) : name(name), type(t) {}
+    socket_type type;
+    QString name;
+    bool array;
+};
 
 struct SubCache
 {
@@ -55,6 +62,7 @@ class ShaderCodeGenerator
 public:
     ShaderCodeGenerator(const DNode *start);
     virtual QString getCode();
+    std::vector<Parameter> getParameter();
 
 protected:
     virtual void init();
@@ -121,6 +129,7 @@ protected:
     QStringList getShaderParameter();
     QStringList getOutputVars();
     CodeCache* getCache();
+    void addParameter(QString name, socket_type t);
     
 private:
     const DNode *start;
@@ -134,6 +143,7 @@ private:
     QStringList VarDeclares;
     QString ShaderHeader;
     QStringList ShaderParameter;
+    std::vector<Parameter> parameterList;
     QStringList OutputVars;
     QHash<const DSocket*, QString> variables;
     QHash<QString, unsigned short>variableCnt;

@@ -80,6 +80,8 @@ void ShaderWriter::initVar(const DSocket *socket)
     case NORMAL:
          VDstr.append("normal ");
         break;
+    default:
+        break;
     }
     VDstr.append(getVariable(socket));
     if(socket->isArray())
@@ -132,6 +134,8 @@ void ShaderWriter::outputVar(const DinSocket *socket)
     case NORMAL:
          OVstr.append("normal ");
          ending = "(0, 0, 0)";
+        break;
+    default:
         break;
     }
 

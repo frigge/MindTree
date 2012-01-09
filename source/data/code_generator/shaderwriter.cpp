@@ -756,6 +756,7 @@ QString ShaderCodeGenerator::writeFloat(const DoutSocket *socket)
     {
         output.append("float ");
         output.append(getVariable(socket));
+        addParameter(getVariable(socket), socket->getType());
         if(socket->isArray())
             output.append("[" + QString::number(socket->getArrayLength()) + "]");
         output.append(" = ");
@@ -782,6 +783,11 @@ QString ShaderCodeGenerator::getCode()
     return returncode;
 }
 
+std::vector<Parameter> ShaderCodeGenerator::getParameter()    
+{
+    return parameterList; 
+}
+
 void ShaderCodeGenerator::addToCode(QString c)
 {
     cache.add(c, focus);
@@ -795,6 +801,11 @@ void ShaderCodeGenerator::addToShaderParameter(QString s)
 {
     if(!ShaderParameter.contains(s))
         ShaderParameter.append(s);
+}
+
+void ShaderCodeGenerator::addParameter(QString name, socket_type t)
+{
+    parameterList.push_back(Parameter(name, t));
 }
 
 QString ShaderCodeGenerator::createShaderParameterCode()
