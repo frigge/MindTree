@@ -513,6 +513,74 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 
 
 
+void VNSocket::mouseMoveEvent(QGraphicsSceneMouseEvent *event)    
+{
+    if((event->pos() - dragstartpos).manhattanLength() < QApplication::startDragDistance()) {
+        QGraphicsItem::mouseMoveEvent(event);
+        return;
+    }
+
+    QDrag *drag = new QDrag(event->widget());
+    QMimeData *mimeData = new QMimeData;
+    QByteArray itemData;
+    QDataStream stream(&itemData, QIODevice::WriteOnly);
+
+    stream << (int)data->getType();
+    if(data->getDir() == IN)
+        mimeData->setData("FRGShaderAuthor/InSocket", itemData);
+    else
+        mimeData->setData("FRGShaderAuthor/OutSocket", itemData);
+    drag->setMimeData(mimeData);
+    drag->exec();
+}
+
+void VNSocket::dragEnterEvent(QGraphicsSceneDragDropEvent *event)    
+{
+    if((event->mimeData()->hasFormat("FRGShaderAuthor/OutSocket")
+        ||event->mimeData()->hasFormat("FRGShaderAuthor/InSocket"))
+        &&!FRG::Space->isLinkNodeMode())
+            FRG::Space->enterLinkNodeMode(this);
+
+    if((event->mimeData()->hasFormat("FRGShaderAuthor/OutSocket") && data->getDir() == IN
+        ||event->mimeData()->hasFormat("FRGShaderAuthor/InSocket") && data->getDir() == OUT)
+        &&FRG::Space->getLinkSocket() != this) {
+        event->acceptProposedAction();
+    }
+}
+
+void VNSocket::dragMoveEvent(QGraphicsSceneDragDropEvent *event)    
+{
+    if((event->mimeData()->hasFormat("FRGShaderAuthor/OutSocket") && data->getDir() == IN
+        ||event->mimeData()->hasFormat("FRGShaderAuthor/InSocket") && data->getDir() == OUT)
+        &&FRG::Space->getLinkSocket() != this)
+        event->acceptProposedAction();
+}
+
+void VNSocket::dropEvent(QGraphicsSceneDragDropEvent *event)    
+{
+    QString format = event->mimeData()->formats().first();
+    if(!FRG::Space->isLinkNodeMode())
+        return;
+    if((event->mimeData()->hasFormat("FRGShaderAuthor/OutSocket") && data->getDir() == IN
+        ||event->mimeData()->hasFormat("FRGShaderAuthor/InSocket") && data->getDir() == OUT)
+        &&FRG::Space->getLinkSocket() != this) {
+        QByteArray itemData;
+        if(data->getDir() == IN)
+            itemData = event->mimeData()->data("FRGShaderAuthor/OutSocket");
+        else
+            itemData = event->mimeData()->data("FRGShaderAuthor/InSocket");
+
+        QDataStream stream(&itemData, QIODevice::ReadOnly);
+        int t;
+        stream >> t;
+        if(DSocket::isCompatible((socket_type)t, data->getType()))
+            FRG::Space->addLink(this);
+        else
+            FRG::Space->cancelLinkNodeMode();
+    }
+    else
+        FRG::Space->cancelLinkNodeMode();
+}
 
 void VNSocket::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
