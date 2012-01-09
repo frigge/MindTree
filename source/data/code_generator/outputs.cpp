@@ -224,7 +224,9 @@ FragmentOutputNode::FragmentOutputNode(const FragmentOutputNode* node)
 
 int FragmentOutputNode::compile()    const
 {
-    GLShaderCode *code = new GLShaderCode(getCode(), GLShaderCode::Fragment);
+    GLSLWriter *w = new GLSLWriter(this);
+    GLShaderCode *code = new GLShaderCode(w->getCode(), GLShaderCode::Fragment, w->getParameter());
+    delete w;
     return FRG::CurrentProject->regGLSLShader(code);
 }
 
@@ -247,7 +249,9 @@ VertexOutputNode::VertexOutputNode(const VertexOutputNode* node)
 
 int VertexOutputNode::compile()    const
 {
-    GLShaderCode *code = new GLShaderCode(getCode(), GLShaderCode::Vertex);
+    GLSLWriter *w = new GLSLWriter(this);
+    GLShaderCode *code = new GLShaderCode(w->getCode(), GLShaderCode::Vertex, w->getParameter());
+    delete w;
     return FRG::CurrentProject->regGLSLShader(code);
 }
 
@@ -270,7 +274,9 @@ GeometryOutputNode::GeometryOutputNode(const GeometryOutputNode* node)
 
 int GeometryOutputNode::compile()    const
 {
-    GLShaderCode *code = new GLShaderCode(getCode(), GLShaderCode::Geometry);
+    GLSLWriter *w = new GLSLWriter(this);
+    GLShaderCode *code = new GLShaderCode(w->getCode(), GLShaderCode::Geometry, w->getParameter());
+    delete w;
     return FRG::CurrentProject->regGLSLShader(code);
 }
 
