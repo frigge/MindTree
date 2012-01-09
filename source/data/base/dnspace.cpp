@@ -168,6 +168,21 @@ ContainerSpace* DNSpace::toContainer()
     return static_cast<ContainerSpace*>(this);
 }
 
+void DNSpace::addJointData(JointData *joint)    
+{
+    joints.append(joint);
+}
+
+void DNSpace::removeJointData(JointData *joint)    
+{
+    joints.removeAll(joint);
+}
+
+QList<JointData*> DNSpace::getJointData()    
+{
+    return joints;
+}
+
 ContainerSpace::ContainerSpace()
     : DNSpace(), node(0)
 {

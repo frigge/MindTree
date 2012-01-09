@@ -31,6 +31,36 @@ class DoutSocket;
 class DSocket;
 class VNSocket;
 class VNodeLink;
+class LinkJoint;
+class DNSpace;
+
+class JointData 
+{
+public:
+    JointData(QPointF pos, DoutSocket *src, LinkJoint *vis=0);
+    ~JointData();
+
+    LinkJoint* getVis();
+    void setVis(LinkJoint* joint);
+    LinkJoint* createVis();
+    void setParent(JointData* p);
+    JointData* getParent() const;
+    DoutSocket* getSource() const;
+    void addInSocket(DinSocket *socket);
+    void removeInSocket(DinSocket *socket);
+    QList<DinSocket*> getInSockets();
+    void setPos(QPointF p);
+    QPointF getPos()const;
+
+private:
+    mutable LinkJoint *vis;
+    JointData *parent;
+    DNSpace *space;
+    QList<DinSocket*> sockets;
+    DoutSocket *source;
+    QPointF pos;
+    QString idname;
+};
 
 typedef struct DNodeLink
 {
@@ -42,43 +72,92 @@ typedef struct DNodeLink
     VNodeLink *vis;
 } DNodeLink;
 
+class LinkJoint : public QGraphicsObject
+{
+    Q_OBJECT
+public:
+    enum {Type = UserType + 3};
+    int type() const {return Type;}
+    LinkJoint(VNSocket *outSocket, QPointF center);
+    LinkJoint(JointData *data);
+    virtual ~LinkJoint();
+    static bool isInBetween(QPointF j1, QPointF j2, QPointF pos);
+    QRectF boundingRect() const;
+    VNSocket* getOutSocket();
+    void addLink(VNodeLink *link);
+    JointData* getData();
+
+public slots:
+    void rmLink(VNodeLink *link);
+
+signals:
+    void removed();
+
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+private:
+    JointData *data;
+    VNSocket *outSocket;
+    QList<VNodeLink *> links;
+    QPointF center;
+    bool moving;
+};
+
 class VNodeLink : public QGraphicsObject
 {
     Q_OBJECT
 
 public:
-    VNodeLink(QPointF startP, QPointF endP);
+    VNodeLink();
     VNodeLink(DNodeLink *data);
     ~VNodeLink();
     DinSocket  *inSocket;
 	DoutSocket *outSocket;
     QRectF boundingRect() const;
+    QPainterPath shape() const;
+    void setData(DNodeLink data);
+    DNodeLink getData();
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-    void setlink(QPointF endP);
-    void setlink(DinSocket *, DoutSocket *);
     void updateLink();
+    //void setStart(QGraphicsItem *s);
+    //void setEnd(QGraphicsItem *e);
+    void setTemp(QGraphicsItem *tmp);
+    void setRoute(QGraphicsItem *s, QGraphicsItem *e);
+    QGraphicsItem* getEnd()const;
+    QGraphicsItem* getStart()const;
+    void addJoint(QPointF pos);
+    void setLink(QPointF pos);
 
     static bool isCompatible(VNSocket *first, VNSocket *last);
 
 public slots:
     void remove();
+    void killVis();
 
 signals:
-    void removeLink(VNodeLink *link);
-
-private:
-    DNodeLink *data;
-    QPointF in, out, c1, c2;
-    QPainterPath drawPath();
-    QMenu *cMenu;
-    void initVNodeLink();
-    QPointF getmiddle(QPointF p1, QPointF p2);
+    void removeLink(VNodeLink*);
+    void removed(VNodeLink*);
 
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
 
+private:
+    QPainterPath drawPath()const;
+    QPainterPath drawStraightPath()const;
+    void initVNodeLink();
+    QPointF getmiddle(QPointF p1, QPointF p2);
+
+    DNodeLink *data;
+    QGraphicsItem *start, *end;
+    QPointF in, out, c1, c2;
+    QMenu *cMenu;
 };
 
 #endif // NODELINK_H

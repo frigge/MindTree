@@ -51,7 +51,12 @@ public:
     void setContainerSpace(bool value);
     ContainerSpace* toContainer();
 
+    void removeJointData(JointData *data);
+    void addJointData(JointData *joint);
+    QList<JointData*> getJointData();
+
 private:
+    QList<JointData*> joints;
     VNSpace *spaceVis;
     QString name;
     QList<DNode*> nodes;

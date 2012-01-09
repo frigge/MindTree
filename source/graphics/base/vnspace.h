@@ -123,15 +123,17 @@ class VNSpace : public QGraphicsScene
 public:
     VNSpace();
     void addLink(VNSocket *final);
-    void removeLink(DSocket *socket);
+    void addLink(LinkJoint *j);
     void enterLinkNodeMode(VNSocket *socket);
+    void enterLinkNodeMode(LinkJoint *j);
     void leaveLinkNodeMode();
+    void cancelLinkNodeMode();
+    VNSocket* getLinkSocket();
     void enterEditNameMode();
     void leaveEditNameMode();
     bool isEditNameMode();
     void moveIntoSpace(DNSpace *space);
     void createSpaceVis();
-    void deleteSpaceVis();
     void cacheNodePositions(QList<DNode*>nodes);
 	QPointF getMousePos();
 	bool isLinkNodeMode();
@@ -142,6 +144,10 @@ public:
     QPointF getCenter(QList<DNode*>nodes);
     void buildContainer();
     void unpackContainer();
+    void regJoint(LinkJoint *j);
+    void rmJoint(LinkJoint *j);
+    void regLink(VNodeLink *l);
+    void rmLink(VNodeLink *l);
 
 signals:
     void linkChanged();
@@ -154,13 +160,15 @@ public slots:
     void updateLinks();
 
 protected:
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     void dropEvent(QGraphicsSceneDragDropEvent *event);
     void dragMoveEvent(QGraphicsSceneDragDropEvent *event);
     void containerNode();
+    void deleteLinkVis();
+    void createLinkVis();
+    bool isStraightLink(DinSocket *socket);
+    void deleteSpaceVis();
 
 private:
     QMenu *NContextMenu;
@@ -170,11 +178,13 @@ private:
     NodeLib *nodelib;
     NewNodeEditor *nodeedit;
     VNSocket *linksocket;
+    LinkJoint *linkjoint;
     VNodeLink *newlink;
     bool editNameMode;
 	bool linkNodeMode;
     QList<DNode*> nodeClipboard;
-    QHash<DSocket*, DNodeLink*> linkcache;
+    QList<VNodeLink*> links;
+    QList<LinkJoint*> joints;
 };
 
 #endif // VNSPACE_H

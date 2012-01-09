@@ -43,7 +43,7 @@ void UndoRemoveNode::undo()
     foreach(DNode *node, nodes)
     {
         FRG::SpaceDataInFocus->addNode(node);
-        VNode *nodeVis = node->createNodeVis();
+        VNode *nodeVis = node->createNodeVis(); 
         FRG::Space->addItem(nodeVis);
         nodeVis->setPos(node->getPos());
     }
@@ -152,13 +152,13 @@ UndoBuildContainer::UndoBuildContainer(ContainerNode *contnode)
         if(node != contnode->getInputs()
             &&node != contnode->getOutputs())
             containerNodes.append(node);
-            
+
     foreach(DNode* node, containerNodes)
         foreach(DinSocket *socket, node->getInSockets())
             if(socket->getCntdSocket()
                 &&socket->getCntdSocket()->getNode() == contnode->getInputs())
                 oldLinks.append(DNodeLink(socket, socket->getCntdSocket()));
-                
+
     foreach(DoutSocket *socket, contnode->getOutSockets())
         oldLinks.append(socket->getLinks());
 }
@@ -166,7 +166,6 @@ UndoBuildContainer::UndoBuildContainer(ContainerNode *contnode)
 void UndoBuildContainer::undo()    
 {
     DNode::unpackContainerNode(contnode);
-    FRG::Space->updateLinks();
 }
 
 void UndoBuildContainer::redo()    
@@ -185,7 +184,6 @@ void UndoBuildContainer::redo()
     VNode *nodeVis = contnode->createNodeVis();
     FRG::Space->addItem(nodeVis);
     nodeVis->setPos(contnode->getPos());
-    FRG::Space->updateLinks();
 }
 
 ContainerCache::ContainerCache(ContainerNode *contnode)
@@ -201,7 +199,7 @@ ContainerCache::ContainerCache(ContainerNode *contnode)
             if(socket->getCntdSocket()
                 &&socket->getCntdSocket()->getNode() == contnode->getInputs())
                 oldLinks.append(DNodeLink(socket, socket->getCntdSocket()));
-                
+
     foreach(DoutSocket *socket, contnode->getOutSockets())
         oldLinks.append(socket->getLinks());
 }    
@@ -231,19 +229,17 @@ void UndoUnpackContainer::undo()
         FRG::Space->addItem(nodeVis);
         nodeVis->setPos(cache.contnode->getPos());
     }
-    FRG::Space->updateLinks();
 }
 
 void UndoUnpackContainer::redo()    
 {
     foreach(ContainerCache cache, containers)
         DNode::unpackContainerNode(cache.contnode);
-
-    FRG::Space->updateLinks();
 }
 
 VNSpace::VNSpace()
-    : newlink(0), nodelib(0), nodeedit(0), editNameMode(false), linkNodeMode(false)
+    : newlink(0), nodelib(0), nodeedit(0), editNameMode(false), linkNodeMode(false), linksocket(0),
+    linkjoint(0)
 {
     qreal space_width, space_height;
     if (itemsBoundingRect().width() < 10000)
@@ -274,8 +270,29 @@ void VNSpace::removeNode(QList<DNode*>nodeList)
             continue;
         FRG::SpaceDataInFocus->unregisterNode(node);
     }
-    updateLinks();
 };
+
+void VNSpace::regLink(VNodeLink *l)    
+{
+    links.append(l); 
+    addItem(l);
+}
+
+void VNSpace::rmLink(VNodeLink *l)    
+{
+    links.removeAll(l);
+}
+
+void VNSpace::regJoint(LinkJoint *j)    
+{
+    joints.append(j);
+    addItem(j);
+}
+
+void VNSpace::rmJoint(LinkJoint *j)    
+{
+    joints.removeAll(j); 
+}
 
 void VNSpace::cacheNodePositions(NodeList nodes)    
 {
@@ -349,63 +366,78 @@ void VNSpace::paste()
 void VNSpace::addLink(VNSocket *final)
 {
     DinSocket *socketToBeLinked = 0;
-    if(linksocket->getData()->getDir() == IN) socketToBeLinked = linksocket->getData()->toIn();
-    else socketToBeLinked = final->getData()->toIn();
+    if(linksocket) {
+        if(linksocket->getData()->getDir() == IN) 
+            socketToBeLinked = linksocket->getData()->toIn();
+        else 
+            socketToBeLinked = final->getData()->toIn();
+    }
+    else
+        socketToBeLinked = final->getData()->toIn();
     DNodeLink olddnlink;
     if(socketToBeLinked->getCntdSocket())
     {
         olddnlink.in = socketToBeLinked->toIn();
         olddnlink.out = socketToBeLinked->getCntdSocket()->toOut();
     }
-    DNodeLink dnlink = DSocket::createLink(linksocket->getData(), final->getData());
-    leaveLinkNodeMode();
-    updateLinks();
+    DNodeLink dnlink;
+    if(linksocket)
+        dnlink = DNodeLink(DSocket::createLink(linksocket->getData(), final->getData()));
+    //else
+    //    dnlink = new DNodeLink(DSocket::createLink(linkjoint->getLink()->getData()->out, final->getData()));
+    newlink->setData(dnlink);
+    if(final->getData()->getDir() != IN) {
+        //newlink->setEnd(newlink->getStart());
+        //newlink->setStart(final);
+        newlink->setRoute(final, newlink->getStart());
+    }
+    else
+        newlink->setRoute(newlink->getStart(), final);
+        //newlink->setEnd(final);
     FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoLink(dnlink, olddnlink));
 
     emit linkChanged(dnlink.out->getNode());
 };
 
-void VNSpace::updateLinks()
+void VNSpace::addLink(LinkJoint *j)
 {
-    foreach(DNode *node, FRG::SpaceDataInFocus->getNodes())
-        foreach(DinSocket *socket, node->getInSockets())
-            if(socket->getCntdSocket()
-                &&(!linkcache.contains(socket)
-                    ||linkcache.value(socket)->out!=socket->getCntdSocket()))
-            {
-                if(linkcache.contains(socket))
-                    delete linkcache.take(socket);
-                linkcache[socket] = new DNodeLink(socket, socket->getCntdSocket(), true);
-            }
-            else if(!socket->getCntdSocket() && linkcache.contains(socket))
-                delete linkcache.take(socket);
-
-    foreach(DNodeLink *dnlink, linkcache.values())
-    {
-        if(!dnlink->in->getNode()
-            ||!dnlink->out->getNode())
-            delete linkcache.take(dnlink->in);
-        dnlink->vis->updateLink(); 
-    }
+    DNodeLink dnlink = DSocket::createLink(linksocket->getData(), j->getOutSocket()->getData());
+    newlink->setData(dnlink);
+    //newlink->setEnd(newlink->getStart());
+    //newlink->setStart(j);
+    newlink->setRoute(j, newlink->getStart());
+    j->addLink(newlink);
+    FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoLink(dnlink, DNodeLink()));
+    emit linkChanged(dnlink.out->getNode());
 }
 
-void VNSpace::removeLink(DSocket *socket)  
+
+void VNSpace::updateLinks()
 {
-    delete linkcache.take(socket);
-    if(socket->getDir() == OUT)
-        foreach(DNodeLink dnlink, socket->toOut()->getLinks())
-            delete linkcache.take(dnlink.in);
 }
 
 void VNSpace::enterLinkNodeMode(VNSocket *socket)
 {
 	linkNodeMode = true;
-    QPointF endpos;
     linksocket = socket;
-    endpos = socket->parentItem()->pos() + socket->pos();
-    newlink = new VNodeLink(endpos, endpos);
-    addItem(newlink);
+    newlink = new VNodeLink();
+    //newlink->setStart(socket);
+    newlink->setTemp(socket);
 };
+
+void VNSpace::enterLinkNodeMode(LinkJoint *j)
+{
+    linkNodeMode = true;
+    linkjoint = j;
+    newlink = new VNodeLink();
+    //newlink->setStart(j);
+    newlink->setTemp(j);
+}
+
+VNSocket* VNSpace::getLinkSocket()    
+{
+    return linksocket;
+}
 
 void VNSpace::leaveLinkNodeMode()
 {
@@ -413,61 +445,31 @@ void VNSpace::leaveLinkNodeMode()
         return;
 
     linkNodeMode = false;
-    VNSocket *finalSocket;
-    removeItem(newlink);
     linksocket = 0;
     newlink = 0;
 };
+
+void VNSpace::cancelLinkNodeMode()    
+{
+    delete newlink;
+    leaveLinkNodeMode();
+}
 
 bool VNSpace::isLinkNodeMode()
 {
 	return linkNodeMode;
 }
 
-void VNSpace::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
-{
-    mousePos = event->scenePos();
-    if (isLinkNodeMode())
-    {
-        QPointF lpos;
-
-        //snap to compatible socket
-        QGraphicsItem *item = itemAt(event->scenePos());
-        if(item && item->type() == VNSocket::Type)
-        {
-            VNSocket *vsocket = (VNSocket*)item;
-            if(DSocket::isCompatible(linksocket->getData(), vsocket->getData()))
-                lpos = item->pos() + item->parentItem()->pos();
-            else
-                lpos = event->scenePos();
-        }
-        else
-            lpos = event->scenePos();
-        newlink->setlink(lpos);
-    }
-    QGraphicsScene::mouseMoveEvent(event);
-    updateLinks();
-    update();
-};
-
-void VNSpace::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    QGraphicsScene::mousePressEvent(event);
-    QGraphicsItem *item = itemAt(event->scenePos());
-    if(!item || item->type() != VNSocket::Type)
-        leaveLinkNodeMode();
-};
-
 void VNSpace::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)    
 {
-    QGraphicsScene::mouseReleaseEvent(event);
     QList<DNode*> nodes = selectedNodes();
     if(nodes.isEmpty())
         return QGraphicsScene::mouseReleaseEvent(event);
-    
+
     DNode *firstNode = nodes.first();
     if(firstNode->getNodeVis()->pos() != FRG::CurrentProject->getNodePosition(firstNode))
         cacheNodePositions(nodes);
+    QGraphicsScene::mouseReleaseEvent(event);
 }
 
 void VNSpace::containerNode()    
@@ -484,8 +486,7 @@ void VNSpace::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     QGraphicsItem *item = itemAt(mousePos);
     if (item)
         QGraphicsScene::contextMenuEvent(event);
-    else
-    {
+    else {
         ContextAddMenu();
         NContextMenu->exec(event->screenPos());
     }
@@ -497,6 +498,7 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
     if(itemAt(event->scenePos()))
     {
         QGraphicsScene::dropEvent(event);
+        leaveLinkNodeMode();
         return;
     }
     if (event->mimeData()->hasFormat("FRGShaderAuthor/nodefile"))
@@ -514,119 +516,9 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
         QDataStream stream(&itemData, QIODevice::ReadOnly);
         stream>>buildInType;
         dnode = FRG::lib->getItem(buildInType)->dropFunc();
-        //switch(buildInType)
-        //{
-        //case 1:
-        //    dnode = BuildIn::surfaceInput(FRG::SpaceDataInFocus);
-        //    break;
-        //case 2:
-        //    dnode = BuildIn::displacementInput(FRG::SpaceDataInFocus);
-        //    break;
-        //case 3:
-        //    dnode = BuildIn::volumeInput(FRG::SpaceDataInFocus);
-        //    break;
-        //case 4:
-        //    dnode = BuildIn::lightInput(FRG::SpaceDataInFocus);
-        //    break;
-        //case 5:
-        //    dnode = BuildIn::surfaceOutput(FRG::SpaceDataInFocus);
-        //    break;
-        //case 6:
-        //    dnode = BuildIn::displacementOutput(FRG::SpaceDataInFocus);
-        //    break;
-        //case 7:
-        //    dnode = BuildIn::volumeOutput(FRG::SpaceDataInFocus);
-        //    break;
-        //case 8:
-        //    dnode = BuildIn::lightOutput(FRG::SpaceDataInFocus);
-        //    break;
-        //case 9:
-        //    dnode = BuildIn::MaddNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 10:
-        //    dnode = BuildIn::MSubNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 11:
-        //    dnode = BuildIn::MmultNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 12:
-        //    dnode = BuildIn::MdivNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 13:
-        //    dnode = BuildIn::MdotNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 14:
-        //    dnode = BuildIn::ContIfNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 15:
-        //    dnode = BuildIn::CgreaterNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 16:
-        //    dnode = BuildIn::CsmallerNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 17:
-        //    dnode = BuildIn::CeqNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 18:
-        //    dnode = BuildIn::CnotNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 19:
-        //    dnode = BuildIn::CandNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 20:
-        //    dnode = BuildIn::CorNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 21:
-        //    dnode = BuildIn::VColNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 22:
-        //    dnode = BuildIn::VStrNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 23:
-        //    dnode = BuildIn::VFlNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 24:
-        //    dnode = BuildIn::ContForNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 25:
-        //    dnode = BuildIn::ContWhileNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 26:
-        //    dnode = BuildIn::CLilluminate(FRG::SpaceDataInFocus);
-        //    break;
-        //case 27:
-        //    dnode = BuildIn::CLilluminance(FRG::SpaceDataInFocus);
-        //    break;
-        //case 28:
-        //    dnode = BuildIn::CLsolar(FRG::SpaceDataInFocus);
-        //    break;
-        //case 29:
-        //    dnode = BuildIn::CLgather(FRG::SpaceDataInFocus);
-        //    break;
-        //case 30:
-        //    dnode = new DShaderPreview();
-        //    FRG::SpaceDataInFocus->addNode(dnode);
-        //    break;
-        //case 31:
-        //    dnode = BuildIn::VVecNode(FRG::SpaceDataInFocus);
-        //    break;
-        //case 32:
-        //    dnode = BuildIn::getArray(FRG::SpaceDataInFocus);
-        //    break;
-        //case 33:
-        //    dnode = BuildIn::setArray(FRG::SpaceDataInFocus);
-        //    break;
-        //case 34:
-        //    dnode = BuildIn::VarName(FRG::SpaceDataInFocus);
-        //    break;
-        //case 35:
-        //    dnode = BuildIn::Viewport(FRG::SpaceDataInFocus);
-        //    break;
-        //case 36:
-        //    dnode = BuildIn::composeArray(FRG::SpaceDataInFocus);
-        //    break;
-        //}
     }
+    else if(isLinkNodeMode())
+        cancelLinkNodeMode();
     if(dnode)
     {
         FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoDropNode(dnode));
@@ -676,7 +568,30 @@ void VNSpace::dropEvent(QGraphicsSceneDragDropEvent *event)
 
 void VNSpace::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
 {
-    updateLinks();
+    update();
+    mousePos = event->scenePos();
+    if (isLinkNodeMode())
+    {
+        QPointF lpos;
+
+        //snap to compatible socket
+        QGraphicsItem *item = itemAt(event->scenePos());
+        if(item && item->type() == VNSocket::Type) {
+            VNSocket *socket = (VNSocket*)item;
+            if(DSocket::isCompatible(linksocket->getData(), socket->getData()))
+                lpos = item->pos() + item->parentItem()->pos();
+            else
+                lpos = event->scenePos();
+        }
+        else if (item && item->type() == LinkJoint::Type
+            && DSocket::isCompatible(linksocket->getData(), 
+                                    ((LinkJoint*)item)->getOutSocket()->getData()->toOut()))
+            lpos = item->pos();
+        else
+            lpos = event->scenePos();
+        newlink->setLink(lpos);
+    }
+
     if(itemAt(event->scenePos()))
     {
         QGraphicsScene::dragMoveEvent(event);
@@ -684,6 +599,7 @@ void VNSpace::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
     }
     if(event->mimeData()->hasFormat("application/x-qabstractitemmodeldatalist"))
         event->acceptProposedAction();
+
 }
 
 void VNSpace::enterEditNameMode()
@@ -717,13 +633,51 @@ void VNSpace::moveIntoSpace(DNSpace *space)
 void VNSpace::createSpaceVis()
 {
     //create nodeVis for new nodes
-    foreach(DNode* node, FRG::SpaceDataInFocus->getNodes())
-    {
+    foreach(DNode* node, FRG::SpaceDataInFocus->getNodes()) {
         addItem(node->createNodeVis());
         node->getNodeVis()->setPos(FRG::CurrentProject->getNodePosition(node));
     }
-    updateLinks();
     emit linkChanged();
+
+    createLinkVis();
+}
+
+bool VNSpace::isStraightLink(DinSocket *socket)
+{
+    if(!socket->getCntdSocket()) return false;
+    foreach(JointData *joint, FRG::SpaceDataInFocus->getJointData())
+       if(joint->getInSockets().contains(socket))
+           return false;
+    return true;
+}
+
+
+void VNSpace::createLinkVis()    
+{
+    VNodeLink *vnlink = 0;
+    foreach(DNode *node, FRG::SpaceDataInFocus->getNodes())
+        foreach(DinSocket *socket, node->getInSockets())
+            if(isStraightLink(socket)) {
+                vnlink = new VNodeLink(new DNodeLink(socket, socket->getCntdSocket(), false));
+                vnlink->setRoute(socket->getCntdSocket()->getSocketVis(), socket->getSocketVis());
+            }
+
+    foreach(JointData *joint, FRG::SpaceDataInFocus->getJointData()){
+        if(!joint->getInSockets().isEmpty()){
+            foreach(DinSocket *socket, joint->getInSockets()){
+                vnlink = new VNodeLink(new DNodeLink(socket, joint->getSource(), false));
+                vnlink->setRoute(joint->getVis(), socket->getSocketVis());
+            }
+        }
+        vnlink = new VNodeLink(new DNodeLink(0, joint->getSource(), false));
+        QGraphicsItem *start, *end;
+        if(joint->getParent())
+            start = joint->getParent()->getVis();
+        else
+            start = joint->getSource()->getSocketVis();
+        end = joint->getVis();
+        vnlink->setRoute(start, end);
+    }
 }
 
 void VNSpace::deleteSpaceVis()
@@ -731,16 +685,25 @@ void VNSpace::deleteSpaceVis()
     if(!FRG::SpaceDataInFocus)
         return;
     //delete all Links
-    foreach(DSocket *socket, linkcache.keys())
-        delete linkcache.value(socket);
-    linkcache.clear();
-    
+    deleteLinkVis();
+
     //delete all visual nodes
     if(!FRG::SpaceDataInFocus->getNodes().isEmpty())
     {
         foreach(DNode *node, FRG::SpaceDataInFocus->getNodes())
             node->deleteNodeVis();
     }
+}
+
+void VNSpace::deleteLinkVis()    
+{
+    foreach(VNodeLink *link, links)
+        delete link;
+    links.clear();
+
+    foreach(LinkJoint *joint, joints)
+        delete joint;
+    joints.clear();
 }
 
 QPointF VNSpace::getMousePos()
@@ -774,7 +737,6 @@ void VNSpace::buildContainer()
     FRG::Space->addItem(contnode->createNodeVis());
     contnode->getNodeVis()->setPos(FRG::CurrentProject->getNodePosition(contnode));
     contnode->getNodeVis()->setSelected(true);
-    updateLinks();
     FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoBuildContainer(contnode));
 }
 
@@ -788,6 +750,4 @@ void VNSpace::unpackContainer()
     FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoUnpackContainer(contnodes));
     foreach(ContainerNode *node, contnodes)
         DNode::unpackContainerNode(node);
-
-    updateLinks();
 }
