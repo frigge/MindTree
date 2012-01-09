@@ -5,6 +5,7 @@
 
 #include "source/data/base/frg.h"
 #include "source/graphics/base/vnspace.h"
+#include "source/data/scene/object.h"
 
 Project::Project(QString filename)
     : filename(filename), glShaderID(0)
@@ -157,6 +158,9 @@ void Project::setNodePosition(const DNode *node, QPointF value)
 void Project::clearNodePosition(const DNode *node)    
 {
     nodePositions.remove(node);
+    if(objects.contains(node)){
+        delete objects.take(node);
+    }
 }
 
 int Project::regGLSLShader(GLShaderCode *shader)    
@@ -173,4 +177,35 @@ void Project::remGLSLShader(int ID)
 GLShaderCode* Project::getGLSLShader(int ID)    
 {
     return glslshaders.value(ID);
+}
+
+void Project::cacheObject(Object *obj, const DNode *node)    
+{
+    if(objects.contains(node)) removeObject(node);
+    objects.insert(node, obj);
+}
+
+bool Project::isCached(const DNode *node)    
+{
+    return objects.contains(node);
+}
+
+Object* Project::getObject(const DNode *node)    
+{
+    return objects.value(node);
+}
+
+void Project::removeObject(Object *obj)    
+{
+    objects.remove(objects.key(obj));
+}
+
+void Project::removeObject(const DNode *node)    
+{
+    objects.take(node);
+}
+
+QList<Object*> Project::getObjects()    
+{
+    return objects.values(); 
 }
