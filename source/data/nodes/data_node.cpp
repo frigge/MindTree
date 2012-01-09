@@ -1329,6 +1329,8 @@ MathNode::MathNode(NType t, bool raw)
         break;
     case DOTPRODUCT:
         setNodeName("Dot Product");
+    case MODULO:
+        setNodeName("Modulo");
         break;
     default:
         break;

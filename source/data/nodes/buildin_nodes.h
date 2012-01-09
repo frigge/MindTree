@@ -40,6 +40,7 @@ namespace BuildIn
     DNode* MmultNode();
     DNode* MdivNode();
     DNode* MdotNode();
+    DNode* MmodNode();
 
     //Booleans
     DNode* CandNode();

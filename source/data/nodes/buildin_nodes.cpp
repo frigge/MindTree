@@ -64,6 +64,13 @@ DNode* BuildIn::MdotNode()
     return node;
 }
 
+DNode* BuildIn::MmodNode()
+{
+    MathNode *node = new MathNode(MODULO);
+    FRG::SpaceDataInFocus->addNode(node);
+    return node;
+}
+
 DNode* BuildIn::CandNode()
 {
     ConditionNode *node = new ConditionNode(AND);
@@ -136,6 +143,7 @@ void BuildIn::registerNodes()
     FRG::lib->addNode("Multiply", "Math", &MmultNode); 
     FRG::lib->addNode("Divide", "Math", &MdivNode); 
     FRG::lib->addNode("Dotproduct", "Math", &MdotNode); 
+    FRG::lib->addNode("Modulo", "Math", &MmodNode); 
 
     FRG::lib->addNode("And", "Boolean", &CandNode); 
     FRG::lib->addNode("Or", "Boolean", &CorNode); 
