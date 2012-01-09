@@ -24,6 +24,10 @@
 #include "QGraphicsSceneMouseEvent"
 #include "QGraphicsTextItem"
 #include "QTextDocument"
+#include "QStringList"
+#include "QApplication"
+#include "QDrag"
+#include "QMimeData"
 
 #include "source/data/nodes/data_node_socket.h"
 #include "source/data/base/frg.h"
@@ -32,6 +36,161 @@
 #include "source/graphics/base/vnspace.h"
 #include "source/data/base/project.h"
 
+SocketTypeAction::SocketTypeAction(DSocket *socket, socket_type t, QObject *parent)
+    : socket(socket), type(t), QAction(parent)
+{
+    connect(this, SIGNAL(triggered()), this, SLOT(setType()));
+}
+
+void SocketTypeAction::setType()    
+{
+    socket->setType(type);
+}
+
+SocketButtonContainer::SocketButtonContainer(VNSocket *socket)
+    :socket(socket), changeTypeButton(0), unlinkButton(0) 
+{
+    if(socket->getData()->getDir() == IN)
+        setPos(-18, 0);
+    else
+        setPos(10, 0);
+    changeTypeButton = new SocketChangeTypeButton(socket);
+    changeTypeButton->hide();
+    changeTypeButton->setParentItem(this);
+    if(socket->getData()->getDir() == IN){
+        unlinkButton = new SocketUnlinkButton(socket);
+        unlinkButton->hide();
+        unlinkButton->setParentItem(this);
+    }
+    setParentItem(socket);
+    setAcceptHoverEvents(true);
+}
+
+SocketButtonContainer::~SocketButtonContainer()
+{
+}
+
+void SocketButtonContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
+{
+}
+
+QRectF SocketButtonContainer::boundingRect() const
+{
+    return QRectF(-40, -10, 60, 30);
+};
+
+void SocketButtonContainer::hoverEnterEvent(QGraphicsSceneHoverEvent *event)    
+{
+    if(unlinkButton)unlinkButton->show();
+    changeTypeButton->show();
+    QGraphicsItem::hoverEnterEvent(event);
+}
+
+void SocketButtonContainer::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)    
+{
+    if(unlinkButton)unlinkButton->hide();
+    changeTypeButton->hide();
+    QGraphicsItem::hoverLeaveEvent(event);
+}
+
+SocketChangeTypeButton::SocketChangeTypeButton(VNSocket *socket)
+    : socket(socket)
+{
+    if(socket->getData()->getDir() == IN)
+        setPos(0, -5);
+    else
+        setPos(0, -5);
+    setAcceptHoverEvents(true);
+    setParentItem(socket);
+    setZValue(zValue() + 3);
+
+    createMenu();
+}
+
+SocketChangeTypeButton::~SocketChangeTypeButton()
+{
+}
+
+void SocketChangeTypeButton::createMenu()    
+{
+    typeMenu = new QMenu();
+    typeMenu->addActions(createActions());
+}
+
+QList<QAction*> SocketChangeTypeButton::createActions()    
+{
+    QList<QAction*> actions;
+    QStringList names;
+    names << "Normal" << "Vector" << "Float" << "Color" << "Point" << "String" << "Variable" << "Condition"
+                    <<  "Matrix" << "Object" << "Polygon" << "Integer" << "Vec2" << "Mat2" << "Mat3" << "Sampler1D" << "Sampler2D"
+                    << "Sampler3D" << "SamplerCube" << "Sampler1DShadow" << "Sampler2DShadow";
+    for(int i=0; i<21; i++) {
+        QAction *action = new SocketTypeAction(socket->getData(), (socket_type)i, (QObject*)socket);
+        action->setText(names.at(i));
+        actions.append(action);
+    }
+    return actions;
+}
+
+QRectF SocketChangeTypeButton::boundingRect() const
+{
+    return QRectF(0, 0, 10, 10);
+};
+
+void SocketChangeTypeButton::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
+{
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setPen(Qt::NoPen);
+    if(isUnderMouse())
+        painter->setBrush(QBrush(QColor(120, 120, 120, 200)));
+    else
+        painter->setBrush(QBrush(QColor(100, 100, 100, 150)));
+    painter->drawPixmap(0, 0, QPixmap(":/unlink.svg"));
+    painter->drawEllipse(0, 0, 10, 10);    
+}
+
+void SocketChangeTypeButton::mousePressEvent(QGraphicsSceneMouseEvent *event)    
+{
+    QGraphicsItem::mousePressEvent(event);
+    typeMenu->exec(event->screenPos());
+}
+
+SocketUnlinkButton::SocketUnlinkButton(VNSocket *socket)
+    : socket(socket)
+{
+    setPos(-10, -5);
+    setAcceptHoverEvents(true);
+    setParentItem(socket);
+    setZValue(zValue() + 3);
+}
+
+SocketUnlinkButton::~SocketUnlinkButton()
+{
+}
+
+QRectF SocketUnlinkButton::boundingRect() const
+{
+    return QRectF(0, 0, 10, 10);
+};
+
+void SocketUnlinkButton::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
+{
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setPen(Qt::NoPen);
+    if(isUnderMouse())
+        painter->setBrush(QBrush(QColor(120, 120, 120, 200)));
+    else
+        painter->setBrush(QBrush(QColor(100, 100, 100, 150)));
+    painter->drawPixmap(0, 0, QPixmap(":/unlink.svg"));
+    painter->drawEllipse(0, 0, 10, 10);    
+}
+
+void SocketUnlinkButton::mousePressEvent(QGraphicsSceneMouseEvent *event)    
+{
+    QGraphicsItem::mousePressEvent(event);
+    socket->getData()->toIn()->clearLink();
+}
+
 VNSocket::VNSocket(DSocket *data, VNode *parent)
 	: data(data), width(SOCKET_WIDTH), height(SOCKET_HEIGHT), socketNameVis(0), drawName(true), visible(true)
 {
@@ -39,14 +198,16 @@ VNSocket::VNSocket(DSocket *data, VNode *parent)
     setAcceptDrops(true);
     setAcceptHoverEvents(true);
     setZValue(zValue()+2);
+    //setFlag(QGraphicsItem::ItemClipsChildrenToShape, false);
     setFlag(ItemIsSelectable, false);
 //    setGraphicsEffect(new QGraphicsDropShadowEffect);
     createContextMenu();
 	createNameVis();
     setParentItem(parent);
+    socketButtons = new SocketButtonContainer(this);
 
-    cb = new VNodeUpdateCallback(parent);
-    data->addRenameCB(cb);
+    connect(data, SIGNAL(nameChanged(QString)), parent, SLOT(updateNodeVis()));
+    //if(data->getDir() == IN)connect(data, SIGNAL(linked(DoutSocket*)), FRG::Space, SLOT(updateLinks()));
 
     //if(data->isArray()) 
     //{
@@ -58,15 +219,17 @@ VNSocket::VNSocket(DSocket *data, VNode *parent)
 
 VNSocket::~VNSocket()
 {
-    data->remRenameCB(cb);
-    delete cb;
-    FRG::Space->removeLink(data);
     delete contextMenu;
 }
 
 DSocket* VNSocket::getData() const
 {
     return data;
+}
+
+QColor VNSocket::getColor()    
+{
+    return color;
 }
 
 void VNSocket::createNameVis()
@@ -268,8 +431,7 @@ QRectF VNSocket::boundingRect() const
 void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *)
 {
     painter->setRenderHint(QPainter::Antialiasing);
-    painter->setClipRect(option->exposedRect);
-    QColor color;
+    //painter->setClipRect(option->exposedRect);
     QPen spen;
     spen.setColor(QColor(50, 50, 50));
     switch(data->getType())
@@ -349,26 +511,8 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     painter->drawEllipse(-width/2, -height/2, width, height);
 };
 
-void VNSocket::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
-{
-    update();
-};
 
-void VNSocket::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
-{
-    update();
-};
 
-void VNSocket::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    if(event->button() != Qt::LeftButton)
-        return;
-
-	if(!FRG::Space->isLinkNodeMode())
-        FRG::Space->enterLinkNodeMode(this);
-    else
-        FRG::Space->addLink(this);
-}
 
 void VNSocket::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
