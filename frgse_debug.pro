@@ -45,6 +45,7 @@ HEADERS += source/data/callbacks.h \
            source/graphics/sourcedock.h \
            source/graphics/viewport.h \
            source/graphics/properties_editor.h \
+           source/graphics/detailsview.h \
            source/data/base/dnspace.h \
            source/data/base/frg.h \
            source/data/base/frg_shader_author.h \
@@ -79,6 +80,7 @@ SOURCES += source/data/callbacks.cpp \
            source/graphics/sourcedock.cpp \
            source/graphics/viewport.cpp \
            source/graphics/properties_editor.cpp \
+           source/graphics/detailsview.cpp \
            source/data/base/dnspace.cpp \
            source/data/base/frg.cpp \
            source/data/base/frg_shader_author.cpp \
