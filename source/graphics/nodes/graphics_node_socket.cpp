@@ -511,7 +511,19 @@ void VNSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
     painter->drawEllipse(-width/2, -height/2, width, height);
 };
 
+void VNSocket::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if(event->button() != Qt::LeftButton) {
+        QGraphicsItem::mousePressEvent(event);
+        return;
+    }
 
+    dragstartpos = event->pos();
+	//if(!FRG::Space->isLinkNodeMode())
+    //    FRG::Space->enterLinkNodeMode(this);
+    //else
+    //    FRG::Space->addLink(this);
+}
 
 void VNSocket::mouseMoveEvent(QGraphicsSceneMouseEvent *event)    
 {
