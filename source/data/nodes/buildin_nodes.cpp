@@ -181,4 +181,5 @@ void BuildIn::registerNodes()
     FRG::lib->addNode("Viewport", "Data", createNode<ViewportNode>); 
     FRG::lib->addNode("Compose Object", "Data", createNode<ObjectNode>); 
     FRG::lib->addNode("Compose Polygon", "Data", createNode<PolygonNode>); 
+    FRG::lib->addNode("Transformation", "Data", createNode<TransformNode>); 
 }

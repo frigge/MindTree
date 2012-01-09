@@ -39,6 +39,7 @@ protected:
     void composeObject();
     void container();
     void stepup();
+    void transform();
 
 private:
     QList<Object*> objects;

@@ -47,8 +47,8 @@ SceneCache::SceneCache(const DinSocket *socket)
         return;
     }
     CacheControl::addCache(getStart(), this);
-    if(getStart())
-        cacheInputs();
+    setType(AbstractDataCache::SCENECACHE);
+    cacheInputs();
 }
 
 SceneCache::~SceneCache()
@@ -160,7 +160,47 @@ void SceneCache::stepup()
     const ContainerNode *node = getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
     SceneCache *cache = new SceneCache(node->getSocketOnContainer(getStart())->toIn());
     objects = cache->getData();
-    delete cache;
+}
+
+void SceneCache::transform()    
+{
+    const DNode *node = getStart()->getNode()->getDerivedConst<TransformNode>();
+    DinSocketList insockets = node->getInSockets(); 
+
+    DinSocket *objin, *tin, *rin, *sin;
+    objin = insockets.at(0);
+    tin = insockets.at(1);
+    rin = insockets.at(2);
+    sin = insockets.at(3);
+
+    Vector t, r, s;
+    VectorCache *tcache, *rcache, *scache;
+    tcache = new VectorCache(tin);
+    rcache = new VectorCache(rin);
+    scache = new VectorCache(sin);
+
+    t = tcache->getSingleData();
+    r = rcache->getSingleData();
+    s = scache->getSingleData();
+
+    delete tcache;
+    delete rcache;
+    delete scache;
+
+    SceneCache *scecache = new SceneCache(objin);
+    QList<Object*> objs = scecache->getData();
+    QMatrix4x4 trans;
+    trans.translate(t.x, t.y, t.z);
+    trans.rotate(r.x, QVector3D(1, 0, 0));
+    trans.rotate(r.y, QVector3D(0, 1, 0));
+    trans.rotate(r.z, QVector3D(0, 0, 1));
+    trans.scale(s.x, s.y, s.z);
+    foreach(Object *obj, objs){
+        Object *object = newObject(node);
+        object->setTransformation(trans);
+        object->makeInstance(obj);
+        objects.append(object);
+    }
 }
 
 PolygonCache::PolygonCache(const DinSocket *socket)
