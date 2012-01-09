@@ -164,6 +164,7 @@ void BuildIn::registerNodes()
     FRG::lib->addNode("If", "Boolean", createNode<ConditionContainerNode>); 
     FRG::lib->addNode("For", "Loop", createNode<ForNode>); 
     FRG::lib->addNode("While", "Loop", createNode<WhileNode>); 
+    FRG::lib->addNode("Foreach", "Loop", createNode<ForeachNode>); 
     
     FRG::lib->addGroup("Shading Loop", "Shading");
     FRG::lib->addNode("Illuminate", "Shading Loop", createNode<IlluminateNode>); 

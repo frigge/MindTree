@@ -1775,6 +1775,28 @@ ForNode::ForNode(const ForNode* node)
 {
 }
 
+ForeachNode::ForeachNode(bool raw)
+    : ContainerNode("Foreach", raw)
+{
+    setNodeType(FOREACHNODE);
+    if(!raw)
+    {
+        new DinSocket("Array", VARIABLE, this);
+        new DoutSocket("Array", VARIABLE, this);
+        new DoutSocket("Index", INTEGER, getInputs());
+        new DinSocket("Value", VARIABLE, getOutputs());
+        DSocketList *inputSocketList = getInputs()->getDerived<SocketNode>()->getOutSocketLlist();
+        DSocketList *outSocketList = getOutputs()->getDerived<SocketNode>()->getInSocketLlist();
+        inputSocketList->move(0, inputSocketList->len() - 1);
+        outSocketList->move(0, outSocketList->len() - 1);
+    }
+}
+
+ForeachNode::ForeachNode(const ForeachNode* node)
+    : ContainerNode(node)
+{
+}
+
 IlluminanceNode::IlluminanceNode(bool raw)
     : LoopNode("Illuminance", raw)
 {

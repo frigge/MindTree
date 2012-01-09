@@ -21,9 +21,9 @@
 #define CACHE_DATA_77LKPR3V
 
 #include "source/data/scene/cache_main.h"
+#include "source/data/scene/object.h"
 
 class Object;
-class Polygon;
 class SceneCache : public AbstractDataCache
 {
 public:
@@ -32,6 +32,7 @@ public:
     QList<Object*> getData();
     virtual SceneCache* getDerived();
     void clear();
+    Object* newObject(const DNode *node);
 
 protected:
     virtual void composeArray();
@@ -49,7 +50,8 @@ public:
     PolygonCache(const DinSocket *socket);
     ~PolygonCache();
     virtual PolygonCache* getDerived();
-    Polygon* getData(int *size=0);
+    PolygonList* getData();
+    Polygon getSingleData();
     void clear();
 
 protected:
@@ -57,10 +59,13 @@ protected:
     void composeArray();
     void container();
     void stepup();
+    void setArray();
+    void getLoopedCache();
+    void forloop();
 
 private:
-    Polygon *data;
-    int arraysize;
+    PolygonList *data;
+    Polygon singlePolygon;
 };
 
 class FloatCache : public AbstractDataCache
@@ -78,6 +83,7 @@ protected:
     void intValue();
     void getLoopedCache();
     void math(eMathOp op);
+    void modulo();
     void container();
     void stepup();
 
@@ -94,6 +100,7 @@ public:
     virtual IntCache* getDerived();
     void setData(int d);
     int* getData(int* size=0);
+    int getSingleData();
     void clear();
 
 protected:
@@ -105,13 +112,31 @@ protected:
     void multiply();
     void divide();
     void math(eMathOp op);
+    void modulo();
     void container();
     void stepup();
     void glShader();
 
 private:
+    int singleData;
     int *data;
     int arraysize;
+};
+
+class VectorForeachCacheThread : public QThread
+{
+public:
+    VectorForeachCacheThread(const DinSocket *socket, VertexList *array, int work_start, int work);
+    ~VectorForeachCacheThread();
+    int getStep();
+
+protected:
+    void run();
+
+private:
+    const DinSocket *socket;
+    VertexList *array;
+    int work_start, work, step;
 };
 
 class VectorCache : public AbstractDataCache
@@ -121,7 +146,8 @@ public:
     ~VectorCache();
     virtual VectorCache* getDerived();
     void setData(Vector d);
-    Vector* getData(int* size=0);
+    VertexList* getData();
+    Vector getSingleData();
     void clear();
 
 protected:
@@ -133,11 +159,25 @@ protected:
     void getLoopedCache();
     void container();
     void stepup();
+    void foreachloop();
 
 private:
-    Vector *data;
-    int arraysize;
+    VertexList *data;
+    Vector singleVector;
 };
 
+class VectorCacheThreaded : public QThread
+{
+public:
+    VectorCacheThreaded(const DinSocket *socket=0);
+    VertexList* getData();
+
+protected:
+    void run();
+
+private:
+    const DinSocket *socket;
+    VertexList *data;
+};
 
 #endif /* end of include guard: CACHE_DATA_77LKPR3V */

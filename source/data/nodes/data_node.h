@@ -84,7 +84,8 @@ enum NType
     FRAGMENTOUTPUT,     VERTEXOUTPUT,
     GEOMETRYOUTPUT,
     GLFRAGMENTINPUT,    GLVERTEXINPUT,
-    GLGEOMETRYINPUT
+    GLGEOMETRYINPUT,    TRANSFORM,
+    FOREACHNODE
 };
 
 class VNode;
@@ -440,6 +441,13 @@ class ForNode : public LoopNode
 public:
     ForNode(bool raw=false);
     ForNode(const ForNode* node);
+};
+
+class ForeachNode : public ContainerNode
+{
+public:
+    ForeachNode(bool raw=false);
+    ForeachNode(const ForeachNode* node);
 };
 
 class WhileNode : public LoopNode
