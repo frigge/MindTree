@@ -68,6 +68,7 @@ public slots:
     void buildContainer();
     void unpackContainer();
     void removeNodes();
+    void addInfoBox();
 
     void newfile(); 
     void save(); 
@@ -93,7 +94,7 @@ private:
     Shader_View *view;
     void change_window_title(QString);
     QList<ChangeSpaceAction*>spaceActions;
-    QDockWidget *nodelib, *nodeeditor, *propeditor;
+    QDockWidget *nodelib, *nodeeditor, *propeditor, *detailsview, *spaceDock;
 };
 
 #endif // FRG_SHADER_AUTHOR_H

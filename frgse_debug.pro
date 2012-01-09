@@ -4,6 +4,7 @@
 
 QT+=core gui opengl
 CONFIG+=debug
+RESOURCES+=source/graphics/icons/res.qrc
 TEMPLATE = app
 TARGET = frgse_debug
 DEPENDPATH += . \
@@ -27,11 +28,13 @@ INCLUDEPATH += . \
 
 # Input
 HEADERS += source/data/callbacks.h \
+           source/data/data_info_box.h \
            source/data/code_generator/shaderwriter.h \
            source/data/code_generator/rslwriter.h \
            source/data/code_generator/glslwriter.h \
            source/data/code_generator/inputs.h \
            source/data/code_generator/outputs.h \
+           source/graphics/vis_info_box.h \
            source/graphics/newnodeeditor.h \
            source/graphics/nodelib.h \
            source/graphics/nodelink.h \
@@ -59,11 +62,13 @@ HEADERS += source/data/callbacks.h \
            source/graphics/nodes/graphics_node.h \
            source/graphics/nodes/graphics_node_socket.h
 SOURCES += source/data/callbacks.cpp \
+           source/data/data_info_box.cpp \
            source/data/code_generator/shaderwriter.cpp \
            source/data/code_generator/rslwriter.cpp \
            source/data/code_generator/glslwriter.cpp \
            source/data/code_generator/inputs.cpp \
            source/data/code_generator/outputs.cpp \
+           source/graphics/vis_info_box.cpp \
            source/graphics/newnodeeditor.cpp \
            source/graphics/nodelib.cpp \
            source/graphics/nodelink.cpp \

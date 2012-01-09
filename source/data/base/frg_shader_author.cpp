@@ -40,6 +40,7 @@
 #include "source/graphics/shaderpreview.h"
 #include "source/graphics/previewdock.h"
 #include "source/graphics/properties_editor.h"
+#include "source/graphics/detailsview.h"
 #include "source/data/data_info_box.h"
 #include "source/graphics/vis_info_box.h"
 
@@ -107,6 +108,11 @@ void frg_Shader_Author::createDocks()
     propeditor = new QDockWidget("Properties Editor");
     propeditor->setWidget(new PropertiesEditor(this));
     addDockWidget(Qt::LeftDockWidgetArea, propeditor);
+
+    detailsview = new QDockWidget("Details View");
+    detailsview->setWidget(new DetailsView(this));
+    addDockWidget(Qt::RightDockWidgetArea, detailsview);
+    tabifyDockWidget(detailsview, spaceDock);
 }
 
 void frg_Shader_Author::createPreviewDock(DShaderPreview *prev)    
