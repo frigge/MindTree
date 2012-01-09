@@ -18,8 +18,6 @@
 
 #include "viewport.h"
 
-#include "QDockWidget"
-#include "QGLWidget"
 #include "QMenu"
 #include "QGraphicsSceneContextMenuEvent"
 #include "QMouseEvent"
@@ -36,9 +34,10 @@
 #include "source/data/scene/cache_data.h"
 
 Viewport::Viewport(QWidget *parent, ViewportNode *node)
-    : QGLWidget(parent), camlookat(QVector3D(0, 0, 0)), rotate(false), zoom(false), pan(false), cache(0), viewnode(node),
+    : QGLWidget(parent), camlookat(QVector3D(0, 0, 0)), rotate(false), zoom(false), pan(false), viewnode(node),
     zoomlvl(10)
 {
+    cache = new SceneCache(node->getInSockets().first());
     camData.edges = true;
     camData.points = true;
     camData.polys = true;
@@ -92,15 +91,53 @@ void Viewport::paintGL()
 
 void Viewport::drawScene()    
 {
-    if(!cache)
-        return;
-
     QList<Object*> objects;
     objects = cache->getData();
 
     if(!objects.isEmpty())
         foreach(Object *obj, objects)
                 drawObject(obj);
+}
+
+QGLBuffer* Viewport::drawVertices(Object *obj)    
+{
+    double *verts = obj->getVertices();
+    int vertcnt = obj->getVertCnt();
+    unsigned int *indices = new unsigned int[vertcnt];
+    for(int i=0; i<vertcnt; i++)
+        indices[i] = i;
+    size_t bytesToAlloc = vertcnt * sizeof(GLdouble) * 3;
+    QGLBuffer *vertbuff = new QGLBuffer;
+    vertbuff->create();
+    vertbuff->bind();
+    vertbuff->setUsagePattern(QGLBuffer::StaticDraw);
+    vertbuff->allocate(verts, bytesToAlloc);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_DOUBLE, 0, 0);
+    glDrawElements(GL_POINTS, vertcnt, GL_UNSIGNED_INT, indices);
+    delete [] verts;
+    delete [] indices;
+    return vertbuff;
+}
+
+void Viewport::drawPolygons(Object *obj)    
+{
+    Polygon *polys = obj->getPolygons();
+    int polycnt = obj->getPolyCnt();
+    //Edges
+    if (camData.edges) {
+        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+        for(int i=0; i<polycnt; i++)
+            glDrawElements(GL_LINE_LOOP, polys[i].vertexcount, GL_UNSIGNED_INT, polys[i].vertices);
+    }
+
+    //draw Polygons 
+    if(camData.polys){
+        glColor4f(0.6f, 0.6f, 0.6f, 1.0f);
+        for(int i=0; i<polycnt; i++)
+            glDrawElements(GL_POLYGON, polys[i].vertexcount, GL_UNSIGNED_INT, polys[i].vertices);
+    }
+    delete [] polys;
 }
 
 void Viewport::drawObject(Object* obj)    
@@ -115,72 +152,28 @@ void Viewport::drawObject(Object* obj)
     program.link();
     program.bind();
 
-    Vector* vertices = obj->getVertices();
-    int vertcnt = obj->getVertCnt();
+    glEnable(GL_POLYGON_OFFSET_LINE);
+    glPolygonOffset(1, 1);
+    glPushMatrix();
+    glMultMatrixd(obj->getTransformation().data());
     int i = 0;
     int j=0, vi=0;
-    //draw Vertices
+    QGLBuffer *vertbuffer = 0;
     if (camData.points) {
         glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-        glPointSize(5.0);
-        glBegin(GL_POINTS);
-        for(i=0; i<vertcnt; i++)
-            glVertex3f(vertices[i].x, vertices[i].y, vertices[i].z);
-        glEnd();
+        glPointSize(4.0);
+        vertbuffer = drawVertices(obj);
     }
 
-    Polygon* polygons = obj->getPolygons();
-    int polycnt = obj->getPolyCnt();
-    Vector *vert=0;
-    //draw Edges
-    if (camData.edges) {
-        glBegin(GL_LINES);
-        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-        for(i=0; i<polycnt; i++)
-            for(j=0; j<polygons[i].vertexcount; j++){
-                if(polygons[i].vertices) //prevent crash TODO: fix properly
-                    vi = polygons[i].vertices[0];
-                else
-                    continue;
-                vi = polygons[i].vertices[j];
-                if(0 > vi || vi >= vertcnt) continue;
-                vert = &vertices[vi];
-                glVertex3f(vert->x, vert->y, vert->z);
-                if(j > 0){
-                    glVertex3f(vert->x, vert->y, vert->z);
-                }
-                if(j == polygons[i].vertexcount -1){
-                    if(polygons[i].vertices) //prevent crash TODO: fix properly
-                        vi = polygons[i].vertices[0];
-                    else
-                        continue;
-                    if(0 > vi || vi >= vertcnt) continue;
-                    vert = &vertices[vi];
-                    glVertex3f(vert->x, vert->y, vert->z);
-                }
-            }
-        glEnd();
-    }
-
-    //draw Polygons 
-    if(camData.polys){
-        for(i=0; i<polycnt; i++) {
-            glBegin(GL_POLYGON);
-            glColor4f(0.6f, 0.6f, 0.6f, 1.0f);
-            for(j=0; j<polygons[i].vertexcount; j++){
-                if(polygons[i].vertices) //prevent crash TODO: fix properly
-                    vi = polygons[i].vertices[0];
-                else
-                    continue;
-                vi = polygons[i].vertices[j];
-                if(0 > vi || vi >= vertcnt) continue;
-                vert = &vertices[vi];
-                glVertex3f(vert->x, vert->y, vert->z);
-            }
-            glEnd();
-        }
-    }
+    drawPolygons(obj);
     program.release();
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisable(GL_POLYGON_OFFSET_LINE);
+    if(vertbuffer) delete vertbuffer;
+    if(obj->getOwner()) drawObject(obj->getOwner());
+    foreach(Object* child, obj->getChildren())
+        drawObject(child);
+    glPopMatrix();
 }
 
 void Viewport::drawAxisGizmo()    
@@ -306,11 +299,7 @@ void Viewport::zoomView(qreal xdist, qreal ydist)
 
 void Viewport::render()    
 {
-    if(cache) {
-        delete cache;
-        cache = 0;
-    }
-    viewnode->render(&cache, &camData, 0);
+    viewnode->render(cache, &camData, 0);
     //cache = viewnode->render();    
     resizeGL(width(), height());
     updateGL();
@@ -318,11 +307,7 @@ void Viewport::render()
 
 void Viewport::render(DNode *node)    
 {
-    if(cache) {
-        delete cache;
-        cache = 0;
-    }
-    viewnode->render(&cache, &camData, node);
+    viewnode->render(cache, &camData, node);
     //cache = viewnode->render(node); 
     resizeGL(width(), height());
     updateGL();
@@ -379,7 +364,7 @@ void VViewportNode::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 }
 
 ViewportNode::ViewportNode(bool raw)
-    : DNode("viewport"), dock(new ViewportDock(this)), thread(new CacheThread())
+    : DNode("viewport"), thread(new CacheThread())
 {
     setNodeType(VIEWPORTNODE);
     thread->setStart(this);
@@ -401,6 +386,7 @@ ViewportNode::ViewportNode(bool raw)
         vert = new DinSocket("Show Points", CONDITION, this);
         ((BoolProperty*)vert->getProperty())->setValue(true);
     }
+    dock = new ViewportDock(this); 
 }
 
 ViewportDock* ViewportNode::getDock()    
@@ -414,11 +400,12 @@ VNode* ViewportNode::createNodeVis()
     return getNodeVis();
 }
 
-void ViewportNode::render(SceneCache **cache, CameraData *data, DNode *node)    
+void ViewportNode::render(SceneCache *cache, CameraData *data, DNode *node)    
 {
     //view->connect(thread, SIGNAL(finished()), view, SLOT(repaint()));
     thread->setData(cache, data, view, node);
     thread->start();
+    thread->wait();
 }
 
 CacheThread::CacheThread()
@@ -434,14 +421,14 @@ void CacheThread::run()
 
     AbstractDataCache *tmpc = 0;
     DinSocket *socket = 0;
+    CacheControl::analyse(view, node);
     
     for(int i=0; i< view->getInSockets().size(); i++){
         socket = view->getInSockets().at(i);
         switch(i)
         {
             case 0:
-                tmpc = new SceneCache(socket);
-                *cache = (SceneCache*)tmpc;
+                cache->update();
                 break;
             case 1:
                 break;
@@ -475,7 +462,7 @@ void CacheThread::run()
     }
 }
 
-void CacheThread::setData(SceneCache **cache, CameraData *data, Viewport *view, DNode *node)    
+void CacheThread::setData(SceneCache *cache, CameraData *data, Viewport *view, DNode *node)    
 {
     this->cache = cache;
     this->camData = data; 

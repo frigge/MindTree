@@ -22,6 +22,7 @@
 
 #include "QDockWidget"
 #include "QGLWidget"
+#include "QGLBuffer"
 #include "QVector3D"
 #include "QMatrix4x4"
 #include "QTimer"
@@ -59,6 +60,8 @@ protected:
     void drawGrid();
     void drawScene();
     void drawObject(Object* obj);
+    QGLBuffer* drawVertices(Object *obj);
+    void drawPolygons(Object *obj);
     void drawAxisGizmo();
     void rotateView(qreal xdist, qreal ydist);
     void panView(qreal xdist, qreal ydist);
@@ -101,11 +104,11 @@ class CacheThread : public QThread
 public:
     CacheThread();
     void run();
-    void setData(SceneCache **cache, CameraData *data, Viewport *view, DNode *node);
+    void setData(SceneCache *cache, CameraData *data, Viewport *view, DNode *node);
     void setStart(ViewportNode *start);
 
 private:
-    SceneCache **cache;
+    SceneCache *cache;
     CameraData *camData;
     ViewportNode *view;
     Viewport* viewport;
@@ -117,7 +120,7 @@ class ViewportNode : public DNode
 public:
     ViewportNode(bool raw=false);
     ViewportDock* getDock();
-    void render(SceneCache **cache, CameraData *data, DNode *node);
+    void render(SceneCache *cache, CameraData *data, DNode *node);
 
 protected:
     virtual VNode* createNodeVis();
