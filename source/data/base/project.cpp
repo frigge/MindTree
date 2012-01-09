@@ -45,6 +45,38 @@ Project::~Project()
     FRG::SpaceDataInFocus = 0;
 }
 
+QString Project::registerItem(void* ptr, QString name)    
+{
+    int count=0;
+    QString idname = name;
+    while(IDNames.contains(idname)){
+       count++;
+       idname = name + QString::number(count);
+    }
+    IDNames.insert(idname, ptr);
+    return idname;
+}
+
+QString Project::getIDName(void *ptr)    
+{
+    return IDNames.key(ptr);
+}
+
+void* Project::getItem(QString idname)    
+{
+    return IDNames.value(idname);
+}
+
+void Project::unregisterItem(void *ptr)    
+{
+    IDNames.remove(IDNames.key(ptr));
+}
+
+void Project::unregisterItem(QString idname)    
+{
+    IDNames.remove(idname);
+}
+
 void Project::save()
 {
     if(getFilename() == "")
