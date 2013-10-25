@@ -1,0 +1,8 @@
+add_subdirectory(Int)
+add_subdirectory(Float)
+#add_subdirectory(Color)
+add_subdirectory(Vector)
+add_subdirectory(Object)
+add_subdirectory(Polygon)
+add_subdirectory(String)
+#add_subdirectory(Boolean)
