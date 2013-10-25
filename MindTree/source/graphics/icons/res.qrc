@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+<file>./linked.svg</file>
+<file>./linked_hover.svg</file>
+</qresource>
+</RCC>

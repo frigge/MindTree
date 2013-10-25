@@ -1,0 +1,5 @@
+add_subdirectory(datatypes)
+add_subdirectory(mathnodes)
+add_subdirectory(mtio)
+add_subdirectory(render)
+add_subdirectory(scenegraph)

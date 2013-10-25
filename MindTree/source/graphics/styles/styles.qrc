@@ -1,0 +1,12 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+<file>style.css</file>
+<file>./groupnode_unselected.svg</file>
+<file>./groupnode_selected.svg</file>
+<file>./button_normal.png</file>
+<file>./button_pressed.png</file>
+<file>./button_over.png</file>
+<file>./bg.svg</file>
+<file>./lineedit.png</file>
+</qresource>
+</RCC>

@@ -1,0 +1,102 @@
+*{
+    font-size:12px;
+    border: none;
+    background: none;
+    color: black;
+
+}
+
+
+QWidget {
+    border-style: none;
+    border-width: 2px;
+    border-image: url(:./bg.svg) 2 2 2 2 stretch stretch;
+    color: white;
+}
+
+
+QMenuBar {
+    border-style: none;
+    background-color: rgb(40, 40, 40);
+    border-width: 0
+}
+
+QMenu {
+    background-color: rgb(40, 40, 40);
+}
+
+QMenu::item {
+    background-color: rgb(40 40, 40);
+    color: white;
+    selection-background-color: rgb(150, 30, 0);
+    border-style: none;
+    border-width: 0;
+    margin: 2px;
+    padding: 2px;
+}
+
+QMenu::item:selected {
+    border-image: none;
+    background-color:#222;
+    margin: 2px;
+    padding: 2px;
+}
+
+QLabel {
+    border-image: none;
+}
+
+QLineEdit {
+    border-image: url(:./lineedit.png) 2 2 2 2;
+}
+
+QToolButton {
+    border-style: none
+}
+
+QPushButton {
+    border-image: url(:./button_normal.png) 2 2 2 2;
+    border-width: 2px;
+    color: white;
+}
+
+QPushButton:pressed {
+    border-image: url(:./button_pressed.png) 2 2 2 2;
+    border-width: 2px;
+}
+
+QPushButton:hover {
+    border-image: url(:./button_over.png) 2 2 2 2;
+    border-width: 2px;
+}
+
+ConsoleWindow {
+    font-family: "Courier New Regular";
+    font-size: 8px
+}
+
+ConsoleInput {
+    font-family: "Courier New Regular";
+    font-size: 8px
+}
+
+QToolBar {
+    border-style: none
+}
+
+QTreeWidget {
+    background-color: rgb(40, 40, 40);
+    alternate-background-color: rgb(50, 50, 50);
+    selection-background-color: rgb(150, 30, 0)
+}
+
+QTreeWidget {
+    alternate-background-color: rgb(50, 50, 50);
+    selection-background-color: rgb(150, 30, 0)
+}
+
+QSplitterHandle {
+    width: 10px;
+    border: 1px solid green;
+}
+
