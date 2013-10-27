@@ -198,10 +198,9 @@ public:
     enum eObjType {
         GEO, CAMERA, LIGHT
     };
-    AbstractTransformable(const AbstractTransformableNode *node, eObjType t);
+    AbstractTransformable(eObjType t);
     virtual ~AbstractTransformable();
     AbstractTransformable::eObjType getType();
-    virtual const AbstractTransformableNode* getNode();
     std::string getName();
     void setName(std::string value);
     //void setTransformation(QMatrix4x4 value);
@@ -232,7 +231,6 @@ private:
     eObjType type;
     glm::vec3 center;
     glm::mat4 transformation;
-    const AbstractTransformableNode *node;
     std::shared_ptr<AbstractTransformable> parent;
     std::list<std::shared_ptr<AbstractTransformable>> children;
     std::string name;
@@ -256,7 +254,7 @@ private:
 class MeshData : public ObjectData
 {
 public:
-    MeshData(const MindTree::DNode *node=nullptr);
+    MeshData();
     virtual ~MeshData();
     std::string getName();
 
@@ -278,7 +276,6 @@ public:
     const MindTree::DNode* getNode();
 
 private:
-    const MindTree::DNode *node;
     MindTree::PropertyMap properties;
     std::string name;
 };
@@ -286,7 +283,7 @@ private:
 class Object : public AbstractTransformable, public MindTree::PyExposable
 {
 public:
-    Object(const AbstractTransformableNode *node=nullptr);
+    Object();
     ~Object();
     void makeInstance(std::shared_ptr<Object> obj);
     std::shared_ptr<ObjectData> getData();
@@ -317,7 +314,7 @@ class Light;
 class Group : public MindTree::PyExposable
 {
 public:
-    Group(const MindTree::DNode *node=nullptr);
+    Group();
     Group(const Group &grp);
     virtual ~Group();
     void addMember(std::shared_ptr<AbstractTransformable> trans);
@@ -328,14 +325,13 @@ public:
     std::list<std::shared_ptr<Light>> getLights();
 
 private:
-    //const MindTree::DNode *node;
     std::list<std::shared_ptr<AbstractTransformable>> members;
 };
 
 class Camera : public AbstractTransformable
 {
 public:
-    Camera(const AbstractTransformableNode *node=nullptr);
+    Camera();
     void setProjection(double aspect);
     glm::mat4 getProjection();
     glm::mat4 getViewMatrix();
@@ -351,7 +347,7 @@ private:
 class Light : public AbstractTransformable
 {
 public:
-    Light(const AbstractTransformableNode *node);
+    Light();
     virtual ~Light();
 
 private:
@@ -361,7 +357,7 @@ private:
 class Scene
 {
 public:
-    Scene(const MindTree::DNode *node);
+    Scene();
     virtual ~Scene();
     std::string getName();
     void setName(std::string n);
@@ -374,7 +370,6 @@ public:
     void setCameras(std::list<Camera*> cams);
 
 private:
-    const MindTree::DNode *node;
     std::string name;
     std::list<Object*> objects;
     std::list<Light*>lights;

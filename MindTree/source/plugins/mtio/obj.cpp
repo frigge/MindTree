@@ -104,7 +104,7 @@ void ObjImporter::addUV(QString line, std::shared_ptr<Object> obj)
 }
 
 ObjImportNode::ObjImportNode(bool raw)
-    : DNode("Obj"), group(new Group(this))
+    : DNode("Obj"), group(new Group())
 {
     setNodeType(OBJIMPORTNODE);
     if(!raw){
@@ -114,7 +114,7 @@ ObjImportNode::ObjImportNode(bool raw)
 }
 
 ObjImportNode::ObjImportNode(const ObjImportNode *node)
-    : DNode(node), group(new Group(this))
+    : DNode(node), group(new Group())
 {
 }
 

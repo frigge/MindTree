@@ -99,10 +99,9 @@ CustomShader::~CustomShader()
 {
 }
 
-AbstractTransformable::AbstractTransformable(const AbstractTransformableNode *node, eObjType t)
-    : node(node), parent(nullptr), center(0, 0, 0), type(t)
+AbstractTransformable::AbstractTransformable(eObjType t)
+    : parent(nullptr), center(0, 0, 0), type(t)
 {
-    if(node)name = node->getNodeName();
 }
 
 AbstractTransformable::~AbstractTransformable()
@@ -113,11 +112,6 @@ AbstractTransformable::~AbstractTransformable()
 AbstractTransformable::eObjType AbstractTransformable::getType()    
 {
     return type;
-}
-
-const AbstractTransformableNode* AbstractTransformable::getNode()
-{
-    return node; 
 }
 
 void AbstractTransformable::removeChild(std::shared_ptr<AbstractTransformable> child)    
@@ -270,10 +264,9 @@ void ObjectData::setType(ObjectData::eDataType t)
     type = t; 
 }
 
-MeshData::MeshData(const MindTree::DNode *node)
-    : ObjectData(MESH), node(node)
+MeshData::MeshData()
+    : ObjectData(MESH)
 {
-    if(node)name = node->getNodeName();
 }
 
 MeshData::~MeshData()
@@ -293,11 +286,6 @@ MindTree::PropertyMap& MeshData::getPropertyMap()
 std::string MeshData::getName()    
 {
     return name;
-}
-
-const DNode* MeshData::getNode()    
-{
-    return node; 
 }
 
 void MeshData::computeFaceNormals()    
@@ -338,8 +326,8 @@ void MeshData::computeVertexNormals()
     addProperty("N", vertexnormals);
 }
 
-Object::Object(const AbstractTransformableNode *node)
-    : AbstractTransformable(node, GEO)
+Object::Object()
+    : AbstractTransformable(GEO)
 {
 }
 
@@ -371,13 +359,11 @@ void Object::makeInstance(std::shared_ptr<Object> obj)
 {
 }
 
-Group::Group(const DNode *node)
-    //: node(node)
+Group::Group()
 {
 }
 
 Group::Group(const Group &grp)
-    //: node(0)
 {
     addMembers(grp.getMembers());
 }
@@ -428,8 +414,8 @@ std::list<std::shared_ptr<Light>> Group::getLights()
     return lights;
 }
 
-Camera::Camera(const AbstractTransformableNode* node)
-    : AbstractTransformable(node, CAMERA), fov(45), perspective(true),
+Camera::Camera()
+    : AbstractTransformable(CAMERA), fov(45), perspective(true),
     near(.1), far(1000)
 {
     setPosition(0, 10, -10);
@@ -455,8 +441,8 @@ glm::mat4 Camera::getViewMatrix()
     return glm::inverse(getTransformation());
 }
 
-Light::Light(const AbstractTransformableNode* node)
-    : AbstractTransformable(node, LIGHT)
+Light::Light()
+    : AbstractTransformable(LIGHT)
 {
 }
 
@@ -464,10 +450,8 @@ Light::~Light()
 {
 }
 
-Scene::Scene(const DNode* node)
-    :node(node), name(node->getNodeName())
+Scene::Scene()
 {
-    //FRG::CurrentProject->registerScene(this);
 }
 
 Scene::~Scene()
@@ -483,11 +467,6 @@ std::string Scene::getName()
 void Scene::setName(std::string n)    
 {
     name = n;
-}
-
-const DNode* Scene::getNode()    
-{
-    return node; 
 }
 
 std::list<Object*> Scene::getObjects()    
@@ -562,7 +541,7 @@ void ObjectDataNodeBase::setObjectData(std::shared_ptr<ObjectData> d)
 ComposeMeshNode::ComposeMeshNode(bool raw)
     : ObjectDataNodeBase("Mesh")
 {
-    setObjectData(std::make_shared<MeshData>(this));
+    setObjectData(std::make_shared<MeshData>());
     setNodeType(COMPOSEMESHNODE);
     if(!raw){
         vertSocket = new DAInSocket("Vertices", VECTOR, this);
@@ -714,7 +693,7 @@ void AbstractTransformableNode::setNodeName(std::string name)
 ObjectNode::ObjectNode(bool raw)
     : AbstractTransformableNode("Object", raw)
 {
-    setObject(std::make_shared<Object>(this));
+    setObject(std::make_shared<Object>());
     setNodeType(NodeType("OBJECT"));
     if(!raw){
         setDynamicSocketsNode(IN);
@@ -756,7 +735,7 @@ DinSocket* ObjectNode::getObjDataSocket()
 //}
 //
 CreateGroupNode::CreateGroupNode(std::string name, bool raw)
-    : DNode(name), group(new Group(this))
+    : DNode(name), group(new Group())
 {
     setNodeType(SCENEGROUP);
     if(!raw){
@@ -767,7 +746,7 @@ CreateGroupNode::CreateGroupNode(std::string name, bool raw)
 }
 
 CreateGroupNode::CreateGroupNode(const CreateGroupNode *node)
-    : DNode(node), group(new Group(this))
+    : DNode(node), group(new Group())
 {
 }
 
@@ -783,7 +762,7 @@ Group* CreateGroupNode::getGroup()
 CameraNode::CameraNode(bool raw)
     : AbstractTransformableNode("Camera", raw)
 {
-    setObject(std::make_shared<Camera>(this));
+    setObject(std::make_shared<Camera>());
     setNodeType(CAMERANODE);
     if(!raw){
         new DinSocket("Perspective", CONDITION, this);
@@ -804,7 +783,7 @@ CameraNode::CameraNode(const CameraNode *node)
 LightNode::LightNode(std::string name, bool raw)
     : AbstractTransformableNode(name, raw)
 {
-    setObject(std::make_shared<Light>(this));
+    setObject(std::make_shared<Light>());
     setNodeType(LIGHTNODE);
     if(!raw){
         new DinSocket("Intensity", FLOAT, this);
