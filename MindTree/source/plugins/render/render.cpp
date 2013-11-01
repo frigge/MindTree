@@ -455,9 +455,11 @@ RenderConfig RenderManager::getConfig()
     return config;
 }
 
-void RenderManager::addPass(RenderPass *pass)    
+RenderPass* RenderManager::addPass()
 {
+    auto pass = new RenderPass();
     passes.push_back(std::unique_ptr<RenderPass>(pass));
+    return pass;
 }
 
 void RenderManager::removePass(uint index)    

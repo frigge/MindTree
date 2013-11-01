@@ -62,9 +62,7 @@ Viewport::Viewport()
 
     rendermanager = std::unique_ptr<MindTree::GL::RenderManager>(new MindTree::GL::RenderManager());
 
-    auto *pass = new MindTree::GL::RenderPass();
-
-    rendermanager->addPass(pass);
+    rendermanager->addPass();
 }
 
 Viewport::~Viewport()
