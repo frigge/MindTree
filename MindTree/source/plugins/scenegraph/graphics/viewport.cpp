@@ -72,6 +72,7 @@ Viewport::~Viewport()
 void Viewport::setData(std::shared_ptr<Group> value)
 {
     rendermanager->getPass(0)->setGeometry(value);
+    render();
 }
 
 void Viewport::changeCamera(QString cam)    

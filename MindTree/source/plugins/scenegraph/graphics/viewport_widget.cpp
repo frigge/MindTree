@@ -42,8 +42,6 @@ void ViewportViewer::update(DinSocket *socket)
 
     static_cast<ViewportWidget*>(getWidget())->getViewport()
         ->setData(cache->data.getData<std::shared_ptr<Group>>());
-
-    static_cast<ViewportWidget*>(getWidget())->getViewport()->render();
 }
 
 ViewportWidget::ViewportWidget(ViewportViewer *viewer)
