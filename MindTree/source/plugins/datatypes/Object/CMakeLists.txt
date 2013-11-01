@@ -18,7 +18,12 @@ link_directories(
             ${OPENGL_LIBRARY_DIRS}
 )
 
-add_library(objectlib SHARED object.cpp)
+set(object_source_files
+    object.cpp
+    matierial.cpp
+)
+
+add_library(objectlib SHARED ${object_source_files})
 
 target_link_libraries(objectlib
                     mindtree_core
