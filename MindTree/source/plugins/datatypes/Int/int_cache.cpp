@@ -25,7 +25,6 @@ using namespace MindTree;
 IntCache::IntCache(const DoutSocket *socket)
     : DataCache(socket)
 {
-    setType(DataCache::INTEGERCACHE);
     cacheInputs();
 }
 

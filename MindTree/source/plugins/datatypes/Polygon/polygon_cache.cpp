@@ -29,7 +29,6 @@ using namespace MindTree;
 PolygonCache::PolygonCache(const DoutSocket *socket)
     : DataCache(socket)
 {
-    setType(DataCache::POLYGONCACHE);
     if(getStart())
         cacheInputs();
 }

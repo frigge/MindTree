@@ -175,14 +175,14 @@ void CacheProcessor::operator()(DataCache* cache)
 }
 
 DataCache::DataCache(const DoutSocket *socket)
-    : startsocket(socket), dataOwner(true), node(socket->getNode()),
+    : startsocket(socket), node(socket->getNode()),
     typeID(socket->getType().id())
 {
     cacheInputs();
 }
 
 DataCache::DataCache(const DataCache &other)
-    : startsocket(other.startsocket), dataOwner(other.dataOwner),
+    : startsocket(other.startsocket),
     node(other.node), typeID(other.typeID), data(other.data)
 {
 }
@@ -231,31 +231,6 @@ DNode* DataCache::getNode()
     return node;
 }
 
-DataCache::cacheType DataCache::getType()
-{
-    return type;
-}
-
-void DataCache::setType(DataCache::cacheType value)
-{
-    type = value;
-}
-
-void DataCache::setOwner(bool owner)const
-{
-    dataOwner = owner;
-}
-
-bool DataCache::isOwner()    const
-{
-    return dataOwner;
-}
-
-DataCache* DataCache::getDerived()    
-{
-    return this; 
-}
-
 const DoutSocket* DataCache::getStart()    const
 {
     return startsocket;
@@ -287,97 +262,4 @@ void DataCache::cacheInputs()
         return;
     }
     (*datacache)(this);
-}
-
-void DataCache::setArray()    
-{
-}
-
-void DataCache::composeArray()    
-{
-}
-
-void DataCache::composePolygon()    
-{
-    
-}
-
-void DataCache::composeObject()    
-{
-}
-
-void DataCache::vectorValue()    
-{
-}
-
-void DataCache::floattovector()    
-{
-}
-
-void DataCache::intValue()    
-{
-}
-
-void DataCache::floatValue()    
-{
-}
-
-void DataCache::forloop()    
-{
-}
-
-void DataCache::getLoopedCache()    
-{
-}
-
-void DataCache::math(eMathOp op)    
-{
-}
-
-void DataCache::modulo()
-{
-}
-
-void DataCache::stepup()    
-{
-}
-
-void DataCache::container()    
-{
-}
-
-void DataCache::glShader()    
-{
-}
-
-void DataCache::transform()    
-{
-}
-
-void DataCache::foreachloop()    
-{
-}
-
-void DataCache::composeScene()    
-{
-}
-
-void DataCache::createCamera()    
-{
-}
-
-void DataCache::createLight()    
-{
-}
-
-void DataCache::createMesh()    
-{
-}
-
-void DataCache::loadObj()    
-{
-}
-
-void DataCache::composeGroup()    
-{
 }

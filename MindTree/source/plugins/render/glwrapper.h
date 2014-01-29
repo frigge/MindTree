@@ -78,6 +78,7 @@ private:
     GLuint id;
 };
 
+class Texture;
 class FBO
 {
 public:
@@ -87,7 +88,11 @@ public:
     void bind();
     void release();
 
+    void attachColorTexture(std::shared_ptr<Texture> tex);
+    void attachDepthTexture(std::shared_ptr<Texture> tex);
+
 private:
+    uint color_attachements;
     GLuint id;
 };
 
@@ -133,6 +138,8 @@ public:
     virtual ~Texture();
     void bind();
     void release();
+    GLuint getID();
+    void createTexture(uint width, uint height);
 
 private:
     GLuint id;

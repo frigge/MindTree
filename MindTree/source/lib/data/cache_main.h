@@ -127,15 +127,6 @@ const std::string CacheMap<cachetype>::str = #cachetype;
 class DataCache
 {
 public:
-    enum cacheType {
-        FLOATCACHE, INTEGERCACHE, SCENECACHE, 
-        OBJECTCACHE, STRINGCACHE, BOOLCACHE, 
-        VECTORCACHE, COLORCACHE, POLYGONCACHE,
-        CAMERACACHE, LIGHTCACHE, OBJECTDATACACHE
-    };
-    typedef enum eMathOp {
-        OPADD, OPSUBTRACT, OPMULTIPLY, OPDIVIDE
-    } eMathOp;
     DataCache(const MindTree::DoutSocket *start);
     DataCache(const DataCache &other);
     virtual ~DataCache();
@@ -153,14 +144,9 @@ public:
             return socket->getProperty().getData<T>();
     }
 
-    void setOwner(bool owner)const;
-    bool isOwner()const;
-    virtual DataCache* getDerived();
     void cacheInputs();
     const MindTree::DoutSocket *getStart()const;
     void setStart(const DoutSocket *socket);
-    cacheType getType();
-    void setType(DataCache::cacheType value);
     static void addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc);
 
     DNode* getNode();
@@ -168,39 +154,11 @@ public:
 
     static const std::vector<AbstractCacheProcessor::cacheList>& getProcessors();
 
-protected:
-    virtual void container();
-    virtual void setArray();
-    virtual void composeArray();
-    virtual void composePolygon();
-    virtual void composeObject();
-    virtual void vectorValue();
-    virtual void floattovector();
-    virtual void intValue();
-    virtual void floatValue();
-    virtual void forloop();
-    virtual void getLoopedCache();
-    virtual void math(eMathOp op);
-    virtual void modulo();
-    virtual void stepup();
-    virtual void glShader();
-    virtual void transform();
-    virtual void foreachloop();
-    virtual void createLight();
-    virtual void createCamera();
-    virtual void composeScene();
-    virtual void createMesh();
-    virtual void loadObj();
-    virtual void composeGroup();
-
-
 private:
     DNode *node;
     static std::vector<AbstractCacheProcessor::cacheList> processors;
     int typeID;
-    cacheType type;
     const DoutSocket *startsocket;
-    mutable bool dataOwner;
 };
 
 

@@ -147,6 +147,7 @@ void UBO::release()
 }
 
 FBO::FBO()
+    : color_attachements(0)
 {
     glGenFramebuffers(1, &id);
 }
@@ -164,6 +165,24 @@ void FBO::bind()
 void FBO::release()    
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void FBO::attachColorTexture(std::shared_ptr<Texture> tex)    
+{
+    glFramebufferTexture2D(GL_FRAMEBUFFER, 
+        GL_COLOR_ATTACHMENT0 + color_attachements++,
+        GL_TEXTURE_2D,
+        tex->getID(),
+        0);
+}
+
+void FBO::attachDepthTexture(std::shared_ptr<Texture> tex)    
+{
+    glFramebufferTexture2D(GL_FRAMEBUFFER, 
+        GL_DEPTH_ATTACHMENT,
+        GL_TEXTURE_2D,
+        tex->getID(),
+        0);
 }
 
 ShaderProgram::ShaderProgram()
@@ -326,10 +345,22 @@ Texture::~Texture()
 
 void Texture::bind()    
 {
+    glBindTexture(GL_TEXTURE_2D, id);
 }
 
 void Texture::release()    
 {
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+GLuint Texture::getID()    
+{
+    return id; 
+}
+
+void Texture::createTexture(uint width, uint height)    
+{
+    
 }
 
 ResourceManager::ResourceManager()

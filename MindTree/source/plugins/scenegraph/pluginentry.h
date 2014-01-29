@@ -22,8 +22,11 @@
 
 //#include "mindtree_module.h"
 
-class MindTree::Viewer;
-class MindTree::DoutSocket;
+namespace MindTree {
+class Viewer;
+class DoutSocket;
+};
+
 MindTree::Viewer* addViewport(MindTree::DoutSocket *socket);
 
 #endif /* end of include guard: PLUGINENTRY_6X48UZR7 */

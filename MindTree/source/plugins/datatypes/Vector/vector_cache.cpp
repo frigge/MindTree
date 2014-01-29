@@ -27,7 +27,6 @@ using namespace MindTree;
 VectorCache::VectorCache(const DoutSocket *socket)
     : DataCache(socket)
 {
-    setType(DataCache::VECTORCACHE);
     cacheInputs();
 }
 

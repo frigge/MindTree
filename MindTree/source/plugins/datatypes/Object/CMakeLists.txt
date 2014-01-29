@@ -20,7 +20,7 @@ link_directories(
 
 set(object_source_files
     object.cpp
-    matierial.cpp
+    material.cpp
 )
 
 add_library(objectlib SHARED ${object_source_files})

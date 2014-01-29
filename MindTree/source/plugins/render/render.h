@@ -3,6 +3,7 @@
 #define RENDER_GR953KUN
 
 #include "memory"
+#include "glm/glm.hpp"
 
 class Object;
 namespace MindTree
@@ -122,7 +123,7 @@ public:
     RenderManager();
     virtual ~RenderManager();
 
-    void addPass(RenderPass *pass);
+    RenderPass* addPass();
     void removePass(uint index);
     void draw(const glm::mat4 &view, const glm::mat4 &projection);
     RenderPass* getPass(uint index);
