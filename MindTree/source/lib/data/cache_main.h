@@ -93,37 +93,6 @@ private:
 };
 
 class DoutSocket;
-
-template<typename T>
-struct CacheMap {
-    static const std::string str;
-    typedef int Type;
-    static void factory(const DoutSocket* socket){}
-};
-
-template<typename T>
-const std::string CacheMap<T>::str="unknown";
-
-#ifndef regCacheType
-#define regCacheType(cachetype, datatype)\
-template<>\
-struct CacheMap<datatype>{\
-    typedef cachetype Type;\
-    static datatype factory(const DoutSocket* socket){\
-        return std::make_shared<cachetype>(socket)->data\
-        .getData<datatype>()\
-        ;}\
-    static const std::string str;\
-};\
-const std::string CacheMap<datatype>::str = #datatype;\
-template<>\
-struct CacheMap<cachetype>{\
-    typedef datatype Type;\
-    static const std::string str;\
-};\
-const std::string CacheMap<cachetype>::str = #cachetype;
-#endif
-
 class DataCache
 {
 public:
@@ -133,16 +102,6 @@ public:
     void cache(const DinSocket *socket);
 
     int getTypeID();
-
-    template<typename T>
-    T cacheForeign(const DinSocket *socket) {
-        if(socket->getCntdSocket()){
-            startsocket = socket->getCntdSocket();
-            return CacheMap<T>::factory(startsocket);
-        } 
-        else
-            return socket->getProperty().getData<T>();
-    }
 
     void cacheInputs();
     const MindTree::DoutSocket *getStart()const;
