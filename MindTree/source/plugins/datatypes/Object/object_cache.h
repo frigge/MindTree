@@ -29,7 +29,6 @@ public:
     virtual ~ObjectDataCache();
 //    void createMesh();
 };
-regCacheType(ObjectDataCache, ObjectData*);
 
 class ObjectCache : public DataCache
 {
@@ -52,6 +51,5 @@ protected:
 //    void createLight();
 //    //void transform();
 };
-regCacheType(ObjectCache, Group);
 } /* MindTree */
 

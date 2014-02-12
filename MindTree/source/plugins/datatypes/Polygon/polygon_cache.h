@@ -25,28 +25,19 @@
 
 namespace MindTree
 {
-
-class PolygonCache : public DataCache
+namespace Cache
 {
-public:
-    PolygonCache(const MindTree::DoutSocket *socket);
-    //PolygonCache(const MindTree::DAInSocket *asocket);
-    ~PolygonCache();
-    virtual PolygonCache* getDerived();
-    //PolygonList* getData();
-    void clear();
-
-protected:
-    void composePolygon();
-    void composeArray();
-    void container();
-    void stepup();
-    void setArray();
-    void getLoopedCache();
-    void forloop();
-};
-regCacheType(PolygonCache, Polygon);
-
+namespace Polygon
+{
+    void composePolygon(DataCache *cache);
+    void composeArray(DataCache *cache);
+    void container(DataCache *cache);
+    void stepup(DataCache *cache);
+    void setArray(DataCache *cache);
+    void getLoopedCache(DataCache *cache);
+    void forloop(DataCache *cache);
+} /* Polygon */
+} /* Cache */
 } /* MindTree */
 
 #endif /* end of include guard: CACHE_DATA_77LKPR3V */

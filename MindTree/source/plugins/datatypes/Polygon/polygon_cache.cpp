@@ -26,41 +26,21 @@
 
 using namespace MindTree;
 
-PolygonCache::PolygonCache(const DoutSocket *socket)
-    : DataCache(socket)
+void composePolygon(DataCache *cache)    
 {
-    if(getStart())
-        cacheInputs();
-}
-
-PolygonCache::~PolygonCache()
-{
-    clear();
-}
-
-PolygonCache* PolygonCache::getDerived()    
-{
-    return this;
-}
-
-void PolygonCache::composePolygon()    
-{
-    DinSocketList insockets = getNode()->getInSockets();
+    DinSocketList insockets = cache->getNode()->getInSockets();
     Polygon p;
     std::vector<uint> verts;
     for(auto *socket : insockets){
         if(!socket->getCntdSocket())continue;
-        verts.push_back(cacheForeign<int>(socket));
+        cache->cache(socket);
+        verts.push_back(cache->data.getData<int>());
     }
     p.set(verts);
-    data = p;
+    cache->data = p;
 }
 
-void PolygonCache::clear()    
-{
-}
-
-void PolygonCache::composeArray()    
+void composeArray(DataCache *cache)    
 {
     //DinSocketList insockets = getStart()->getNode()->getInSockets();
     //int startsize = insockets.size() - 1;
@@ -75,21 +55,21 @@ void PolygonCache::composeArray()
     //}
 }
 
-void PolygonCache::container()    
+void container(DataCache *cache)    
 {
-    const ContainerNode *node = getStart()->getNode()->getDerivedConst<ContainerNode>();
-    cache(node->getSocketInContainer(getStart())->toIn());
+    const ContainerNode *node = cache->getStart()->getNode()->getDerivedConst<ContainerNode>();
+    cache->cache(node->getSocketInContainer(cache->getStart())->toIn());
 }
 
-void PolygonCache::stepup()    
+void stepup(DataCache *cache)    
 {
-    const ContainerNode *node = getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
-    cache(node->getSocketOnContainer(getStart())->toIn());
+    const ContainerNode *node = cache->getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
+    cache->cache(node->getSocketOnContainer(cache->getStart())->toIn());
 }
 
-void PolygonCache::forloop()    
+void forloop(DataCache *cache)    
 {
-    const ForNode *node = getStart()->getNode()->getDerivedConst<ForNode>(); 
+    const ForNode *node = cache->getNode()->getDerivedConst<ForNode>(); 
     DinSocket *start, *end, *step;
     DinSocketList insockets = node->getInSockets();
 
@@ -99,45 +79,42 @@ void PolygonCache::forloop()
 
     int startval, endval, stepval;
 
-    startval = cacheForeign<int>(start);
-    endval = cacheForeign<int>(end);
-    stepval = cacheForeign<int>(step);
+    //cache start, end and step values
+    cache->cache(start); startval = cache->data.getData<int>();
+    cache->cache(end); endval = cache->data.getData<int>();
+    cache->cache(step); stepval = cache->data.getData<int>();
 
+    //get corresponding entries inside the loop node
     const LoopSocketNode *innode, *outnode;
     innode = node->getInputs()->getDerivedConst<LoopSocketNode>();
     outnode = node->getOutputs()->getDerivedConst<LoopSocketNode>();
 
     double stepping;
-    const DinSocket *lin = node->getSocketInContainer(getStart())->toIn();
+    const DinSocket *lin = node->getSocketInContainer(cache->getStart())->toIn();
     LoopCache *c = LoopCacheControl::loop(node);
-    PolygonCache *pcache = 0;
+
     for(stepping = startval; stepping < endval; stepping += stepval) {
         c->setStep(stepping);
-        cache(lin);
-        c->addData(this);
+        cache->cache(lin);
     }
-
-    PolygonCache *finalpc = (PolygonCache*)c->getCache();
-    if(finalpc) 
-        data = finalpc->data;
 
     LoopCacheControl::del(node);
 }
 
-void PolygonCache::getLoopedCache()    
+void getLoopedCache(DataCache *cache)    
 {
-    LoopSocketNode *ls = getStart()->getNode()->getDerived<LoopSocketNode>();
-    PolygonCache* loopedCache = (PolygonCache*)LoopCacheControl::loop(ls->getContainer()->getDerivedConst<LoopNode>())->getCache();
-    if(loopedCache) {
-        data = loopedCache->data;
-    }
-    
-    else{
-        cache(ls->getContainer()->getSocketOnContainer(getStart())->toIn());
-    }
+    //LoopSocketNode *ls = cache->getStart()->getNode()->getDerived<LoopSocketNode>();
+    //PolygonCache* loopedCache = (PolygonCache*)LoopCacheControl::loop(ls->getContainer()->getDerivedConst<LoopNode>())->getCache();
+    //if(loopedCache) {
+    //    cache->data = loopedCache->data;
+    //}
+    //
+    //else{
+    //    cache->cache(ls->getContainer()->getSocketOnContainer(cache->getStart())->toIn());
+    //}
 }
 
-void PolygonCache::setArray()    
+void setArray(DataCache *cache)
 {
     //DNode *node = getStart()->getNode();
     //DinSocketList inSockets = node->getInSockets();

@@ -24,25 +24,21 @@
 
 namespace MindTree
 {
-    
-class FloatCache : public DataCache
+namespace Cache
 {
-public:
-    FloatCache(const MindTree::DoutSocket *socket=0);
-    ~FloatCache();
-//    virtual FloatCache* getDerived();
-//    void clear();
-//
-//protected:
-//    void floatValue();
-//    void intValue();
-//    void getLoopedCache();
-//    void math(eMathOp op);
-//    void modulo();
-//    void container();
-//    void stepup();
-};
-regCacheType(FloatCache, double);
-
+namespace Float
+{
+    void floatValue(DataCache *cache);
+    void intValue(DataCache *cache);
+    void getLoopedCache(DataCache *cache);
+    //void add(eMathOp op);
+    //void subtract(eMathOp op);
+    //void divide(eMathOp op);
+    //void multiply(eMathOp op);
+    void modulo(DataCache *cache);
+    void container(DataCache *cache);
+    void stepup(DataCache *cache);
+} /* Float */
+} /* Cache */
 } /* MindTree */
 #endif /* end of include guard: FLOAT_CACHE_44P6X3RJ */

@@ -48,7 +48,6 @@ public:
 //    void stepup();
 //    void glShader();
 };
-regCacheType(IntCache, int);
 
 } /* MindTree */
 

@@ -164,11 +164,11 @@ VectorForeachCacheThread::~VectorForeachCacheThread()
 //    }
 //}
 //
-//int VectorForeachCacheThread::getStep()    
-//{
-//    return step; 
-//}
-//
+int VectorForeachCacheThread::getStep()    
+{
+    return step; 
+}
+
 //void VectorCache::foreachloop()    
 //{
 ///*  

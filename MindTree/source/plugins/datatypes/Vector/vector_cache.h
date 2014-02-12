@@ -33,7 +33,7 @@ class VectorForeachCacheThread : public QThread
 public:
     VectorForeachCacheThread(const MindTree::DinSocket *socket, VectorList *array, int work_start, int work);
     ~VectorForeachCacheThread();
-//    int getStep();
+    int getStep();
 //
 //protected:
 //    void run();

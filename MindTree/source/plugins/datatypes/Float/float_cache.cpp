@@ -17,52 +17,39 @@
 */
 
 #include "float_cache.h"
-#include "../Int/int_cache.h"
-#include "../Vector/vector_cache.h"
 
 using namespace MindTree;
-FloatCache::FloatCache(const DoutSocket *socket)
-    : DataCache(socket)
+using namespace MindTree::Cache::Float;
+
+void floatValue(DataCache* cache)    
 {
+    cache->cache(cache->getNode()->getInSockets().first());
 }
 
-FloatCache::~FloatCache()
+void intValue(DataCache* cache)    
 {
+    cache->cache(cache->getNode()->getInSockets().first());
 }
 
-//void FloatCache::clear()
-//{
-//}
-//
-//FloatCache* FloatCache::getDerived()    
-//{
-//    return this;
-//}
-//
-//void FloatCache::floatValue()    
-//{
-//    cache(getNode()->getInSockets().first());
-//}
-//
-//void FloatCache::intValue()    
-//{
-//    cache(getNode()->getInSockets().first());
-//}
-//
-//void FloatCache::getLoopedCache()    
-//{
-//    LoopSocketNode *ls = getStart()->getNode()->getDerived<LoopSocketNode>();
-//    if(ls->getContainer()->getNodeType() == FOR) {
-//        if(ls->getContainer()->getSocketOnContainer(getStart()) == ls->getContainer()->getInSockets().at(2)) {
-//            data = LoopCacheControl::loop(ls->getContainer()->getDerivedConst<LoopNode>())->getStep();
-//        }
-//        else{
-//            cache(ls->getContainer()->getSocketOnContainer(getStart())->toIn());
-//        }
-//    }
-//}
-//
-//void FloatCache::math(eMathOp op)    
+void getLoopedCache(DataCache* cache)    
+{
+    LoopSocketNode *ls = cache->getStart()
+        ->getNode()->getDerived<LoopSocketNode>();
+    if(ls->getContainer()->getNodeType() == FOR) {
+        if(ls->getContainer()->getSocketOnContainer(cache->getStart()) 
+           == ls->getContainer()->getInSockets().at(2)) {
+            cache->data = LoopCacheControl::loop(
+                                ls->getContainer()
+                                    ->getDerivedConst<LoopNode>())->getStep();
+        }
+        else{
+            cache->cache(ls->getContainer()
+                         ->getSocketOnContainer(cache->getStart())->toIn());
+        }
+    }
+}
+
+//void math(eMathOp op)    
 //{
 //    DinSocketList insockets = getNode()->getInSockets();
 //    int i=0;
@@ -95,32 +82,33 @@ FloatCache::~FloatCache()
 //        i++;
 //    }
 //}
-//
-//void FloatCache::modulo()
+
+void modulo(DataCache* cache)
+{
+    //DinSocketList insockets = getNode()->getInSockets();
+    //cache(insockets.at(0));
+    //double val = data;
+    //cache(insockets.at(1));
+    //int div = data;
+
+    //data = val % div;
+}
+
+void container(DataCache* cache)    
+{
+    const ContainerNode *node = cache->getStart()->getNode()
+        ->getDerivedConst<ContainerNode>();
+    cache->cache(node->getSocketInContainer(cache->getStart())->toIn());
+}
+
+//void stepup(DataCache* cache)    
 //{
-//    //DinSocketList insockets = getNode()->getInSockets();
-//    //cache(insockets.at(0));
-//    //double val = data;
-//    //cache(insockets.at(1));
-//    //int div = data;
-//
-//    //data = val % div;
-//}
-//
-//void FloatCache::container()    
-//{
-//    const ContainerNode *node = getStart()->getNode()->getDerivedConst<ContainerNode>();
-//    cache(node->getSocketInContainer(getStart())->toIn());
-//}
-//
-//void FloatCache::stepup()    
-//{
-//    const ContainerNode *node = getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
+//    const ContainerNode *node = cache->getStart()->getNode()->getDerivedConst<SocketNode>()->getContainer();
 //    if(node->getNodeType() == FOREACHNODE
-//        &&getStart() == getStart()->getNode()->getOutSocketLlist()->getLLsocketAt(0)->socket) {
-//        data = ((VectorForeachCacheThread*)QThread::currentThread())->getStep();
+//        &&cache->getStart() == cache->getStart()->getNode()->getOutSocketLlist()->getLLsocketAt(0)->socket) {
+//        cache->data = ((VectorForeachCacheThread*)QThread::currentThread())->getStep();
 //        return;
 //    }
-//    cache(node->getSocketOnContainer(getStart())->toIn());
+//    cache->cache(node->getSocketOnContainer(cache->getStart())->toIn());
 //}
-//
+
