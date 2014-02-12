@@ -108,13 +108,13 @@ public:
     void setStart(const DoutSocket *socket);
     static void addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc);
 
-    DNode* getNode();
+    const DNode* getNode()const;
     Property data;
 
     static const std::vector<AbstractCacheProcessor::cacheList>& getProcessors();
 
 private:
-    DNode *node;
+    const DNode *node;
     static std::vector<AbstractCacheProcessor::cacheList> processors;
     int typeID;
     const DoutSocket *startsocket;

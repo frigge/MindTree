@@ -103,6 +103,10 @@ int LoopCache::getStep()const
 }
 
 
+/*
+ * ????
+ *
+ */
 void LoopCache::addData(DataCache *cache)    
 {
     if(cachedData.isEmpty())
@@ -220,13 +224,14 @@ void DataCache::cache(const DinSocket *socket)
 {
    if(socket->getCntdSocket()){
        startsocket = socket->getCntdSocket();
+       node = socket->getCntdSocket()->getNode();
        cacheInputs();
    } 
    else
        data = socket->getProperty();
 }
 
-DNode* DataCache::getNode()    
+const DNode* DataCache::getNode() const
 {
     return node;
 }
@@ -243,7 +248,6 @@ void DataCache::setStart(const DoutSocket *socket)
 
 void DataCache::cacheInputs()    
 {
-    node = startsocket->getNode();
     int nodeTypeID = node->getType().id();
     AbstractCacheProcessor *proc=0;
     if(typeID >= processors.size()){

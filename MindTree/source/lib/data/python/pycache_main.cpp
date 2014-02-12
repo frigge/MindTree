@@ -35,7 +35,7 @@ void MindTree::PyCacheProcessor::operator()(MindTree::DataCache* cache)
 
 MindTree::DNodePyWrapper* MindTree::wrap_DataCache_getNode(MindTree::DataCache *cache)    
 {
-    return new MindTree::DNodePyWrapper(cache->getNode()); 
+    return new MindTree::DNodePyWrapper(const_cast<DNode*>(cache->getNode())); 
 }
 
 BPy::object MindTree::wrap_DataCache_getData(MindTree::DataCache *self)
