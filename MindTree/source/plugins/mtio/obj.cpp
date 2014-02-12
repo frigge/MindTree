@@ -22,10 +22,9 @@
 
 using namespace MindTree;
 
-ObjImporter::ObjImporter(ObjImportNode *node)
-    : node(node)
+ObjImporter::ObjImporter(std::string filepath)
 {
-    QFile file(node->getFilePath());
+    QFile file(filepath.c_str());
     file.open(QFile::ReadOnly);
     QTextStream stream(&file);
 
@@ -59,7 +58,7 @@ void ObjImporter::readData(QTextStream &stream)
 std::shared_ptr<Object> ObjImporter::addObject(QString line)    
 {
     auto obj = std::make_shared<Object>();
-    node->getGroup()->addMember(obj);
+    grp->addMember(obj);
     QStringList l = line.split(" ");
     l.takeFirst();
     obj->setName(l[0].toStdString());
@@ -103,8 +102,13 @@ void ObjImporter::addUV(QString line, std::shared_ptr<Object> obj)
 {
 }
 
+std::shared_ptr<Group> ObjImporter::getGroup()
+{
+    return grp;
+}
+
 ObjImportNode::ObjImportNode(bool raw)
-    : DNode("Obj"), group(new Group())
+    : DNode("Obj")
 {
     setNodeType(OBJIMPORTNODE);
     if(!raw){
@@ -114,7 +118,7 @@ ObjImportNode::ObjImportNode(bool raw)
 }
 
 ObjImportNode::ObjImportNode(const ObjImportNode *node)
-    : DNode(node), group(new Group())
+    : DNode(node)
 {
 }
 
@@ -123,13 +127,8 @@ DinSocket* ObjImportNode::getFileSocket()
     return filesocket; 
 }
 
-QString ObjImportNode::getFilePath()    
+std::string ObjImportNode::getFilePath() const
 {
-    return filesocket->getProperty().getData<std::string>().c_str();
-}
-
-Group* ObjImportNode::getGroup()    
-{
-    return group; 
+    return filesocket->getProperty().getData<std::string>();
 }
 

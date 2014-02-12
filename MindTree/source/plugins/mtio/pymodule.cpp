@@ -3,20 +3,29 @@
 #include "data/cache_main.h"
 #include "data/nodes/node_db.h"
 
-BOOST_PYTHON_MODULE(objio){
-    MindTree::NodeDataBase::registerNodeType(new MindTree::BuildInFactory("OBJIMPORTNODE", "Objects.Import",
-                []{
-                    return new ObjImportNode();
-                }));
+using namespace MindTree;
 
-    MindTree::DataCache::addProcessor(MindTree::SocketType("GROUPDATA"), 
-                                    MindTree::NodeType("OBJIMPORTNODE"), 
-                                    new MindTree::CacheProcessor(
-                [](MindTree::DataCache* cache){
-                    ObjImportNode *node = cache->getNode()->getDerived<ObjImportNode>();
-                    ObjImporter objio(node);
-                    auto grp = std::make_shared<Group>();
-                    grp->addMembers(node->getGroup()->getMembers());
-                    cache->data = grp;
-                }));
+BOOST_PYTHON_MODULE(objio)
+{
+    auto importFn = []
+    {
+        return new ObjImportNode();
+    };
+
+    NodeDataBase::registerNodeType(new BuildInFactory("OBJIMPORTNODE", 
+                                                      "Objects.Import",
+                                                      importFn));
+
+    auto proc = [] (MindTree::DataCache* cache)
+    {
+        const ObjImportNode *node = cache->getNode()
+            ->getDerivedConst<ObjImportNode>();
+
+        ObjImporter objio(node->getFilePath());
+        cache->data = objio.getGroup();
+    };
+
+    DataCache::addProcessor(SocketType("GROUPDATA"), 
+                            NodeType("OBJIMPORTNODE"), 
+                            new CacheProcessor(proc));
 }

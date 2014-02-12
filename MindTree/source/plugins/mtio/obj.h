@@ -30,8 +30,10 @@ class ObjImportNode;
 class ObjImporter
 {
 public:
-    ObjImporter(ObjImportNode *node);
+    ObjImporter(std::string filepath);
     virtual ~ObjImporter();
+
+    std::shared_ptr<Group> getGroup();
 
 private:
     void readData(QTextStream &stream);
@@ -40,7 +42,7 @@ private:
     void addFace(QString line, std::shared_ptr<Object> obj);
     void addUV(QString line, std::shared_ptr<Object> obj);
 
-    ObjImportNode *node;
+    std::shared_ptr<Group> grp;
     QString name;
 };
 
@@ -50,12 +52,10 @@ public:
     ObjImportNode(bool raw=false);
     ObjImportNode(const ObjImportNode *node);
     MindTree::DinSocket* getFileSocket();
-    QString getFilePath();
-    Group* getGroup();
+    std::string getFilePath()const;
 
 private:
     MindTree::DinSocket *filesocket;
-    Group *group;
 };
 
 #endif /* end of include guard: OBJ*/
