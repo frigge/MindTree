@@ -20,8 +20,6 @@
 
 #define WRAPPER_FA9WP8AJ
 
-#include "QPointF"
-#include "QString"
 #include "boost/python.hpp"
 #include "iostream"
 
@@ -77,15 +75,15 @@ class DNodePyWrapper;
 class DNodeListIteratorPyWrapper
 {
 public:
-    DNodeListIteratorPyWrapper(QList<DNode*> nodelist);
+    DNodeListIteratorPyWrapper(std::vector<DNode*> nodelist);
     virtual ~DNodeListIteratorPyWrapper();
     static void wrap();
     DNodeListIteratorPyWrapper* iter();
     DNodePyWrapper* next();
 
 private:
-    QList<DNode*>::iterator iterator;
-    QList<DNode*> nodelist;
+    std::vector<DNode*>::iterator iterator;
+    std::vector<DNode*> nodelist;
 };
 
 class PythonNodeFactory : public MindTree::AbstractNodeFactory
@@ -107,11 +105,11 @@ class PyWrapper
 public:
     PyWrapper(PyExposable *exp);
     virtual ~PyWrapper();
-    static void regNode(QString group, QString name, PyObject *nodeClass);
+    static void regNode(PyObject *nodeClass);
     static DNodePyWrapper* createNode(std::string name);
     static BPy::list getRegisteredNodes();
-    static Signal::CallbackHandler attachToSignal(QString id, BPy::object fn);
-    static QList<QString> getNodeTypes();
+    static Signal::CallbackHandler attachToSignal(std::string id, BPy::object fn);
+    static std::vector<std::string> getNodeTypes();
     static std::string __str__StringVector(std::vector<std::string> &self);
     static std::string __repr__StringVector(std::vector<std::string> &self);
     static std::vector<std::string> getSocketTypes();
@@ -148,36 +146,25 @@ class DNSpacePyWrapper;
 PYWRAPPERCLASS(Project)
 {
     PYWRAPHEAD(Project)
-    QString getFilename();
-    void setFilename(QString name);
+    std::string getFilename();
+    void setFilename(std::string name);
     DNSpacePyWrapper* getRoot();
 };
 PYWRAPPERFUNC(Project)
-
-//class ProjectPyWrapper : public PyWrapper
-//{
-//public:
-//    ProjectPyWrapper(Project *project);
-//    virtual ~ProjectPyWrapper();
-//    static void wrap();
-//    QString getFilename();
-//    void setFilename(QString name);
-//    DNSpacePyWrapper* getRoot();
-//};
 
 class DNodePyWrapper;
 PYWRAPPERCLASS(DNSpace)
 {
 public:
     PYWRAPHEAD(DNSpace);
-    QString getName();
+    std::string getName();
     void addNode(DNodePyWrapper *node);
     void removeNode(DNodePyWrapper *node);
     bool isContainer();
-    void setName(QString name);
-    QString __str__();
-    QString __repr__();
-    DNodePyWrapper* __getitem__(QString name);
+    void setName(std::string name);
+    std::string __str__();
+    std::string __repr__();
+    DNodePyWrapper* __getitem__(std::string name);
     DNodePyWrapper* __getitem__(int index);
     DNodeListIteratorPyWrapper* iter();
 };
@@ -198,7 +185,7 @@ public:
     std::string getType();
     BPy::list getNodeTypes();
     void setName(std::string name);
-    QPointF getPos();
+    BPy::tuple getPos();
     void setPos(BPy::tuple pos);
     DSocketListPyWrapper* in();
     DSocketListPyWrapper* out();
@@ -237,7 +224,7 @@ public:
     std::string __repr__();
     LLsocketPyWrapper* __iter__();
     DSocketPyWrapper* getitemint(int i);
-    DSocketPyWrapper* getitemstr(QString str);
+    DSocketPyWrapper* getitemstr(std::string str);
     unsigned int len();
 
 private:
@@ -253,8 +240,8 @@ public:
     DNodePyWrapper* getNode();
     std::string getName();
     void setName(std::string name);
-    void setType(QString value);
-    QString getType();
+    void setType(std::string value);
+    std::string getType();
 
 private:
 };

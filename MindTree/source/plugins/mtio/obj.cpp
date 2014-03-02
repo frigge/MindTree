@@ -110,14 +110,14 @@ std::shared_ptr<Group> ObjImporter::getGroup()
 ObjImportNode::ObjImportNode(bool raw)
     : DNode("Obj")
 {
-    setNodeType(OBJIMPORTNODE);
+    setNodeType("OBJIMPORT");
     if(!raw){
         filesocket = new DinSocket("Filename", std::string("DIRECTORY"), this);
         new DoutSocket("Group", GROUPDATA, this);
     }
 }
 
-ObjImportNode::ObjImportNode(const ObjImportNode *node)
+ObjImportNode::ObjImportNode(const ObjImportNode &node)
     : DNode(node)
 {
 }

@@ -502,14 +502,14 @@ void Scene::setCameras(std::list<Camera*> cams)
 PolygonNode::PolygonNode(bool raw)
     : DNode("Object")
 {
-    setNodeType(POLYGONNODE);
+    setType("POLYGONNODE");
     if(!raw){
         new DoutSocket("Polygon", POLYGON, this);
         setDynamicSocketsNode(IN);
     }
 }
 
-PolygonNode::PolygonNode(const PolygonNode *node)
+PolygonNode::PolygonNode(const PolygonNode &node)
     : DNode(node)
 {
 }
@@ -519,7 +519,7 @@ ObjectDataNodeBase::ObjectDataNodeBase(std::string name)
 {
 }
 
-ObjectDataNodeBase::ObjectDataNodeBase(const ObjectDataNodeBase *node)
+ObjectDataNodeBase::ObjectDataNodeBase(const ObjectDataNodeBase &node)
     : DNode(node)
 {
 }
@@ -542,7 +542,7 @@ ComposeMeshNode::ComposeMeshNode(bool raw)
     : ObjectDataNodeBase("Mesh")
 {
     setObjectData(std::make_shared<MeshData>());
-    setNodeType(COMPOSEMESHNODE);
+    setNodeType("COMPOSEMESHNODE");
     if(!raw){
         vertSocket = new DAInSocket("Vertices", VECTOR, this);
         polySocket = new DAInSocket("Polygons", POLYGON, this);
@@ -550,7 +550,7 @@ ComposeMeshNode::ComposeMeshNode(bool raw)
     }
 }
 
-ComposeMeshNode::ComposeMeshNode(const ComposeMeshNode *node)
+ComposeMeshNode::ComposeMeshNode(const ComposeMeshNode &node)
     : ObjectDataNodeBase(node)
 {
 }
@@ -582,7 +582,7 @@ AbstractTransformableNode::AbstractTransformableNode(std::string name, bool raw)
     }
 }
 
-AbstractTransformableNode::AbstractTransformableNode(const AbstractTransformableNode *node)
+AbstractTransformableNode::AbstractTransformableNode(const AbstractTransformableNode &node)
     : transformable(nullptr)
 {
     //mainData = new SocketNode(node->getMainData());
@@ -591,8 +591,7 @@ AbstractTransformableNode::AbstractTransformableNode(const AbstractTransformable
 
 bool AbstractTransformableNode::isTransformable(DNode *node)    
 {
-    NType t = node->getNodeType();
-    return t == OBJECTNODE || t == CAMERANODE || t == LIGHTNODE;
+    return true;
 }
 
 AbstractTransformableNode::~AbstractTransformableNode()
@@ -704,7 +703,7 @@ ObjectNode::ObjectNode(bool raw)
     }
 }
 
-ObjectNode::ObjectNode(const ObjectNode *node)
+ObjectNode::ObjectNode(const ObjectNode &node)
     : AbstractTransformableNode(node)
 {
 }
@@ -737,7 +736,7 @@ DinSocket* ObjectNode::getObjDataSocket()
 CreateGroupNode::CreateGroupNode(std::string name, bool raw)
     : DNode(name), group(new Group())
 {
-    setNodeType(SCENEGROUP);
+    setNodeType("GROUP");
     if(!raw){
         new DoutSocket("Group", GROUPDATA, this);
         new DAInSocket("Members", GROUPDATA, this);
@@ -745,7 +744,7 @@ CreateGroupNode::CreateGroupNode(std::string name, bool raw)
     }
 }
 
-CreateGroupNode::CreateGroupNode(const CreateGroupNode *node)
+CreateGroupNode::CreateGroupNode(const CreateGroupNode &node)
     : DNode(node), group(new Group())
 {
 }
@@ -763,14 +762,14 @@ CameraNode::CameraNode(bool raw)
     : AbstractTransformableNode("Camera", raw)
 {
     setObject(std::make_shared<Camera>());
-    setNodeType(CAMERANODE);
+    setNodeType("CAMERA");
     if(!raw){
         new DinSocket("Perspective", CONDITION, this);
         new DinSocket("FOV", FLOAT, this);
     }
 }
 
-CameraNode::CameraNode(const CameraNode *node)
+CameraNode::CameraNode(const CameraNode &node)
     : AbstractTransformableNode(node)
 {
 }
@@ -784,14 +783,14 @@ LightNode::LightNode(std::string name, bool raw)
     : AbstractTransformableNode(name, raw)
 {
     setObject(std::make_shared<Light>());
-    setNodeType(LIGHTNODE);
+    setNodeType("LIGHT");
     if(!raw){
         new DinSocket("Intensity", FLOAT, this);
         new DinSocket("Color", COLOR, this);
     }
 }
 
-LightNode::LightNode(const LightNode *node)
+LightNode::LightNode(const LightNode &node)
     : AbstractTransformableNode(node)
 {
 }
@@ -814,10 +813,10 @@ void LightNode::setLightType(LightNode::LightType t)
 PointLightNode::PointLightNode(bool raw)
     : LightNode("Point Light", raw)
 {
-    setLightType(POINTLIGHT);
+    //setLightType("POINTLIGHT");
 }
 
-PointLightNode::PointLightNode(const PointLightNode *node)
+PointLightNode::PointLightNode(const PointLightNode &node)
     : LightNode(node)
 {
 }
@@ -825,10 +824,10 @@ PointLightNode::PointLightNode(const PointLightNode *node)
 SpotLightNode::SpotLightNode(bool raw)
     : LightNode("Spot Light", raw)
 {
-    setLightType(SPOTLIGHT);
+    //setLightType("SPOTLIGHT");
 }
 
-SpotLightNode::SpotLightNode(const SpotLightNode *node)
+SpotLightNode::SpotLightNode(const SpotLightNode &node)
     : LightNode(node)
 {
 }
@@ -839,7 +838,7 @@ DistantLightNode::DistantLightNode(bool raw)
     setLightType(DISTANTLIGHT);
 }
 
-DistantLightNode::DistantLightNode(const DistantLightNode *node)
+DistantLightNode::DistantLightNode(const DistantLightNode &node)
     : LightNode(node)
 {
 }

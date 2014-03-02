@@ -77,7 +77,7 @@ void Viewport::setData(std::shared_ptr<Group> value)
 
 void Viewport::changeCamera(QString cam)    
 {
-    CameraNode* cnode = (CameraNode*)FRG::CurrentProject->getItem(cam);
+    CameraNode* cnode = (CameraNode*)FRG::CurrentProject->getItem(cam.toStdString());
     if(cnode) {
         activeCamera = std::static_pointer_cast<Camera>(cnode->getObject());
         if(selectedNode == cnode)

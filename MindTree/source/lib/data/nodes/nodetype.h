@@ -19,81 +19,32 @@
 
 #define NODETYPE_QDRSY1S8
 
-#include "QHash"
+#include "string"
+#include "vector"
+
 namespace MindTree{
-
-enum NType
-{
-    CONTAINER,          FUNCTION,
-    MULTIPLY,           DIVIDE,
-    ADD,                SUBTRACT,
-    DOTPRODUCT,         MODULO,
-
-    GREATERTHAN,        SMALLERTHAN,
-    EQUAL,              AND,OR,
-    CONDITIONCONTAINER, NOT,
-
-    FOR, WHILE, GATHER, ILLUMINANCE,
-    ILLUMINATE, SOLAR,
-
-    SURFACEINPUT,       SURFACEOUTPUT,
-    DISPLACEMENTINPUT,  DISPLACEMENTOUTPUT,
-    VOLUMEINPUT,        VOLUMEOUTPUT,
-    LIGHTINPUT,         LIGHTOUTPUT,
-    ILLUMINANCEINPUT,   ILLUMINATEINPUT,
-    SOLARINPUT,
-
-    INSOCKETS,          OUTSOCKETS,
-    LOOPINSOCKETS,      LOOPOUTSOCKETS,
-
-    COLORNODE,          FLOATNODE,
-    INTNODE, BOOLNODE,
-    STRINGNODE,         VECTORNODE,
-    PREVIEW, GETARRAY,  SETARRAY,
-    COMPOSEARRAY,       VARNAME,
-    OBJECTNODE,         POLYGONNODE,
-    FLOATTOVECTOR,      VIEWPORTNODE,
-
-    FRAGMENTOUTPUT,     VERTEXOUTPUT,
-    GEOMETRYOUTPUT,
-    GLFRAGMENTINPUT,    GLVERTEXINPUT,
-    GLGEOMETRYINPUT,    TRANSFORM,
-    FOREACHNODE,
-
-    READFILE,           WRITEFILE,
-    PROCESS, SAVEIMAGE, LOADIMAGE,
-    TEXTVIEWER,         IMAGEVIEWER,
-    CAMERANODE,         SCENENODE,
-    LIGHTNODE,          COMPOSEMESHNODE,
-    OBJIMPORTNODE,      SCENEGROUP
-};
 
 class NodeType
 {
 public:
-    NodeType(std::string typeStr="");
-    NodeType(NType oldType);
+    NodeType(const std::string &typeStr="");
+    NodeType(const char *typeStr);
+
     virtual ~NodeType();
     static NodeType byID(int id);
     int id()const;
     std::string toStr()const;
-    NType getOldType()const;
 
-    static QList<QString> getTypes();
+    static std::vector<std::string> getTypes();
 
     static int registerType(std::string name);
     static void unregisterType(std::string name);
     static int getID(std::string name);
 
-    bool operator==(NType t)const;
-    bool operator==(std::string t)const;
     bool operator==(const NodeType &other)const;
-    bool operator!=(NType t)const;
-    bool operator!=(std::string t)const;
     bool operator!=(const NodeType &other)const;
 
 private:
-    NType oldType;
     std::string typeString;
     int _id;
     static int id_cnt;

@@ -1,8 +1,5 @@
 #ifndef PROJECT_H
 #define PROJECT_H
-
-#include "QList"
-#include "QPointF"
 #include "data/nodes/data_node.h"
 #include "data/data_nodelink.h"
 #include "data/dnspace.h"
@@ -15,7 +12,7 @@ class DNode;
 
 class Project : public PyExposable
 {
-	Project(QString filename="");
+	Project(std::string filename="");
 
 public:
 	~Project();
@@ -24,45 +21,43 @@ public:
     static Project* create();
     static Project* load(std::string filename);
 
-    void removeSelectedNodes(QList<DNode*>nodes);
+    void removeSelectedNodes(NodeList nodes);
 
-    static QList<DNodeLink*> getOutLinks(NodeList nodes);
-    static QList<DNodeLink*> getInLinks(NodeList nodes);
-    static QList<DNodeLink*> getOutLinks(DNode *node);
-    static QList<DNodeLink*> getInLinks(DNode *node);
+    static std::vector<DNodeLink*> getOutLinks(NodeList nodes);
+    static std::vector<DNodeLink*> getInLinks(NodeList nodes);
+    static std::vector<DNodeLink*> getOutLinks(DNode *node);
+    static std::vector<DNodeLink*> getInLinks(DNode *node);
 
     void save(); 
     void saveAs(); 
+    void fromFile(std::string filename);
 
-	QString getFilename()const;
-	void setFilename(QString value);
+    std::string getFilename()const;
+	void setFilename(std::string value);
 	void setRootSpace(DNSpace* value);
 	DNSpace* getRootSpace();
-    //void moveIntoRootSpace();
-	void setNodePosition(const DNode *node, QPointF value);
-	QPointF getNodePosition(const DNode *node);
-    void clearNodePosition(const DNode *node);
 
     void registerSpace(DNSpace *space);
     void unregisterSpace(DNSpace *space);
-    //QString registerViewer(ViewerBase *viewer);
-    QString registerNode(DNode *node);
-    QString registerSocket(DSocket *socket);
-    QString registerSocketType(SocketType t);
-    //QString registerNodeType(NodeType t);
-    void unregisterItem(QString idname);
+
+    std::string registerNode(DNode *node);
+    std::string registerSocket(DSocket *socket);
+    std::string registerSocketType(SocketType t);
+
+    void unregisterItem(std::string idname);
     void unregisterItem(void *ptr);
-    void* getItem(QString idname);
-    QString getIDName(void *ptr);
-    QString registerItem(void* ptr, QString name);
+
+    void* getItem(std::string idname);
+    std::string getIDName(void *ptr);
+    std::string registerItem(void* ptr, std::string name);
 
 private:
-    QString filename;
+    std::string filename;
     DNSpace *root_scene;
     static Project *project;
-	QHash<const DNode*, QPointF> nodePositions;
-    QList<DNSpace*>spaces;
-    QHash<QString, void*> IDNames;
+
+    std::vector<DNSpace*>spaces;
+    std::unordered_map<std::string, void*> idNames;
 };
 } /* MindTree */
 

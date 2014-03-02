@@ -112,9 +112,9 @@ QSize ViewerDockHeaderWidget::sizeHint()    const
 ViewerDockBase::ViewerDockBase(QString name)
     : startSocket(0), pinned(false), viewer(0)
 {
-    auto n = FRG::CurrentProject->registerItem(this, name);
-    setObjectName(n);
-    setWindowTitle(n);
+    auto n = FRG::CurrentProject->registerItem(this, name.toStdString());
+    setObjectName(n.c_str());
+    setWindowTitle(n.c_str());
     //setTitleBarWidget(new ViewerDockHeaderWidget(this));
     //FRG::Author->addDockWidget(Qt::RightDockWidgetArea, this);
     //connect(FRG::Space, SIGNAL(selectionChanged()), this, SLOT(updateFocus()));

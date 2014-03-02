@@ -16,42 +16,42 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "QMutex"
-#include "QMutexLocker"
-
 #include "iostream"
 
 #include "cache_main.h"
 
 using namespace MindTree;
 
-QHash<DataCache*, const DoutSocket*>CacheControl::caches;
-QHash<const LoopNode*, LoopCache*> LoopCacheControl::loops;
-QList<const DNode*> CacheControl::updateNodes;
+std::unordered_map<DataCache*, const DoutSocket*>CacheControl::caches;
+std::unordered_map<const LoopNode*, LoopCache*> LoopCacheControl::loops;
+ConstNodeList CacheControl::updateNodes;
 std::vector<AbstractCacheProcessor::cacheList> DataCache::processors;
 
 bool CacheControl::isCached(const DoutSocket *socket)    
 {
-    return caches.values().contains(socket);
+    return getCache(socket) ? true : false;
 }
 
 void CacheControl::addCache(const DoutSocket *socket, DataCache *cache)    
 {
-    if(caches.contains(caches.key(socket))) {
-        delete caches.key(socket);
-        caches.remove(caches.key(socket));
+    if(isCached(socket)) {
+        DataCache *c = getCache(socket);
+        caches.erase(c);
+        delete c;
     }
-    caches.insert(cache, socket); 
+    caches.insert({cache, socket}); 
 }
 
 void CacheControl::removeCache(DataCache *cache)    
 {
-    caches.remove(cache);
+    caches.erase(cache);
 }
 
 DataCache* CacheControl::getCache(const DoutSocket *socket)    
 {
-    return caches.key(socket); 
+    for (auto p : caches)
+        if (p.second == socket) return p.first;
+    return nullptr;
 }
 
 void CacheControl::analyse(DNode *viewnode, const DNode *changedNode)    
@@ -63,16 +63,22 @@ void CacheControl::analyse(DNode *viewnode, const DNode *changedNode)
         return;
     }
     ConstNodeList before_changed = changedNode->getAllInNodesConst();
-    updateNodes.append(changedNode);
+    updateNodes.push_back(changedNode);
 
-    foreach(const DNode *node, active_network) 
-        if(!before_changed.contains(node))
-            updateNodes.append(node);
+    for(const DNode *node : active_network) 
+    {
+        auto b = before_changed.begin();
+        auto e = before_changed.end();
+        if(std::find(b, e, node) == e)
+            updateNodes.push_back(node);
+    }
 }
 
 bool CacheControl::isOutDated(const DNode *node)    
 {
-    return updateNodes.contains(node);
+    return std::find(updateNodes.begin(), 
+                     updateNodes.end(), 
+                     node) != updateNodes.end();
 }
 
 LoopCache::LoopCache()
@@ -87,9 +93,9 @@ LoopCache::~LoopCache()
 
 void LoopCache::free()    
 {
-    while(!cachedData.isEmpty())
-        foreach(const DoutSocket *socket, cachedData.keys())
-            delete cachedData.take(socket);
+    for (auto p : cachedData)
+        delete p.first;
+    cachedData.clear();
 }
 
 void LoopCache::setStep(int step)    
@@ -104,17 +110,21 @@ int LoopCache::getStep()const
 
 
 /*
- * ????
+ * the cached data is preserved for every loop iteration
  *
  */
 void LoopCache::addData(DataCache *cache)    
 {
-    if(cachedData.isEmpty())
+    if(cachedData.size() > 0)
         loopentry = cache->getStart();
-    if(cachedData.contains(cache->getStart()))
-        delete cachedData.take(cache->getStart());
+    auto p = cachedData.find(cache->getStart());
+    if(p != cachedData.end())
+    {
+        delete p->second;
+        cachedData.erase(p);
+    }
 
-    cachedData.insert(cache->getStart(), cache);
+    cachedData.insert({cache->getStart(), cache});
 }
 
 DataCache* LoopCache::getCache(const DoutSocket *socket)    
@@ -125,9 +135,9 @@ DataCache* LoopCache::getCache(const DoutSocket *socket)
     else
         s = socket;
 
-    if(!cachedData.contains(s))
+    if(cachedData.find(s) == cachedData.end())
         return 0;
-    return cachedData.value(s);
+    return cachedData[s];
 }
 
 const LoopNode* LoopCache::getNode()
@@ -137,23 +147,24 @@ const LoopNode* LoopCache::getNode()
 
 LoopCache* LoopCacheControl::loop(const LoopNode *node)
 {
-    QMutex mutex;
-    QMutexLocker lock(&mutex);
+    //QMutex mutex;
+    //QMutexLocker lock(&mutex);
     LoopCache *lc;
-    if(loops.contains(node))
-        lc = loops.value(node);
+    if(loops.find(node) != loops.end())
+        lc = loops[node];
     else {
         lc = new LoopCache();
-        loops.insert(node, lc);
+        loops.insert({node, lc});
     }
     return lc;
 }
 
 void LoopCacheControl::del(const LoopNode *node)    
 {
-    QMutex mutex;
-    QMutexLocker lock(&mutex);
-    delete loops.take(node);
+    auto p = loops.find(node);
+    loops.erase(p);
+
+    delete p->second;
 }
 
 AbstractCacheProcessor::AbstractCacheProcessor()
@@ -175,19 +186,24 @@ CacheProcessor::~CacheProcessor()
 
 void CacheProcessor::operator()(DataCache* cache)    
 {
+    std::cout << "calling c++ processor ..." << std::endl;
     processor(cache); 
 }
 
 DataCache::DataCache(const DoutSocket *socket)
-    : startsocket(socket), node(socket->getNode()),
-    typeID(socket->getType().id())
+    : node(socket->getNode()),
+    typeID(socket->getType().id()),
+    startsocket(socket)
 {
     cacheInputs();
 }
 
 DataCache::DataCache(const DataCache &other)
-    : startsocket(other.startsocket),
-    node(other.node), typeID(other.typeID), data(other.data)
+    : 
+    data(other.data),
+    node(other.node), 
+    typeID(other.typeID),
+    startsocket(other.startsocket)
 {
 }
 
@@ -203,8 +219,8 @@ int DataCache::getTypeID()
 
 void DataCache::addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc)
 {
-    int node_type = nt.id();
-    int socket_type = st.id();
+    unsigned long node_type = nt.id();
+    unsigned long socket_type = st.id();
     if(processors.size() <= socket_type) {
         processors.resize(socket_type+1);
         processors[socket_type] = AbstractCacheProcessor::cacheList();
@@ -248,15 +264,25 @@ void DataCache::setStart(const DoutSocket *socket)
 
 void DataCache::cacheInputs()    
 {
-    int nodeTypeID = node->getType().id();
-    AbstractCacheProcessor *proc=0;
+    unsigned long nodeTypeID = node->getType().id();
+
     if(typeID >= processors.size()){
-        std::cout<< "no processors defined for this data type (id:" <<typeID<<")"<< std::endl;
+        std::cout<< "no processors defined for this data type ("
+                 << SocketType::byID(typeID).getCustomType()
+                 << " id:" 
+                 << typeID
+                 << ")"
+                 << std::endl;
         return;
     }
     auto list = processors[typeID];
     if(nodeTypeID >= list.size()){
-        std::cout<< "no processors defined for this node type (id:" <<nodeTypeID<<")"<< std::endl;
+        std::cout<< "no processors defined for this node type (" 
+                 << node->getType().toStr() 
+                 << " id:" 
+                 <<nodeTypeID
+                 <<")"
+                 << std::endl;
         return;
     }
     auto datacache = list[nodeTypeID];
@@ -265,5 +291,6 @@ void DataCache::cacheInputs()
         std::cout<<"Socket Type ID:" << typeID << std::endl;
         return;
     }
+    std::cout << "caching " << SocketType::byID(typeID).getCustomType() << " on " << node->getType().toStr() << std::endl;
     (*datacache)(this);
 }

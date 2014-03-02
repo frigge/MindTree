@@ -21,7 +21,6 @@
 #define CACHE_MAIN_PD1QWTW9
 
 #include "data/nodes/data_node.h"
-#include "QThread"
 
 namespace MindTree
 {
@@ -40,8 +39,8 @@ public:
     static bool isOutDated(const MindTree::DNode *node);
 
 private:
-    static QHash<DataCache*, const MindTree::DoutSocket*>caches;
-    static QList<const MindTree::DNode*> updateNodes;
+    static std::unordered_map<DataCache*, const MindTree::DoutSocket*>caches;
+    static ConstNodeList updateNodes;
 };
 
 class LoopCache
@@ -58,7 +57,7 @@ public:
 
 private:
     const MindTree::DoutSocket *loopentry;
-    QHash<const MindTree::DoutSocket*, DataCache*> cachedData;
+    std::unordered_map<const MindTree::DoutSocket*, DataCache*> cachedData;
     int stepValue, startValue, endValue;
 };
 
@@ -69,7 +68,7 @@ public:
     static void del(const MindTree::LoopNode *node);
 
 private:
-    static QHash<const MindTree::LoopNode*, LoopCache*> loops;
+    static std::unordered_map<const MindTree::LoopNode*, LoopCache*> loops;
 };
 
 class AbstractCacheProcessor

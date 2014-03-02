@@ -72,22 +72,14 @@ MathNode::MathNode(NodeType t, bool raw)
         setDynamicSocketsNode(IN);
         DoutSocket *out = new DoutSocket("Result", VARIABLE, this);
         DinSocket *in = getInSockets().first();
-        //DSocket::nameCB(out, in);
-        //DSocket::nameCB(in, out);
-        //DSocket::typeCB(out, in);
-        //DSocket::typeCB(in, out);
     }
 }
 
-MathNode::MathNode(const MathNode* node)
+MathNode::MathNode(const MathNode &node)
     : DNode(node)
 {
     DoutSocket *out = getOutSockets().first();
     DinSocket *in = getInSockets().first();
-    //DSocket::nameCB(out, in);
-    //DSocket::nameCB(in, out);
-    //DSocket::typeCB(out, in);
-    //DSocket::typeCB(in, out);
 }
 
 void MathNode::dec_var_socket(DSocket *socket)

@@ -50,7 +50,7 @@ class ObjImportNode : public MindTree::DNode
 {
 public:
     ObjImportNode(bool raw=false);
-    ObjImportNode(const ObjImportNode *node);
+    ObjImportNode(const ObjImportNode &node);
     MindTree::DinSocket* getFileSocket();
     std::string getFilePath()const;
 

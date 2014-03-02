@@ -36,7 +36,7 @@ public:
     };
 
     MathNode(MindTree::NodeType t, bool raw=false);
-    MathNode(const MathNode *node);
+    MathNode(const MathNode &node);
 
     virtual void dec_var_socket(MindTree::DSocket *socket);
 };

@@ -19,10 +19,6 @@
 #ifndef DNSPACE_H
 #define DNSPACE_H
 
-#include "QList"
-#include "QString"
-#include "QObject"
-
 #include "data/nodes/data_node.h"
 //#include "source/graphics/nodelink.h"
 #include "source/data/undo/frg_generic_undo.h"
@@ -32,9 +28,8 @@
 namespace MindTree
 {
 
-class DNSpace : public QObject, public FRGUndoBase, public PyExposable
+class DNSpace : public FRGUndoBase, public PyExposable
 {
-    Q_OBJECT
 public:
     class Iterator
     {
@@ -50,47 +45,42 @@ public:
     };
 
     DNSpace();
-    DNSpace(DNSpace* space);
+    DNSpace(const DNSpace &space);
     virtual ~DNSpace();
     void addNode(DNode *node);
     void removeNode(DNode *node);
     void unregisterNode(DNode *node);
-    QString getName();
-	void setName(QString value);
+    std::string getName() const;
+	void setName(std::string value);
     bool operator==(DNSpace &space);
     bool operator!=(DNSpace &space);
 
-    qint16 getNodeCnt();
+    uint getNodeCnt();
     NodeList getNodes()const;
 
-    bool isContainerSpace();
+    bool isContainerSpace() const;
     void setContainerSpace(bool value);
     ContainerSpace* toContainer();
 
     void addInfoBox(DInfoBox *box);
     void removeInfoBox(DInfoBox *box);
-    QList<DInfoBox*> getInfoBoxes();
-
-signals:
-    void nodeCreated(DNode*);
+    std::vector<DInfoBox*> getInfoBoxes();
 
 private:
-    QList<DInfoBox*> infos;
-    QString name;
-    QList<DNode*> nodes;
+    std::vector<DInfoBox*> infos;
+    std::string name;
+    NodeList nodes;
     bool isCSpace;
 };
 
-QDataStream & operator<<(QDataStream &stream, DNSpace *space);
-QDataStream & operator>>(QDataStream &stream, DNSpace **space);
 
 class ContainerSpace : public DNSpace
 {
-    Q_OBJECT
 public:
     ContainerSpace();
-    ContainerSpace(ContainerSpace* space);
+    ContainerSpace(const ContainerSpace &space);
     ~ContainerSpace();
+
     ContainerNode *getContainer();
     void setContainer(ContainerNode *node);
     DNSpace* getParent();
@@ -100,8 +90,8 @@ private:
     ContainerNode *node;
 };
 
-QDataStream & operator>>(QDataStream &stream, ContainerSpace **space);
 } /* MindTree */
+
 MindTree::DNSpace::Iterator begin(MindTree::DNSpace *space);
 MindTree::DNSpace::Iterator end(MindTree::DNSpace *space);
 

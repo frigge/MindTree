@@ -10,40 +10,44 @@ using namespace MindTree;
 
 Project* Project::project=0;
 
-Project::Project(QString filename)
+Project::Project(std::string filename)
     : filename(filename)
 {
     FRG::CurrentProject = this;
     DNSpace *space = 0;
     if(filename != "")
     {
-        QFile file(filename);
-        file.open(QIODevice::ReadOnly);
-        QDataStream stream(&file);
-
-        FRG_PROJECT_HEADER_CHECK
-        {
-            stream>>&space;
-            file.close();
-            LoadNodeIDMapper::clear();
-            LoadSocketIDMapper::remap();
-        }
-        else
-            space = new DNSpace;
+        fromFile(filename);
     }
     else
     {
-        space = new DNSpace;
+        space = new DNSpace();
     }
     setRootSpace(space);
     root_scene->setName("Root");
+}
+
+void Project::fromFile(std::string filename)
+{
+    //QFile file(filename);
+    //file.open(QIODevice::ReadOnly);
+    //QDataStream stream(&file);
+
+    //FRG_PROJECT_HEADER_CHECK
+    //{
+    //    stream>>&space;
+    //    file.close();
+    //    LoadNodeIDMapper::clear();
+    //    LoadSocketIDMapper::remap();
+    //}
+    //else
+    //    space = new DNSpace;
 }
 
 Project::~Project()
 {
     spaces.clear();
     delete root_scene;
-    nodePositions.clear();
     //FRG::SpaceDataInFocus = 0;
 }
 
@@ -71,19 +75,19 @@ Project* Project::instance()
 //    return QString(); 
 //}
 
-QString Project::registerNode(DNode *node)    
+std::string Project::registerNode(DNode *node)    
 {
-    return QString(); 
+    return "";
 }
 
-QString Project::registerSocket(DSocket *socket)    
+std::string Project::registerSocket(DSocket *socket)    
 {
-    return QString(); 
+    return "";
 }
 
-QString Project::registerSocketType(SocketType t)    
+std::string Project::registerSocketType(SocketType t)    
 {
-    return QString(); 
+    return "";
 }
 
 //QString Project::registerNodeType(NodeType t)    
@@ -91,81 +95,83 @@ QString Project::registerSocketType(SocketType t)
 //    return QString(); 
 //}
 
-QString Project::registerItem(void* ptr, QString name)    
+std::string Project::registerItem(void* ptr, std::string name)    
 {
     int count=0;
-    QString idname = name;
-    while(IDNames.contains(idname)){
+    std::string idname = name;
+    while(idNames.find(idname) != idNames.end())
+    {
        count++;
-       idname = name + QString::number(count);
+       idname = name + std::to_string(count);
     }
-    IDNames.insert(idname, ptr);
+    idNames.insert({idname, ptr});
     return idname;
 }
 
-QString Project::getIDName(void *ptr)    
+std::string Project::getIDName(void *ptr)    
 {
-    return IDNames.key(ptr);
+    for (auto p : idNames)
+        if (ptr == p.second) return p.first;
 }
 
-void* Project::getItem(QString idname)    
+void* Project::getItem(std::string idname)    
 {
-    if(!IDNames.contains(idname))
+    if(idNames.find(idname) != idNames.end())
         return 0;
-    return IDNames.value(idname);
+    return idNames[idname];
 }
 
 void Project::unregisterItem(void *ptr)    
 {
-    IDNames.remove(IDNames.key(ptr));
+    idNames.erase(getIDName(ptr));
 }
 
-void Project::unregisterItem(QString idname)    
+void Project::unregisterItem(std::string idname)    
 {
-    IDNames.remove(idname);
+    idNames.erase(idname);
 }
 
 void Project::save()
 {
-    if(getFilename() == "")
-    {
-        setFilename(QFileDialog::getSaveFileName(0));
-    }
-    QFile file(getFilename());
-    file.open(QIODevice::WriteOnly);
-    QDataStream stream(&file);
-    stream<<FRG_PROJECT_HEADER;
-    stream<<getRootSpace();
-    file.close();
+    //if(getFilename() == "")
+    //{
+    //    setFilename(QFileDialog::getSaveFileName(0));
+    //}
+    //QFile file(getFilename());
+    //file.open(QIODevice::WriteOnly);
+    //QDataStream stream(&file);
+    //stream<<FRG_PROJECT_HEADER;
+    //stream<<getRootSpace();
+    //file.close();
 }
 
 void Project::saveAs()
 {
-    filename = QFileDialog::getSaveFileName(0);
-    QFile file(filename);
-    file.open(QIODevice::WriteOnly);
-    QDataStream stream(&file);
-    stream<<FRG_PROJECT_HEADER;
-    stream<<getRootSpace();
-    file.close();
+    //filename = QFileDialog::getSaveFileName(0);
+    //QFile file(filename);
+    //file.open(QIODevice::WriteOnly);
+    //QDataStream stream(&file);
+    //stream<<FRG_PROJECT_HEADER;
+    //stream<<getRootSpace();
+    //file.close();
 }
 
 void Project::registerSpace(DNSpace *space)    
 {
-    spaces.append(space);
+    spaces.push_back(space);
 }
 
 void Project::unregisterSpace(DNSpace *space)    
 {
-    spaces.removeAll(space);
+    spaces.erase(std::find(spaces.begin(), spaces.end(), space));
 }
 
-QString Project::getFilename()const
+std::string Project::getFilename()const
 {
 	return filename;
 }
 
-void Project::setFilename(QString value)
+void Project::setFilename(std::string value)
 {
 	filename = value;
     MT_CUSTOM_SIGNAL_EMITTER("filename_changed", value);
@@ -186,57 +192,43 @@ void Project::setRootSpace(DNSpace* value)
 //    FRG::Space->moveIntoSpace(root_scene);
 //}
 
-QList<DNodeLink*> Project::getOutLinks(NodeList nodes)
+std::vector<DNodeLink*> Project::getOutLinks(NodeList nodes)
 {
-	QList<DNodeLink*> outs;
-    foreach(DNode *node, nodes)
-        foreach(DoutSocket* socket, node->getOutSockets())
-            foreach(DNodeLink dnlink, socket->getLinks())
-                if(!nodes.contains(dnlink.in->getNode()))
-                    outs.append(new DNodeLink(dnlink));
+    std::vector<DNodeLink*> outs;
+    for(DNode *node : nodes)
+        for(DoutSocket* socket : node->getOutSockets())
+            for(DNodeLink dnlink : socket->getLinks())
+                if(std::find(nodes.begin(), 
+                             nodes.end(), 
+                             dnlink.in->getNode()) == nodes.end())
+                    outs.push_back(new DNodeLink(dnlink));
     return outs;
 }
 
-QList<DNodeLink*> Project::getInLinks(DNode *node)    
+std::vector<DNodeLink*> Project::getInLinks(DNode *node)    
 {
     NodeList nodes;
-    nodes.append(node);
+    nodes.push_back(node);
     return getInLinks(nodes);
 }
 
-QList<DNodeLink *> Project::getInLinks(NodeList nodes)
+std::vector<DNodeLink *> Project::getInLinks(NodeList nodes)
 {
-    QList<DNodeLink *> ins;
-    foreach(DNode *node, nodes)
-        foreach(DinSocket *socket, node->getInSockets())
+    std::vector<DNodeLink *> ins;
+    for(DNode *node : nodes)
+        for(DinSocket *socket : node->getInSockets())
             if(socket->getCntdSocket()
-                &&!nodes.contains(socket->getCntdSocket()->getNode()))
-            ins.append(new DNodeLink(socket, socket->getCntdSocket()));
+                &&std::find(nodes.begin(), 
+                            nodes.end(), 
+                            socket->getCntdSocket()->getNode()) == nodes.end())
+
+                ins.push_back(new DNodeLink(socket, socket->getCntdSocket()));
     return ins;
 }
 
-QList<DNodeLink*> Project::getOutLinks(DNode *node)    
+std::vector<DNodeLink*> Project::getOutLinks(DNode *node)    
 {
     NodeList nodes;
-    nodes.append(node);
+    nodes.push_back(node);
     return getOutLinks(nodes);
-}
-
-QPointF Project::getNodePosition(const DNode *node)
-{
-    if(!nodePositions.contains(node)) return QPointF(0, 0);
-	return nodePositions.value(node);
-}
-
-void Project::setNodePosition(const DNode *node, QPointF value)
-{
-    if(value == QPointF(0,0))
-        nodePositions.remove(node);
-
-	nodePositions[node] = value;
-}
-
-void Project::clearNodePosition(const DNode *node)    
-{
-    nodePositions.remove(node);
 }

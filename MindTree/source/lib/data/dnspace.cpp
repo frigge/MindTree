@@ -17,7 +17,6 @@
 */
 
 
-#include "QDebug"
 #include "boost/python.hpp"
 #include "data/project.h"
 #include "data/frg.h"
@@ -64,14 +63,13 @@ DNSpace::DNSpace()
     Signal::mergeSignals<DNode*>("addNode", "graphChanged");
 }
 
-DNSpace::DNSpace(DNSpace* space)
-    : name(space->getName()), isCSpace(false)
+DNSpace::DNSpace(const DNSpace &space)
+    : name(space.getName()), isCSpace(false)
 {
-    foreach(DNode *node, space->getNodes())
+    for(auto *node : space.getNodes())
     {
         DNode *copy = node->clone();
         addNode(copy);
-        FRG::CurrentProject->setNodePosition(copy, node->getPos());
     }
 }
 
@@ -79,39 +77,39 @@ DNSpace::~DNSpace()
 {
     FRG::CurrentProject->unregisterSpace(this);
     //try to clear all links before deleting nodes
-    foreach(DNode *node, getNodes())
-        foreach(DinSocket *socket, node->getInSockets())
+    for(auto *node : getNodes())
+        for(auto *socket : node->getInSockets())
             socket->clearLink();
 
-    foreach(DNode *node, getNodes())
+    for(auto *node : getNodes())
         delete node;
 }
 
-QDataStream & MindTree::operator<<(QDataStream &stream, DNSpace *space)
-{
-    stream<<space->getName();
-    stream<<(qint16)space->getNodeCnt();
-    foreach(DNode *node, space->getNodes())
-        stream<<node;
-}
+// QDataStream & MindTree::operator<<(QDataStream &stream, DNSpace *space)
+// {
+//     stream<<space->getName();
+//     stream<<(qint16)space->getNodeCnt();
+//     foreach(DNode *node, space->getNodes())
+//         stream<<node;
+// }
 
-QDataStream & MindTree::operator>>(QDataStream &stream, DNSpace **space)
-{
-    DNSpace *newspace = 0;
-    newspace = new DNSpace();
-    *space = newspace;
-    qint16 nodecnt;
-    QString name;
-    stream>>name;
-    newspace->setName(name);
-    stream>>nodecnt;
-    DNode_ptr node = 0;
-    for(int i = 0; i<nodecnt; i++)
-    {
-        stream>>&node;
-        newspace->addNode(node.get());
-    }
-}
+//QDataStream & MindTree::operator>>(QDataStream &stream, DNSpace **space)
+//{
+//    DNSpace *newspace = 0;
+//    newspace = new DNSpace();
+//    *space = newspace;
+//    qint16 nodecnt;
+//    QString name;
+//    stream>>name;
+//    newspace->setName(name);
+//    stream>>nodecnt;
+//    DNode_ptr node = 0;
+//    for(int i = 0; i<nodecnt; i++)
+//    {
+//        stream>>&node;
+//        newspace->addNode(node.get());
+//    }
+//}
 
 bool DNSpace::operator==(DNSpace &space)
 {
@@ -141,11 +139,12 @@ void DNSpace::addNode(DNode *node)
 {
     if(!node)return;
     node->setSpace(this);
-    if(nodes.contains(node))return;
-    nodes.append(node);
+
+    if(std::find(nodes.begin(), nodes.end(), node) != nodes.end()) return;
+    nodes.push_back(node);
+
     MT_SIGNAL_EMITTER(node);
     MT_CUSTOM_SIGNAL_EMITTER("addNode", node);
-    //emit nodeCreated(node);
 }
 
 void DNSpace::removeNode(DNode *node)
@@ -157,13 +156,13 @@ void DNSpace::removeNode(DNode *node)
 
 void DNSpace::unregisterNode(DNode *node)    
 {
-    nodes.removeAll(node);
+    nodes.erase(std::find(nodes.begin(), nodes.end(), node));
     node->setSpace(0);
 }
 
-qint16 DNSpace::getNodeCnt()
+uint DNSpace::getNodeCnt()
 {
-    return (qint16)nodes.size();
+    return nodes.size();
 }
 
 NodeList DNSpace::getNodes()const
@@ -171,17 +170,17 @@ NodeList DNSpace::getNodes()const
     return nodes;
 }
 
-QString DNSpace::getName()
+std::string DNSpace::getName() const
 {
 		return name;
 }
 
-void DNSpace::setName(QString value)
+void DNSpace::setName(std::string value)
 {
 		name = value;
 }
 
-bool DNSpace::isContainerSpace()
+bool DNSpace::isContainerSpace() const
 {
     return isCSpace;
 }
@@ -193,31 +192,31 @@ void DNSpace::setContainerSpace(bool value)
 
 ContainerSpace* DNSpace::toContainer()    
 {
-    return static_cast<ContainerSpace*>(this);
+    return dynamic_cast<ContainerSpace*>(this);
 }
 
 void DNSpace::addInfoBox(DInfoBox *box)    
 {
-    infos.append(box);
+    infos.push_back(box);
 }
 
-void DNSpace::removeInfoBox(DInfoBox *box)    
+void DNSpace::removeInfoBox(DInfoBox *box)
 {
-    infos.removeAll(box); 
+    infos.erase(std::find(infos.begin(), infos.end(), box)); 
 }
 
-QList<DInfoBox*> DNSpace::getInfoBoxes()    
+std::vector<DInfoBox*> DNSpace::getInfoBoxes()    
 {
     return infos; 
 }
 
 ContainerSpace::ContainerSpace()
-    : DNSpace(), node(0), parentSpace(0)
+    : node(0), parentSpace(0)
 {
     setContainerSpace(true);
 }
 
-ContainerSpace::ContainerSpace(ContainerSpace* space)
+ContainerSpace::ContainerSpace(const ContainerSpace &space)
     : DNSpace(space)
 {
     setContainerSpace(true);
@@ -232,23 +231,23 @@ DNSpace* ContainerSpace::getParent()
     return parentSpace;
 }
 
-QDataStream & MindTree::operator>>(QDataStream &stream, ContainerSpace **space)
-{
-    ContainerSpace *newspace = 0;
-    newspace = new ContainerSpace();
-    *space = newspace;
-    qint16 nodecnt;
-    QString name;
-    stream>>name;
-    newspace->setName(name);
-    stream>>nodecnt;
-    DNode_ptr node = 0;
-    for(int i = 0; i<nodecnt; i++)
-    {
-        stream>>&node;
-        newspace->addNode(node.get());
-    }
-}
+//QDataStream & MindTree::operator>>(QDataStream &stream, ContainerSpace **space)
+//{
+//    ContainerSpace *newspace = 0;
+//    newspace = new ContainerSpace();
+//    *space = newspace;
+//    qint16 nodecnt;
+//    QString name;
+//    stream>>name;
+//    newspace->setName(name);
+//    stream>>nodecnt;
+//    DNode_ptr node = 0;
+//    for(int i = 0; i<nodecnt; i++)
+//    {
+//        stream>>&node;
+//        newspace->addNode(node.get());
+//    }
+//}
 
 ContainerNode* ContainerSpace::getContainer()
 {

@@ -20,6 +20,31 @@
 
 #define DATATYPES_EVYG6DVA
 
+template<class T>
+class Vec2
+{
+    public:
+        Vec2 () : _x(0), _y(0) {}
+
+        Vec2(T x, T y) : _x(x), _y(y) {}
+
+        const T& x() { return _x; }
+        const T& y() { return _y; }
+
+        Vec2& operator+= (const Vec2 other) { _x += other._x; _y += other._y; return *this; }
+        Vec2& operator-= (const Vec2 other) { _x -= other._x; _y -= other._y; return *this; }
+
+        Vec2& operator + (const Vec2 other) { return Vec2<T>(_x + other._x, _y + other._y); }
+        Vec2& operator - (const Vec2 other) { return Vec2<T>(_x + other._x, _y + other._y); }
+
+    private:
+        T _x, _y;
+};
+
+typedef Vec2<float> Vec2f;
+typedef Vec2<double> Vec2d;
+typedef Vec2<int> Vec2i;
+
 class Vec3d
 {
 public:

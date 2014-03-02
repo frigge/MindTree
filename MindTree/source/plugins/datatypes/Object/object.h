@@ -380,14 +380,14 @@ class PolygonNode : public MindTree::DNode
 {
 public:
     PolygonNode(bool raw=false);
-    PolygonNode(const PolygonNode *node);
+    PolygonNode(const PolygonNode &node);
 };
 
 class ObjectDataNodeBase : public MindTree::DNode
 {
 public:
     ObjectDataNodeBase(std::string name);
-    ObjectDataNodeBase(const ObjectDataNodeBase *node);
+    ObjectDataNodeBase(const ObjectDataNodeBase &node);
     virtual ~ObjectDataNodeBase();
     virtual std::shared_ptr<ObjectData> getObjectData();
 
@@ -402,7 +402,7 @@ class ComposeMeshNode : public ObjectDataNodeBase
 {
 public:
     ComposeMeshNode(bool raw=false);
-    ComposeMeshNode(const ComposeMeshNode *node);
+    ComposeMeshNode(const ComposeMeshNode &node);
     MindTree::DAInSocket* getVertSocket();
     MindTree::DAInSocket* getPolySocket();
     //std::shared_ptr<MeshData> getObjectData();
@@ -415,7 +415,7 @@ class AbstractTransformableNode : public MindTree::DNode
 {
 public:
     AbstractTransformableNode(std::string, bool raw=false);
-    AbstractTransformableNode(const AbstractTransformableNode *node);
+    AbstractTransformableNode(const AbstractTransformableNode &node);
     virtual ~AbstractTransformableNode();
 
     virtual std::shared_ptr<AbstractTransformable> getObject();
@@ -438,7 +438,7 @@ class ObjectNode : public AbstractTransformableNode
 {
 public:
     ObjectNode(bool raw=false);
-    ObjectNode(const ObjectNode *node);
+    ObjectNode(const ObjectNode &node);
     //Object* getObject();
     MindTree::DinSocket* getObjDataSocket();
     MindTree::DinSocket* getGeoSocket();
@@ -453,7 +453,7 @@ class CreateGroupNode : public MindTree::DNode
 {
 public:
     CreateGroupNode(std::string name="Group", bool raw=false);
-    CreateGroupNode(const CreateGroupNode *node);
+    CreateGroupNode(const CreateGroupNode &node);
     virtual ~CreateGroupNode();
     Group* getGroup();
 
@@ -465,7 +465,7 @@ class CameraNode : public AbstractTransformableNode
 {
 public:
     CameraNode(bool raw=false);
-    CameraNode(const CameraNode *node);
+    CameraNode(const CameraNode &node);
     //Camera* getObject();
 };
 
@@ -474,7 +474,7 @@ class LightNode : public AbstractTransformableNode
 public:
     enum LightType {POINTLIGHT, SPOTLIGHT, DISTANTLIGHT};
     LightNode(std::string name, bool raw=false);
-    LightNode(const LightNode *node);
+    LightNode(const LightNode &node);
 
     //Light* getObject();
     LightType getLightType();
@@ -488,21 +488,21 @@ class PointLightNode : public LightNode
 {
 public:
     PointLightNode(bool raw=false);
-    PointLightNode(const PointLightNode *node);
+    PointLightNode(const PointLightNode &node);
 };
 
 class SpotLightNode : public LightNode
 {
 public:
     SpotLightNode(bool raw=false);
-    SpotLightNode(const SpotLightNode *node);
+    SpotLightNode(const SpotLightNode &node);
 };
 
 class DistantLightNode : public LightNode
 {
 public:
     DistantLightNode(bool raw=false);
-    DistantLightNode(const DistantLightNode *node);
+    DistantLightNode(const DistantLightNode &node);
 };
 
 #endif /* end of include guard: OBJECT */

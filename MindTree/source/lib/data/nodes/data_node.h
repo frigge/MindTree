@@ -19,20 +19,14 @@
 #ifndef DATA_NODE_H
 #define DATA_NODE_H
 
-#include "QPointF"
-#include "QColor"
-
 #include "data/nodes/data_node_socket.h"
 #include "data/callbacks.h"
 #include "data/python/pyexposable.h"
 #include "data/nodes/nodetype.h"
+#include "data/datatypes.h"
 
 #include "functional"
 #include "memory"
-
-class VNode;
-class VContainerNode;
-class SourceDock;
 
 namespace MindTree {
 class DNode;
@@ -48,7 +42,7 @@ public:
     static void clear();
 
 private:
-    static QHash<unsigned short, DNode_ptr>loadIDMapper;
+    static std::unordered_map<unsigned short, DNode_ptr>loadIDMapper;
 };
 
 class CopyNodeMapper
@@ -58,35 +52,34 @@ public:
     static DNode * getCopy(DNode *original);
 
 private:
-    static QHash<DNode*, DNode*> nodeMap;
+    static std::unordered_map<DNode*, DNode*> nodeMap;
 };
 
 class DNSpace;
 class ContainerNode;
 
-typedef QList<DNode*> NodeList;
-typedef QList<const DNode*> ConstNodeList;
+typedef std::vector<DNode*> NodeList;
+typedef std::vector<const DNode*> ConstNodeList;
 
 
-class DNode : public QObject, public PyExposable
+class DNode : public PyExposable
 {
-Q_OBJECT
 public:
     DNode(std::string name="");
-    DNode(const DNode* node);
     DNode(const DNode& node);
-    static QList<DNode*> copy(QList<DNode*>nodes);
+
+    static NodeList copy(NodeList nodes);
     virtual ~DNode();
 
     bool getSelected();
     void setSelected(bool value);
 
     NodeType getType()const;
-    void setType(std::string value);
+    void setType(NodeType value);
     virtual DNode* clone();
 
-    QPointF getPos()const;
-    void setPos(QPointF value);
+    Vec2i getPos()const;
+    void setPos(Vec2i value);
 
     template<class C>
     const C* getDerivedConst() const;
@@ -99,10 +92,9 @@ public:
 
     virtual void setNodeName(std::string name);
     std::string getNodeName() const;
-    void setNodeType(NType t);
     void setNodeType(NodeType t);
     virtual void addSocket(DSocket *socket);
-    QStringList getSocketNames();
+    std::vector<std::string> getSocketNames();
     void setSocketIDName(DSocket *socket);
     DSocket* getSocketByIDName(std::string idname);
     void removeSocket(DSocket *socket);
@@ -120,7 +112,6 @@ public:
     DSocketList* getInSocketLlist() const;
     DSocketList *getOutSocketLlist() const;
     void setInSockets(DinSocketList value);
-    NType getNodeType() const;
     DSocket* getVarSocket() const;
     void setVarSocket(const DSocket* value);
     DSocket* getLastSocket() const;
@@ -137,7 +128,7 @@ public:
     //void unblockRegCB();
     //void blockRegCB();
 
-    static DNode_ptr newNode(std::string name, NType t, int insize, int outsize);
+    static DNode_ptr newNode(std::string name, NodeType t, int insize, int outsize);
 
     static bool isInput(const DNode *node);
     //static bool isMathNode(const DNode *node);
@@ -161,9 +152,6 @@ public:
     Property operator[](std::string name);
     void rmProperty(std::string name);
 
-signals:
-    void deleted(DNode*);
-
 private:
     static std::vector<std::function<DNode_ptr()>> newNodeFactory;
     bool selected;
@@ -180,7 +168,7 @@ private:
     mutable DSocketList inSockets;
     NodeType type;
     CallbackList addSocketCallbacks;
-    QPointF pos;
+    Vec2i pos;
     mutable PropertyMap properties;
 };
 
@@ -196,23 +184,6 @@ C* DNode::getDerived()
     return static_cast<C*>(this); 
 }
 
-QDataStream &operator<<(QDataStream &stream, DNode *node);
-QDataStream &operator>>(QDataStream &stream, DNode_ptr *node);
-
-class FunctionNode : public DNode
-{
-public:
-    FunctionNode(std::string name="");
-    FunctionNode(const FunctionNode* node);
-    virtual bool operator==(const DNode &node)const;
-    virtual bool operator!=(const DNode &node)const;
-    std::string getFunctionName() const;
-    void setFunctionName(std::string value);
-
-private:
-    std::string function_name;
-};
-
 class ContainerSpace;
 class SocketNode;
 
@@ -220,14 +191,14 @@ class ContainerNode : public DNode
 {
 public:
     ContainerNode(std::string name="", bool raw=false);
-    ContainerNode(const ContainerNode* node);
+    ContainerNode(const ContainerNode &node);
     ~ContainerNode();
 
     DSocket *getSocketOnContainer(DSocket *socket);
     const DSocket *getSocketOnContainer(const DSocket *socket) const;
     DSocket *getSocketInContainer(DSocket *socket);
     const DSocket *getSocketInContainer(const DSocket *socket) const;
-    QList<const DSocket*> getMappedSocketsOnContainer() const;
+    std::vector<const DSocket*> getMappedSocketsOnContainer() const;
     void mapOnToIn(const DSocket *on, const DSocket *in);
     int getSocketMapSize() const;
 
@@ -236,7 +207,7 @@ public:
 
     ContainerSpace* getContainerData() const;
     void setContainerData(ContainerSpace* value);
-    void C_addItems(QList<DNode*> nodes);
+    void addItems(NodeList nodes);
 
     void addMappedSocket(DSocket *socket);
 
@@ -258,7 +229,7 @@ public:
 private:
     SocketNode *inSocketNode, *outSocketNode;
     ContainerSpace *containerData;
-    QHash<const DSocket*, const DSocket*> socket_map;
+    std::unordered_map<const DSocket*, const DSocket*> socket_map;
 };
 
 
@@ -273,7 +244,7 @@ class SocketNode : public DNode
 {
 public:
     SocketNode(socket_dir dir, ContainerNode *contnode, bool raw=false);
-    SocketNode(const SocketNode* node);
+    SocketNode(const SocketNode &node);
 
     void setInSocketNode(ContainerNode *contnode);
     virtual void setOutSocketNode(ContainerNode *contnode);
@@ -303,105 +274,14 @@ public:
 
     void setPartner(LoopSocketNode* p);
     DSocket *getPartnerSocket(const DSocket *) const;
-    QList<DSocket*> getLoopedSockets() const;
-    qint16 getLoopedSocketsCount() const;
+    std::vector<DSocket*> getLoopedSockets() const;
+    uint getLoopedSocketsCount() const;
 
     virtual void inc_var_socket();
 
 private:
     QHash<DSocket*, DSocket*> loopSocketMap;
     LoopSocketNode *partner;
-};
-
-class ConditionNode : public DNode
-{
-public:
-    ConditionNode(NType t, bool raw=false);
-    ConditionNode(const ConditionNode *node);
-};
-
-class ValueNode : public DNode
-{
-public:
-    ValueNode(std::string name);
-    ValueNode(const ValueNode* node);
-    bool isShaderInput() const;
-    void setShaderInput(bool);
-
-    void setNodeName(std::string name);
-
-protected:
-    //virtual void getValue() = 0;
-
-private:
-    bool shaderInput;
-};
-
-class ColorValueNode : public ValueNode
-{
-public:
-    ColorValueNode(std::string name="Color", bool raw=false);
-    ColorValueNode(const ColorValueNode* node);
-    //virtual bool operator==(const DNode &node)const;
-    //virtual bool operator!=(const DNode &node)const;
-
-    //void setValue(QColor);
-    //QColor getValue() const;
-
-//protected:
-    //void updateColorLabel();
-
-//private:
-    //QColor colorvalue;
-};
-
-class StringValueNode : public ValueNode
-{
-public:
-    StringValueNode(std::string name="String", bool raw=false);
-    StringValueNode(const StringValueNode* node);
-};
-
-class FloatValueNode : public ValueNode
-{
-public:
-    FloatValueNode(std::string name="Float", bool raw=false);
-    FloatValueNode(const FloatValueNode* node);
-};
-
-class IntValueNode : public ValueNode
-{
-public:
-    IntValueNode(std::string name="Integer", bool raw=false);
-    IntValueNode(const IntValueNode* node);
-};
-
-class BoolValueNode : public ValueNode
-{
-public:
-    BoolValueNode(std::string name="Boolean", bool raw=false);
-    BoolValueNode(const BoolValueNode* node);
-};
-
-class VectorValueNode : public ValueNode
-{
-public:
-    VectorValueNode(std::string name="Vector", bool raw=false);
-    VectorValueNode(const VectorValueNode* node);
-    //Vector getValue() const;
-    //void setValue(Vector newvalue);
-    //virtual bool operator==(const DNode &node)const;
-    //virtual bool operator!=(const DNode &node)const;
-
-//private:
-    //Vector vectorvalue;
-};
-
-class FloatToVectorNode : public DNode
-{
-public:
-    FloatToVectorNode(bool raw=false);
-    FloatToVectorNode(const FloatToVectorNode* node);
 };
 
 class LoopNode : public ContainerNode

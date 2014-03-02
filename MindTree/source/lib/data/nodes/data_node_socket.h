@@ -136,8 +136,9 @@ typedef enum
 class SocketType
 {
 public:
-    SocketType(socket_type t);
-    SocketType(std::string str="");
+    SocketType(const socket_type t);
+    SocketType(const std::string &str="");
+    SocketType(const char *str);
     virtual ~SocketType();
 
     void mapToNew();
@@ -148,7 +149,6 @@ public:
     void setCustomType(std::string value);
     static int getID(std::string str);
     static SocketType byID(int id);
-    int getID(QString type);
     static int registerType(std::string type);
     static std::vector<std::string> getTypes();
     int id();
@@ -157,8 +157,6 @@ public:
     bool operator!=(const SocketType &other);
     bool operator==(socket_type t);
     bool operator!=(socket_type t);
-    bool operator==(std::string str);
-    bool operator!=(std::string str);
 
     SocketType& operator=(socket_type t);
     SocketType& operator=(std::string str);
