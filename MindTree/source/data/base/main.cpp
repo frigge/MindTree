@@ -18,7 +18,6 @@
 
 
 #include <QtGui/QApplication>
-#include "QStyle"
 
 #include "source/graphics/base/mindtree_mainwindow.h"
 #include "source/data/base/init.h"
