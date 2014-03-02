@@ -41,7 +41,8 @@ class FloatEditor(QWidget):
         self.widget = QDoubleSpinBox()
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
-        self.widget.setValue(socket.value)
+        if socket.value != None:
+            self.widget.setValue(socket.value)
         self.widget.valueChanged.connect(lambda x: setattr(self.socket, "value", x))
 
 class IntEditor(QWidget):
@@ -51,7 +52,8 @@ class IntEditor(QWidget):
         self.widget = QSpinBox()
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
-        self.widget.setValue(socket.value)
+        if socket.value != None:
+            self.widget.setValue(socket.value)
         self.widget.valueChanged.connect(lambda x: setattr(self.socket, "value", x))
 
 class BoolEditor(QWidget):
@@ -62,7 +64,8 @@ class BoolEditor(QWidget):
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(QLabel(socket.name))
         self.layout().addWidget(self.widget)
-        self.widget.setChecked(socket.value)
+        if socket.value != None:
+            self.widget.setChecked(socket.value)
         self.widget.valueChanged.connect(lambda x: setattr(self.socket, "value", x))
 
 class Editor(QWidget):
