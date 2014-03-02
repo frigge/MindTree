@@ -39,7 +39,6 @@ public:
     PropertyData(){}
     PropertyData(T data) : data(data) {}
     PropertyData(const PropertyData &prop) : data(prop.data){}
-    virtual ~PropertyData() {}
 
     T getData()const
     {

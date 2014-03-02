@@ -58,7 +58,7 @@ Property Property::createPropertyFromPython(std::string name, const BPy::object 
 {
     auto t = MindTree::Python::type(pyobj);
     if(t == "int") { 
-        int val = BPy::extract<int>(pyobj);
+        long val = BPy::extract<long>(pyobj);
         return Property(val, name);
     }        
     else if(t == "str" || t == "unicode") {
@@ -66,7 +66,7 @@ Property Property::createPropertyFromPython(std::string name, const BPy::object 
         return Property(val, name);
     }
     else if(t == "float") { 
-        float val = BPy::extract<float>(pyobj);
+        double val = BPy::extract<float>(pyobj);
         return Property(val, name);
     }
     else if(t == "long") { 
