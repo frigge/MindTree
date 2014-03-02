@@ -79,9 +79,7 @@ public slots:
     static QWidget* addConsole();
 
     void setupStyle();
-#ifdef QT_DEBUG
     void lookupStyle();
-#endif
 
     void showDock(QDockWidget* widget);
 
@@ -94,10 +92,9 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event);
 
 private:
-#ifdef QT_DEBUG
     qint64 style_age;
     QString stylePath;
-#endif
+
     static bool pickWidget, mouseNodeGraphPos;
     Shader_View *view;
     void change_window_title(QString);

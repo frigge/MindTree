@@ -79,10 +79,7 @@ bool frg_Shader_Author::mouseNodeGraphPos = false;
 bool frg_Shader_Author::pickWidget = false;
 
 frg_Shader_Author::frg_Shader_Author(QWidget *parent)
-    : QMainWindow(parent)
-#ifdef QT_DEBUG
-    , style_age(-1)
-#endif
+    : QMainWindow(parent), style_age(-1)
 {
     setObjectName("MindTreeMainWindow");
     FRG::Author = this;
@@ -146,7 +143,6 @@ void frg_Shader_Author::registerWindow(WindowFactory *factory)
     menus.value("&Window")->addAction(factory->action());
 }
 
-#ifdef QT_DEBUG
 void frg_Shader_Author::lookupStyle()    
 {
     if(style_age == -1){
@@ -161,7 +157,6 @@ void frg_Shader_Author::lookupStyle()
         setupStyle();
     }
 }
-#endif
 
 void frg_Shader_Author::mouseMoveEvent(QMouseEvent *event)    
 {
