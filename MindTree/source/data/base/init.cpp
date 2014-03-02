@@ -84,7 +84,8 @@ void MindTree::runTests(std::vector<std::string> testlist)
         }
     }
     std::cout<<"finished"<<std::endl;
-    std::cout<< failed << " out of " << testlist.size() << " tests failed" << std::endl;
+    if(testlist.size() > 1)
+        std::cout<< failed << " out of " << testlist.size() << " tests failed" << std::endl;
 }
 
 bool MindTree::noGui()
