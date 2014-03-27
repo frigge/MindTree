@@ -19,6 +19,7 @@
 #include "obj.h"
 #include "glm/glm.hpp"
 #include "QFile"
+#include "QFileInfo"
 
 using namespace MindTree;
 
@@ -26,6 +27,8 @@ ObjImporter::ObjImporter(std::string filepath)
 {
     QFile file(filepath.c_str());
     file.open(QFile::ReadOnly);
+    QFileInfo fi(file);
+    if(!fi.exists()) return;
     QTextStream stream(&file);
 
     readData(stream);
@@ -58,6 +61,7 @@ void ObjImporter::readData(QTextStream &stream)
 std::shared_ptr<Object> ObjImporter::addObject(QString line)    
 {
     auto obj = std::make_shared<Object>();
+    if(!grp) grp = std::make_shared<Group>();
     grp->addMember(obj);
     QStringList l = line.split(" ");
     l.takeFirst();
@@ -80,7 +84,7 @@ void ObjImporter::addVertex(QString line, std::shared_ptr<Object> obj)
         ++i;
     }
     std::static_pointer_cast<MeshData>(obj->getData())
-        ->getProperty<std::shared_ptr<VertexList>>("P")->append(glm::vec3(d[0], d[1], d[2]));
+        ->getProperty<std::shared_ptr<VertexList>>("P")->push_back(glm::vec3(d[0], d[1], d[2]));
 }
 
 void ObjImporter::addFace(QString line, std::shared_ptr<Object> obj)    
@@ -95,7 +99,7 @@ void ObjImporter::addFace(QString line, std::shared_ptr<Object> obj)
     Polygon poly;
     poly.set(p);
     std::static_pointer_cast<MeshData>(obj->getData())
-        ->getProperty<std::shared_ptr<PolygonList>>("polygon")->append(poly);
+        ->getProperty<std::shared_ptr<PolygonList>>("polygon")->push_back(poly);
 }
 
 void ObjImporter::addUV(QString line, std::shared_ptr<Object> obj)    
@@ -113,7 +117,7 @@ ObjImportNode::ObjImportNode(bool raw)
     setNodeType("OBJIMPORT");
     if(!raw){
         filesocket = new DinSocket("Filename", std::string("DIRECTORY"), this);
-        new DoutSocket("Group", GROUPDATA, this);
+        new DoutSocket("Group", "GROUPDATA", this);
     }
 }
 

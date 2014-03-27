@@ -12,7 +12,7 @@ BOOST_PYTHON_MODULE(objio)
         return new ObjImportNode();
     };
 
-    NodeDataBase::registerNodeType(new BuildInFactory("OBJIMPORTNODE", 
+    NodeDataBase::registerNodeType(new BuildInFactory("OBJIMPORT", 
                                                       "Objects.Import",
                                                       importFn));
 
@@ -22,10 +22,10 @@ BOOST_PYTHON_MODULE(objio)
             ->getDerivedConst<ObjImportNode>();
 
         ObjImporter objio(node->getFilePath());
-        cache->data = objio.getGroup();
+        cache->pushData(objio.getGroup());
     };
 
     DataCache::addProcessor(SocketType("GROUPDATA"), 
-                            NodeType("OBJIMPORTNODE"), 
+                            NodeType("OBJIMPORT"), 
                             new CacheProcessor(proc));
 }
