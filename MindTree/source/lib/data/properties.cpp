@@ -20,14 +20,14 @@
 #include "source/data/python/init.h"
 #include "data/nodes/data_node_socket.h"
 #include "exception"
+#include "glm/glm.hpp"
 
 #include "properties.h"
 
 using namespace MindTree;
 
-Property::Property(std::string name)
+Property::Property()
     : data(0),
-     name(name),
      type("undefined"),
      /* default fn objects to avoid std::bad_function_call*/
      //by default reset property value as this property is empty as well
@@ -38,7 +38,7 @@ Property::Property(std::string name)
 }
 
 Property::Property(const Property &other)
-    : Property(other.name)
+    : Property()
 {
     other.cloneData(*this);
 }
@@ -54,33 +54,58 @@ Property& Property::operator=(const Property &other)
     return *this;
 }
 
-Property Property::createPropertyFromPython(std::string name, const BPy::object &pyobj)    
+Property Property::createPropertyFromPython(const BPy::object &pyobj)    
 {
     auto t = MindTree::Python::type(pyobj);
     if(t == "int") { 
-        long val = BPy::extract<long>(pyobj);
-        return Property(val, name);
+        int val = BPy::extract<int>(pyobj);
+        return Property(val);
     }        
     else if(t == "str" || t == "unicode") {
         std::string val = BPy::extract<std::string>(pyobj);
-        return Property(val, name);
+        return Property(val);
     }
     else if(t == "float") { 
         double val = BPy::extract<float>(pyobj);
-        return Property(val, name);
+        return Property(val);
+    }
+    else if (t == "bool") {
+        bool val = BPy::extract<bool>(pyobj);
+        return Property(val);
     }
     else if(t == "long") { 
         long val = BPy::extract<long>(pyobj);
-        return Property(val, name);
+        return Property(val);
+    }
+    else if(t == "tuple") {
+        BPy::tuple tuple(pyobj);
+        if(BPy::len(tuple) == 3) {
+            double x, y, z;
+            x = BPy::extract<float>(pyobj[0]);
+            y = BPy::extract<float>(pyobj[1]);
+            z = BPy::extract<float>(pyobj[2]);
+            glm::vec3 val(x, y, z);
+            return Property(val);
+        }
+        else if(BPy::len(tuple) == 4) {
+            double x, y, z, w;
+            x = BPy::extract<float>(pyobj[0]);
+            y = BPy::extract<float>(pyobj[1]);
+            z = BPy::extract<float>(pyobj[2]);
+            w = BPy::extract<float>(pyobj[3]);
+            glm::vec4 val(x, y, z, w);
+            return Property(val);
+
+        }
     }
     else if(t == "dict") {
         std::vector<Property> prop_vec;
         auto items = BPy::dict(pyobj).items();
         for(auto i = 0; i<BPy::len(items); i++) {
             std::string n = BPy::extract<std::string>(items[i][0]);
-            prop_vec.push_back(createPropertyFromPython(n, BPy::object(items[i][1])));
+            prop_vec.push_back(createPropertyFromPython(BPy::object(items[i][1])));
         }
-        return Property(prop_vec, name);
+        return Property(prop_vec);
     }
     else
     return Property();
@@ -91,17 +116,12 @@ Property Property::clone()const
     return Property(*this);
 }
 
-std::string Property::getType()    
+std::string Property::getType() const
 {
     return type;
 }
 
-std::string Property::getName()    
-{
-    return name;
-}
-
-BPy::object Property::toPython()    
+BPy::object Property::toPython() const
 {
     if(!data) {
         return BPy::object();

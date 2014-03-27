@@ -23,7 +23,6 @@
 #include "iostream"
 #include "data/properties.h"
 
-#include "data/signal.h"
 
 #include "data_node.h"
 
@@ -76,7 +75,8 @@ DNode::DNode(std::string name)
       nodeName(FRG::CurrentProject->registerItem(this, name.c_str())),
       varsocket(0),
       lastsocket(0),
-      blockCBregister(false)
+      blockCBregister(false),
+      _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
 };
 
@@ -87,7 +87,8 @@ DNode::DNode(const DNode& node)
       ID(count++),
       nodeName(node.getNodeName()),
       type(node.getType()),
-      blockCBregister(false)
+      blockCBregister(false),
+      _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
     for(auto prop : node.getProperties())
         properties[prop.first] = prop.second;
@@ -145,15 +146,14 @@ Property DNode::operator[](std::string name)
     return properties[name];
 }
 
-void DNode::setProperty(Property value)
+void DNode::setProperty(Property value, std::string name)
 {
-    auto name = value.getName();
     auto prop = properties.find(name);
     if(prop != properties.end()) {
         properties.erase(name);
     }
 
-    properties[value.getName()] = value;
+    properties[name] = value;
 }
 
 void DNode::rmProperty(std::string name)    
@@ -169,6 +169,7 @@ Vec2i DNode::getPos()const
 void DNode::setPos(Vec2i value)
 {
     pos = value;
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "nodePositionChanged");
 }
 
 DSocket* DNode::getSocketByIDName(std::string idname)    
@@ -456,10 +457,8 @@ void DNode::setNodeName(std::string name)
 void DNode::addSocket(DSocket *socket)
 {
     setSocketIDName(socket);
-    if(socket->getDir()==IN) inSockets.add(socket);
+    if(socket->getDir()== DSocket::IN) inSockets.add(socket);
     else outSockets.add(socket);
-
-    addSocketCallbacks();
 }
 
 void DNode::setSocketIDName(DSocket *socket)    
@@ -494,7 +493,7 @@ std::vector<std::string> DNode::getSocketNames()
 void DNode::removeSocket(DSocket *socket)
 {
     if(!socket)return;
-    if(socket->getDir() == IN) {
+    if(socket->getDir() == DSocket::IN) {
         inSockets.rm(socket);
         delete socket;
     }
@@ -513,10 +512,10 @@ void DNode::dec_var_socket(DSocket *socket)
 void DNode::inc_var_socket()
 {
     lastsocket = varsocket;
-    if(lastsocket->getDir() == IN)
-        varsocket = new DinSocket("+", VARIABLE, this);
+    if(lastsocket->getDir() == DSocket::IN)
+        varsocket = new DinSocket("+", "VARIABLE", this);
     else
-        varsocket = new DoutSocket("+", VARIABLE, this);
+        varsocket = new DoutSocket("+", "VARIABLE", this);
     varsocket->setVariable(true);
     varcnt +=1;
 }
@@ -615,13 +614,13 @@ void DNode::setSpace(DNSpace* value)
     space = value;
 }
 
-void DNode::setDynamicSocketsNode(socket_dir dir, socket_type t)
+void DNode::setDynamicSocketsNode(DSocket::SocketDir dir)
 {
     DSocket *varsocket = 0;
-    if(dir == IN)
-        varsocket = new DinSocket("+", t, this);
+    if(dir == DSocket::IN)
+        varsocket = new DinSocket("+", "VARIABLE", this);
     else
-        varsocket = new DoutSocket("+", t, this);
+        varsocket = new DoutSocket("+", "VARIABLE", this);
     varsocket->setVariable(true);
 }
 
@@ -776,8 +775,8 @@ ContainerNode::ContainerNode(std::string name, bool raw)
     {
         setContainerData(new ContainerSpace);
         containerData->setName(name);
-        new SocketNode(IN, this);
-        new SocketNode(OUT, this);
+        new SocketNode(DSocket::IN, this);
+        new SocketNode(DSocket::OUT, this);
     }
 }
 
@@ -786,8 +785,10 @@ ContainerNode::ContainerNode(const ContainerNode &node)
 {
     setNodeType("CONTAINER");
     setContainerData(new ContainerSpace(*node.getContainerData()));
+
     for(const DSocket *socket : node.getMappedSocketsOnContainer())
-        mapOnToIn(CopySocketMapper::getCopy(socket), CopySocketMapper::getCopy(node.getSocketInContainer(socket)));
+        mapOnToIn(CopySocketMapper::getCopy(socket), 
+                  CopySocketMapper::getCopy(node.getSocketInContainer(socket)));
 
     setInputs(CopyNodeMapper::getCopy(node.getInputs()));
     setOutputs(CopyNodeMapper::getCopy(node.getOutputs()));
@@ -801,40 +802,36 @@ ContainerNode::~ContainerNode()
 NodeList ContainerNode::getAllInNodes(NodeList nodes)    
 {
     nodes = DNode::getAllInNodes(nodes);
-    LLsocket *tmp = getOutputs()->getInSocketLlist()->getFirst();
-    do{
-        if(tmp->socket->getArray())
-            foreach(DoutSocket *socket, ((DAInSocket*)tmp->socket)->getLinks())     
-                nodes = socket->getNode()->getAllInNodes(nodes);
-        else
-            if(tmp->socket->toIn()->getCntdSocket())
-                nodes = tmp->socket->toIn()->getCntdSocket()->getNode()->getAllInNodes(nodes);
-    }while(tmp = tmp->next);
+    for(auto socket : getOutputs()->getInSockets()) {
+        DoutSocket *cntd = nullptr;
+        if((cntd = socket->toIn()->getCntdSocket()))
+            nodes = cntd->getNode()->getAllInNodes(nodes);
+    }
     return nodes;
 }
 
 ConstNodeList ContainerNode::getAllInNodesConst(ConstNodeList nodes)    const
 {
     nodes = DNode::getAllInNodesConst(nodes);
-    LLsocket *tmp = getOutputs()->getInSocketLlist()->getFirst();
-    do{
-        if(tmp->socket->getArray())
-            foreach(DoutSocket *socket, ((DAInSocket*)tmp->socket)->getLinks())     
-                nodes = socket->getNode()->getAllInNodesConst(nodes);
-        else
-            if(tmp->socket->toIn()->getCntdSocket())
-                nodes = tmp->socket->toIn()->getCntdSocket()->getNode()->getAllInNodesConst(nodes);
-    }while(tmp = tmp->next);
+    for(auto socket : getOutputs()->getInSockets()) {
+        DoutSocket *cntd = nullptr;
+        if((cntd = socket->toIn()->getCntdSocket()))
+            nodes = cntd->getNode()->getAllInNodesConst(nodes);
+    }
     return nodes;
 }
 
 void ContainerNode::addMappedSocket(DSocket *socket)
 {
     DSocket *mapped_socket = 0;
-    if(socket->getDir() == IN)
-        mapped_socket = new DoutSocket(socket->getName(), socket->getType(), inSocketNode);
+    if(socket->getDir() == DSocket::IN)
+        mapped_socket = new DoutSocket(socket->getName(), 
+                                       socket->getType(), 
+                                       inSocketNode);
     else
-        mapped_socket = new DinSocket(socket->getName(), socket->getType(), outSocketNode);
+        mapped_socket = new DinSocket(socket->getName(), 
+                                      socket->getType(), 
+                                      outSocketNode);
     mapOnToIn(socket, mapped_socket);     
 }
 
@@ -898,7 +895,7 @@ SocketNode* ContainerNode::getOutputs() const
 void ContainerNode::newSocket(DSocket *socket)
 {
     DSocket *mapped_socket = 0;
-    if(socket->getDir() == IN)
+    if(socket->getDir() == DSocket::IN)
         mapped_socket = new DoutSocket(*socket->toOut(), this);
     else
         mapped_socket = new DinSocket(*socket->toIn(), this);
@@ -1004,10 +1001,10 @@ bool ContainerNode::operator!=(const DNode &node)const
 //    setNodeType(CONDITIONCONTAINER);
 //}
 //
-SocketNode::SocketNode(socket_dir dir, ContainerNode *contnode, bool raw)
+SocketNode::SocketNode(DSocket::SocketDir dir, ContainerNode *contnode, bool raw)
     : container(0)
 {
-    if (dir == IN)
+    if (dir == DSocket::IN)
     {
         setType("INSOCKETS");
         if(!raw && contnode)setInSocketNode(contnode);
@@ -1028,14 +1025,14 @@ SocketNode::SocketNode(const SocketNode &node)
 
 void SocketNode::setInSocketNode(ContainerNode *contnode)
 {
-    setDynamicSocketsNode(OUT);
+    setDynamicSocketsNode(DSocket::OUT);
     setNodeName("Input");
     contnode->setInputs(this);
 }
 
 void SocketNode::setOutSocketNode(ContainerNode *contnode)
 {
-    setDynamicSocketsNode(IN);
+    setDynamicSocketsNode(DSocket::IN);
     setNodeName("Output");
     contnode->setOutputs(this);
 }
@@ -1055,7 +1052,7 @@ void SocketNode::inc_var_socket()
     DNode::inc_var_socket();
 	DSocket *newsocket;
 //    unsigned short arrID = container->getSocketOnContainer(getLastSocket())->getArrayID();
-	if(getLastSocket()->getDir() == IN)
+	if(getLastSocket()->getDir() == DSocket::IN)
 		newsocket = new DoutSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
 	else
 		newsocket = new DinSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);

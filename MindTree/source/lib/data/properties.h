@@ -120,11 +120,11 @@ template<class T> std::string PropertyData<T>::propertyTypeID = "undefined";
 class Property
 {
 public:
-    Property(std::string name="");
+    Property();
 
     template<typename T>
-    Property(T data, std::string name="")
-        : Property(name)
+    Property(T data)
+    : Property()
     {
         setData<T>(data);
     }
@@ -135,7 +135,7 @@ public:
     Property& operator=(const Property &other);
 
     Property clone()const;
-    static Property createPropertyFromPython(std::string name, const BPy::object &pyobj);
+    static Property createPropertyFromPython(const BPy::object &pyobj);
 
 
     template<typename T>
@@ -152,7 +152,7 @@ public:
     }
 
     template<typename T>
-    T getData(){
+    T getData() const{
         //initialize on demand with default value
         if(!data) {
             data = new PropertyData<T>();
@@ -162,17 +162,15 @@ public:
         return ((PropertyData<T>*)data)->getData();
     }
 
-    BPy::object toPython();
-    std::string getType();
-    std::string getName();
+    BPy::object toPython() const;
+    std::string getType() const;
 
 private:
     std::function<void(Property&)> cloneData;
     std::function<void()> deleteFunc;
     std::function<BPy::object()> pyconverter;
-    void *data;
+    mutable void *data;
     std::string type;
-    std::string name;
 };
 
 typedef std::unordered_map<std::string, Property> PropertyMap;

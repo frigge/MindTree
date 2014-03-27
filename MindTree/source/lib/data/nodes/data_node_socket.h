@@ -19,11 +19,6 @@
 #ifndef DATA_NODE_SOCKET_H
 #define DATA_NODE_SOCKET_H
 
-#include "QHash"
-#include "QObject"
-#include "QDataStream"
-
-#include "data/callbacks.h"
 #include "data/datatypes.h"
 #include "data/python/pyexposable.h"
 #include "data/data_nodelink.h"
@@ -34,8 +29,8 @@ namespace MindTree
 class DSocket;
 class DinSocket;
 class DoutSocket;
-typedef QList<DinSocket*> DinSocketList;
-typedef QList<DoutSocket*> DoutSocketList;
+typedef std::vector<DinSocket*> DinSocketList;
+typedef std::vector<DoutSocket*> DoutSocketList;
 
 
 class LLsocket : public PyExposable
@@ -84,7 +79,7 @@ public:
     static void remap();
 
 private:
-    static QHash<unsigned short, const DSocket*>loadIDMapper;
+    static std::unordered_map<unsigned short, const DSocket*>loadIDMapper;
 };
 
 class CopySocketMapper
@@ -95,58 +90,21 @@ public:
     static void remap();
 
 private:
-    static QHash<const DSocket*, const DSocket*> socketMap;
+    static std::unordered_map<const DSocket*, const DSocket*> socketMap;
 };
 
-class VNSocket;
-
-typedef enum
-{
-    NORMAL,
-    VECTOR,
-    FLOAT,
-    COLOR,
-    POINT,
-    STRING,
-    VARIABLE,
-    CONDITION,
-    MATRIX,
-    SCENEOBJECT,
-    POLYGON,
-    INTEGER,
-
-    VEC2,
-    MAT2,
-    MAT3,
-
-    SAMPLER1D,
-    SAMPLER2D,
-    IMAGE = SAMPLER2D,
-    SAMPLER3D,
-    SAMPLERCUBE,
-    SAMPLER1DSHADOW,
-    SAMPLER2DSHADOW,
-
-    OBJDATA,
-    SCENEDATA,
-    GROUPDATA,
-    CUSTOMSOCKET
-}socket_type;
 
 class SocketType
 {
 public:
-    SocketType(const socket_type t);
     SocketType(const std::string &str="");
     SocketType(const char *str);
     virtual ~SocketType();
 
     void mapToNew();
 
-    socket_type getType()const;
-    void setType(socket_type value);
-    std::string getCustomType()const;
-    void setCustomType(std::string value);
+    std::string toStr()const;
+    void setType(std::string value);
     static int getID(std::string str);
     static SocketType byID(int id);
     static int registerType(std::string type);
@@ -155,10 +113,7 @@ public:
 
     bool operator==(const SocketType &other);
     bool operator!=(const SocketType &other);
-    bool operator==(socket_type t);
-    bool operator!=(socket_type t);
 
-    SocketType& operator=(socket_type t);
     SocketType& operator=(std::string str);
 
 private:
@@ -166,24 +121,20 @@ private:
     int _id;
     static int id_cnt;
     static std::vector<std::string> id_map;
-    socket_type old_type;
 };
 
-typedef enum
-{
-    IN,
-    OUT
-} socket_dir;
-
 class DNode;
-//class VNode;
 class DinSocket;
 class DoutSocket;
 
-class DSocket : public QObject, public PyExposable
+class DSocket : public PyExposable
 {
-    Q_OBJECT
 public:
+    enum SocketDir {
+        IN,
+        OUT
+    };
+
 	DSocket(std::string, SocketType, DNode *node);
     DSocket(const DSocket& socket, DNode *node=0);
     virtual ~DSocket();
@@ -193,16 +144,13 @@ public:
     const DinSocket* toIn()const;
     const DoutSocket* toOut()const;
 
-    QString setSocketVarName(QHash<QString, unsigned short> *SocketNameCnt)const;
-	QString getVarName() const;
-
 	void  setNode(DNode*);
     bool operator==(DSocket &socket)const;
     bool operator!=(DSocket &socket)const;
     std::string getName() const;
 	SocketType getType() const;
-	socket_dir getDir() const;
-	void setDir(socket_dir value);
+    SocketDir getDir() const;
+	void setDir(SocketDir value);
 	DNode* getNode() const;
 	bool getVariable() const;
 	void setVariable(bool value);
@@ -211,61 +159,32 @@ public:
     void setIDName(std::string name);
     std::string getIDName();
 
-    void setArray(bool);
-    bool getArray()const;
-
     static unsigned short count;
     static DNodeLink createLink(DSocket *socket1, DSocket *socket2);
     static void removeLink(DinSocket *in, DoutSocket *out);
     static bool isCompatible(DSocket *s1, DSocket *s2);
     static bool isCompatible(SocketType s1, SocketType s2);
     static DSocket* getSocket(unsigned short ID);
-    //static void typeCB(const DSocket *first, const DSocket *last);
-    //static void nameCB(const DSocket *first, const DSocket *last);
 
-public slots:
 	virtual void setType(SocketType value);
 	void setName(std::string value);
-
-signals:
-    void nameChanged(QString);
-    void typeChanged(SocketType);
-    void disconnected();
-    void removed();
 
 private:
     std::string idName;
     std::string name;
     SocketType type;
-    socket_dir dir;
+    SocketDir dir;
     DNode *node;
-    bool variable, is_array;
+    bool variable;
     unsigned short ID;
 
-    static QHash<unsigned short, DSocket*>socketIDHash;
-	mutable QString varname;
+    static std::unordered_map<unsigned short, DSocket*>socketIDHash;
 };
-
-QDataStream& operator<<(QDataStream &stream, DSocket *socket);
-QDataStream& operator>>(QDataStream &stream, DSocket **socket);
 
 class DoutSocket;
 
-class DAInSocket : public DSocket
-{
-public:
-    DAInSocket(std::string, SocketType, DNode *node);
-    virtual ~DAInSocket();
-    void addLink(DoutSocket *socket);
-    QList<DoutSocket*> getLinks()const;
-
-private:
-    QList<DoutSocket*> cntdSockets;
-};
-
 class DinSocket : public DSocket
 {
-    Q_OBJECT
 public:
     DinSocket(std::string, SocketType, DNode *node);
     DinSocket(const DinSocket& socket, DNode *node=0);
@@ -281,8 +200,6 @@ public:
     DoutSocket* getCntdWorkSocket() const;
 	void setCntdSocket(DoutSocket *socket);
     void cntdSocketFromID();
-	bool getToken() const;
-	void setToken(bool value);
     bool operator==(DinSocket &socket)const;
     bool operator!=(DinSocket &socket)const;
 	void setTempCntdID(unsigned short value);
@@ -291,16 +208,11 @@ public:
     Property getProperty()const;
     void setProperty(Property property);
 
-public slots:
     void clearLink();
-
-signals:
-    void linked(DoutSocket *);
 
 private:
 	unsigned short tempCntdID;
     DoutSocket* cntdSocket;
-    bool Token;
 
     mutable Property prop;
 };
@@ -308,27 +220,19 @@ private:
 
 class DoutSocket: public DSocket
 {
-    Q_OBJECT
 public:
 	DoutSocket(std::string, SocketType, DNode *node);
     DoutSocket(const DoutSocket& socket, DNode *node=0);
     ~DoutSocket();
-    void* getAttachedData();
-    void setAttachedData(void* value);
     bool operator==(DoutSocket &socket)const;
     bool operator!=(DoutSocket &socket)const;
-    QList<DNodeLink> getLinks() const;
+    std::vector<DNodeLink> getLinks() const;
     void registerSocket(DSocket *socket);
     void unregisterSocket(DinSocket *socket, bool decr=true);
 
 private:
-    void* attachedData;
-    QList<DinSocket*> cntdSockets;
+    std::vector<DinSocket*> cntdSockets;
 };
 
 } /* MindTree */
-QDataStream & operator<<(QDataStream &stream, MindTree::SocketType type);
-QDataStream& operator<<(QDataStream &stream, MindTree::DinSocket *socket);
-QDataStream& operator>>(QDataStream &stream, MindTree::DinSocket **socket);
-
 #endif // DATA_NODE_SOCKET_H

@@ -29,10 +29,10 @@
 
 using namespace MindTree;
 
-QHash<unsigned short, const DSocket*>LoadSocketIDMapper::loadIDMapper;
+std::unordered_map<unsigned short, const DSocket*>LoadSocketIDMapper::loadIDMapper;
 unsigned short DSocket::count = 0;
-QHash<const DSocket*, const DSocket*> CopySocketMapper::socketMap;
-QHash<unsigned short, DSocket*> DSocket::socketIDHash;
+std::unordered_map<const DSocket*, const DSocket*> CopySocketMapper::socketMap;
+std::unordered_map<unsigned short, DSocket*> DSocket::socketIDHash;
 
 LLsocket& LLsocket::operator++()    
 {
@@ -50,12 +50,14 @@ bool LLsocket::operator!=(const LLsocket& other)
 }
 
 DSocketList::DSocketList()
-    : first(0), length(0)
+    :   length(0),
+        first(0)
 {
 }
 
 DSocketList::DSocketList(const DSocketList &other)
-    : first(other.getFirst()), length(other.length)
+    :   length(other.length),
+        first(other.getFirst())
 {
 }
 
@@ -188,26 +190,26 @@ void DSocketList::move(unsigned short oldpos, unsigned short newpos)
     }
 }
 
-DoutSocketList DSocketList::returnAsOutSocketList()    const
+DoutSocketList DSocketList::returnAsOutSocketList() const
 {
     DoutSocketList list;
     LLsocket *f = first;
     if(f){
-        list.append(f->socket->toOut());
-        while(f = f->next)
-            list.append(f->socket->toOut());
+        list.push_back(f->socket->toOut());
+        while((f = f->next))
+            list.push_back(f->socket->toOut());
     }
     return list;
 }
 
-DinSocketList DSocketList::returnAsInSocketList()    const
+DinSocketList DSocketList::returnAsInSocketList() const
 {
     DinSocketList list;
     LLsocket *f = first;
     if(f){
-        list.append(f->socket->toIn());
-        while(f = f->next)
-            list.append(f->socket->toIn());
+        list.push_back(f->socket->toIn());
+        while((f = f->next))
+            list.push_back(f->socket->toIn());
     }
     return list;
 }
@@ -216,57 +218,72 @@ unsigned short DSocketList::len()
 {
     LLsocket *f = first;
     unsigned short i=0;
-    if(f) for(i=1; f=f->next; i++);
+    if(f) for(i=1; (f=f->next); i++);
     assert(i == length);
     return i;
 }
 
 unsigned short LoadSocketIDMapper::getID(const DSocket *socket)    
 {
-    return loadIDMapper.key(socket);
+    for(auto p : loadIDMapper)
+        if (p.second == socket) return p.first;
+    return -1;
 }
 
 void LoadSocketIDMapper::setID(const DSocket *socket, unsigned short ID)    
 {
-    loadIDMapper.insert(ID, socket);
+    loadIDMapper.insert({ID, socket});
 }
 
 const DSocket * LoadSocketIDMapper::getSocket(unsigned short ID)    
 {
-//    if(!loadIDMapper.contains(ID))
-//        printf("could not resolve pointer for ID: %2d", ID);
-    return loadIDMapper.value(ID);
+    return loadIDMapper[ID];
 }
 
 void LoadSocketIDMapper::remap()    
 {
-    foreach(const DSocket *socket, loadIDMapper.values())
-        if(socket->getDir() == IN)
+    for(auto p : loadIDMapper) {
+        const DSocket *socket = p.second;
+        if(socket->getDir() == DSocket::IN)
             if(socket->toIn()->getTempCntdID() > 0)
                 const_cast<DSocket*>(socket)->toIn()->cntdSocketFromID();
+        }
     loadIDMapper.clear();
 }
 
 void CopySocketMapper::setSocketPair(const DSocket *original, const DSocket *copy)    
 {
-   socketMap.insert(original, copy); 
+   socketMap.insert({original, copy}); 
 }
 
 const DSocket * CopySocketMapper::getCopy(const DSocket *original)    
 {
-    if(!socketMap.contains(original)) return 0;
-    return socketMap.value(original);
+    if(socketMap.find(original) == socketMap.end()) return 0;
+    return socketMap[original];
 }
 
+/** Loops through the socketmap and resets the connections.
+ * If a connected socket is in the socketMap it means it is copied as well
+ * so we link to  the copy. Otherwise we link to the original*/
 void CopySocketMapper::remap()    
 {
-    foreach(const DSocket *socket, socketMap.keys())
-        if(socket->getDir() == IN)
-            if(socket->toIn()->getCntdSocket())
-                if(socketMap.contains(socket->toIn()->getCntdSocket()))
-                    const_cast<DSocket*>(socketMap[socket])->toIn()->setCntdSocket(const_cast<DSocket*>(socketMap[socket->toIn()->getCntdSocket()])->toOut());
+    for(const auto p : socketMap) {
+        //look in the socket map for all the insockets
+        const DSocket *socket = p.first;
+        if(socket->getDir() == DSocket::IN) {
+            const DoutSocket *cntd = nullptr;
+            //if this socket is connected and the connected was copied as well
+            if((cntd = socket->toIn()->getCntdSocket())) {
+                DinSocket *inCopy = const_cast<DSocket*>(socketMap[socket])->toIn();
+                if(socketMap.find(cntd) != socketMap.end()) {
+                    DoutSocket *outCopy = const_cast<DSocket*>(socketMap[cntd])->toOut();
+                    inCopy->setCntdSocket(outCopy);
+                }
                 else
-                    const_cast<DoutSocket*>(socket->toIn()->getCntdSocket())->registerSocket(const_cast<DSocket*>(socketMap[socket])->toIn());
+                    inCopy->setCntdSocket(const_cast<DoutSocket*>(cntd));
+            }
+        }
+    }
 
     socketMap.clear();
 }
@@ -274,19 +291,13 @@ void CopySocketMapper::remap()
 int SocketType::id_cnt=-1;
 std::vector<std::string> SocketType::id_map;
 
-SocketType::SocketType(const socket_type t)
-    : old_type(t), type("")
-{
-    mapToNew();
-}
-
 SocketType::SocketType(const std::string &str)
-    : old_type(CUSTOMSOCKET), type(str), _id(getID(str))
+    : type(str), _id(getID(str))
 {
 }
 
 SocketType::SocketType(const char *str)
-    : old_type(CUSTOMSOCKET), type(str), _id(getID(str))
+    : type(str), _id(getID(str))
 {
 }
 
@@ -326,128 +337,20 @@ int SocketType::id()
     return _id;  
 }
 
-void SocketType::mapToNew()    
-{
-     switch(old_type)
-     {
-         case NORMAL:
-             type = "NORMAL";
-             break;
-         case VECTOR:
-             type = "VECTOR";
-             break;
-         case FLOAT:
-             type = "FLOAT";
-             break;
-         case COLOR:
-             type = "COLOR";
-             break;
-         case POINT:
-             type = "POINT";
-             break;
-         case STRING:
-             type = "STRING";
-             break;
-         case VARIABLE:
-             type = "VARIABLE";
-             break;
-         case CONDITION:
-             type = "CONDITION";
-             break;
-         case MATRIX:
-             type = "MATRIX";
-             break;
-         case SCENEOBJECT:
-             type = "SCENEOBJECT";
-             break;
-         case POLYGON:
-             type = "POLYGON";
-             break;
-         case INTEGER:
-             type = "INTEGER";
-             break;
-
-         case VEC2:
-             type = "case ";
-             break;
-         case MAT2:
-             type = "MAT2";
-             break;
-         case MAT3:
-             type = "MAT3";
-             break;
-
-         case SAMPLER1D:
-             type = "case ";
-             break;
-         case SAMPLER2D:
-             type = "IMAGE";
-             break;
-         case SAMPLER3D:
-             type = "SAMPLER3D";
-             break;
-         case SAMPLERCUBE:
-             type = "SAMPLERCUBE";
-             break;
-         case SAMPLER1DSHADOW:
-             type = "SAMPLER1DSHADOW";
-             break;
-         case SAMPLER2DSHADOW:
-             type = "SAMPLER2DSHADOW";
-             break;
-
-         case OBJDATA:
-             type = "OBJDATA";
-             break;
-         case SCENEDATA:
-             type = "SCENEDATA";
-             break;
-         case GROUPDATA:
-             type = "GROUPDATA";
-             break;
-        default: break;
-    }
-     _id = getID(type);
-}
-
-QDataStream & operator<<(QDataStream &stream, SocketType type)
-{
-    stream << type.getType() << type.getCustomType();
-    return stream;
-}
-
-socket_type SocketType::getType() const
-{
-    return old_type;
-}
-
-void SocketType::setType(socket_type value)
-{
-    old_type = value;
-    mapToNew();
-}
-
-std::string SocketType::getCustomType() const
+std::string SocketType::toStr() const
 {
     return type;
 }
 
-void SocketType::setCustomType(std::string value)
+void SocketType::setType(std::string value)
 {
-    old_type = CUSTOMSOCKET;
     type = value;
 }
 
 bool SocketType::operator==(const SocketType &other)    
 {
-    if(other.getType() != old_type) return false;
-    if(other.getCustomType() != type) return false;
+    if(other.type != type) return false;
     return true;
-}
-
-bool SocketType::operator==(socket_type t)    
-{
-    return old_type == t;
 }
 
 bool SocketType::operator!=(const SocketType &other)    
@@ -455,44 +358,37 @@ bool SocketType::operator!=(const SocketType &other)
     return !(*this == other);
 }
 
-bool SocketType::operator!=(socket_type t)    
-{
-    return!(*this == t);
-}
-
-SocketType& SocketType::operator=(socket_type t)    
-{
-    setType(t);
-    return *this;
-}
-
 SocketType& SocketType::operator=(std::string str)    
 {
-    setCustomType(str);
+    setType(str);
     return *this;
 }
 
 DSocket::DSocket(std::string name, SocketType type, DNode *node)
-	: name(name), type(type), ID(++count), variable(false), node(node), is_array(false)
+:   name(name),
+    type(type),
+    node(node),
+    variable(false),
+    ID(++count)
 {
-    socketIDHash.insert(ID, this);
+    socketIDHash.insert({ID, this});
 }
 
 DSocket::DSocket(const DSocket& socket, DNode *node)
-: name(socket.getName()), type(socket.getType()), ID(++count),
-    QObject(),
-    node(node), is_array(socket.getArray()),
-    variable(socket.getVariable())
+:   name(socket.getName()), 
+    type(socket.getType()), 
+    node(node),
+    variable(socket.getVariable()),
+    ID(++count)
 {
     CopySocketMapper::setSocketPair(&socket, this);
-    socketIDHash.insert(ID, this);
+    socketIDHash.insert({ID, this});
 }
 
 DSocket::~DSocket()
 {
     std::cout << "delete DinSocket" << std::endl;
-    socketIDHash.remove(ID);
-    emit removed();
+    socketIDHash.erase(ID);
 }
 
 bool DSocket::operator==(DSocket &socket)    const
@@ -540,143 +436,54 @@ bool DSocket::isCompatible(DSocket *s1, DSocket *s2)
 
 bool DSocket::isCompatible(SocketType s1, SocketType s2)    
 {
-    if(s1 == VARIABLE || s2 == VARIABLE)
-        return true;
-    if(s1 == s2)
-        return true;
-    if((s1 == VECTOR && s2 == NORMAL)
-        ||(s2 == VECTOR && s1 == NORMAL))
-        return true;
-    if((s1 == INTEGER && s2 == FLOAT)
-        || (s1 == FLOAT && s2 == INTEGER))
-        return true;
-    if(s1 == GROUPDATA || s2 == GROUPDATA)
-        return true;
-    return false;
+    return true;
 }
 
 DNodeLink DSocket::createLink(DSocket *socket1, DSocket *socket2)    
 {
     DinSocket *in = 0;
-    DAInSocket *ain = 0;
     DoutSocket *out = 0;
 
     if(socket1->getDir() == IN)
     {
-       if(socket1->getArray())
-           ain = (DAInSocket*)socket1;
-        else
-           in = socket1->toIn();
-       out = socket2->toOut(); 
+        in = socket1->toIn();
+        out = socket2->toOut(); 
     }
     else
     {
-       out = socket1->toOut(); 
-       if(socket2->getArray())
-           ain = (DAInSocket*)socket2;
-        else
-           in = socket2->toIn();
-    }
-    if ( socket1->getType() == VARIABLE ) {
-        socket1->setType(socket2->getType());
-        socket1->setName(socket2->getName());
-    }
-    if ( socket2->getType() == VARIABLE ) {
-        socket2->setType(socket1->getType());
-        socket2->setName(socket1->getName());
+        out = socket1->toOut(); 
+        in = socket2->toIn();
     }
     if(in) {
         in->setCntdSocket(out);
         return DNodeLink(in, out);
-    }
-    else {
-        ain->addLink(out);
-        return DNodeLink(ain, out);
     }
     return DNodeLink(in, out);
 }
 
 void DSocket::removeLink(DinSocket *in, DoutSocket *out)    
 {
-//    if(in->getVariable()) 
-//    {
-//        in->clearLink(false);
-//        out->unregisterSocket(in, false);
-//        DNode *inNode = in->getNode();
-//        inNode->dec_var_socket(in);
-//        return;
-//    }
-//    if(out->getVariable()) 
-//    {
-//        in->clearLink(false);
-//        DNode *outNode = out->getNode();
-//        outNode->dec_var_socket(out);
-//        return;
-//    }
     in->clearLink();
-}
-
-void DSocket::setArray(bool arr)
-{
-    is_array = arr;
-}
-
-bool DSocket::getArray() const
-{
-    return is_array;
 }
 
 DSocket* DSocket::getSocket(unsigned short ID)    
 {
-    return socketIDHash.value(ID);
-}
-
-//void DSocket::nameCB(const DSocket *first, const DSocket *last)    
-//{
-//    first->connect(first, SIGNAL(nameChanged(QString)), last, SLOT(setName(QString)));
-//}
-
-//void DSocket::typeCB(const DSocket *first, const DSocket *last)    
-//{
-//    //first->connect(first, SIGNAL(typeChanged(socket_type)), last, SLOT(setType(socket_type)));
-//}
-
-DAInSocket::DAInSocket(std::string name, SocketType t, DNode *node)
-    : DSocket(name, t, node)
-{
-    setDir(IN);
-    node->addSocket(this);
-    setArray(true);
-}
-
-DAInSocket::~DAInSocket()
-{
-    //foreach(DoutSocket *cntdSocket, cntdSockets)
-    //    cntdSocket->unregisterSocket(this);
-}
-
-void DAInSocket::addLink(DoutSocket *socket)    
-{
-    if(!cntdSockets.contains(socket) && isCompatible(this, socket))
-        cntdSockets.append(socket);
-}
-
-QList<DoutSocket*> DAInSocket::getLinks()const
-{
-    return cntdSockets;
+    return socketIDHash[ID];
 }
 
 DinSocket::DinSocket(std::string name, SocketType type, DNode *node)
-	: DSocket(name, type, node), cntdSocket(0), tempCntdID(0), Token(false)
+:   DSocket(name, type, node), 
+    tempCntdID(0),
+    cntdSocket(nullptr)
 {
 	setDir(IN);
     getNode()->addSocket(this);
 };
 
 DinSocket::DinSocket(const DinSocket& socket, DNode *node)
-    : DSocket(socket, node),
+:   DSocket(socket, node),
+    tempCntdID(0),
     cntdSocket(socket.getCntdSocket()),
-    tempCntdID(0), Token(socket.getToken()),
     prop(socket.prop)
 {
     setDir(IN);
@@ -718,9 +525,8 @@ void DinSocket::addLink(DoutSocket *socket)
 void DinSocket::clearLink()
 {
     if(cntdSocket)cntdSocket->unregisterSocket(this);
-	cntdSocket = 0;
+	cntdSocket = nullptr;
 
-    emit disconnected();
     if(getVariable())
         getNode()->dec_var_socket(this);
 }
@@ -735,59 +541,9 @@ void DinSocket::setTempCntdID(unsigned short value)
 	tempCntdID = value;
 }
 
-QDataStream & MindTree::operator<<(QDataStream &stream, DSocket *socket)
-{
-    stream<<(unsigned short)socket->getID()<<socket->getVariable();
-    stream<<socket->getName()<<socket->getType();
-	if(socket->getDir() == IN)
-	{
-		stream<<socket->toIn()->getToken();
-        if(socket->toIn()->getCntdSocket())
-            stream<<socket->toIn()->getCntdSocket()->getID();
-        else
-            stream<<(unsigned short)(0);
-	}
-    return stream;
-}
-
-QDataStream & MindTree::operator>>(QDataStream &stream, DSocket **socket)
-{
-	int type;
-    unsigned short ID;
-    QString name;
-    bool isVar; 
-    stream>>ID;
-    stream>>isVar;
-    stream>>name;
-    stream>>type;
-
-	DSocket *newsocket = *socket;
-    newsocket->setType((socket_type)type);
-    newsocket->setName(name.toStdString());
-    newsocket->setVariable(isVar);
-	if(newsocket->getDir() == IN)
-	{
-		bool istoken;
-		unsigned short tempID;
-        bool bprop;
-        QString sprop;
-        Vector vprop;
-        double fprop;
-        int iprop;
-        QColor cprop;
-		stream>>istoken;
-		stream>>tempID;
-		newsocket->toIn()->setTempCntdID(tempID);
-		newsocket->toIn()->setToken(istoken); 
-	}
-    LoadSocketIDMapper::setID(newsocket, ID);
-    return stream;
-}
-
 bool DinSocket::operator==(DinSocket &socket)const
 {
-    if(DSocket::operator!=(socket)
-        ||getToken() != socket.getToken())
+    if(DSocket::operator!=(socket))
         return false;
     return true;
 }
@@ -812,26 +568,6 @@ void DSocket::setName(std::string value)
 {
     if(value == name) return;
 	name = value;
-    //bool ok=false;
-    //int ar = name.indexOf("[");
-    //int l = 0;
-    //if(ar >= 0)
-    //{
-    //    QString arrlengthString = name.right(name.size() - ar);
-    //    arrlengthString = arrlengthString.replace("]", "");
-    //    arrlengthString = arrlengthString.replace("[", "");
-    //    l = arrlengthString.toInt(&ok);
-    //}
-    //if(ok) 
-    //{
-    //     arrayLength = l;
-    //     is_array = true;
-    //}
-    //else
-    //    is_array = false;
-
-    if(name != "+")
-        emit nameChanged(name.c_str());
 }
 
 SocketType DSocket::getType() const
@@ -843,17 +579,14 @@ void DSocket::setType(SocketType value)
 {
     if(value == type) return;
 	type = value;
-
-    if(type != VARIABLE)
-        emit typeChanged(type);
 }
 
-socket_dir DSocket::getDir() const
+DSocket::SocketDir DSocket::getDir() const
 {
 	return dir;
 }
 
-void DSocket::setDir(socket_dir value)
+void DSocket::setDir(DSocket::SocketDir value)
 {
 	dir = value;
 }
@@ -868,32 +601,20 @@ DoutSocket::DoutSocket(std::string name, SocketType type, DNode *node)
 {
 	setDir(OUT);
     getNode()->addSocket(this);
-    //setSocketVarName(); 
 }
 
 DoutSocket::DoutSocket(const DoutSocket& socket, DNode *node)
-    : DSocket(socket, node), attachedData(0)
+    : DSocket(socket, node)
 {
     setDir(OUT);
     getNode()->addSocket(this);
-//    setSocketVarName();
 }
 
 DoutSocket::~DoutSocket()
 {
     std::cout << "delete DinSocket" << std::endl;
-    foreach(DinSocket *socket, cntdSockets)
+    for(DinSocket *socket : cntdSockets)
         socket->clearLink();
-}
-
-void* DoutSocket::getAttachedData()
-{
-    return attachedData;
-}
-
-void DoutSocket::setAttachedData(void* value)
-{
-    attachedData = value;
 }
 
 bool DoutSocket::operator==(DoutSocket &socket)const
@@ -912,23 +633,27 @@ void DoutSocket::registerSocket(DSocket *socket)
 {
     if(this == getNode()->getVarSocket()) 
         getNode()->inc_var_socket();
-    if(!cntdSockets.contains(socket->toIn()))
-        cntdSockets.append(socket->toIn()); 
+
+    if(std::find(cntdSockets.begin(), 
+                 cntdSockets.end(), 
+                 socket->toIn()) == cntdSockets.end())
+        cntdSockets.push_back(socket->toIn()); 
 }
 
-QList<DNodeLink> DoutSocket::getLinks() const
+std::vector<DNodeLink> DoutSocket::getLinks() const
 {
-    QList<DNodeLink> links;
-    foreach(DinSocket *socket, cntdSockets)
-        links.append(DNodeLink(socket, const_cast<DoutSocket*>(this)));
+    std::vector<DNodeLink> links;
+    for(DinSocket *socket : cntdSockets)
+        links.push_back(DNodeLink(socket, const_cast<DoutSocket*>(this)));
     return links;
 }
 
 void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
 {
-    emit disconnected();
-    cntdSockets.removeAll(socket); 
-    if(cntdSockets.isEmpty() && getVariable() && decr) getNode()->dec_var_socket(this);
+    auto it = std::find(cntdSockets.begin(), cntdSockets.end(), socket);
+    cntdSockets.erase(it); 
+    if(cntdSockets.size() == 0 && getVariable() && decr) 
+        getNode()->dec_var_socket(this);
 }
 
 void DinSocket::setCntdSocket(DoutSocket *socket)
@@ -947,10 +672,9 @@ void DinSocket::setCntdSocket(DoutSocket *socket)
     cntdSocket->registerSocket(this);
     if (getVariable())
         getNode()->inc_var_socket();
-    //std::cout << typeid(this).name() << std::endl;
+
     MT_SIGNAL_EMITTER(this);
     MT_CUSTOM_SIGNAL_EMITTER("createLink", this);
-    //emit linked(socket);
 }
 
 void DinSocket::cntdSocketFromID()
@@ -971,40 +695,21 @@ DoutSocket* DinSocket::getCntdSocket() const
 
 DoutSocket* DinSocket::getCntdFunctionalSocket() const
 {
-        DSocket *ns=0;
         if(!cntdSocket)
-            return 0;
+            return nullptr;
 
         DNode *cntdNode = cntdSocket->getNode();
         if(cntdNode->isContainer())
         {
             return cntdNode->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdFunctionalSocket();
         }
-        //else if(cntdNode->getNodeType() == INSOCKETS)
-        //{
-        //    DinSocket *ns = cntdNode->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket)->toIn();
-        //    if(ns) return ns->getCntdFunctionalSocket();
-        //    else return 0;
-        //}
-        //else if (cntdNode->getNodeType() == LOOPINSOCKETS)
-        //{
-        //    ns = cntdNode->getDerived<LoopSocketNode>()->getPartnerSocket(cntdSocket);
-        //    if(ns)return ns->toIn()->getCntdFunctionalSocket();
-        //    else
-        //    {
-        //        ns = cntdNode->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket);
-        //        if(ns) return ns->toIn()->getCntdFunctionalSocket();
-        //    }
-        //}
-
         return cntdSocket;
 }
 
 DoutSocket* DinSocket::getCntdWorkSocket() const
 {
-        DSocket *ns=0;
         if(!cntdSocket)
-            return 0;
+            return nullptr;
 
         DNode *cntdNode = cntdSocket->getNode();
         if(cntdSocket->getNode()->isContainer())
@@ -1035,16 +740,6 @@ DoutSocket* DinSocket::getCntdWorkSocket() const
         }*/
 
         return cntdSocket;
-}
-
-bool DinSocket::getToken() const
-{
-	return Token;
-}
-
-void DinSocket::setToken(bool value)
-{
-	Token = value;
 }
 
 bool DSocket::getVariable() const

@@ -20,10 +20,11 @@
 #define DATA_NODE_H
 
 #include "data/nodes/data_node_socket.h"
-#include "data/callbacks.h"
 #include "data/python/pyexposable.h"
 #include "data/nodes/nodetype.h"
 #include "data/datatypes.h"
+
+#include "data/signal.h"
 
 #include "functional"
 #include "memory"
@@ -100,7 +101,7 @@ public:
     void removeSocket(DSocket *socket);
     virtual void dec_var_socket(DSocket *socket);
     virtual void inc_var_socket();
-    void setDynamicSocketsNode(socket_dir dir, socket_type t=VARIABLE);
+    void setDynamicSocketsNode(DSocket::SocketDir dir);
     void clearSocketLinks();
     bool isContainer() const;
 
@@ -121,17 +122,9 @@ public:
     DNSpace* getSpace() const;
     virtual void setSpace(DNSpace* value);
 
-    //void regAddSocketCB(Callback *cb);
-    //void remAddSocketCB(Callback *cb);
-    //void unblockCB();
-    //void blockCB();
-    //void unblockRegCB();
-    //void blockRegCB();
-
     static DNode_ptr newNode(std::string name, NodeType t, int insize, int outsize);
 
     static bool isInput(const DNode *node);
-    //static bool isMathNode(const DNode *node);
     static bool isConditionNode(const DNode *node);
     bool isValueNode()const;
     
@@ -142,18 +135,17 @@ public:
 
     DNode *createFuncNode(std::string filepath);
     static DNode *dropNode(std::string filepath);
-    //static ContainerNode *buildContainerNode(QList<DNode*>nodes);
-    //static void unpackContainerNode(DNode *node);
 
     Property getProperty(std::string name);
     const Property getProperty(std::string name)const;
     PropertyMap getProperties()const;
-    void setProperty(Property value);
+    void setProperty(Property value, std::string name);
     Property operator[](std::string name);
     void rmProperty(std::string name);
 
 private:
     static std::vector<std::function<DNode_ptr()>> newNodeFactory;
+
     bool selected;
     DNSpace *space;
     DSocket *varsocket;
@@ -167,9 +159,10 @@ private:
     mutable DSocketList outSockets;
     mutable DSocketList inSockets;
     NodeType type;
-    CallbackList addSocketCallbacks;
     Vec2i pos;
     mutable PropertyMap properties;
+
+    Signal::LiveTimeTracker *_signalLiveTime;
 };
 
 template<class C>
@@ -243,7 +236,7 @@ public:
 class SocketNode : public DNode
 {
 public:
-    SocketNode(socket_dir dir, ContainerNode *contnode, bool raw=false);
+    SocketNode(DSocket::SocketDir dir, ContainerNode *contnode, bool raw=false);
     SocketNode(const SocketNode &node);
 
     void setInSocketNode(ContainerNode *contnode);
@@ -264,7 +257,7 @@ class LoopNode;
 class LoopSocketNode : public SocketNode
 {
 public:
-    LoopSocketNode(socket_dir dir, LoopNode *contnode, bool raw=false);
+    LoopSocketNode(DSocket::SocketDir dir, LoopNode *contnode, bool raw=false);
     LoopSocketNode(const LoopSocketNode* node);
 
     virtual void dec_var_socket(DSocket *socket);
