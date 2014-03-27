@@ -1,7 +1,6 @@
 project(scenegraph)
 set(SCE_SRC
     pluginentry.cpp
-    graphics/prop_edit_widget.cpp
     graphics/viewport.cpp
     graphics/viewport_widget.cpp
 )
@@ -9,7 +8,6 @@ set(SCE_SRC
 set(SCE_HEADER
     pluginentry.h
     graphics/viewport.h
-    graphics/prop_edit_widget.h
     graphics/viewport_widget.h
 )
 

@@ -1,6 +1,8 @@
 #include "GL/glew.h"
 #include "QGLContext"
 #include "glm/gtc/type_ptr.hpp"
+#include "iostream"
+#include "fstream"
 #include "glwrapper.h"
 
 using namespace MindTree::GL;
@@ -76,10 +78,8 @@ void VBO::release()
 
 void VBO::data(std::shared_ptr<VertexList> l)
 {
-    float *d = l->to1DArray();
-    glBufferData(GL_ARRAY_BUFFER, l->getSize() * 3 * sizeof(float), d, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, l->size() * 3 * sizeof(float), &(*l)[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(index);
-    delete[] d;
 }
 
 GLint VBO::getIndex()    
@@ -250,10 +250,31 @@ void ShaderProgram::addShaderFromSource(std::string src, GLenum type)
     glAttachShader(id, shader);
 }
 
+void ShaderProgram::addShaderFromFile(std::string filename, GLenum type)
+{
+    std::ifstream stream(filename);
+
+    std::string content;
+    std::string line;
+    while (stream) {
+        std::getline(stream, line);
+        content += line;
+        content += "\n";
+    }
+
+    addShaderFromSource(content, type);
+}
+
 void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)    
 {
     GLint location = glGetUniformLocation(id, name.c_str());
     if(location > -1) glUniform3f(location, value.x, value.y, value.z);
+}
+
+void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)    
+{
+    GLint location = glGetUniformLocation(id, name.c_str());
+    if(location > -1) glUniform4f(location, value.x, value.y, value.z, value.w);
 }
 
 void ShaderProgram::setUniform(std::string name, float value)    

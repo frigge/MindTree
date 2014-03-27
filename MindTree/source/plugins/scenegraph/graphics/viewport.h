@@ -49,6 +49,7 @@ public slots:
     void setShowPoints(bool b);
     void setShowEdges(bool b);
     void setShowPolygons(bool b);
+    void setShowFlatShading(bool b);
     void changeCamera(QString cam);
     //void setSelectedNode();
     AbstractTransformableNode* getSelectedNode();

@@ -3,6 +3,7 @@
 #define RENDER_GR953KUN
 
 #include "memory"
+#include "vector"
 #include "glm/glm.hpp"
 
 class Object;
@@ -29,11 +30,9 @@ public:
 
     void drawPoints(const glm::mat4 &view, const glm::mat4 &projection);
     void drawEdges(const glm::mat4 &view, const glm::mat4 &projection);
-    void drawPolygons(const glm::mat4 &view, const glm::mat4 &projection);
-
-    void setDrawPoints(bool b);
-    void setDrawEdges(bool b);
-    void setDrawPolygons(bool b);
+    void drawPolygons(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config);
+    void drawVertexNormals(const glm::mat4 &view, const glm::mat4 &projection);
+    void drawFaceNormals(const glm::mat4 &view, const glm::mat4 &projection);
 
     void setPointProgram(ShaderProgram *prog);
     void setEdgeProgram(ShaderProgram *prog);
@@ -54,7 +53,6 @@ protected:
     std::vector<uint> triangles;
 
 private:
-    bool points, edges, polygons;
 
     bool initialized;
 };
@@ -107,14 +105,17 @@ public:
     void setDrawPoints(bool draw);
     void setDrawEdges(bool draw);
     void setDrawPolygons(bool draw);
+    void setShowFlatShaded(bool b);
     bool drawPoints() const;
     bool drawEdges() const;
     bool drawPolygons() const;
+    bool flatShading() const;
 
 private:
     bool _drawPoints = true;
     bool _drawEdges = true;
     bool _drawPolygons = true;
+    bool _flatShading = false;
 };
 
 class RenderManager
@@ -122,6 +123,8 @@ class RenderManager
 public:
     RenderManager();
     virtual ~RenderManager();
+
+    void init();
 
     RenderPass* addPass();
     void removePass(uint index);
@@ -131,6 +134,7 @@ public:
     RenderConfig getConfig();
 
 private:
+    glm::vec4 backgroundColor;
     std::list<std::unique_ptr<RenderPass>> passes;
     RenderConfig config;
 };

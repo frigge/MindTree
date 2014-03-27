@@ -32,7 +32,8 @@ link_directories(
             ${OPENGL_LIBRARY_DIRS}
 )
 
-add_library(render SHARED ${RENDER_SRC} ${RENDER_HEADER})
+add_library(render SHARED ${RENDER_SRC})
+
 target_link_libraries(render 
             objectlib
             mindtree_core

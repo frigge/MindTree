@@ -11,9 +11,7 @@
 using namespace MindTree::GL;
 
 Render::Render(std::shared_ptr<Object> o)
-    : obj(o), initialized(false), points(true),
-        edges(true),
-        polygons(true)
+    : obj(o), initialized(false)
 {
 }
 
@@ -28,35 +26,28 @@ void Render::init()
     initialized = true;
 }
 
-void Render::setDrawPoints(bool b)    
-{
-    points = b;
-}
-
-void Render::setDrawEdges(bool b)    
-{
-    edges = b;
-}
-
-void Render::setDrawPolygons(bool b)    
-{
-    polygons = b;
-}
-
 void Render::draw(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config)    
 {
     if(!initialized)
         init();
 
+    auto props = obj->getPropertyMap();
+    glm::mat4 model = obj->getWorldTransformation();
+    glm::mat4 modelView = view * model;
     vao->bind();
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_POLYGON_OFFSET_LINE);
     glEnable(GL_POLYGON_OFFSET_POINT);
     glLineWidth(1.1);
     glPolygonOffset(2, 2.);
-    if(config.drawPoints()) drawPoints(view, projection);
-    if(config.drawEdges()) drawEdges(view, projection);
-    if(config.drawPolygons()) drawPolygons(view, projection);
+    if(config.drawPoints()) drawPoints(modelView, projection);
+    if(config.drawEdges()) drawEdges(modelView, projection);
+    if(config.drawPolygons()) drawPolygons(modelView, projection, config);
+
+    if(props.find("display.drawVertexNormal") != props.end())
+        if(props["display.drawVertexNormal"].getData<bool>())
+            drawVertexNormals(modelView, projection);
+
     glDisable(GL_PROGRAM_POINT_SIZE);
     glDisable(GL_POLYGON_OFFSET_LINE);
     glDisable(GL_POLYGON_OFFSET_POINT);
@@ -70,10 +61,23 @@ void Render::drawPoints(const glm::mat4 &view, const glm::mat4 &projection)
     pointProgram->bind();
     pointProgram->setUniform("modelView", view);
     pointProgram->setUniform("projection", projection);
+    
+    glm::vec4 color = glm::vec4(1, 0, 0, 1);
+    auto props = obj->getPropertyMap();
+    if(props.find("display.pointColor") != props.end())
+        color = props["display.pointColor"].getData<glm::vec4>();
+
+    pointProgram->setUniform("color", color);
+
+    int pointSize = 3;
+    if(props.find("display.pointSize") != props.end())
+        pointSize = props["display.pointSize"].getData<int>();
+
+    pointProgram->setUniform("size", pointSize);
 
     auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
     auto verts = mesh->getProperty<std::shared_ptr<VertexList>>("P");
-    glDrawArrays(GL_POINTS, 0, verts->getSize());
+    glDrawArrays(GL_POINTS, 0, verts->size());
     pointProgram->release();
 }
 
@@ -84,6 +88,12 @@ void Render::drawEdges(const glm::mat4 &view, const glm::mat4 &projection)
     edgeProgram->setUniform("modelView", view);
     edgeProgram->setUniform("projection", projection);
 
+    glm::vec4 color = glm::vec4(1, 1, 1, 1);
+    auto props = obj->getPropertyMap();
+    if(props.find("display.edgeColor") != props.end())
+        color = props["display.edgeColor"].getData<glm::vec4>();
+
+    edgeProgram->setUniform("color", color);
     
     glMultiDrawElements(GL_LINE_LOOP, //Primitive type
                         (const GLsizei*)&polysizes[0], //polygon sizes
@@ -94,12 +104,73 @@ void Render::drawEdges(const glm::mat4 &view, const glm::mat4 &projection)
     edgeProgram->release();
 }
 
-void Render::drawPolygons(const glm::mat4 &view, const glm::mat4 &projection)    
+void Render::drawVertexNormals(const glm::mat4 &view, const glm::mat4 &projection)
+{
+    MindTree::GL::ShaderProgram prog;
+    std::string vertexShader(
+                             "in vec3 vertex;\
+                             uniform mat4 mvMat;\
+                             uniform mat4 projection;\
+                            void main(){\
+                                gl_Position = projection * mvMat * vec4(vertex, 1);\
+                                };\
+                            ");
+
+    auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
+    auto normals = mesh->getProperty<std::shared_ptr<VertexList>>("N");
+    auto verts = mesh->getProperty<std::shared_ptr<VertexList>>("P");
+    std::vector<glm::vec3> lines;
+
+    for(size_t i=0; i<verts->size(); i++){
+        lines.push_back(verts->at(i));
+        lines.push_back(verts->at(i) + normals->at(i));
+    }
+
+    glm::vec4 color(1, 1, 0, 1);
+    int linewidth = 1;
+
+    auto props = obj->getPropertyMap();
+    if(props.find("display.vertexNormalWidth") != props.end())
+        linewidth = props["display.vertexNormalWidth"].getData<int>();
+    if(props.find("display.vertexNormalColor") != props.end())
+        color = props["display.vertexNormalColor"].getData<glm::vec4>();
+    
+    prog.addShaderFromSource(vertexShader, GL_VERTEX_SHADER);
+    prog.link();
+    prog.bind();
+    prog.vertexAttribute("vertex", lines);
+
+    prog.enableAttribute("vertex");
+    prog.setUniform("mvMat", view);
+    prog.setUniform("projection", projection);
+    prog.setUniform("color", color);
+
+    glLineWidth(linewidth);
+    glDrawArrays(GL_LINES, 0, lines.size());
+    prog.disableAttribute("vertex");
+    prog.release();
+    glLineWidth(1);
+}
+
+void Render::drawFaceNormals(const glm::mat4 &view, const glm::mat4 &projection)
+{
+
+}
+
+void Render::drawPolygons(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config)    
 {
     if(!polyProgram) return;
     polyProgram->bind();
     polyProgram->setUniform("modelView", view * obj->getWorldTransformation());
     polyProgram->setUniform("projection", projection);
+
+    glm::vec4 color = glm::vec4(1, 1, 1, 1);
+    auto props = obj->getPropertyMap();
+    if(props.find("display.polyColor") != props.end())
+        color = props["display.polyColor"].getData<glm::vec4>();
+
+    polyProgram->setUniform("color", color);
+    polyProgram->setUniform("flatShading", (int)config.flatShading());
 
     glMultiDrawElements(GL_TRIANGLE_FAN, //Primitive type
                         (const GLsizei*)&polysizes[0], //polygon sizes
@@ -114,26 +185,13 @@ ShaderProgram* Render::defaultPointProgram()
 {
     auto *prog = new ShaderProgram;
     prog->bind();
-    std::string src = 
-        "#version 330\n"
-        "in vec3 P;\n"
-        "uniform mat4 modelView;\n"
-        "uniform mat4 projection;\n"
-        "void main(){\n"
-        "   gl_Position = projection * modelView * vec4(P, 1.);\n"
-        "   gl_PointSize = 2;\n"
-        "}\n";
 
-    prog->addShaderFromSource(src, GL_VERTEX_SHADER);
+    prog->addShaderFromFile("../plugins/render/defaultShaders/points.vert", 
+                            GL_VERTEX_SHADER);
 
-    src = 
-        "#version 330\n"
-        "out vec4 outcolor;\n"
-        "void main(){\n"
-        "   outcolor = vec4(1,0,0, 1.);\n"
-        "}\n";
+    prog->addShaderFromFile("../plugins/render/defaultShaders/points.frag", 
+                            GL_FRAGMENT_SHADER);
 
-    prog->addShaderFromSource(src, GL_FRAGMENT_SHADER);
     prog->link();
     prog->release();
     return prog;
@@ -143,24 +201,13 @@ ShaderProgram* Render::defaultEdgeProgram()
 {
     auto *prog = new ShaderProgram;
     prog->bind();
-    auto src = 
-        "#version 330\n"
-        "uniform mat4 modelView;\n"
-        "uniform mat4 projection;\n"
-        "in vec3 P;\n"
-        "void main(){\n"
-        "   gl_Position = projection * modelView * vec4(P, 1);\n"
-        "}\n";
-    prog->addShaderFromSource(src, GL_VERTEX_SHADER);
 
-    src = 
-        "#version 330\n"
-        "out vec4 color;\n"
-        "void main(){\n"
-        "   color = vec4(1.);\n"
-        "}\n";
+    prog->addShaderFromFile("../plugins/render/defaultShaders/edges.vert", 
+                            GL_VERTEX_SHADER);
 
-    prog->addShaderFromSource(src, GL_FRAGMENT_SHADER);
+    prog->addShaderFromFile("../plugins/render/defaultShaders/edges.frag", 
+                            GL_FRAGMENT_SHADER);
+
     prog->link();
     prog->release();
     return prog;
@@ -171,76 +218,12 @@ ShaderProgram* Render::defaultPolyProgram()
     auto *prog = new ShaderProgram;
     prog->bind();
 
-    auto src = 
-        "#version 330\n"
-        "uniform mat4 modelView;\n"
-        "uniform mat4 projection;\n"
-        "in vec3 P;\n"
-        "in vec3 N;\n"
-        "out vec3 pos;\n"
-        "out vec3 sn;\n"
-        "void main(){\n"
-        "   gl_Position = projection * modelView * vec4(P, 1);\n"
-        "   pos = (modelView * vec4(P, 1)).xyz;\n"
-        "   sn = (modelView * vec4(N, 0)).xyz;\n"
-        "}\n";
-    prog->addShaderFromSource(src, GL_VERTEX_SHADER);
+    prog->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
+                            GL_VERTEX_SHADER);
 
-    src = 
-        "#version 330\n"
-        "in vec3 pos;\n"
-        "in vec3 sn;\n"
-        "in vec3 eye;\n"
-        "out vec4 color;\n"
+    prog->addShaderFromFile("../plugins/render/defaultShaders/polygons.frag", 
+                            GL_FRAGMENT_SHADER);
 
-        "struct Light {"
-            "vec3 pos;\n"
-            "vec3 color;\n"
-            "float intensity;\n"
-        "};\n"
-        "Light lights[3];\n"
-        "vec3 lambert(){\n"
-            "vec3 outcol = vec3(0.0);\n"
-            "for(int i=0; i<3; i++){\n"
-                "Light l = lights[i];\n"
-                "vec3 lvec = l.pos - pos ;\n"
-                "float cosine = dot(normalize(sn), normalize(lvec));\n"
-                "cosine = clamp(cosine, 0.0, 1.0);\n"
-                "vec3 col = l.color * l.intensity * cosine;\n"
-                "outcol += col * 1./dot(lvec, lvec);\n"
-            "}\n"
-            "return outcol;\n"
-        "}\n"
-
-        "vec3 phong(){\n"
-            "vec3 outcol = vec3(0.);\n"
-            "for(int i=0; i<3; i++){\n"
-                "Light l = lights[i];\n"
-                "vec3 lvec = l.pos-pos;\n"
-                "vec3 ln = normalize(lvec);\n"
-                "vec3 Half = normalize(eye + ln);\n"
-                "vec3 nn = normalize(sn);\n"
-                "float cosine = clamp(dot(nn, Half), 0., 1.);\n"
-                "float roughness =  .01;\n"
-                "cosine = pow(cosine, 1./roughness);\n"
-                "vec3 col = vec3(1.0) * l.intensity * (cosine);\n"
-                "outcol += col/dot(lvec, lvec);\n"
-            "}\n"
-            "return outcol;\n"
-        "}\n"
-
-        "void main(){"
-            "lights[0] = Light(vec3(50, 50, -20), vec3(1, .8, .7), 5000.);\n"
-            "lights[1] = Light(vec3(-50, 0, 0), vec3(.6, .6, 1), 700.);\n"
-            "lights[2] = Light(vec3(0, 0, -50), vec3(.6, .6, 1), 100.);\n"
-            "vec3 ambient = vec3(.8, .8, 1.0);\n"
-            "float ambientIntensity = .15;\n"
-            "float diffint = .8;\n"
-            "float specint = .7;\n"
-            "color = vec4(lambert()*diffint + ambient*ambientIntensity + phong()*specint, 1);\n"
-        "}";
-
-    prog->addShaderFromSource(src, GL_FRAGMENT_SHADER);
     prog->link();
     prog->release();
     return prog;
@@ -422,6 +405,11 @@ void RenderConfig::setDrawPolygons(bool draw)
     _drawPolygons = draw;
 }
 
+void RenderConfig::setShowFlatShaded(bool b)
+{
+    _flatShading = b;
+}
+
 bool RenderConfig::drawPoints()    const 
 {
     return _drawPoints;
@@ -437,12 +425,32 @@ bool RenderConfig::drawPolygons()    const
     return _drawPolygons;
 }
 
+bool RenderConfig::flatShading() const
+{
+    return _flatShading;
+}
+
 RenderManager::RenderManager()
+    : backgroundColor(glm::vec4(.2, .2, .2, 1.))
 {
 }
 
 RenderManager::~RenderManager()
 {
+}
+
+void RenderManager::init()
+{
+    glewInit();
+    glClearColor(backgroundColor.r, 
+                 backgroundColor.g, 
+                 backgroundColor.b, 
+                 backgroundColor.a);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void RenderManager::setConfig(RenderConfig cfg)    

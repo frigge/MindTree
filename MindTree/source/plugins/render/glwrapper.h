@@ -107,8 +107,10 @@ public:
 
     void link();
     void addShaderFromSource(std::string src, GLenum type);
+    void addShaderFromFile(std::string filename, GLenum type);
 
     void setUniform(std::string name, const glm::vec3 &value);
+    void setUniform(std::string name, const glm::vec4 &value);
     void setUniform(std::string name, float value);
     void setUniform(std::string name, int value);
     void setUniform(std::string name, const glm::mat4 &value);

@@ -26,6 +26,7 @@
 #include "QMouseEvent"
 #include "QGLShaderProgram"
 #include "QGLFramebufferObject"
+#include "QPointF"
 #include "GL/glut.h"
 
 #include "iostream"
@@ -35,8 +36,6 @@
 
 #include "source/plugins/datatypes/Object/object_cache.h"
 #include "graphics/viewport_widget.h"
-#include "graphics/prop_edit_widget.h"
-#include "graphics/object_node_vis.h"
 #include "source/data/base/raytracing/ray.h"
 
 #include "viewport.h"
@@ -71,6 +70,8 @@ Viewport::~Viewport()
 
 void Viewport::setData(std::shared_ptr<Group> value)
 {
+    if(!value) return;
+
     rendermanager->getPass(0)->setGeometry(value);
     render();
 }
@@ -93,12 +94,7 @@ void Viewport::repaint()
 
 void Viewport::initializeGL()    
 {
-    glewInit();
-    glClearColor(0.2f, .2f, .2f, 1.0f); 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    rendermanager->init();
 }
 
 void Viewport::resizeGL(int width, int height)    
@@ -120,7 +116,6 @@ void Viewport::paintGL()
         glEnable(GL_POINT_SMOOTH);
     }
     if(!selectionMode) {
-        drawFps();
         drawGrid();
         drawScene();
         time(&end);
@@ -131,28 +126,6 @@ void Viewport::paintGL()
         drawScene();
         glDisable(GL_DITHER);
     }
-}
-
-void Viewport::drawFps()    
-{
-//    glPushMatrix();
-//    QPainter paint(this);
-//    paint.begin(this);
-//    paint.drawText(10, 10, QString::number(1.0/difftime(end, start)) + " FPS");
-//    paint.end();
-//    glPopMatrix();
-}
-
-void Viewport::mouseToWorld()    
-{
-    //GLdouble *pmat= new GLdouble[16];
-    //GLdouble *mvmat= new GLdouble[16];
-    //GLint *view = new GLint[4];
-    //glGetIntegerv(GL_VIEWPORT, view);
-    //glGetDoublev(GL_PROJECTION_MATRIX, pmat);
-    //glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
-    //gluUnProject(lastpos.x(), height() - lastpos.y(), 0, mvmat, pmat, view, &mwNear[0], &mwNear[1], &mwNear[2]);
-    //gluUnProject(lastpos.x(), height() - lastpos.y(), 1, mvmat, pmat, view, &mwFar[0], &mwFar[1], &mwFar[2]);
 }
 
 void Viewport::drawScene()    
@@ -184,32 +157,18 @@ void Viewport::setShowPolygons(bool b)
     updateGL();
 }
 
+void Viewport::setShowFlatShading(bool b)
+{
+    auto config = rendermanager->getConfig();
+    config.setShowFlatShaded(b);
+    rendermanager->setConfig(config);
+    updateGL();
+}
+
 void Viewport::drawTransformable(std::shared_ptr<AbstractTransformable> transformable)
 {
     DNode *node=0;
     drawOrigin();
-    //NodeList selectedNodes = FRG::Space->selectedNodes();
-    //TranslateHandle *handle=0;
-    //if(!selectedNodes.isEmpty()){
-    //    node = selectedNodes.first();
-    //    if(node != transformable->getNode()) {
-    //        glPopMatrix();
-    //        return;
-    //    }
-    //    switch(node->getNodeType()) {
-    //        case CAMERANODE:
-    //        case LIGHTNODE:
-    //        case OBJECTNODE:
-    //            //handle = ((ObjectNodeVis*)node->getNodeVis())->getTranslateHandle();
-    //            break;
-    //        default:
-    //            break;
-    //    }
-    //}
-    //if(handle) {
-    //    handle->draw(activeCamera->getViewMatrix(), activeCamera->getProjection());
-    //}
-    //if(selectionMode) checkTransform();
 }
 
 void Viewport::drawOrigin()    
@@ -252,30 +211,6 @@ void Viewport::drawOrigin()
     glEnable(GL_DEPTH_TEST);
 }
 
-void Viewport::drawAxisGizmo()    
-{
-    //x-Axis
-    glBegin(GL_LINES);
-    glColor3f(1.f, .0f, .0f);
-    glVertex3f(2.f, -1.0f, -5.0f);
-    glVertex3f(1.0f, -1.0f, -5.0f);
-    glEnd();
-
-    //y-Axis
-    glBegin(GL_LINES);
-    glColor3f(0.f, 1.0f, .0f);
-    glVertex3f(1.0f, -2.0f, -5.0f);
-    glVertex3f(1.0f, -1.0f, -5.0f);
-    glEnd();
-
-   //z-Axis
-    glBegin(GL_LINES);
-    glColor3f(0.f, .0f, 1.0f);
-    glVertex3f(1.0f, -1.0f, -6.0f);
-    glVertex3f(1.0f, -1.0f, -5.0f);
-    glEnd();
-}
-
 void Viewport::drawGrid()    
 {
     int xsegments = 100;
@@ -316,7 +251,6 @@ void Viewport::drawGrid()
         verts.push_back(glm::vec3(xsize/2, 0, (float(i)/zsegments * zsize) - zsize/2));
     }
 
-    std::cout << "compiling grid shader" << std::endl;
     prog.addShaderFromSource(vert, GL_VERTEX_SHADER);
     prog.addShaderFromSource(frag, GL_FRAGMENT_SHADER);
     prog.link();
@@ -330,81 +264,6 @@ void Viewport::drawGrid()
     glDrawArrays(GL_LINES, 0, verts.size());
     prog.disableAttribute("vertex");
     prog.release();
-}
-
-void Viewport::checkTransform()    
-{
-    //AbstractTransformableNode *tn = (AbstractTransformableNode*)FRG::Space->selectedNodes().first();
-    //GLubyte rgb[3];
-    //glReadPixels(lastpos.x(), height() - lastpos.y(), 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &rgb);
-    //Vector mwn = Vector(mwNear[0], mwNear[1], mwNear[2]);
-    //Vector mwf = Vector(mwFar[0], mwFar[1], mwFar[2]);
-    //Vector dir = mwf - mwn;
-    //Ray r(mwn, dir);
-    //Vector hitpoint;
-    //glm::vec3 lastObjPos = tn->getObject()->getTransformation().map(glm::vec3());
-    //Vector lop(lastObjPos.x(), lastObjPos.y(), lastObjPos.z());
-    //if(rgb[0] == 255) {
-    //    transformMode = 1;
-    //    if(!r.intersectPlane(lop, Vector(1, lop.y, lop.z), Vector(lop.x, lop.y, 1), 0, 0, 0, &hitpoint))
-    //        r.intersectPlane(lop, Vector(1, lop.y, lop.z), Vector(lop.x, 1, lop.z), 0, 0, 0, &hitpoint);
-    //}
-    //else if(rgb[1] == 255) {
-    //    transformMode = 2;
-    //    if(!r.intersectPlane(lop, Vector(lop.x, 1, lop.z), Vector(lop.x, lop.y, 1), 0, 0, 0, &hitpoint))
-    //        r.intersectPlane(lop, Vector(1, lop.y, lop.z), Vector(lop.x, 1, lop.z), 0, 0, 0, &hitpoint);
-    //}
-    //else if(rgb[2] == 255) {
-    //    transformMode = 3;
-    //    if(!r.intersectPlane(lop, Vector(1, lop.y, lop.z), Vector(lop.x, lop.y, 1), 0, 0, 0, &hitpoint))
-    //        r.intersectPlane(lop, Vector(lop.x, 1, lop.z), Vector(lop.x, lop.y, 1), 0, 0, 0, &hitpoint);
-    //}
-    //else{
-    //    return;
-    //}
-    //mouseDistToObj = glm::vec3(hitpoint.x, hitpoint.y, hitpoint.z) - lastObjPos;
-
-    //selectionMode = false;
-}
-
-void Viewport::transform(QPointF mpos)
-{
-//    lastpos = mpos;
-//    AbstractTransformableNode *tn = (AbstractTransformableNode*)FRG::Space->selectedNodes().first();
-//    glm::vec3 campos = activeCamera->getPosition();
-//    Vector mwn = Vector(mwNear[0], mwNear[1], mwNear[2]);
-//    Vector mwf = Vector(mwFar[0], mwFar[1], mwFar[2]);
-//    Vector dir = mwf - mwn;
-//    Ray r(mwn, dir);
-//    Vector hitpoint;
-//    glm::vec3 lastObjPos = tn->getObject()->getPosition();
-//    Vector lop(lastObjPos.x(), lastObjPos.y(), lastObjPos.z());
-//    glm::vec3 tv;
-//    glm::vec3 lastMousePos = lastObjPos + mouseDistToObj;
-//    switch(transformMode) {
-//        case 1:
-//            if(!r.intersectPlane(lop, Vector(1, lop.y, lop.z), Vector(lop.x, lop.y, 1), 0, 0, 0, &hitpoint))
-//                r.intersectPlane(lop, Vector(1, lop.y, lop.z), Vector(lop.x, 1, lop.z), 0, 0, 0, &hitpoint);
-//            tv = glm::vec3(hitpoint.x, hitpoint.y, hitpoint.z) - lastMousePos;
-//            tn->getObject()->translate(tv.x(), 0, 0);
-//            break;
-//        case 2:
-//            if(!r.intersectPlane(lop, Vector(lop.x, 1, lop.z), Vector(lop.x, lop.y, 1), 0, 0, 0, &hitpoint))
-//                r.intersectPlane(lop, Vector(1, lop.y, lop.z), Vector(lop.x, 1, lop.z), 0, 0, 0, &hitpoint);
-//            tv = glm::vec3(hitpoint.x, hitpoint.y, hitpoint.z) - lastMousePos;
-//            tn->getObject()->translate(0, tv.y(), 0);
-//            break;
-//        case 3:
-//            if(!r.intersectPlane(lop, Vector(1, lop.y, lop.z), Vector(lop.x, lop.y, 1), 0, 0, 0, &hitpoint))
-//                r.intersectPlane(lop, Vector(lop.x, 1, lop.z), Vector(lop.x, lop.y, 1), 0, 0, 0, &hitpoint);
-//            tv = glm::vec3(hitpoint.x, hitpoint.y, hitpoint.z) - lastMousePos;
-//            tn->getObject()->translate(0, 0, tv.z());
-//            break;
-//        default:
-//            break;
-//    }
-//    lastObjPos = tn->getObject()->getPosition();
-//    mouseDistToObj = glm::vec3(hitpoint.x, hitpoint.y, hitpoint.z) - lastObjPos;
 }
 
 void Viewport::mousePressEvent(QMouseEvent *event)    
@@ -425,7 +284,6 @@ void Viewport::mouseReleaseEvent(QMouseEvent *event)
     pan = false;
     zoom = false;
     selectionMode =false;
-    transformMode = 0;
     lastpos = QPointF();
 }
 
@@ -433,10 +291,6 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 {
     float xdist = lastpos.x()  - event->posF().x();
     float ydist = event->posF().y() - lastpos.y();
-    if(transformMode) {
-        transform(event->pos());
-        return;
-    }
     if(rotate)
         rotateView(xdist, ydist);
     else if(pan)

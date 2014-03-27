@@ -36,12 +36,10 @@ ViewportViewer::~ViewportViewer()
 {
 }
 
-void ViewportViewer::update(DinSocket *socket)    
+void ViewportViewer::update(DinSocket *)
 {
-    std::unique_ptr<DataCache> cache(new DataCache(getStart()));
-
     static_cast<ViewportWidget*>(getWidget())->getViewport()
-        ->setData(cache->data.getData<std::shared_ptr<Group>>());
+        ->setData(cache.getData(0).getData<std::shared_ptr<Group>>());
 }
 
 ViewportWidget::ViewportWidget(ViewportViewer *viewer)
@@ -80,12 +78,18 @@ void ViewportWidget::createToolbar()
     QAction *showPointsAction = tools->addAction("P");
     showPointsAction->setCheckable(true);
     showPointsAction->setChecked(true);
+
     QAction *showEdgesAction = tools->addAction("E");
     showEdgesAction->setCheckable(true);
     showEdgesAction->setChecked(true);
+
     QAction *showPolygonsAction = tools->addAction("F");
     showPolygonsAction->setCheckable(true);
     showPolygonsAction->setChecked(true);
+
+    QAction *showFlatShadedAction = tools->addAction("Flat Shaded");
+    showFlatShadedAction->setCheckable(true);
+    showFlatShadedAction->setChecked(false);
 
     camBox = new QComboBox();
     tools->addWidget(camBox);
@@ -95,22 +99,21 @@ void ViewportWidget::createToolbar()
     connect(showPointsAction, SIGNAL(toggled(bool)), this, SLOT(togglePoints(bool)));
     connect(showEdgesAction, SIGNAL(toggled(bool)), this, SLOT(toggleEdges(bool)));
     connect(showPolygonsAction, SIGNAL(toggled(bool)), this, SLOT(togglePolygons(bool)));
+    connect(showFlatShadedAction, SIGNAL(toggled(bool)), this, SLOT(toggleFlatShading(bool)));
 }
 
 void ViewportWidget::refillCamBox()    
 {
-    QString curCamName = camBox->currentText();
-    camBox->clear();
-    //DoutSocket *startSocket = dock->getViewport()->getStartSocket();
-    DoutSocket *startSocket = 0;
-    if(!startSocket)return;
-    Group* grp = (Group*)startSocket->getAttachedData();
-    if(!grp) return;
-    auto cameras = grp->getCameras();
-    for(auto cam : cameras)
-        camBox->addItem(cam->getName().c_str());
-    if(camBox->findData(curCamName) == -1)
-        camBox->setCurrentIndex(camBox->findText(curCamName));
+    //QString curCamName = camBox->currentText();
+    //camBox->clear();
+    ////DoutSocket *startSocket = dock->getViewport()->getStartSocket();
+    //DoutSocket *startSocket = 0;
+    //if(!startSocket)return;
+    //auto cameras = grp->getCameras();
+    //for(auto cam : cameras)
+    //    camBox->addItem(cam->getName().c_str());
+    //if(camBox->findData(curCamName) == -1)
+    //    camBox->setCurrentIndex(camBox->findText(curCamName));
 }
 
 void ViewportWidget::togglePoints(bool b)    
@@ -126,4 +129,9 @@ void ViewportWidget::toggleEdges(bool b)
 void ViewportWidget::togglePolygons(bool b)    
 {
     viewport->setShowPolygons(b);
+}
+
+void ViewportWidget::toggleFlatShading(bool b)
+{
+    viewport->setShowFlatShading(b);
 }
