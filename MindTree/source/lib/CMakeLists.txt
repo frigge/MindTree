@@ -5,7 +5,7 @@ set(LIB_SRC
     data/datatypes.cpp
     data/dnspace.cpp
     data/frg.cpp
-    data/nodes/buildin_nodes.cpp
+    #data/nodes/buildin_nodes.cpp
     data/nodes/data_node.cpp
     data/nodes/data_node_socket.cpp
     data/nodes/node_db.cpp
@@ -32,7 +32,7 @@ set(LIB_HEAD
     data/datatypes.h
     data/dnspace.h
     data/frg.h
-    data/nodes/buildin_nodes.h
+    #data/nodes/buildin_nodes.h
     data/nodes/data_node.h
     data/nodes/data_node_socket.h
     data/nodes/node_db.h
