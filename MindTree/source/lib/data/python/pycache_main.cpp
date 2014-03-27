@@ -38,14 +38,14 @@ MindTree::DNodePyWrapper* MindTree::wrap_DataCache_getNode(MindTree::DataCache *
     return new MindTree::DNodePyWrapper(const_cast<DNode*>(cache->getNode())); 
 }
 
-BPy::object MindTree::wrap_DataCache_getData(MindTree::DataCache *self)
+BPy::object MindTree::wrap_DataCache_getData(MindTree::DataCache *self, int index)
 {
-    return self->data.toPython();
+    return self->getData(index).toPython();
 }
 
 void MindTree::wrap_DataCache_setData(MindTree::DataCache *self, BPy::object data)
 {
-    self->data = MindTree::Property::createPropertyFromPython("", data);
+    self->pushData(MindTree::Property::createPropertyFromPython(data));
 }
 
 MindTree::DoutSocketPyWrapper* MindTree::wrap_DataCache_getStart(DataCache *cache)    
@@ -60,24 +60,24 @@ void MindTree::wrap_DataCache_addProcessor(BPy::object fn, std::string ntype, st
                                         new MindTree::PyCacheProcessor(fn));
 }
 
-void MindTree::wrap_DataCache_cache(MindTree::DataCache *self, MindTree::DinSocketPyWrapper* socket)
-{
-    if(!socket->alive()) return;
-    self->cache(socket->getWrapped<DinSocket>());
-}
-
+//void MindTree::wrap_DataCache_cache(MindTree::DataCache *self, MindTree::DinSocketPyWrapper* socket)
+//{
+//    if(!socket->alive()) return;
+//    self->cache(socket->getWrapped<DinSocket>());
+//}
+//
 BPy::dict MindTree::wrap_DataCache_getProcessors()
 {
-    auto &processors = DataCache::getProcessors();
+    const auto &processors = DataCache::getProcessors();
     BPy::dict dict;
-    for(int i=0; i<processors.size(); i++){
-        int size = processors[i].size();
+    for(ulong i=0; i<processors.size(); i++){
+        ulong size = processors[i].size();
         BPy::list l;
-        for(int j=0; j<processors[i].size(); j++) {
+        for(ulong j=0; j<size; j++) {
             auto node_str = NodeType::byID(j).toStr();
             l.append(NodeType::byID(j).toStr());
         }
-        dict[SocketType::byID(i).getCustomType()] = l;
+        dict[SocketType::byID(i).toStr()] = l;
     }
     return dict;
 }
@@ -85,12 +85,13 @@ BPy::dict MindTree::wrap_DataCache_getProcessors()
 void MindTree::wrap_DataCache()    
 {
     BPy::class_<MindTree::DataCache>("_DataCache", BPy::no_init)
-        .def("cache", &wrap_DataCache_cache)
+        //.def("cache", &wrap_DataCache_cache)
         .def("addProcessor", &wrap_DataCache_addProcessor)
         .staticmethod("addProcessor")
         .add_property("node", BPy::make_function(&wrap_DataCache_getNode,
                                 BPy::return_value_policy<BPy::manage_new_object>()))
-        .add_property("data", &wrap_DataCache_getData, &wrap_DataCache_setData)
+        .def("getData", &wrap_DataCache_getData)
+        .def("setData", &wrap_DataCache_setData)
         .add_static_property("processors", &wrap_DataCache_getProcessors)
         .add_property("start", BPy::make_function(&wrap_DataCache_getStart,
                                 BPy::return_value_policy<BPy::manage_new_object>()));
