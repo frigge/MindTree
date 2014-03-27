@@ -24,6 +24,7 @@
 #include "iostream"
 
 #include "data/nodes/node_db.h"
+#include "glm/glm.hpp"
 #include "data/windowfactory.h"
 
 namespace BPy = boost::python;
@@ -71,6 +72,24 @@ public: \
     static void wrap();
 #endif
 
+template<>
+struct PyConverter<glm::vec3>
+{
+    static BPy::object pywrap(glm::vec3 data)
+    {
+        return BPy::make_tuple(data[0], data[1], data[2]);
+    }
+};
+
+template<>
+struct PyConverter<glm::vec4>
+{
+    static BPy::object pywrap(glm::vec4 data)
+    {
+        return BPy::make_tuple(data[0], data[1], data[2], data[3]);
+    }
+};
+
 class DNodePyWrapper;
 class DNodeListIteratorPyWrapper
 {
@@ -105,10 +124,14 @@ class PyWrapper
 public:
     PyWrapper(PyExposable *exp);
     virtual ~PyWrapper();
+
+    static void wrap();
+
     static void regNode(PyObject *nodeClass);
     static DNodePyWrapper* createNode(std::string name);
     static BPy::list getRegisteredNodes();
     static Signal::CallbackHandler attachToSignal(std::string id, BPy::object fn);
+    static Signal::CallbackHandler attachToBoundSignal(BPy::object livetime, std::string id, BPy::object fn);
     static std::vector<std::string> getNodeTypes();
     static std::string __str__StringVector(std::vector<std::string> &self);
     static std::string __repr__StringVector(std::vector<std::string> &self);
@@ -139,7 +162,6 @@ class DNode;
 class DSocket;
 class DinSocket;
 class DoutSocket;
-class DAInSocket;
 
 class DNSpacePyWrapper;
 
@@ -171,6 +193,8 @@ public:
 PYWRAPPERFUNC(DNSpace)
 
 class DSocketListPyWrapper;
+class DinSocketPyWrapper;
+class DoutSocketPyWrapper;
 class DNodePyWrapper : public PyWrapper
 {
 public:
@@ -190,8 +214,8 @@ public:
     DSocketListPyWrapper* in();
     DSocketListPyWrapper* out();
     BPy::object getProperty(std::string name);
-    void addInSocket(std::string name, std::string type);
-    void addOutSocket(std::string name, std::string type);
+    DinSocketPyWrapper* addInSocket(std::string name, std::string type);
+    DoutSocketPyWrapper* addOutSocket(std::string name, std::string type);
     DNSpacePyWrapper* getSpace();
     static void setattr(BPy::object self, BPy::object name, BPy::object value);
     static BPy::object getattr(BPy::object self, std::string key);
@@ -269,15 +293,6 @@ public:
     static void wrap();
 };
 PYWRAPPERFUNC(DoutSocket)
-
-class DAInSocketPyWrapper : public DSocketPyWrapper
-{
-public:
-    DAInSocketPyWrapper(DAInSocket *socket);
-    virtual ~DAInSocketPyWrapper();
-    static void wrap();
-};
-PYWRAPPERFUNC(DAInSocket)
 
 class PropertyPyWrapper
 {

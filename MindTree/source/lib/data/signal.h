@@ -16,6 +16,10 @@
 
 #define MT_SIGNAL_EMITTER(...) MindTree::Signal::callHandler(__PRETTY_FUNCTION__, ##__VA_ARGS__)
 
+#define MT_BOUND_SIGNAL_EMITTER(...) MindTree::Signal::callBoundHandler(__PRETTY_FUNCTION__, ##VA_ARGS__)
+
+#define MT_CUSTOM_BOUND_SIGNAL_EMITTER(...) MindTree::Signal::callBoundHandler(__VA_ARGS__)
+
 #define MT_CUSTOM_SIGNAL_EMITTER(...) MindTree::Signal::callHandler(__VA_ARGS__)
 
 namespace BPy = boost::python;
@@ -41,18 +45,36 @@ private:
     mutable bool detached;
     std::function<void()>destructor;
     static int sigCounter;
-    template<typename... Args> friend class SignalObject;
+    template<typename... Args> friend class Callback;
+};
+
+typedef std::vector<CallbackHandler> CallbackVector;
+
+class LiveTimeTracker
+{
+public:
+    LiveTimeTracker(void*);
+    ~LiveTimeTracker();
+
+    void* boundObject;
+
+private:
+    bool registered;
+    template<typename ...Args> friend  
+    void callBoundHandler(LiveTimeTracker* tracker, std::string sig, Args... args);
+
+    std::function<void()> destructor;
 };
 
 template<typename... Args>
-class SignalObject
+class Callback
 {
 public:
-    SignalObject(std::function<void(Args...)> fn) : fn(fn), sigID(CallbackHandler::sigCounter++) { }
+    Callback(std::function<void(Args...)> fn) : fn(fn), sigID(CallbackHandler::sigCounter++) { }
 
-    SignalObject(const SignalObject &other) : fn(other.fn), sigID(other.sigID) {}
-    bool operator==(const SignalObject& other) {return other.sigID == sigID;}
-    bool operator!=(const SignalObject& other) {return other.sigID != sigID;}
+    Callback(const Callback &other) : fn(other.fn), sigID(other.sigID) {}
+    bool operator==(const Callback& other) {return other.sigID == sigID;}
+    bool operator!=(const Callback& other) {return other.sigID != sigID;}
     void operator()(Args... args) {fn(args...);}
 
 private:
@@ -61,14 +83,14 @@ private:
 };
 
 template<>
-class SignalObject<>
+class Callback<>
 {
 public:
-    SignalObject(std::function<void()> fn) : fn(fn), sigID(CallbackHandler::sigCounter++) { }
+    Callback(std::function<void()> fn) : fn(fn), sigID(CallbackHandler::sigCounter++) { }
 
-    SignalObject(const SignalObject &other) : fn(other.fn), sigID(other.sigID) {}
-    bool operator==(const SignalObject& other) {return other.sigID == sigID;}
-    bool operator!=(const SignalObject& other) {return other.sigID != sigID;}
+    Callback(const Callback &other) : fn(other.fn), sigID(other.sigID) {}
+    bool operator==(const Callback& other) {return other.sigID == sigID;}
+    bool operator!=(const Callback& other) {return other.sigID != sigID;}
     void operator()() {fn();}
 
 private:
@@ -77,13 +99,13 @@ private:
 };
 
 template<>
-class SignalObject<BPy::object>
+class Callback<BPy::object>
 {
 public:
-    SignalObject(BPy::object fn) : fn(fn), sigID(CallbackHandler::sigCounter++) {}
-    SignalObject(const SignalObject &other) : fn(other.fn), sigID(other.sigID) {}
-    bool operator==(const SignalObject& other) {return other.sigID == sigID;}
-    bool operator!=(const SignalObject& other) {return other.sigID != sigID;}
+    Callback(BPy::object fn) : fn(fn), sigID(CallbackHandler::sigCounter++) {}
+    Callback(const Callback &other) : fn(other.fn), sigID(other.sigID) {}
+    bool operator==(const Callback& other) {return other.sigID == sigID;}
+    bool operator!=(const Callback& other) {return other.sigID != sigID;}
     template<typename... Args>
     void operator()(Args... args) {
         try {
@@ -99,15 +121,20 @@ private:
 };
 
 template<typename ... Args>
-class Sig
+class Signal
 {
 public:
-    CallbackHandler add(std::function<void(Args ...)> fn) {
-        SignalObject<Args...> sigObj(fn);
+    CallbackHandler connect(std::function<void(Args ...)> fn) {
+        Callback<Args...> sigObj(fn);
         callbacks.push_back(sigObj); 
         return CallbackHandler([this, sigObj] {
-                    this->callbacks.erase(std::find(this->callbacks.begin(), this->callbacks.end(), sigObj));
+                    this->disconnect(sigObj);
                 });
+    }
+
+    void disconnect(Callback<Args...> cb)
+    {
+        callbacks.erase(std::find(callbacks.begin(), callbacks.end(), cb));
     }
 
     void operator()(Args ...args) {
@@ -115,20 +142,25 @@ public:
     }
 
 private:
-    std::vector<SignalObject<Args...>> callbacks;
+    std::vector<Callback<Args...>> callbacks;
 };
 
 template<>
-class Sig<>
+class Signal<>
 {
 public:
-    CallbackHandler add(std::function<void()> fn) {
-        SignalObject<> sigObj(fn);
+    CallbackHandler connect(std::function<void()> fn) {
+        Callback<> sigObj(fn);
         callbacks.push_back(sigObj); 
         return CallbackHandler([this, sigObj]
                 {
-                    this->callbacks.erase(std::find(this->callbacks.begin(), this->callbacks.end(), sigObj));
+                    this->disconnect(sigObj);
                 });
+    }
+
+    void disconnect(Callback<> cb)
+    {
+        callbacks.erase(std::find(callbacks.begin(), callbacks.end(), cb));
     }
 
     void operator()() {
@@ -136,21 +168,27 @@ public:
     }
 
 private:
-    std::vector<SignalObject<>> callbacks;
+    std::vector<Callback<>> callbacks;
 };
 
 template<>
-class Sig<BPy::object>
+class Signal<BPy::object>
 {
 public:
-    CallbackHandler add(BPy::object fn) {
-        SignalObject<BPy::object> sigObj(fn);
+    CallbackHandler connect(BPy::object fn) {
+        Callback<BPy::object> sigObj(fn);
         callbacks.push_back(sigObj); 
         return CallbackHandler([this, sigObj]
                 {
-                    this->callbacks.erase(std::find(this->callbacks.begin(), this->callbacks.end(), sigObj));
+                    this->disconnect(sigObj);
                 });
     }
+
+    void disconnect(Callback<BPy::object> cb)
+    {
+        callbacks.erase(std::find(callbacks.begin(), callbacks.end(), cb));
+    }
+
 
     template<typename... Args>
     void operator()(Args... args) {
@@ -158,16 +196,16 @@ public:
     }
 
 private:
-    std::vector<SignalObject<BPy::object>> callbacks;
+    std::vector<Callback<BPy::object>> callbacks;
 };
 
 template<typename ...Args>
 class SignalCollector
 {
 public:
-    CallbackHandler add(std::string sigEmitter, std::function<void(Args...)> fun) {
-        if(!sigs.count(sigEmitter)) sigs[sigEmitter] = new Sig<Args...>();
-        auto handler = sigs[sigEmitter]->add(fun); 
+    CallbackHandler connect(std::string sigEmitter, std::function<void(Args...)> fun) {
+        if(!sigs.count(sigEmitter)) sigs[sigEmitter] = new Signal<Args...>();
+        auto handler = sigs[sigEmitter]->connect(fun); 
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
         return handler;
@@ -175,22 +213,24 @@ public:
 
     void operator()(std::string sigEmitter, Args... args)
     {
-        if(sigs.count(sigEmitter))(*sigs[sigEmitter])(args...);
+        if(sigs.count(sigEmitter))
+            (*sigs[sigEmitter])(args...);
+
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
     }
 
 private:
-    std::map<std::string, Sig<Args...>*> sigs;
+    std::map<std::string, Signal<Args...>*> sigs;
 };
 
 template<>
 class SignalCollector<>
 {
 public:
-    CallbackHandler add(std::string sigEmitter, std::function<void()> fun) {
-        if(!sigs.count(sigEmitter)) sigs[sigEmitter] = new Sig<>();
-        auto handler = sigs[sigEmitter]->add(fun); 
+    CallbackHandler connect(std::string sigEmitter, std::function<void()> fun) {
+        if(!sigs.count(sigEmitter)) sigs[sigEmitter] = new Signal<>();
+        auto handler = sigs[sigEmitter]->connect(fun); 
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
         return handler;
@@ -204,16 +244,20 @@ public:
     }
 
 private:
-    std::map<std::string, Sig<>*> sigs;
+    std::map<std::string, Signal<>*> sigs;
 };
 
 template<>
 class SignalCollector<BPy::object>
 {
 public:
-    CallbackHandler add(std::string sigEmitter, BPy::object fun) {
-        if(!sigs.count(sigEmitter)) sigs[sigEmitter] = new Sig<BPy::object>();
-        auto handler = sigs[sigEmitter]->add(fun); 
+    CallbackHandler connect(std::string sigEmitter, BPy::object fun) 
+    {
+        if(sigs.find(sigEmitter) == sigs.end()) 
+            sigs.insert({sigEmitter, new Signal<BPy::object>()});
+
+        auto handler = sigs[sigEmitter]->connect(fun); 
+
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
         return handler;
@@ -222,13 +266,15 @@ public:
     template<typename...Args>
     void operator()(std::string sigEmitter, Args... args)
     {
-        if(sigs.count(sigEmitter))(*sigs[sigEmitter])(args...);
+        if(sigs.find(sigEmitter) != sigs.end())
+            (*sigs[sigEmitter])(args...);
+
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
     }
 
 private:
-    std::map<std::string, Sig<BPy::object>*> sigs;
+    std::map<std::string, Signal<BPy::object>*> sigs;
 };
 
 template<typename...Args>
@@ -238,6 +284,14 @@ struct SignalHandler {
 
 template<typename...Args> 
 SignalCollector<Args...> SignalHandler<Args...>::handler;
+
+template<typename ...Args>
+struct BoundSignalHandler {
+    static std::map<void*, SignalCollector<Args...>> handlers;
+};
+
+template<typename...Args> 
+std::map<void*, SignalCollector<Args...>> BoundSignalHandler<Args...>::handlers;
 
 template<typename ...Args>
 void callHandler(std::string sig, Args... args)
@@ -250,15 +304,55 @@ void callHandler(std::string sig, Args... args)
 }
 
 template<typename ...Args>
+void callBoundHandler(LiveTimeTracker* tracker, std::string sig, Args... args)
+{
+    if(!tracker->registered) {
+        tracker->destructor = [tracker] {
+            BoundSignalHandler<Args...>::handlers.erase(tracker->boundObject);
+        };
+        tracker->registered = true;
+    }
+
+    auto end = BoundSignalHandler<Args...>::handlers.end();
+    if (BoundSignalHandler<Args...>::handlers.find(tracker->boundObject) != end)
+        BoundSignalHandler<Args...>::handlers[tracker->boundObject](sig, args ...);
+    else
+        BoundSignalHandler<Args...>::handlers.insert({tracker->boundObject, SignalCollector<Args...>()});
+    
+    //The Python Signal only registers one tuple as an argument so the
+    //signature is different.
+    auto e = BoundSignalHandler<BPy::object>::handlers.end();
+    if (BoundSignalHandler<BPy::object>::handlers.find(tracker->boundObject) != e) {
+        auto &handler = BoundSignalHandler<BPy::object>::handlers.at(tracker->boundObject);
+        handler(sig, args...);
+    }
+    else
+        BoundSignalHandler<BPy::object>::handlers.insert({tracker->boundObject, SignalCollector<BPy::object>()});
+}
+
+template<typename ...Args>
 SignalCollector<Args...>& getHandler()
 {
     return SignalHandler<Args...>::handler;
 }
 
 template<typename ...Args>
+SignalCollector<Args...>& getBoundHandler(void* boundObject)
+{
+    auto begin = BoundSignalHandler<Args...>::handlers.begin();
+    auto end = BoundSignalHandler<Args...>::handlers.end();
+
+    if(BoundSignalHandler<Args...>::handlers.find(boundObject) == end)
+        BoundSignalHandler<Args...>::handlers.insert({boundObject, SignalCollector<Args...>()});
+
+    SignalCollector<Args...> &handler = BoundSignalHandler<Args...>::handlers.at(boundObject);
+    return handler;
+}
+
+template<typename ...Args>
 void mergeSignals(std::string oldSignal, std::string newSignal)
 {
-    getHandler<Args...>().add(oldSignal, [newSignal](Args... args){
+    getHandler<Args...>().connect(oldSignal, [newSignal](Args... args){
                 MT_CUSTOM_SIGNAL_EMITTER(newSignal);
             }).detach();
 }

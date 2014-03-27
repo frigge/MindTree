@@ -23,9 +23,6 @@
 #include "QDir"
 #include "iostream"
 
-#include "source/graphics/nodes/graphics_node.h"
-#include "QGraphicsItem"
-#include "source/graphics/base/vnspace.h"
 #include "data/signal.h"
 #include "graphics/viewer.h"
 #include "boost/python/suite/indexing/vector_indexing_suite.hpp"
@@ -35,6 +32,7 @@
 
 #include "init.h"
 
+using namespace MindTree;
 using namespace MindTree::Python;
 
 std::string MindTree::Python::type(const BPy::object &obj)
@@ -74,6 +72,7 @@ BOOST_PYTHON_MODULE(MT){
         .def("__str__", PyWrapper::__str__StringVector)
         .def("__repr__", PyWrapper::__repr__StringVector);
     BPy::def("attachToSignal", PyWrapper::attachToSignal);
+    BPy::def("attachToBoundSignal", PyWrapper::attachToBoundSignal);
     BPy::def("getNodeTypes", PyWrapper::getNodeTypes);
     BPy::def("getSocketTypes", PyWrapper::getSocketTypes);
 
@@ -91,6 +90,7 @@ void MindTree::Python::wrap_all()
         BPy::class_<MindTree::Signal::CallbackHandler>("CallbackHandler", BPy::no_init)
             .def("detach", &MindTree::Signal::CallbackHandler::detach)
             .def("destruct", &MindTree::Signal::CallbackHandler::destruct);
+        PyWrapper::wrap();
         ProjectPyWrapper::wrap();
         DNSpacePyWrapper::wrap();
         DNodeListIteratorPyWrapper::wrap();
@@ -100,7 +100,6 @@ void MindTree::Python::wrap_all()
         DSocketPyWrapper::wrap();
         DinSocketPyWrapper::wrap();
         DoutSocketPyWrapper::wrap();
-        DAInSocketPyWrapper::wrap();
         PyViewerBase::wrap();
         PropertyPyWrapper::wrap();
         MindTree::Signal::SignalHandler<>::handler("registerPyDataTypes");
@@ -153,11 +152,8 @@ PyObject* DSocketListToPython::convert(DSocketList const &l)
     BPy::list list;
     LLsocket* iter = l.getFirst();
     while(iter){
-        if(iter->socket->getDir() == IN)
-            if(iter->socket->getArray())
-                list.append<DAInSocketPyWrapper*>(new DAInSocketPyWrapper((DAInSocket*)iter->socket));
-            else
-                list.append<DinSocketPyWrapper*>(new DinSocketPyWrapper(iter->socket->toIn()));
+        if(iter->socket->getDir() == DSocket::IN)
+            list.append<DinSocketPyWrapper*>(new DinSocketPyWrapper(iter->socket->toIn()));
         else
             list.append<DoutSocketPyWrapper*>(new DoutSocketPyWrapper(iter->socket->toOut()));
         iter = iter->next;

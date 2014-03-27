@@ -9,7 +9,8 @@ MindTree::Signal::CallbackHandler::CallbackHandler(std::function<void()> destruc
 }
 
 MindTree::Signal::CallbackHandler::CallbackHandler(const CallbackHandler &other) 
-    : destructor(other.destructor), detached(other.detached)
+:    detached(other.detached),
+     destructor(other.destructor)
 {
     other.detached = true;
 }
@@ -25,6 +26,18 @@ void MindTree::Signal::CallbackHandler::detach()
 }
 
 void MindTree::Signal::CallbackHandler::destruct()    
+{
+    destructor();
+}
+
+MindTree::Signal::LiveTimeTracker::LiveTimeTracker(void* boundObject)
+:   registered(false),
+    boundObject(boundObject),
+    destructor([]{})
+{
+}
+
+MindTree::Signal::LiveTimeTracker::~LiveTimeTracker()
 {
     destructor();
 }
