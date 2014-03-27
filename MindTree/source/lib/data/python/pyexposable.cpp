@@ -27,17 +27,24 @@ PyExposable::PyExposable()
 
 PyExposable::~PyExposable()
 {
-    foreach(PyWrapper *wrapper, wrapper_objects){
+    for(PyWrapper *wrapper : wrapper_objects){
         wrapper->elementDestroyed();
     }
 }
 
 void PyExposable::regWrapper(PyWrapper *wrapper)    
 {
-    wrapper_objects.append(wrapper);
+    wrapper_objects.push_back(wrapper);
 }
 
 void PyExposable::rmWrapper(PyWrapper *wrapper)    
 {
-    wrapper_objects.removeAll(wrapper);
+    auto begin = wrapper_objects.begin();
+    auto end = wrapper_objects.end();
+
+    auto it = std::find(begin, end, wrapper);
+
+    if(it != end) {
+        wrapper_objects.erase(it);
+    }
 }

@@ -20,7 +20,7 @@
 
 #define PYEXPOSABLE_AMQP8KO1
 
-#include "QList"
+#include "vector"
 
 namespace MindTree
 {
@@ -34,7 +34,7 @@ public:
     void rmWrapper(PyWrapper *wrapper);
 
 private:
-    QList<PyWrapper*> wrapper_objects;
+    std::vector<PyWrapper*> wrapper_objects;
 };
 
     
