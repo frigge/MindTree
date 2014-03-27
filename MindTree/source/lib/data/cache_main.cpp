@@ -190,6 +190,13 @@ void CacheProcessor::operator()(DataCache* cache)
     processor(cache); 
 }
 
+DataCache::DataCache()
+    : node(nullptr),
+    typeID(-1),
+    startsocket(nullptr)
+{
+}
+
 DataCache::DataCache(const DoutSocket *socket)
     : node(socket->getNode()),
     typeID(socket->getType().id()),
@@ -200,9 +207,9 @@ DataCache::DataCache(const DoutSocket *socket)
 
 DataCache::DataCache(const DataCache &other)
     : 
-    data(other.data),
     node(other.node), 
     typeID(other.typeID),
+    cachedData(other.cachedData),
     startsocket(other.startsocket)
 {
 }
@@ -212,7 +219,15 @@ DataCache::~DataCache()
     std::cout << "delete datacache" << std::endl;
 }
 
-int DataCache::getTypeID()
+void DataCache::start(const DoutSocket *socket)
+{
+    startsocket = socket;
+    node = socket->getNode();
+    typeID = socket->getType().id();
+    cacheInputs();
+}
+
+int DataCache::getTypeID() const
 {
     return  typeID;
 }
@@ -239,12 +254,31 @@ const std::vector<AbstractCacheProcessor::cacheList>& DataCache::getProcessors()
 void DataCache::cache(const DinSocket *socket)    
 {
    if(socket->getCntdSocket()){
-       startsocket = socket->getCntdSocket();
-       node = socket->getCntdSocket()->getNode();
-       cacheInputs();
+       //const DoutSocket *lastSocket = startsocket;
+       //const DNode *lastNode = node;
+       //startsocket = socket->getCntdSocket();
+       //node = socket->getCntdSocket()->getNode();
+
+       //cacheInputs();
+       DataCache cache(socket->getCntdSocket());
+       pushData(cache.getData(0));
+
+       //restore previouse data when finished
+       //startsocket = lastSocket;
+       //node = lastNode;
    } 
    else
-       data = socket->getProperty();
+       pushData(socket->getProperty());
+}
+
+void DataCache::pushData(Property prop)
+{
+    cachedData.push_front(prop);
+}
+
+const Property& DataCache::getData(int index) const
+{
+    return *std::next(cachedData.begin(), index);
 }
 
 const DNode* DataCache::getNode() const
@@ -264,11 +298,16 @@ void DataCache::setStart(const DoutSocket *socket)
 
 void DataCache::cacheInputs()    
 {
+    auto insockets = node->getInSockets();
+    for(auto it = insockets.rbegin(); it != insockets.rend(); it++) {
+        cache(*it);
+    }
+
     unsigned long nodeTypeID = node->getType().id();
 
     if(typeID >= processors.size()){
         std::cout<< "no processors defined for this data type ("
-                 << SocketType::byID(typeID).getCustomType()
+                 << SocketType::byID(typeID).toStr()
                  << " id:" 
                  << typeID
                  << ")"
@@ -291,6 +330,11 @@ void DataCache::cacheInputs()
         std::cout<<"Socket Type ID:" << typeID << std::endl;
         return;
     }
-    std::cout << "caching " << SocketType::byID(typeID).getCustomType() << " on " << node->getType().toStr() << std::endl;
+    std::cout << "caching " << SocketType::byID(typeID).toStr() << " on " << node->getType().toStr() << std::endl;
     (*datacache)(this);
+    //Property prop(cachedData.front());
+    //cachedData.pop_front();
+    //for(size_t i = 0; i<node->getInSockets().size(); i++)
+    //    cachedData.pop_front();
+    //cachedData.push_front(prop);
 }

@@ -29,13 +29,13 @@ namespace Cache
 {
 namespace Polygon
 {
-    void composePolygon(DataCache *cache);
-    void composeArray(DataCache *cache);
-    void container(DataCache *cache);
-    void stepup(DataCache *cache);
-    void setArray(DataCache *cache);
-    void getLoopedCache(DataCache *cache);
-    void forloop(DataCache *cache);
+//    void composePolygon(DataCache *cache);
+//    void composeArray(DataCache *cache);
+//    void container(DataCache *cache);
+//    void stepup(DataCache *cache);
+//    void setArray(DataCache *cache);
+//    void getLoopedCache(DataCache *cache);
+//    void forloop(DataCache *cache);
 } /* Polygon */
 } /* Cache */
 } /* MindTree */

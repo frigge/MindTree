@@ -28,16 +28,16 @@ namespace Cache
 {
 namespace Float
 {
-    void floatValue(DataCache *cache);
-    void intValue(DataCache *cache);
-    void getLoopedCache(DataCache *cache);
-    //void add(eMathOp op);
-    //void subtract(eMathOp op);
-    //void divide(eMathOp op);
-    //void multiply(eMathOp op);
-    void modulo(DataCache *cache);
-    void container(DataCache *cache);
-    void stepup(DataCache *cache);
+//    void floatValue(DataCache *cache);
+//    void intValue(DataCache *cache);
+//    void getLoopedCache(DataCache *cache);
+//    //void add(eMathOp op);
+//    //void subtract(eMathOp op);
+//    //void divide(eMathOp op);
+//    //void multiply(eMathOp op);
+//    void modulo(DataCache *cache);
+//    void container(DataCache *cache);
+//    void stepup(DataCache *cache);
 } /* Float */
 } /* Cache */
 } /* MindTree */

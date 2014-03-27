@@ -24,16 +24,16 @@
 
 using namespace MindTree;
 
-VectorCache::VectorCache(const DoutSocket *socket)
-    : DataCache(socket)
-{
-    cacheInputs();
-}
-
-VectorCache::~VectorCache()
-{
-    //clear();
-}
+//VectorCache::VectorCache(const DoutSocket *socket)
+//    : DataCache(socket)
+//{
+//    cacheInputs();
+//}
+//
+//VectorCache::~VectorCache()
+//{
+//    //clear();
+//}
 
 //void VectorCache::clear()
 //{
@@ -223,12 +223,6 @@ int VectorForeachCacheThread::getStep()
 
 VectorCacheThreaded::VectorCacheThreaded(const DinSocket *socket)
     : socket(socket), data(0)
-{
-    start();
-}
-
-VectorCacheThreaded::VectorCacheThreaded(const DAInSocket *socket)
-    : socket(0), asocket(socket), data(0)
 {
     start();
 }

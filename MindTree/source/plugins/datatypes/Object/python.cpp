@@ -27,7 +27,7 @@ ObjectPyWrapper::~ObjectPyWrapper()
 
 void ObjectPyWrapper::wrap()    
 {
-    MindTree::PropertyData<VectorList>::registerType("VectorList");
+    MindTree::PropertyData<VertexList>::registerType("VertexList");
     BPy::class_<ObjectPyWrapper>("Object", BPy::no_init);
 }
 
@@ -46,8 +46,8 @@ void GroupPyWrapper::wrap()
 }
 
 BOOST_PYTHON_MODULE(object){
-    MindTree::PropertyData<Group*>::registerType("GROUPDATA");
-    MindTree::PropertyData<Object*>::registerType("SCENEOBJECT");
+    MindTree::PropertyData<Group>::registerType("GROUPDATA");
+    MindTree::PropertyData<Object>::registerType("SCENEOBJECT");
     ObjectDataPyWrapper::wrap();
     ObjectPyWrapper::wrap();
     GroupPyWrapper::wrap();

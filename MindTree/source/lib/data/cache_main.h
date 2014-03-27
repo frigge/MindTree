@@ -95,26 +95,33 @@ class DoutSocket;
 class DataCache
 {
 public:
+    DataCache();
     DataCache(const MindTree::DoutSocket *start);
     DataCache(const DataCache &other);
     virtual ~DataCache();
-    void cache(const DinSocket *socket);
 
-    int getTypeID();
+    void start(const DoutSocket *socket);
 
-    void cacheInputs();
-    const MindTree::DoutSocket *getStart()const;
-    void setStart(const DoutSocket *socket);
-    static void addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc);
+    int getTypeID() const;
+
+    void pushData(Property prop);
+    const Property& getData(int index) const;
 
     const DNode* getNode()const;
-    Property data;
 
+    const MindTree::DoutSocket *getStart()const;
+    void setStart(const DoutSocket *socket);
+
+    static void addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc);
     static const std::vector<AbstractCacheProcessor::cacheList>& getProcessors();
 
 private:
+    void cacheInputs();
+    void cache(const DinSocket *socket);
+
     const DNode *node;
     static std::vector<AbstractCacheProcessor::cacheList> processors;
+    std::list<Property> cachedData;
     int typeID;
     const DoutSocket *startsocket;
 };

@@ -19,9 +19,6 @@
 #define GLM_SWIZZLE
 #include "object.h"
 
-#include "QGLShaderProgram"
-#include "QGLBuffer"
-
 #include "cmath"
 #include "data/frg.h"
 #include "data/project.h"
@@ -33,71 +30,6 @@
 //#include "graphics/object_node_vis.h"
 
 using namespace MindTree;
-
-float* VertexList::to1DArray()    
-{
-    if(getSize()==0)
-        return nullptr;
-
-    float *arr = new float[getSize() * 3];
-    DataChunk<glm::vec3, 10000> *f = firstChunk;
-    for(int i=0; i<getSize() * 3; i += 3){
-        arr[i] = f->data[(i/3)%10000].x;
-        arr[i+1] = f->data[(i/3)%10000].y;
-        arr[i+2] = f->data[(i/3)%10000].z;
-        if(!(((i/3)+1)%10000)) f = f->next;
-    }
-    return arr;
-}
-
-unsigned int* PolygonList::getPolySizes()    
-{
-    if(getSize() == 0)
-        return nullptr;
-
-    unsigned int *arr = new unsigned int[getSize()];
-    DataChunk<Polygon, 100> *f = firstChunk;
-    for(int i=0; i<getSize(); i++) {
-        arr[i] = f->data[i%100].size();
-        if(!(i+1)%100) f = f->next;
-    }
-    return arr;
-}
-
-unsigned int** PolygonList::getPolyIndices()    
-{
-    unsigned int **indices = new unsigned int*[getSize()];
-    DataChunk<Polygon, 100> *f = firstChunk;
-    for(int i=0; i<getSize(); i++) {
-        indices[i] = new unsigned int[f->data[i%100].size()];
-        for(int j=0; j<f->data[i%100].size(); j++)
-            indices[i][j] = f->data[i%100].verts()[j];
-        if(!(i+1)%100) f = f->next;
-    }
-    return indices;
-}
-
-void PolygonList::append(Polygon d)    
-{
-    FRGDataList<Polygon, 100>::append(d);
-    for(int i=0; i<d.size(); i++){
-        if(vertex_map.size() < d.verts()[i]+1) vertex_map.resize(d.verts()[i]+1);
-        vertex_map[d.verts()[i]].push_back(getSize()-1);
-    }
-}
-
-intVecList_t& PolygonList::getVertexMap()    
-{
-    return vertex_map;
-}
-
-CustomShader::CustomShader()
-{
-}
-
-CustomShader::~CustomShader()
-{
-}
 
 AbstractTransformable::AbstractTransformable(eObjType t)
     : parent(nullptr), center(0, 0, 0), type(t)
@@ -293,16 +225,34 @@ void MeshData::computeFaceNormals()
     auto facenormals = std::make_shared<VertexList>();
     auto polygons = getProperty<std::shared_ptr<PolygonList>>("polygon");
     auto vertices = getProperty<std::shared_ptr<VertexList>>("P");
-    for(int i=0; i<polygons->getSize(); i++){
+
+    for(const auto &poly : *polygons) {
         glm::vec3 normal;
-        Polygon poly = (*polygons)[i];
+
         for(int j=2; j<poly.size(); j++){
-           glm::vec3 vec1 = (*vertices)[poly.verts()[j-1]] - (*vertices)[poly.verts()[0]];
-           glm::vec3 vec2 = (*vertices)[poly.verts()[j]] - (*vertices)[poly.verts()[j-1]];
-           glm::vec3 cross = glm::cross(vec1, vec2);
-           normal += cross;
+            uint vec_prev_i = poly.verts()[j - 1];
+            uint vec_cur_i = poly.verts()[j];
+            uint vec_first_i = poly.verts()[0];
+
+            glm::vec3 vec_prev = vertices->at(vec_prev_i);
+            glm::vec3 vec_cur = vertices->at(vec_cur_i);
+            glm::vec3 vec_first = vertices->at(vec_first_i);
+
+            glm::vec3 vec1 = vec_cur - vec_prev;
+            glm::vec3 vec2 = vec_cur - vec_first;
+            glm::vec3 cross = glm::cross(vec2, vec1);
+
+            //do not accidentally kill the normal
+            glm::vec3 new_normal = normal + cross;
+            if(glm::length(new_normal) > 0)
+                normal = new_normal;
         }
-        facenormals->append(glm::normalize(normal));
+
+        //yet there could still be a corrupt poly and glm crashes in that case
+        if(glm::length(normal) > 0)
+            normal = glm::normalize(normal);
+
+        facenormals->push_back(normal);
     }
     addProperty("poly_normal", facenormals);
 }
@@ -311,17 +261,31 @@ void MeshData::computeVertexNormals()
 {
     computeFaceNormals();
     auto vertexnormals = std::make_shared<VertexList>();
+    auto verts = getProperty<std::shared_ptr<VertexList>>("P");
     auto polygons = getProperty<std::shared_ptr<PolygonList>>("polygon");
     auto facenormals = getProperty<std::shared_ptr<VertexList>>("poly_normal");
-    intVecList_t vertexMap = polygons->getVertexMap();
-    for(auto vector : vertexMap){
+    //loop through all vertices by index
+    for(size_t i = 0; i < verts->size(); i++) {
         glm::vec3 normal;
-        for(auto i : vector){
-            glm::vec3 vec2 = (*facenormals)[i];
-            if(glm::dot(normal, vec2) < 0) vec2 *= -1;
-            normal += vec2;
+        //loop through all faces by index
+        for(size_t j = 0; j < facenormals->size(); j++) {
+            //if the polygon contains the currently looked at vertex
+            for(int pi : polygons->at(j).verts()) {
+                if (pi == i) {
+                    //add it to the normal vector
+                    glm::vec3 vec2 = (*facenormals)[j];
+                    //if(glm::dot(normal, vec2) < 0) vec2 *= -1;
+                    glm::vec3 new_normal = normal + vec2;
+                    if(glm::length(new_normal) > 0)
+                        normal = new_normal;
+                    break;
+                }
+            }
         }
-        vertexnormals->append(glm::normalize(normal));
+        if(glm::length(normal) > 0)
+            vertexnormals->push_back(glm::normalize(normal));
+        else
+            vertexnormals->push_back(glm::vec3(1, 0, 0));
     }
     addProperty("N", vertexnormals);
 }
@@ -504,8 +468,8 @@ PolygonNode::PolygonNode(bool raw)
 {
     setType("POLYGONNODE");
     if(!raw){
-        new DoutSocket("Polygon", POLYGON, this);
-        setDynamicSocketsNode(IN);
+        new DoutSocket("Polygon", "POLYGON", this);
+        setDynamicSocketsNode(DSocket::IN);
     }
 }
 
@@ -544,25 +508,13 @@ ComposeMeshNode::ComposeMeshNode(bool raw)
     setObjectData(std::make_shared<MeshData>());
     setNodeType("COMPOSEMESHNODE");
     if(!raw){
-        vertSocket = new DAInSocket("Vertices", VECTOR, this);
-        polySocket = new DAInSocket("Polygons", POLYGON, this);
-        new DoutSocket("Data", OBJDATA, this);
+        new DoutSocket("Data", "OBJDATA", this);
     }
 }
 
 ComposeMeshNode::ComposeMeshNode(const ComposeMeshNode &node)
     : ObjectDataNodeBase(node)
 {
-}
-
-DAInSocket* ComposeMeshNode::getVertSocket()    
-{
-    return vertSocket;
-}
-
-DAInSocket* ComposeMeshNode::getPolySocket()    
-{
-    return polySocket;
 }
 
 //std::shared_ptr<MeshData> ComposeMeshNode::getObjectData()    
@@ -574,11 +526,11 @@ AbstractTransformableNode::AbstractTransformableNode(std::string name, bool raw)
     : DNode(name)
 {
     if(!raw){
-        new DoutSocket("Object", SCENEOBJECT, this);
-        transSocket = new DinSocket("Translation", VECTOR, this);
-        rotSocket = new DinSocket("Rotation", VECTOR, this);
-        scaleSocket = new DinSocket("Scale", VECTOR, this);
-        new DinSocket("Parent", SCENEOBJECT, this);
+        new DoutSocket("Object", "SCENEOBJECT", this);
+        transSocket = new DinSocket("Translation", "VECTOR", this);
+        rotSocket = new DinSocket("Rotation", "VECTOR", this);
+        scaleSocket = new DinSocket("Scale", "VECTOR", this);
+        new DinSocket("Parent", "SCENEOBJECT", this);
     }
 }
 
@@ -695,11 +647,13 @@ ObjectNode::ObjectNode(bool raw)
     setObject(std::make_shared<Object>());
     setNodeType(NodeType("OBJECT"));
     if(!raw){
-        setDynamicSocketsNode(IN);
-        objDataSocket = new DinSocket("Data", OBJDATA, this);
-        fragSocket = new DinSocket("GLSL Fragment Shader", INTEGER, this);
-        vertSocket = new DinSocket("GLSL Vertex Shader", INTEGER, this);
-        geoSocket = new DinSocket("GLSL Geometry Shader", INTEGER, this);
+        setDynamicSocketsNode(DSocket::IN);
+        objDataSocket = new DinSocket("Data", "OBJDATA", this);
+        fragSocket = new DinSocket("GLSL Fragment Shader", "INTEGER", this);
+        vertSocket = new DinSocket("GLSL Vertex Shader", "INTEGER", this);
+        geoSocket = new DinSocket("GLSL Geometry Shader", "INTEGER", this);
+
+        new DoutSocket("Object", "GROUPDATA", this);
     }
 }
 
@@ -738,9 +692,7 @@ CreateGroupNode::CreateGroupNode(std::string name, bool raw)
 {
     setNodeType("GROUP");
     if(!raw){
-        new DoutSocket("Group", GROUPDATA, this);
-        new DAInSocket("Members", GROUPDATA, this);
-        new DAInSocket("Members", SCENEOBJECT, this);
+        new DoutSocket("Group", "GROUPDATA", this);
     }
 }
 
@@ -764,8 +716,8 @@ CameraNode::CameraNode(bool raw)
     setObject(std::make_shared<Camera>());
     setNodeType("CAMERA");
     if(!raw){
-        new DinSocket("Perspective", CONDITION, this);
-        new DinSocket("FOV", FLOAT, this);
+        new DinSocket("Perspective", "CONDITION", this);
+        new DinSocket("FOV", "FLOAT", this);
     }
 }
 
@@ -785,8 +737,8 @@ LightNode::LightNode(std::string name, bool raw)
     setObject(std::make_shared<Light>());
     setNodeType("LIGHT");
     if(!raw){
-        new DinSocket("Intensity", FLOAT, this);
-        new DinSocket("Color", COLOR, this);
+        new DinSocket("Intensity", "FLOAT", this);
+        new DinSocket("Color", "COLOR", this);
     }
 }
 

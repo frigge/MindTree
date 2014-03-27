@@ -34,7 +34,6 @@ class ObjectCache : public DataCache
 {
 public:
     ObjectCache(const MindTree::DinSocket *socket);
-    ObjectCache(const MindTree::DAInSocket *asocket);
     ObjectCache(const MindTree::DoutSocket *socket);
     ~ObjectCache();
 //    void clear();

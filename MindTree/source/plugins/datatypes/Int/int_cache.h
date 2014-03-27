@@ -25,29 +25,29 @@
 namespace MindTree {
 class DinSocket;
 
-class IntCache : public DataCache
-{
-public:
-    IntCache(const DoutSocket *socket=0);
-    ~IntCache();
-//    virtual IntCache* getDerived();
-//    void clear();
-//    bool cache(const DinSocket *socket);
-//
-//protected:
-//    void composeArray();
-//    void intValue();
-//    void getLoopedCache();
-//    void add();
-//    void subtract();
-//    void multiply();
-//    void divide();
-//    void math(eMathOp op);
-//    void modulo();
-//    void container();
-//    void stepup();
-//    void glShader();
-};
+//class IntCache : public DataCache
+//{
+//public:
+//    IntCache(const DoutSocket *socket=0);
+//    ~IntCache();
+////    virtual IntCache* getDerived();
+////    void clear();
+////    bool cache(const DinSocket *socket);
+////
+////protected:
+////    void composeArray();
+////    void intValue();
+////    void getLoopedCache();
+////    void add();
+////    void subtract();
+////    void multiply();
+////    void divide();
+////    void math(eMathOp op);
+////    void modulo();
+////    void container();
+////    void stepup();
+////    void glShader();
+//};
 
 } /* MindTree */
 

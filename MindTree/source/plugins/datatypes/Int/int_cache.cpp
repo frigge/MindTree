@@ -22,16 +22,16 @@
 
 using namespace MindTree;
 
-IntCache::IntCache(const DoutSocket *socket)
-    : DataCache(socket)
-{
-    cacheInputs();
-}
-
-IntCache::~IntCache()
-{
-    //clear();
-}
+//IntCache::IntCache(const DoutSocket *socket)
+//    : DataCache(socket)
+//{
+//    cacheInputs();
+//}
+//
+//IntCache::~IntCache()
+//{
+//    //clear();
+//}
 
 //bool IntCache::cache(const DinSocket *socket)    
 //{

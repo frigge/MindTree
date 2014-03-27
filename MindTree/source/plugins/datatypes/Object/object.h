@@ -28,116 +28,11 @@
 #include "data/python/pyexposable.h"
 #include "data/properties.h"
 
-template<class T, unsigned long chunksize>
-struct DataChunk
-{
-    DataChunk() : next(nullptr), data(new T[chunksize]) {};
-    ~DataChunk() {delete [] data; if(next)delete next;};
-    T* data;
-    DataChunk *next;
-};
-
-template<class T, unsigned long chunksize>
-class FRGDataList
-{
-    class Iterator
-    {
-    public:
-        Iterator(FRGDataList &list, int pos) : pos(pos), list(list) {}
-        Iterator(const Iterator& other) : pos(other.pos), list(other.list) {}
-
-        Iterator& operator++() {pos++; return *this;}
-        T operator*() {return list[pos];}
-        bool operator!=(const Iterator &other) {return other.pos != pos;}
-    private:
-        FRGDataList &list;
-        int pos;
-    };
-
-public:
-    FRGDataList() : size(0), firstChunk(new DataChunk<T, chunksize>()) {}
-    virtual ~FRGDataList(){delete firstChunk;}
-    DataChunk<T, chunksize>* first() {return firstChunk;}
-
-    DataChunk<T, chunksize>* lastChunk() {
-        DataChunk<T, chunksize> *f = firstChunk;
-        while(f->next) f = f->next;
-        return f;
-    }
-
-    Iterator begin(){
-        return Iterator(*this, 0);
-    }
-
-    Iterator end(){
-        return Iterator(*this, size);
-    }
-
-    virtual void append(T d) {
-        if(size == 0){
-            firstChunk->data[0] = d;
-            size++;
-            return;
-        }
-        if(!(size % chunksize)) {
-            DataChunk<T, chunksize> *e = lastChunk();
-            e->next = new DataChunk<T, chunksize>();
-            e->next->data[0] = d;
-            size++;
-            return;
-        }
-        DataChunk<T, chunksize> *e = lastChunk();
-        e->data[size%chunksize] = d;
-        size++;
-    }
-    unsigned long getSize(){return size;}
-
-    T* toArray() {
-        if(size==0)
-            return nullptr;
-        T* array = new T[size];
-        DataChunk<T, chunksize> *f = firstChunk;
-        for(int i=0; i<size; i++){
-            array[i] = f->data[i%chunksize];
-            if(!((i+1)%chunksize)) f = f->next;
-        }
-        return array;
-    }
-
-    void resize(unsigned int newsize) {
-        int curr_chunk_nr = size/chunksize;
-        int new_chunk_nr = newsize/chunksize;
-        int ch_ind = size%chunksize;
-        size = newsize;
-        DataChunk<T, chunksize> *f = firstChunk;
-        for(int i=0; i < new_chunk_nr; i++) {
-            if(i>= curr_chunk_nr)
-                f->next = new DataChunk<T, chunksize>();
-            f = f->next;
-        }
-    }
-
-    T& operator[](unsigned long i) {
-        if(i >= size)
-            resize(i+1);
-        int chunknr = i/chunksize;
-        int chunk_i = i%chunksize;
-        DataChunk<T, chunksize> *f = first();
-        for(int j=0; j!=chunknr; j++, f=f->next);
-        return f->data[chunk_i];
-    }
-
-protected:
-    DataChunk<T, chunksize> *firstChunk;
-
-private:
-    unsigned long size;
-};
-
 class Polygon
 {
 public:
     Polygon() {}
+    Polygon(std::initializer_list<uint> list) : vertices(list) {};
     Polygon(const Polygon &poly){*this = poly;}
     virtual ~Polygon() {}
     Polygon &operator=(const Polygon& poly)
@@ -156,40 +51,9 @@ private:
     std::vector<uint> vertices;
 };
 
-typedef std::vector<std::vector<int> > intVecList_t;
-class PolygonList : public FRGDataList<Polygon, 100>
-{
-public:
-    PolygonList(){};
-    unsigned int** getPolyIndices();
-    unsigned int* getPolySizes();
-    virtual void append(Polygon d);
-    intVecList_t& getVertexMap();
-private:
-    intVecList_t vertex_map;
-};
+typedef std::vector<glm::vec3> VertexList;
+typedef std::vector<Polygon> PolygonList;
 
-class VectorList : public FRGDataList<glm::vec3, 10000>
-{
-public:
-    VectorList() {};
-    float* to1DArray();
-};
-
-typedef VectorList VertexList;
-
-class CustomShader
-{
-public:
-    CustomShader();
-    virtual ~CustomShader();
-
-private:
-    /* data */
-};
-
-class QGLBuffer;
-class QGLShaderProgram;
 class MeshData;
 class AbstractTransformableNode;
 class AbstractTransformable : public std::enable_shared_from_this<AbstractTransformable>
@@ -403,12 +267,7 @@ class ComposeMeshNode : public ObjectDataNodeBase
 public:
     ComposeMeshNode(bool raw=false);
     ComposeMeshNode(const ComposeMeshNode &node);
-    MindTree::DAInSocket* getVertSocket();
-    MindTree::DAInSocket* getPolySocket();
     //std::shared_ptr<MeshData> getObjectData();
-
-private:
-    MindTree::DAInSocket *vertSocket, *polySocket;
 };
 
 class AbstractTransformableNode : public MindTree::DNode

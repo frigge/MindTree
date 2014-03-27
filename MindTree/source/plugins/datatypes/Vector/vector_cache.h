@@ -23,15 +23,15 @@
 #include "QThread"
 #include "data/cache_main.h"
 
-class VectorList;
 namespace MindTree
 {
+class VertexList;
 class DinSocket;
 
 class VectorForeachCacheThread : public QThread
 {
 public:
-    VectorForeachCacheThread(const MindTree::DinSocket *socket, VectorList *array, int work_start, int work);
+    VectorForeachCacheThread(const MindTree::DinSocket *socket, VertexList *array, int work_start, int work);
     ~VectorForeachCacheThread();
     int getStep();
 //
@@ -40,15 +40,15 @@ public:
 //
 private:
     const MindTree::DinSocket *socket;
-    VectorList *array;
+    VertexList *array;
     int work_start, work, step;
 };
 
-class VectorCache : public DataCache
-{
-public:
-    VectorCache(const MindTree::DoutSocket *socket=0);
-    ~VectorCache();
+//class VectorCache : public DataCache
+//{
+//public:
+//    VectorCache(const MindTree::DoutSocket *socket=0);
+//    ~VectorCache();
 //    virtual VectorCache* getDerived();
 //    void clear();
 //
@@ -65,13 +65,12 @@ public:
 //
 //private:
 //    Vector data;
-};
+//};
 
 class VectorCacheThreaded : public QThread
 {
 public:
-    VectorCacheThreaded(const MindTree::DinSocket *socket=0);
-    VectorCacheThreaded(const MindTree::DAInSocket *socket=0);
+    VectorCacheThreaded(const MindTree::DinSocket *socket=nullptr);
 //    VectorList* getData();
 
 protected:
@@ -79,8 +78,7 @@ protected:
 
 private:
     const MindTree::DinSocket *socket;
-    const MindTree::DAInSocket *asocket;
-    VectorList *data;
+    VertexList *data;
 };
 
 } /* MindTree */
