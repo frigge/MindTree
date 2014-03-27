@@ -7,14 +7,20 @@
 using namespace MindTree;
 
 Viewer::Viewer(DoutSocket *start)
-    : start(start), widget(0)
+    : widget(0),
+    start(start)
 {
     Signal::getHandler<DinSocket*>()
-        .add("createLink", 
-                std::bind(&Viewer::update_viewer, this, std::placeholders::_1)).detach();
+        .connect("createLink", 
+                std::bind(&Viewer::update_viewer, 
+                          this, 
+                          std::placeholders::_1)).detach();
+
     Signal::getHandler<DinSocket*>()
-        .add("socketChanged", 
-                std::bind(&Viewer::update_viewer, this, std::placeholders::_1)).detach();
+        .connect("socketChanged", 
+                std::bind(&Viewer::update_viewer, 
+                          this, 
+                          std::placeholders::_1)).detach();
 }
 
 Viewer::~Viewer()
@@ -23,12 +29,12 @@ Viewer::~Viewer()
 
 void Viewer::update_viewer(DinSocket *socket)    
 {
+    cache.start(start);
     update(socket);
 }
 
 void Viewer::update(DinSocket*)    
 {
-    std::cout<<"updating viewer ... " << std::endl;
 }
 
 DoutSocket* Viewer::getStart()
@@ -39,6 +45,7 @@ DoutSocket* Viewer::getStart()
 void Viewer::setStart(DoutSocket* value)
 {
     start = value;
+    update_viewer(nullptr);
 }
 
 QWidget* Viewer::getWidget()
@@ -48,7 +55,8 @@ QWidget* Viewer::getWidget()
 
 void Viewer::setWidget(QWidget* value)
 {
-    if(!widget) std::cout<<"no valid viewer widget" << std::endl;
     widget = value;
+    if(!widget) std::cout<<"no valid viewer widget" << std::endl;
+    update_viewer(nullptr);
 }
 

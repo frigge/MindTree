@@ -2,27 +2,29 @@ import MT, PySide
 from PySide.QtCore import *
 from PySide.QtGui import *
 
-class StringViewerGUI(QWidget): 
+class StringViewerGUI(QScrollArea): 
     def __init__(self, viewer):
         self.viewer = viewer
-        StringViewerGUI.viewers.append(self)
-        QWidget.__init__(self)
-        lay = QVBoxLayout()
-        self.setLayout(lay)
+        QScrollArea.__init__(self)
         self.label = QLabel("")
-        lay.addWidget(self.label)
+        self.setWidget(self.label)
+
+    def setText(self, text):
+        self.label.setText(text)
+        self.label.adjustSize()
+
+    def resizeEvent(self, event):
+        self.label.setFixedWidth(self.width())
 
 class StringViewer(MT.pytypes.Viewer):
     def __init__(self, socket):
         MT.pytypes.Viewer.__init__(self, socket)
         self.viewer = StringViewerGUI(self)
         self.setWidget(self.viewer)
-        self.socket = socket
 
     def update(self, s):
         print("updating viewer: s:"+str(s)+" , self.socket:"+str(self.socket))
-        cache = MT.cache.DataCache(self.socket)
-        data = cache.data
-        self.viewer.label.setText(str(data))
+        data = self.cache.getData(0)
+        self.viewer.setText(data)
 
-MT.gui.registerViewer("StringViewer", "String", StringViewer)
+MT.gui.registerViewer("StringViewer", "STRING", StringViewer)

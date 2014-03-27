@@ -3,6 +3,7 @@
 
 #include "data/cache_main.h"
 
+void initDefaultProperties();
 namespace MindTree
 {
 namespace Cache
@@ -15,14 +16,13 @@ void add(MindTree::DataCache * cache)
 {
     T data;
     std::cout << "caching " << cache->getNode()->getNodeName() << std::endl;
-    for(const auto *socket : cache->getNode()->getInSockets())
-    {
-        cache->cache(socket);
-        std::cout << "current value is: " << cache->data.getData<T>() << std::endl;
-        data += cache->data.getData<T>();
+    for(size_t i=0; i< cache->getNode()->getInSockets().size(); i++){
+        std::cout << "current value is: " << cache->getData(i).getData<T>() << std::endl;
+        data += cache->getData(i).getData<T>();
     }
 
-    cache->data.setData<T>(data);
+    std::cout << "in combination it is: " << data << std::endl;
+    cache->pushData(data);
 }
 
 template <typename T>

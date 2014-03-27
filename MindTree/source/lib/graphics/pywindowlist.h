@@ -58,6 +58,8 @@ public:
     static void wrap();
     void update(DinSocket *socket);
     void setWidget(BPy::object widget);
+    DoutSocketPyWrapper* getSocket();
+    DataCache getCache() const;
 
 private:
     BPy::object widget;

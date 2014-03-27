@@ -73,6 +73,7 @@ public:
     ViewerDockBase(QString name);
     virtual ~ViewerDockBase();
     void setViewer(Viewer *view);
+    Viewer* getViewer();
     virtual void setFocusNode(DNode* node);
     virtual void exec(){}
     virtual void exec(DNode*){}

@@ -5,6 +5,7 @@
 #include "QObject"
 #include "QList"
 #include "map"
+#include "unordered_map"
 
 class QDockWidget;
 class QMainWindow;
@@ -68,6 +69,8 @@ private:
 
     static ViewerList* viewerList;
     QMainWindow *window;
+    std::unordered_map<std::string, ViewerDockBase*> openViewers;
+
     std::map<std::string, std::vector<ViewerFactory*>> windowFactories;
 };
 } /* MindTree */

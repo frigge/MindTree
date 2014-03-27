@@ -2,6 +2,7 @@
 
 #define VIEWER_JMU26VVQ
 
+#include "data/cache_main.h"
 #include "boost/python.hpp"
 
 namespace BPy=boost::python;
@@ -16,7 +17,6 @@ class Viewer
 public:
     Viewer(DoutSocket *socket);
     virtual ~Viewer();
-    void update_viewer(DinSocket*);
     virtual void update(DinSocket*);
     DoutSocket* getStart();
     void setStart(DoutSocket* value);
@@ -25,8 +25,10 @@ public:
 
 protected:
     QWidget *widget;
+    MindTree::DataCache cache;
 
 private:
+    void update_viewer(DinSocket*);
     DoutSocket *start;
 };
 

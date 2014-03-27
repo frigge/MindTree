@@ -43,10 +43,10 @@ MindTree::ViewerDockBase* PythonViewerFactory::createViewer(DoutSocket *socket)
 {
     std::cout<<"creating Python Viewer"<<std::endl;
     ViewerDockBase *dock = new ViewerDockBase(getName());
-    dock->setStart(socket);
     BPy::object obj = cls(new DoutSocketPyWrapper(socket));
     PyViewerBase* base = BPy::extract<PyViewerBase*>(obj);
     dock->setViewer(base);
+    dock->setStart(socket);
     return dock;
 }
 
@@ -62,7 +62,21 @@ PyViewerBase::~PyViewerBase()
 void PyViewerBase::wrap()
 {
     BPy::class_<PyViewerBase, boost::noncopyable>("Viewer", BPy::init<DoutSocketPyWrapper*>())
-        .def("setWidget", &PyViewerBase::setWidget);
+        .def("setWidget", &PyViewerBase::setWidget)
+        .add_property("cache", &PyViewerBase::getCache)
+        .add_property("socket", 
+                      BPy::make_function(&PyViewerBase::getSocket, 
+                                         BPy::return_value_policy<BPy::manage_new_object>()));
+}
+
+DoutSocketPyWrapper* PyViewerBase::getSocket()
+{
+    return new DoutSocketPyWrapper(getStart());
+}
+
+DataCache PyViewerBase::getCache() const
+{
+    return cache;
 }
 
 void PyViewerBase::update(DinSocket *socket)    

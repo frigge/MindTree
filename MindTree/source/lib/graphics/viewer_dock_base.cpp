@@ -134,6 +134,11 @@ void ViewerDockBase::setViewer(Viewer *view)
     setWidget(view->getWidget());
 }
 
+Viewer* ViewerDockBase::getViewer()
+{
+    return viewer;
+}
+
 void ViewerDockBase::deleteThis(bool del)    
 {
     if(!del)deleteLater();
@@ -193,6 +198,7 @@ DoutSocket* ViewerDockBase::getStart()
 void ViewerDockBase::setStart(DoutSocket* value)
 {
     startSocket = value;
+    viewer->setStart(value);
 }
 
 void ViewerDockBase::setFocusNode(DNode* node)    

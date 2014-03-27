@@ -61,6 +61,7 @@ QString MindTree::WindowList::showWindow(QString name)
 QString MindTree::WindowList::showSplitWindow(QString name, QString other, Qt::Orientation orientation, float ratio)    
 {
     auto dock = createWindow(name);
+    if(!dock) return "";
     auto otherDock = window->findChild<QDockWidget*>(other);
     int width = otherDock->width();
     window->splitDockWidget(otherDock, dock, orientation);
@@ -129,12 +130,23 @@ void MindTree::ViewerList::showDock(QDockWidget* dock)
 QString MindTree::ViewerList::showViewer(DoutSocket *socket, unsigned int index)
 {
     std::cout<< "show the viewer" << std::endl;
-    if(!windowFactories.count(socket->getType().getCustomType())) {
+    if(!windowFactories.count(socket->getType().toStr())) {
         std::cout<<"No Viewer registered for this type"<<std::endl;
         return "";
     }
-    auto dock = windowFactories[socket->getType().getCustomType()][index]->createViewer(socket);
-    showDock(dock);
+
+    std::string typestr = socket->getType().toStr();
+    std::string idstr = typestr + std::to_string(index);
+    ViewerDockBase *dock = nullptr;
+    if(openViewers.find(idstr) == openViewers.end()) {
+        dock = windowFactories[typestr][index]->createViewer(socket);
+        openViewers.insert({typestr + std::to_string(index), dock});
+        showDock(dock);
+    } else {
+        dock = openViewers[idstr];  
+        dock->setStart(socket);
+    }
+
     return dock->objectName();
 }
 
