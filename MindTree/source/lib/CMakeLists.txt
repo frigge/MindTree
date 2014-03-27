@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 set(LIB_SRC
     data/cache_main.cpp
-    data/callbacks.cpp
     data/data_nodelink.cpp
     data/datatypes.cpp
     data/dnspace.cpp
@@ -29,7 +28,6 @@ set(LIB_SRC
 
 set(LIB_HEAD
     data/cache_main.h
-    data/callbacks.h
     data/data_nodelink.h
     data/datatypes.h
     data/dnspace.h

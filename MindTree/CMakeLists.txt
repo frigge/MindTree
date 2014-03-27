@@ -20,7 +20,7 @@ SET(HEADER
             source/graphics/python/consolewindow.h
             source/data/base/raytracing/ray.h
             source/data/undo/frg_generic_undo.h
-            source/graphics/gui.h
+            #source/graphics/gui.h
 #source/graphics/nodes/graphics_node.h
 #            source/graphics/nodes/graphics_node_socket.h
             source/graphics/base/mindtree_mainwindow.h
@@ -37,7 +37,7 @@ SET(SOURCE
             source/data/base/init.cpp
             source/data/gl/init.cpp
             source/data/python/init.cpp
-            source/graphics/gui.cpp
+            #source/graphics/gui.cpp
 #            source/graphics/newnodeeditor.cpp
 #            source/graphics/nodelib.cpp
 #            source/graphics/scenewidgetcontainer.cpp
