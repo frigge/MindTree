@@ -26,12 +26,12 @@ def testFloatCache():
 
     cache = MT.cache.DataCache(add.outsockets[0])
     try:
-        print("resulting value: %d" % cache.data)
+        print("resulting value: %d" % cache.getData(0))
     except:
-        print("resulting datatype is: %s" % str(type(cache.data)))
+        print("resulting datatype is: %s" % str(type(cache.getData(0))))
 
     print("expected value: %d" % (12+5+8))
-    return (12+5+8) == cache.data
+    return (12+5+8) == cache.getData(0)
 
 def testfloatvalue():
     return True

@@ -26,4 +26,4 @@ def testStringCache():
     add.insockets[0].connected = add2.outsockets[0]
 
     cache = MT.cache.DataCache(add.outsockets[0])
-    return (value1 + value2 + value3) == cache.data
+    return (value1 + value2 + value3) == cache.getData(0)

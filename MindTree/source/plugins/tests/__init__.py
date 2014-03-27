@@ -3,7 +3,6 @@ from stringcachetest import *
 from connectsockets import *
 from properties import *
 from cpp_tests import *
-from tollertest import *
 
 def testAll():
     print("testing all tests ...")
