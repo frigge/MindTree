@@ -12,12 +12,22 @@ class IntNodeFactory(MT.pytypes.NodeFactory):
     insockets = [("Value", "INTEGER")]
     outsockets = [("Value", "INTEGER")]
 
-def floatvalue(cache):
-    cache.cache(cache.node.insockets[0])
+class StringNodeFactory(MT.pytypes.NodeFactory):
+    type="STRINGVALUE"
+    label="Values.String Value"
+    insockets = [("Value", "STRING")]
+    outsockets = [("Value", "STRING")]
+
+class ColorNodeFactory(MT.pytypes.NodeFactory):
+    type="COLORVALUE"
+    label="Values.Color Value"
+    insockets = [("Value", "COLOR")]
+    outsockets = [("Value", "COLOR")]
 
 def registerNodes():
     MT.registerNode(FloatNodeFactory)
     MT.registerNode(IntNodeFactory)
+    MT.registerNode(StringNodeFactory)
+    MT.registerNode(ColorNodeFactory)
 
 registerNodes()
-MT.cache.DataCache.addProcessor(floatvalue, "FLOATVALUE", "FLOAT")
