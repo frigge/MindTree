@@ -62,20 +62,69 @@ class BoolEditor(QWidget):
         self.socket = socket
         self.widget = QCheckBox()
         self.setLayout(QHBoxLayout())
-        self.layout().addWidget(QLabel(socket.name))
         self.layout().addWidget(self.widget)
         if socket.value != None:
-            self.widget.setChecked(socket.value)
-        self.widget.valueChanged.connect(lambda x: setattr(self.socket, "value", x))
+            self.widget.setCheckState(Qt.Checked if socket.value else Qt.Unchecked)
+        self.widget.stateChanged.connect(self.setChecked)
+
+    def setChecked(self, val):
+        bval = val == 2
+        self.socket.value = bval
+
+class ColorButton(QPushButton):
+    colorChanged = pyqtSignal(QColor)
+
+    def __init__(self):
+        QPushButton.__init__(self, "")
+        self.setFlat(True)
+        self.clicked.connect(self.pickColor)
+        self.color = QColor(255, 255, 255, 255)
+
+    def setColor(self, color):
+        self.color = color
+        self.colorChanged.emit(color)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setBrush(QBrush(self.color))
+        painter.drawRect(self.rect())
+
+    def pickColor(self):
+        newcolor = QColorDialog.getColor(self.color)
+        if newcolor.isValid():
+            self.setColor(newcolor)
+
+class ColorEditor(QWidget):
+    def __init__(self, socket):
+        QWidget.__init__(self)
+        self.socket = socket
+        self.widget = ColorButton()
+        self.setLayout(QHBoxLayout())
+        self.layout().addWidget(self.widget)
+        if socket.value != None:
+            value = socket.value
+            col = QColor(value[0]*255, value[1]*255, value[2]*255, value[3]*255)
+            self.widget.setColor(col)
+        self.widget.colorChanged.connect(self.applyColor)
+
+    def applyColor(self, color):
+        self.socket.value = (float(color.redF()), 
+                             float(color.greenF()), 
+                             float(color.blueF()),
+                             float(color.alphaF()));
 
 class Editor(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         self.widget = QWidget()
         lay = QVBoxLayout()
+        lay.setMargin(0)
+        lay.setSpacing(0)
         self.setLayout(lay)
         lay.addWidget(self.widget)
         self.widget.setLayout(QFormLayout())
+        self.widget.layout().setMargin(0)
+        self.widget.layout().setSpacing(0)
 
         self.cb = MT.attachToSignal("selectionChanged", self.updateEditor)
 
@@ -100,5 +149,7 @@ class Editor(QWidget):
                     self.widget.layout().addRow(s.name, IntEditor(s))
                 elif s.type == "BOOLEAN":
                     self.widget.layout().addRow(s.name, BoolEditor(s))
+                elif s.type == "COLOR":
+                    self.widget.layout().addRow(s.name, ColorEditor(s))
     
 MT.gui.registerWindow("PropertiesEditor", Editor)
