@@ -1,8 +1,11 @@
-import MT, PySide, node, signaldecorator
+import MT
+import node
+
 from PySide.QtGui import *
 from PySide.QtOpenGL import *
 from PySide.QtCore import *
 
+from nodebrowser import NodeBrowser
 
 class NodeSpace(QGraphicsScene):
     def __init__(self, space):
@@ -11,22 +14,32 @@ class NodeSpace(QGraphicsScene):
         self.setItemIndexMethod(QGraphicsScene.NoIndex)
         self.tmpLink = None
         self.createNetwork()
-        self.setSceneRect(0, 0, 500, 500)
         self.nodes = {}
         setattr(MT, "graph", self)
         self.cb = MT.attachToSignal("createLink", self.drawLink)
+        self.setSceneRect(-5000, -5000, 10000, 10000)
 
     def createNetwork(self):
         for n in self.space:
             addNode(n)
             for s in n.insockets:
-                if s.cntdsocket: self.drawLink(s)
+                if s.cntdsocket:
+                    self.drawLink(s)
+
+    def updateSceneRect(self):
+        view = self.views()[0]
+        ul = view.mapToScene(view.rect().topLeft())
+        br = view.mapToScene(view.rect().bottomRight())
+        viewRect = QRectF(ul, br)
+
+        itemsrect = self.itemsBoundingRect()
+        combinedrect = itemsrect | viewRect
+        self.setSceneRect(combinedrect)
 
     def addNode(self, n):
-        print(n.name + " added to the scene")
         item = node.NodeItem(n)
         self.addItem(item)
-        self.nodes[n.name] =  item
+        self.nodes[n.name] = item
 
     def removeNode(self, n):
         item = self.nodes[n.name]
@@ -37,10 +50,11 @@ class NodeSpace(QGraphicsScene):
         link = node.NodeLink()
         link.start = self.nodes[insocket.node.name]
         link.end = self.nodes[insocket.connected.node.name]
+        print("blubb")
         self.addItem(link)
 
     def showTmpLink(self, socket):
-        self.tmpLink = node.NodeLink(socket, socket.parentItem(), temp = True)
+        self.tmpLink = node.NodeLink(socket, socket.parentItem(), temp=True)
         self.addItem(self.tmpLink)
 
     def removeTmpLink(self):
@@ -60,19 +74,18 @@ class NodeSpace(QGraphicsScene):
         QGraphicsScene.dragMoveEvent(self, event)
 
     def mouseReleaseEvent(self, event):
-        if self.tmpLink != None:
+        if self.tmpLink is not None:
             self.removeItem(self.tmpLink)
         self.tmpLink = None
         QGraphicsScene.mouseReleaseEvent(self, event)
 
 
 class NodeGraph(QGraphicsView):
-    
+
     def __init__(self):
         QGraphicsView.__init__(self)
 
-        self.scene = NodeSpace(MT.project.root)
-        self.setScene(self.scene)
+        self.setScene(NodeSpace(MT.project.root))
         #QGL.setPreferredPaintEngine(QPaintEngine.OpenGL2)
         #glFmt = QGLFormat.defaultFormat()
         #glFmt.setSwapInterval(0)
@@ -85,7 +98,7 @@ class NodeGraph(QGraphicsView):
         #glWidget.setAutoFillBackground(False)
         self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
         #self.setViewport(glWidget)
-        self.setViewport(QGLWidget())
+        #self.setViewport(QGLWidget())
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -96,13 +109,34 @@ class NodeGraph(QGraphicsView):
         self.cb2 = MT.attachToSignal("removeNode", self.removeNode)
 
         self.space = MT.project.root
+        self.setAcceptDrops(True)
+        self.dragPos = None
+
+    def resizeEvent(self, event):
+        QGraphicsView.resizeEvent(self, event)
+
+    def dragEnterEvent(self, event):
+        QGraphicsView.dragEnterEvent(self, event)
+        event.acceptProposedAction()
+
+    def dragMoveEvent(self, event):
+        QGraphicsView.dragMoveEvent(self, event)
+        event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        QGraphicsView.dropEvent(self, event)
+        nodeLabel = str(event.mimeData().text())
+        node = MT.createNode(nodeLabel)
+        if node is not None:
+            self.scene().space.addNode(node)
+            scenePos = self.mapToScene(event.pos())
+            node.pos = (scenePos.x(), scenePos.y())
 
     def addNode(self, n):
-        self.scene.addNode(n)
+        self.scene().addNode(n)
 
     def removeNode(self, n):
         self.scene.removeNode(n)
-
 
     def __del__(self):
         #MT.nodegraphs.remove(self)
@@ -110,59 +144,39 @@ class NodeGraph(QGraphicsView):
 
     def drawBackground(self, painter, rect):
         painter.setBrush(QBrush(QColor(30, 30, 30)))
-        painter.drawRect(rect)
+        painter.drawRect(self.sceneRect())
 
     def mousePressEvent(self, event):
         QGraphicsView.mousePressEvent(self, event)
+        self.dragPos = event.pos()
 
+    def getSceneViewRect(self):
+        tl = self.mapToScene(self.rect().topLeft())
+        br = self.mapToScene(self.rect().bottomRight())
+        return QRectF(tl, br)
 
-class NodeBrowser(QToolBox):
-    def __init__(self, graph):
-        QToolBox.__init__(self)
-        self.resize(50, 50)
-        self.groups = {}
-        self.graph = graph
+    def mouseMoveEvent(self, event):
+        #handle dragging manually
+        if (event.buttons() & Qt.MiddleButton
+                or (event.modifiers() & Qt.AltModifier 
+                    and event.buttons() & Qt.LeftButton)):
 
-    def sizeHint(self):
-        return QSize(50, 50)
+            self.setCursor(Qt.ClosedHandCursor)
 
-    def insertGroup(self, cats):
-        if ".".join(cats) in self.groups:
-            return
-        
-        catname = []
-        currbox = self
+            distance = event.pos() - self.dragPos
+            rect = self.getSceneViewRect()
 
-        for c in cats:
-            catname.append(c)
-            if ".".join(catname) in self.groups:
-                return
-            currwidget = QWidget()
-            currwidget.setLayout(QFormLayout())
-            currbox.addItem(currwidget, c)
-            self.groups[".".join(catname)] = currwidget
-            if ".".join(catname) != ".".join(cats):
-                box = QToolBox()
-                currbox = box
-                currwidget.layout().addWidget(box)
+            rect.translate(-distance.x(), -distance.y())
 
-    def initList(self):
-        nodeTypes = MT.getRegisteredNodes()
-        for nt in nodeTypes:
-            cats = nt.split(".")
-            if len(cats) > 1:
-                button = QPushButton(cats[-1])
-                self.insertGroup(cats[:-1])
-                self.groups[".".join(cats[:-1])].layout().addWidget(button)
-                button.clicked.connect(self.createNode(nt))
-            else:
-                print("specify a category for: " + nt)
+            self.centerOn(rect.center())
+            self.dragPos = event.pos()
+        else: 
+            QGraphicsView.mouseMoveEvent(self, event)
 
-    def createNode(self, nodeType):
-        def nodeSlot():
-            node = MT.createNode(nodeType)
-            self.graph.space.addNode(node)
-        return nodeSlot
+    def mouseReleaseEvent(self, event):
+        QGraphicsView.mouseReleaseEvent(self, event)
+        self.setCursor(Qt.ArrowCursor)
+        self.drag = False
 
 
 class NodeGraphWidget(QWidget):

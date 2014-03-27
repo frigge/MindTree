@@ -6,8 +6,17 @@ class NodeDesigner:
     @staticmethod
     def paint_outsocket(socket, painter):
         painter.setBrush(socket.color)
-        painter.setPen(Qt.NoPen)
-        painter.drawRoundedRect(0, 0, socket.width, socket.height, 2, 2)
+
+        if socket.hover:
+            pen = QPen()
+            pen.setStyle(Qt.SolidLine)
+            pen.setWidth(3)
+            pen.setColor(QColor(200, 255, 200, 255))
+            painter.setPen(pen)
+        else:
+            painter.setPen(Qt.NoPen)
+
+        painter.drawEllipse(0, 0, socket.width, socket.height)
 
 
 class NodeLink(QGraphicsItem):
@@ -109,7 +118,7 @@ class NodeName(QGraphicsTextItem):
             self.parentItem().data.name = text
         else:
             self.setPlainText(sef.parentItem().data.name)
-        
+
         self.setTextInteractionFlags(Qt.NoTextInteraction)
         self.textCursor().clearSelection()
 
@@ -119,13 +128,15 @@ class NodeOutSocket(QGraphicsItem):
         QGraphicsItem.__init__(self, parent)
         self.setFlag(QGraphicsItem.ItemIsMovable, False)
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
-        self.width = 40
+        self.width = 15
         self.height = 15
-        self.setPos(parent.width - self.width + 5, parent.height - self.height/2)
+        self.setPos((parent.width - self.width) / 2, parent.height + 5)
         self.out_color = QColor(140, 140, 140)
         self.over_color = QColor(200, 200, 200)
         self.color = self.out_color
         self.setAcceptHoverEvents(True)
+
+        self.hover = False
 
     def paint(self, painter, option, widget):
         painter.setRenderHint(QPainter.Antialiasing)
@@ -137,15 +148,18 @@ class NodeOutSocket(QGraphicsItem):
     def hoverEnterEvent(self, event):
         self.color = self.over_color
         QGraphicsItem.hoverEnterEvent(self, event)
+        self.hover = True
 
     def hoverLeaveEvent(self, event):
         self.color = self.out_color
         QGraphicsItem.hoverLeaveEvent(self, event)
+        self.hover = False
 
     def mousePressEvent(self, event):
-        if event.button() != Qt.LeftButton: 
+        if event.button() != Qt.LeftButton:
             QGraphicsItem.mousePressEvent(self, event)
             return
+
         self.dragStartPos = event.screenPos()
         self.scene().showTmpLink(self)
         if len(self.parentItem().data.outsockets) > 1:
@@ -167,7 +181,7 @@ class NodeOutSocket(QGraphicsItem):
 
         drag = QDrag(event.widget())
         drag.setMimeData(QMimeData())
-        drag.exec_() 
+        drag.exec_()
 
 class NodeOptionsButton(QGraphicsItem):
     def __init__(self, node):
@@ -190,9 +204,9 @@ class NodeOptionsButton(QGraphicsItem):
                 for i, viewer in enumerate(viewers[s.type]):
                     def showViewer(i):
                         def _():
-                            MT.gui.showViewer(s, i) 
+                            MT.gui.showViewer(s, i)
                         return _
-                    act = self.menu.addAction(viewer)        
+                    act = self.menu.addAction(viewer)
                     act.triggered.connect(showViewer(i))
 
     def mousePressEvent(self, event):
@@ -224,33 +238,38 @@ class NodeItem(QGraphicsItem):
     def __init__(self, data, parent=None):
         QGraphicsItem.__init__(self, parent)
         self.data = data
-        self.setPos(0, 0)
 
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemIsFocusable, True)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+
         self.setAcceptHoverEvents(True)
         self.setAcceptsHoverEvents(True)
         self.setAcceptDrops(True)
 
-        x = self.pos().x()
-        y = self.pos().y()
         self.name = NodeName(self)
-        print("creating node at ({0}, {1})".format(x, y))
 
         self.width = 60
         self.height = 25
         self.out = NodeOutSocket(self)
         self.nodeOptions = NodeOptionsButton(self)
+        self.posCB = MT.attachToBoundSignal(data, "nodePositionChanged", self.updatePositionFromData)
 
     def __del__(self):
         print("deleting node vis")
 
+    def updatePositionFromData(self):
+        if (self.pos().x(), self.pos().y()) != self.data.pos:
+            self.setPos(*self.data.pos)
+
     def itemChange(self, change, value):
         if change == self.ItemSelectedChange:
-            print("selection has changed", self.data.name, bool(value))
             self.data.selected = bool(value)
+            if self.data.pos != (self.pos().x(), self.pos().y()):
+                self.data.pos = (self.pos().x(), self.pos().y())
+
         return QGraphicsItem.itemChange(self, change, value)
 
     def showOptionsButton(self):
@@ -271,16 +290,16 @@ class NodeItem(QGraphicsItem):
         painter.setRenderHint(QPainter.Antialiasing)
         outline = QPen()
         if self.isSelected():
-            outline.setColor(QColor(150, 145, 0, 200))
-            outline.setWidth(2)
+            outline.setColor(QColor(180, 120, 50, 255))
+            outline.setWidth(3)
         else:
-            outline.setColor(QColor(150, 150, 150, 255))
+            outline.setColor(QColor(50, 50, 50, 255))
             outline.setWidth(1)
 
         brush = QBrush(QColor(50, 50, 50, 255), Qt.SolidPattern)
         painter.setPen(outline)
         painter.setBrush(brush)
-        painter.drawRoundedRect(0, 0, self.width, self.height, 3, 3)
+        painter.drawRoundedRect(0, 0, self.width, self.height, 1, 1)
 
     def boundingRect(self):
         return QRectF(0, 0, self.width, self.height)
