@@ -69,27 +69,24 @@ MathNode::MathNode(NodeType t, bool raw)
 
     if(!raw)
     {
-        setDynamicSocketsNode(IN);
-        DoutSocket *out = new DoutSocket("Result", VARIABLE, this);
-        DinSocket *in = getInSockets().first();
+        setDynamicSocketsNode(DSocket::IN);
+        new DoutSocket("Result", "VARIABLE", this);
     }
 }
 
 MathNode::MathNode(const MathNode &node)
     : DNode(node)
 {
-    DoutSocket *out = getOutSockets().first();
-    DinSocket *in = getInSockets().first();
 }
 
 void MathNode::dec_var_socket(DSocket *socket)
 {
     DNode::dec_var_socket(socket);
-    DoutSocket *outsocket = getOutSockets().first();
+    DoutSocket *outsocket = getOutSockets().at(0);
     if(getVarcnt() == 0)
     {
-        outsocket->setType(VARIABLE);
-        getVarSocket()->setType(VARIABLE);
+        outsocket->setType("VARIABLE");
+        getVarSocket()->setType("VARIABLE");
     }
 }
 
