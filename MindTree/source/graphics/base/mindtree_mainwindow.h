@@ -28,8 +28,6 @@
 #include "data/project.h"
 #include "data/windowfactory.h"
 /*Forward declarations*/
-class Shader_View;
-class DShaderPreview;
 
 class SettingsDialog : public QDialog
 {
@@ -62,20 +60,8 @@ public slots:
     void registerWindow(MindTree::WindowFactory *factory);
     void openSettings();
 
-    void buildContainer();
-    void unpackContainer();
-    void removeNodes();
-
-    void redo();
-    void undo();
-
-    void toggleNodeLib();
-    void toggleNodeEditor();
-
     //void createPreviewDock(DShaderPreview *prev);
 
-    void addTextDock();
-    void addImageDock();
     static QWidget* addConsole();
 
     void setupStyle();
@@ -96,7 +82,6 @@ private:
     QString stylePath;
 
     static bool pickWidget, mouseNodeGraphPos;
-    Shader_View *view;
     void change_window_title(QString);
     QDockWidget *nodelib, *nodeeditor, *propeditor, *detailsview, *spaceDock;
     QHash<QString, QMenu*> menus;

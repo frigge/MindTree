@@ -103,7 +103,6 @@ frg_Shader_Author::frg_Shader_Author(QWidget *parent)
 
     statusBar()->showMessage("Welcome to MindTree");
 
-    initDefaultProperties();
     setupStyle();
 
 #ifdef QT_DEBUG
@@ -114,7 +113,7 @@ frg_Shader_Author::frg_Shader_Author(QWidget *parent)
     std::cout<<"I'm in debug mode so i'm gonna read the styles in realtime"<<std::endl;
 #endif
 
-    MindTree::Signal::getHandler<QString>().add("filename_changed",[this](QString title){
+    MindTree::Signal::getHandler<QString>().connect("filename_changed",[this](QString title){
         this->change_window_title(title); 
     }).detach();
 };
@@ -190,17 +189,6 @@ void frg_Shader_Author::togglePickWidget()
     if(pickWidget) mouseNodeGraphPos = false;
 }
 
-void frg_Shader_Author::toggleMouseNodeGraphPos()    
-{
-    mouseNodeGraphPos = !mouseNodeGraphPos;
-    if(mouseNodeGraphPos ) pickWidget = false;
-}
-
-bool frg_Shader_Author::isMouseNodeGraphPos()    
-{
-   return mouseNodeGraphPos; 
-}
-
 void frg_Shader_Author::setupStyle()    
 {
 #ifdef QT_DEBUG
@@ -213,115 +201,6 @@ void frg_Shader_Author::setupStyle()
     QString style(str.readAll());
     qApp->setStyleSheet(style);
 }
-
-void frg_Shader_Author::initDefaultProperties()    
-{
-}
-
-
-void frg_Shader_Author::createSpaceDock()    
-{
-}
-
-void frg_Shader_Author::createDocks()    
-{
-    //TODO: change into a dialog
-    //nodeeditor = new QDockWidget("Node Editor");
-    //nodeeditor->setWidget(new NewNodeEditor);
-    //addDockWidget(Qt::TopDockWidgetArea, nodeeditor);    
-    //nodeeditor->hide();
-
-    //nodelib = new NodeLibDock(this);
-
-    //propeditor = new QDockWidget("Properties Editor");
-    //propeditor->setWidget(new PropertiesEditor(this));
-    //addDockWidget(Qt::LeftDockWidgetArea, propeditor);
-
-    //detailsview = new QDockWidget("Details View");
-    //detailsview->setWidget(new DetailsView(this));
-    //addDockWidget(Qt::RightDockWidgetArea, detailsview);
-    //tabifyDockWidget(detailsview, spaceDock);
-}
-
-//void frg_Shader_Author::createPreviewDock(DShaderPreview *prev)    
-//{
-//    PreviewDock *prevDock = new PreviewDock(prev);
-//    addDockWidget(Qt::RightDockWidgetArea, prevDock);
-//}
-
-void frg_Shader_Author::createMenus()
-{
-    //QMenu *fileMenu = new QMenu("&File");
-    //QAction *newAction = fileMenu->addAction("&New");
-    //newAction->setShortcuts(QKeySequence::New);
-    //QAction *openAction = fileMenu->addAction("&Open");
-    //openAction->setShortcuts(QKeySequence::Open);
-    //QAction *saveAction = fileMenu->addAction("&Save");
-    //saveAction->setShortcuts(QKeySequence::Save);
-    //QAction *saveAsAction = fileMenu->addAction("Save &As");
-    //saveAsAction->setShortcuts(QKeySequence::SaveAs);
-    //QAction *quitAction = fileMenu->addAction("&Quit");
-    //quitAction->setShortcuts(QKeySequence::Quit);
-
-    //QMenu *editMenu = new QMenu("&Edit");
-    //QAction *undoAction = editMenu->addAction("&Undo");
-    //undoAction->setShortcuts(QKeySequence::Undo);
-    //QAction *redoAction = editMenu->addAction("&Redo");
-    //redoAction->setShortcuts(QKeySequence::Redo);
-    //QAction *deleteAction = editMenu->addAction("&Delete");
-    //deleteAction->setShortcuts(QKeySequence::Delete);
-    //QAction *copyAction = editMenu->addAction("&Copy");
-    //copyAction->setShortcuts(QKeySequence::Copy);
-    //QAction *cutAction = editMenu->addAction("C&ut");
-    //cutAction->setShortcuts(QKeySequence::Cut);
-    //QAction *pasteAction = editMenu->addAction("&Paste");
-    //pasteAction->setShortcuts(QKeySequence::Paste);
-    //QAction *settingsAction = editMenu->addAction("&Settings...");
-
-    //QMenu *nodeMenu = new QMenu("&Nodes");
-    ////nodeMenu->setTearOffEnabled(true);
-    //QAction *infoBoxAction = nodeMenu->addAction("&Info Box");
-    //QAction *containerAction = nodeMenu->addAction("&Build Container");
-    //containerAction->setShortcut(QString("c"));
-    //QAction *unpackAction = nodeMenu->addAction("&Unpack Container");
-    //unpackAction->setShortcut(QString("Alt+c"));
-    //QAction *nodeEditorAction = nodeMenu->addAction("&New Node");
-    //nodeEditorAction->setShortcut(QString("n"));
-    //nodeEditorAction->setCheckable(true);
-    //QAction *nodeLibAction = nodeMenu->addAction("&Node Library");
-    //nodeLibAction->setCheckable(true);
-    //nodeLibAction->setChecked(true);
-    //nodeLibAction->setShortcut(QString("l"));
-
-    //QMenu *previewMenu = new QMenu("&Preview");
-    //QAction *editprevAction = previewMenu->addAction("&Edit Previews");
-    //connect(editprevAction, SIGNAL(triggered()), this, SLOT(openPreviewEditor()));
-
-
-    //connect(saveAction, SIGNAL(triggered()), this, SLOT(save()));
-    //connect(saveAsAction, SIGNAL(triggered()), this, SLOT(saveAs()));
-    //connect(openAction, SIGNAL(triggered()), this, SLOT(open()));
-    //connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
-
-    //connect(undoAction, SIGNAL(triggered()), this, SLOT(undo()));
-    //connect(redoAction, SIGNAL(triggered()), this, SLOT(redo()));
-    //connect(deleteAction, SIGNAL(triggered()), this, SLOT(removeNodes()));
-    //connect(copyAction, SIGNAL(triggered()), FRG::Space, SLOT(copy()));
-    //connect(cutAction, SIGNAL(triggered()), FRG::Space, SLOT(cut()));
-    //connect(pasteAction, SIGNAL(triggered()), FRG::Space, SLOT(paste()));
-    //connect(settingsAction, SIGNAL(triggered()), this, SLOT(openSettings()));
-
-    //connect(infoBoxAction, SIGNAL(triggered()), this, SLOT(addInfoBox()));
-    //connect(containerAction, SIGNAL(triggered()), this, SLOT(buildContainer()));
-    //connect(unpackAction, SIGNAL(triggered()), this, SLOT(unpackContainer()));
-    //connect(nodeEditorAction, SIGNAL(triggered()), this, SLOT(toggleNodeEditor()));
-    //connect(nodeLibAction, SIGNAL(triggered()), this, SLOT(toggleNodeLib()));
-
-    //registerMenu(fileMenu);
-    //registerMenu(editMenu);
-    //registerMenu(nodeMenu);
-    //registerMenu(previewMenu);
-};
 
 void frg_Shader_Author::openSettings()    
 {
@@ -339,48 +218,6 @@ QWidget* frg_Shader_Author::addConsole()
     //ConsoleDialog *console = new ConsoleDialog(this);
 }
 
-void frg_Shader_Author::addTextDock()    
-{
-    //new SourceDock();
-}
-
-void frg_Shader_Author::addImageDock()    
-{
-}
-
-void frg_Shader_Author::toggleNodeLib()    
-{
-    if(nodelib->isVisible())
-        nodelib->hide();
-    else
-        nodelib->show();
-}
-
-void frg_Shader_Author::toggleNodeEditor()    
-{
-    //if(nodeeditor->isVisible())
-    //    nodeeditor->hide();
-    //else
-    //    nodeeditor->show();
-}
-
-void frg_Shader_Author::removeNodes()    
-{
-    //NodeList nodes = FRG::Space->selectedNodes();
-    //FRG::SpaceDataInFocus->registerUndoRedoObject(new UndoRemoveNode(nodes));
-    //FRG::Space->removeNode(nodes);
-}
-
-void frg_Shader_Author::buildContainer()    
-{
-    //FRG::Space->buildContainer();
-}
-
-void frg_Shader_Author::unpackContainer()    
-{
-    //FRG::Space->unpackContainer(); 
-}
-
 void frg_Shader_Author::change_window_title(QString title)
 {
     QString newtitle("MindTree");
@@ -388,14 +225,3 @@ void frg_Shader_Author::change_window_title(QString title)
     newtitle.append(title);
     setWindowTitle(newtitle);
 }
-
-void frg_Shader_Author::undo()    
-{
-    //FRG::SpaceDataInFocus->undo();
-}
-
-void frg_Shader_Author::redo()    
-{
-    //FRG::SpaceDataInFocus->redo();
-}
-
