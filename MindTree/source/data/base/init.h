@@ -7,7 +7,6 @@ namespace MindTree
     void initApp(int argc, char *argv[]);
     void finalizeApp();
     void initGui();
-    void initDefaultProperties();
     void parseArguments(int argc, char* argv[]);
 
     void runTests(std::vector<std::string> testlist);

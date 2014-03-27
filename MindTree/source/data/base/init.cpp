@@ -12,20 +12,9 @@ void MindTree::initApp(int argc, char *argv[])
 {
     MindTree::Project::create();
     MindTree::Python::init(argc, argv);
-    MindTree::initDefaultProperties();
     MindTree::Python::loadIntern();
     MindTree::Python::loadPlugins();
     MindTree::parseArguments(argc, argv);
-}
-
-void MindTree::initDefaultProperties()    
-{
-    MindTree::PropertyData<QString>::registerType("STRING");
-    MindTree::PropertyData<std::string>::registerType("STRING");
-    MindTree::PropertyData<int>::registerType("INTEGER");
-    MindTree::PropertyData<float>::registerType("FLOAT");
-    MindTree::PropertyData<double>::registerType("FLOAT");
-    MindTree::PropertyData<Vec3d>::registerType("VEC3D");
 }
 
 void MindTree::initGui()
