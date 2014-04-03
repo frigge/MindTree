@@ -25,6 +25,7 @@
 #include "data/datatypes.h"
 
 #include "data/signal.h"
+#include "data/mtobject.h"
 
 #include "functional"
 #include "memory"
@@ -63,7 +64,7 @@ typedef std::vector<DNode*> NodeList;
 typedef std::vector<const DNode*> ConstNodeList;
 
 
-class DNode : public PyExposable
+class DNode : public Object, public PyExposable
 {
 public:
     DNode(std::string name="");
@@ -136,13 +137,6 @@ public:
     DNode *createFuncNode(std::string filepath);
     static DNode *dropNode(std::string filepath);
 
-    Property getProperty(std::string name);
-    const Property getProperty(std::string name)const;
-    PropertyMap getProperties()const;
-    void setProperty(Property value, std::string name);
-    Property operator[](std::string name);
-    void rmProperty(std::string name);
-
 private:
     static std::vector<std::function<DNode_ptr()>> newNodeFactory;
 
@@ -160,7 +154,6 @@ private:
     mutable DSocketList inSockets;
     NodeType type;
     Vec2i pos;
-    mutable PropertyMap properties;
 
     Signal::LiveTimeTracker *_signalLiveTime;
 };

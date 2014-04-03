@@ -6,6 +6,6 @@
 
 namespace prim3d
 {
-    std::shared_ptr<Object> createCube(float scale);
+    std::shared_ptr<GeoObject> createCube(float scale);
 };
 #endif

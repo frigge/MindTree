@@ -85,14 +85,11 @@ DNode::DNode(const DNode& node)
       selected(false),
       varcnt(0),
       ID(count++),
-      nodeName(node.getNodeName()),
+      nodeName(FRG::CurrentProject->registerItem(this, node.getNodeName())),
       type(node.getType()),
       blockCBregister(false),
       _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
-    for(auto prop : node.getProperties())
-        properties[prop.first] = prop.second;
-
     for(DinSocket *socket : node.getInSockets())
         new DinSocket(*socket, this);
     for(DoutSocket *socket : node.getOutSockets())
@@ -112,6 +109,8 @@ DNode::~DNode()
         delete socket;
 
     if(space)space->unregisterNode(this);
+
+    FRG::CurrentProject->unregisterItem(this);
 }
 
 bool DNode::getSelected()
@@ -123,42 +122,6 @@ void DNode::setSelected(bool value)
 {
     MT_CUSTOM_SIGNAL_EMITTER("selectionChanged", this);
     selected = value;
-}
-
-const Property DNode::getProperty(std::string name)const
-{
-    const auto prop = properties[name];
-    return prop;
-}
-
-Property DNode::getProperty(std::string name)
-{
-    return properties[name];
-}
-
-PropertyMap DNode::getProperties()   const 
-{
-    return properties;
-}
-
-Property DNode::operator[](std::string name)
-{
-    return properties[name];
-}
-
-void DNode::setProperty(Property value, std::string name)
-{
-    auto prop = properties.find(name);
-    if(prop != properties.end()) {
-        properties.erase(name);
-    }
-
-    properties[name] = value;
-}
-
-void DNode::rmProperty(std::string name)    
-{
-    properties.erase(name);
 }
 
 Vec2i DNode::getPos()const

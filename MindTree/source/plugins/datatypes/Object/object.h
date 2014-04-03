@@ -22,6 +22,7 @@
 
 #include "data/nodes/data_node.h"
 #include "data/cache_main.h"
+#include "data/mtobject.h"
 //#include "source/data/code_generator/glslwriter.h"
 #include "glm/glm.hpp"
 #include "QMatrix4x4"
@@ -56,7 +57,7 @@ typedef std::vector<Polygon> PolygonList;
 
 class MeshData;
 class AbstractTransformableNode;
-class AbstractTransformable : public std::enable_shared_from_this<AbstractTransformable>
+class AbstractTransformable : public MindTree::Object, public std::enable_shared_from_this<AbstractTransformable>
 {
 public:
     enum eObjType {
@@ -100,7 +101,7 @@ private:
     std::string name;
 };
 
-class ObjectData : public MindTree::PyExposable
+class ObjectData : public MindTree::Object, public MindTree::PyExposable
 {
 public:
     enum eDataType {
@@ -122,60 +123,33 @@ public:
     virtual ~MeshData();
     std::string getName();
 
-    void addProperty(std::string name, MindTree::Property prop);
-    template<typename T>
-    T getProperty(std::string name) {
-        try {
-            return properties.at(name).getData<T>();
-        } catch (const std::out_of_range &e){
-            std::cout << "no Property of name "<< name << " stored" << std::endl;
-            return T();
-        }
-    }
-
-    MindTree::PropertyMap& getPropertyMap();
-
     void computeFaceNormals();
     void computeVertexNormals();
     const MindTree::DNode* getNode();
 
 private:
-    MindTree::PropertyMap properties;
     std::string name;
 };
 
-class Object : public AbstractTransformable, public MindTree::PyExposable
+class GeoObject : public AbstractTransformable, public MindTree::PyExposable
 {
 public:
-    Object();
-    ~Object();
-    void makeInstance(std::shared_ptr<Object> obj);
+    GeoObject();
+    ~GeoObject();
+    void makeInstance(std::shared_ptr<GeoObject> obj);
     std::shared_ptr<ObjectData> getData();
     void setData(std::shared_ptr<ObjectData> value);
-    void addProperty(std::string name, MindTree::Property prop);
-    template<typename T>
-    T getProperty(std::string name) {
-        try {
-            return properties.at(name).getData<T>();
-        } catch (const std::out_of_range &e){
-            std::cout << "no Property of name "<< name << " stored" << std::endl;
-            return T();
-        }
-    }
-
-    const MindTree::PropertyMap& getPropertyMap();
 
 private:
     std::shared_ptr<ObjectData> data;
-    MindTree::PropertyMap properties;
 };
 
 class CreateGroupNode;
 class Camera;
-class Object;
+class GeoObject;
 class Light;
 
-class Group : public MindTree::PyExposable
+class Group : public MindTree::Object, public MindTree::PyExposable
 {
 public:
     Group();
@@ -185,7 +159,7 @@ public:
     std::list<std::shared_ptr<AbstractTransformable>> getMembers()const;
     void addMembers(std::list<std::shared_ptr<AbstractTransformable>> list);
     std::list<std::shared_ptr<Camera>> getCameras();
-    std::list<std::shared_ptr<Object>> getGeometry();
+    std::list<std::shared_ptr<GeoObject>> getGeometry();
     std::list<std::shared_ptr<Light>> getLights();
 
 private:
@@ -228,14 +202,14 @@ public:
     const MindTree::DNode* getNode();
     std::list<Camera*> getCameras();
     std::list<Light*> getLights();
-    std::list<Object*> getObjects();
-    void setObjects(std::list<Object*> objs);
+    std::list<GeoObject*> getObjects();
+    void setObjects(std::list<GeoObject*> objs);
     void setLights(std::list<Light*> lights);
     void setCameras(std::list<Camera*> cams);
 
 private:
     std::string name;
-    std::list<Object*> objects;
+    std::list<GeoObject*> objects;
     std::list<Light*>lights;
     std::list<Camera*>cameras;
 };

@@ -7,6 +7,7 @@ set(LIB_SRC
     data/frg.cpp
     #data/nodes/buildin_nodes.cpp
     data/nodes/data_node.cpp
+    data/mtobject.cpp
     data/nodes/data_node_socket.cpp
     data/nodes/node_db.cpp
     data/nodes/nodetype.cpp
@@ -34,6 +35,7 @@ set(LIB_HEAD
     data/frg.h
     #data/nodes/buildin_nodes.h
     data/nodes/data_node.h
+    data/mtobject.h
     data/nodes/data_node_socket.h
     data/nodes/node_db.h
     data/nodes/nodetype.h

@@ -40,7 +40,7 @@ ObjImporter::~ObjImporter()
 
 void ObjImporter::readData(QTextStream &stream)    
 {
-    std::shared_ptr<Object> obj;
+    std::shared_ptr<GeoObject> obj;
 
     while(!stream.atEnd()) {
         QString line = stream.readLine();
@@ -58,22 +58,22 @@ void ObjImporter::readData(QTextStream &stream)
     std::static_pointer_cast<MeshData>(obj->getData())->computeVertexNormals();
 }
 
-std::shared_ptr<Object> ObjImporter::addObject(QString line)    
+std::shared_ptr<GeoObject> ObjImporter::addObject(QString line)    
 {
-    auto obj = std::make_shared<Object>();
+    auto obj = std::make_shared<GeoObject>();
     if(!grp) grp = std::make_shared<Group>();
     grp->addMember(obj);
     QStringList l = line.split(" ");
     l.takeFirst();
     obj->setName(l[0].toStdString());
     auto mesh = std::make_shared<MeshData>();
-    mesh->addProperty("P", std::make_shared<VertexList>());
-    mesh->addProperty("polygon", std::make_shared<PolygonList>());
+    mesh->setProperty("P", std::make_shared<VertexList>());
+    mesh->setProperty("polygon", std::make_shared<PolygonList>());
     obj->setData(mesh);
     return obj;
 }
 
-void ObjImporter::addVertex(QString line, std::shared_ptr<Object> obj)
+void ObjImporter::addVertex(QString line, std::shared_ptr<GeoObject> obj)
 {
     QStringList l = line.split(" ");
     double d[3];
@@ -84,10 +84,12 @@ void ObjImporter::addVertex(QString line, std::shared_ptr<Object> obj)
         ++i;
     }
     std::static_pointer_cast<MeshData>(obj->getData())
-        ->getProperty<std::shared_ptr<VertexList>>("P")->push_back(glm::vec3(d[0], d[1], d[2]));
+        ->getProperty("P")
+        .getData<std::shared_ptr<VertexList>>()
+        ->push_back(glm::vec3(d[0], d[1], d[2]));
 }
 
-void ObjImporter::addFace(QString line, std::shared_ptr<Object> obj)    
+void ObjImporter::addFace(QString line, std::shared_ptr<GeoObject> obj)    
 {
     QStringList l = line.split(" ");
     std::vector<uint> p;
@@ -99,10 +101,12 @@ void ObjImporter::addFace(QString line, std::shared_ptr<Object> obj)
     Polygon poly;
     poly.set(p);
     std::static_pointer_cast<MeshData>(obj->getData())
-        ->getProperty<std::shared_ptr<PolygonList>>("polygon")->push_back(poly);
+        ->getProperty("polygon")
+        .getData<std::shared_ptr<PolygonList>>()
+        ->push_back(poly);
 }
 
-void ObjImporter::addUV(QString line, std::shared_ptr<Object> obj)    
+void ObjImporter::addUV(QString line, std::shared_ptr<GeoObject> obj)    
 {
 }
 

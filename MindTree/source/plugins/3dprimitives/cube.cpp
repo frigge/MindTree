@@ -2,9 +2,9 @@
 
 using namespace glm;
 
-std::shared_ptr<Object> prim3d::createCube(float scale)
+std::shared_ptr<GeoObject> prim3d::createCube(float scale)
 {
-    auto obj = std::make_shared<Object>();
+    auto obj = std::make_shared<GeoObject>();
     auto mesh = std::make_shared<MeshData>();
     obj->setData(mesh);
 
@@ -36,8 +36,8 @@ std::shared_ptr<Object> prim3d::createCube(float scale)
     });
 
 
-    mesh->addProperty("P", vertices);
-    mesh->addProperty("polygon", polygons);
+    mesh->setProperty("P", vertices);
+    mesh->setProperty("polygon", polygons);
     mesh->computeVertexNormals();
 
     return obj;

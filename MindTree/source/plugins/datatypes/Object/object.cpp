@@ -26,7 +26,6 @@
 #include "data/nodes/node_db.h"
 #include "data/nodes/nodetype.h"
 #include "glm/gtc/matrix_transform.hpp"
-//#include "source/data/base/properties.h"
 //#include "graphics/object_node_vis.h"
 
 using namespace MindTree;
@@ -205,16 +204,6 @@ MeshData::~MeshData()
 {
 }
 
-void MeshData::addProperty(std::string name, MindTree::Property prop)    
-{
-    properties[name] = prop; 
-}
-
-MindTree::PropertyMap& MeshData::getPropertyMap()    
-{
-    return properties;
-}
-
 std::string MeshData::getName()    
 {
     return name;
@@ -223,8 +212,8 @@ std::string MeshData::getName()
 void MeshData::computeFaceNormals()    
 {
     auto facenormals = std::make_shared<VertexList>();
-    auto polygons = getProperty<std::shared_ptr<PolygonList>>("polygon");
-    auto vertices = getProperty<std::shared_ptr<VertexList>>("P");
+    auto polygons = getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
+    auto vertices = getProperty("P").getData<std::shared_ptr<VertexList>>();
 
     for(const auto &poly : *polygons) {
         glm::vec3 normal;
@@ -254,16 +243,16 @@ void MeshData::computeFaceNormals()
 
         facenormals->push_back(normal);
     }
-    addProperty("poly_normal", facenormals);
+    setProperty("poly_normal", facenormals);
 }
 
 void MeshData::computeVertexNormals()    
 {
     computeFaceNormals();
     auto vertexnormals = std::make_shared<VertexList>();
-    auto verts = getProperty<std::shared_ptr<VertexList>>("P");
-    auto polygons = getProperty<std::shared_ptr<PolygonList>>("polygon");
-    auto facenormals = getProperty<std::shared_ptr<VertexList>>("poly_normal");
+    auto verts = getProperty("P").getData<std::shared_ptr<VertexList>>();
+    auto polygons = getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
+    auto facenormals = getProperty("poly_normal").getData<std::shared_ptr<VertexList>>();
     //loop through all vertices by index
     for(size_t i = 0; i < verts->size(); i++) {
         glm::vec3 normal;
@@ -287,39 +276,29 @@ void MeshData::computeVertexNormals()
         else
             vertexnormals->push_back(glm::vec3(1, 0, 0));
     }
-    addProperty("N", vertexnormals);
+    setProperty("N", vertexnormals);
 }
 
-Object::Object()
+GeoObject::GeoObject()
     : AbstractTransformable(GEO)
 {
 }
 
-Object::~Object()
+GeoObject::~GeoObject()
 {
 }
 
-void Object::addProperty(std::string name, MindTree::Property prop)    
-{
-    properties[name] = prop; 
-}
-
-const MindTree::PropertyMap& Object::getPropertyMap()    
-{
-    return properties; 
-}
-
-std::shared_ptr<ObjectData> Object::getData()
+std::shared_ptr<ObjectData> GeoObject::getData()
 {
     return data;
 }
 
-void Object::setData(std::shared_ptr<ObjectData> value)
+void GeoObject::setData(std::shared_ptr<ObjectData> value)
 {
     data = value;
 }
 
-void Object::makeInstance(std::shared_ptr<Object> obj)
+void GeoObject::makeInstance(std::shared_ptr<GeoObject> obj)
 {
 }
 
@@ -351,12 +330,12 @@ std::list<std::shared_ptr<AbstractTransformable>> Group::getMembers()    const
     return members;
 }
 
-std::list<std::shared_ptr<Object>> Group::getGeometry()
+std::list<std::shared_ptr<GeoObject>> Group::getGeometry()
 {
-    std::list<std::shared_ptr<Object>> objs;
+    std::list<std::shared_ptr<GeoObject>> objs;
     for(auto &obj : members)
         if(obj->getType() == AbstractTransformable::GEO)
-            objs.push_back(std::static_pointer_cast<Object>(obj));
+            objs.push_back(std::static_pointer_cast<GeoObject>(obj));
     return objs;
 }
 
@@ -433,12 +412,12 @@ void Scene::setName(std::string n)
     name = n;
 }
 
-std::list<Object*> Scene::getObjects()    
+std::list<GeoObject*> Scene::getObjects()    
 {
     return objects;
 }
 
-void Scene::setObjects(std::list<Object*> objs)    
+void Scene::setObjects(std::list<GeoObject*> objs)    
 {
     objects = objs;
 }
@@ -644,7 +623,7 @@ void AbstractTransformableNode::setNodeName(std::string name)
 ObjectNode::ObjectNode(bool raw)
     : AbstractTransformableNode("Object", raw)
 {
-    setObject(std::make_shared<Object>());
+    setObject(std::make_shared<GeoObject>());
     setNodeType(NodeType("OBJECT"));
     if(!raw){
         setDynamicSocketsNode(DSocket::IN);

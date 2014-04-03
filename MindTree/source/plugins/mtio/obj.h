@@ -37,10 +37,10 @@ public:
 
 private:
     void readData(QTextStream &stream);
-    std::shared_ptr<Object> addObject(QString line);
-    void addVertex(QString line, std::shared_ptr<Object> obj);
-    void addFace(QString line, std::shared_ptr<Object> obj);
-    void addUV(QString line, std::shared_ptr<Object> obj);
+    std::shared_ptr<GeoObject> addObject(QString line);
+    void addVertex(QString line, std::shared_ptr<GeoObject> obj);
+    void addFace(QString line, std::shared_ptr<GeoObject> obj);
+    void addUV(QString line, std::shared_ptr<GeoObject> obj);
 
     std::shared_ptr<Group> grp;
     QString name;

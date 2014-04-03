@@ -26,15 +26,15 @@ BOOST_PYTHON_MODULE(prim3d)
         double vnSize = cache->getData(9).getData<double>();
 
         auto cube = prim3d::createCube(scale);
-        cube->addProperty("display.pointColor", pointColor);
-        cube->addProperty("display.pointSize", pointSize);
-        cube->addProperty("display.edgeColor", edgeColor);
-        cube->addProperty("display.polyColor", polyColor);
-        cube->addProperty("display.drawVertexNormal", drawVertexNormal);
-        cube->addProperty("display.drawPolyNormal", drawPolyNormal);
-        cube->addProperty("display.vertexNormalWidth", vertexNormalWidth);
-        cube->addProperty("display.vertexNormalColor", vertexNormalColor);
-        cube->addProperty("display.vertexNormalSize", vnSize);
+        cube->setProperty("display.pointColor", pointColor);
+        cube->setProperty("display.pointSize", pointSize);
+        cube->setProperty("display.edgeColor", edgeColor);
+        cube->setProperty("display.polyColor", polyColor);
+        cube->setProperty("display.drawVertexNormal", drawVertexNormal);
+        cube->setProperty("display.drawPolyNormal", drawPolyNormal);
+        cube->setProperty("display.vertexNormalWidth", vertexNormalWidth);
+        cube->setProperty("display.vertexNormalColor", vertexNormalColor);
+        cube->setProperty("display.vertexNormalSize", vnSize);
 
         grp->addMember(cube);
         cache->pushData(grp);
