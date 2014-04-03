@@ -418,7 +418,7 @@ void DNodePyWrapper::setattr(BPy::object self, BPy::object name, BPy::object val
     if(!node->alive())return;
     std::string n = BPy::extract<std::string>(name);
     auto prop = Property::createPropertyFromPython(value);
-    node->getWrapped<DNode>()->setProperty(prop, n);
+    node->getWrapped<DNode>()->setProperty(n, prop);
 }
 
 BPy::object DNodePyWrapper::getattr(BPy::object self, std::string key)    
