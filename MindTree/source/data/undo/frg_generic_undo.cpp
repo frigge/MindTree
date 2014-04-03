@@ -34,7 +34,7 @@ void FRGStack::clear()
 
 FRGUndoRedoObjectBase* FRGStack::popItem()    
 {
-    if(items.empty())return NULL;
+    if(items.empty())return nullptr;
     FRGUndoRedoObjectBase *item = items.top();
     items.pop();
     return item;

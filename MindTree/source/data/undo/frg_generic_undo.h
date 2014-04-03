@@ -16,10 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef NULL
-#define NULL 0x0
-#endif
-
 #ifndef FRG_GENERIC_UNDO_H
 #define FRG_GENERIC_UNDO_H
 
