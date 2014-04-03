@@ -5,7 +5,7 @@
 #include "data/python/wrapper.h"
 
 class ObjectData;
-class Object;
+class GeoObject;
 class Group;
 class ObjectDataPyWrapper : public MindTree::PyWrapper
 {
@@ -19,7 +19,7 @@ public:
 class ObjectPyWrapper : public MindTree::PyWrapper
 {
 public:
-    ObjectPyWrapper(Object *obj);
+    ObjectPyWrapper(GeoObject *obj);
     virtual ~ObjectPyWrapper();
 
     static void wrap();

@@ -16,7 +16,7 @@ void ObjectDataPyWrapper::wrap()
     BPy::class_<ObjectDataPyWrapper>("ObjectData", BPy::no_init);
 }
 
-ObjectPyWrapper::ObjectPyWrapper(Object *obj)
+ObjectPyWrapper::ObjectPyWrapper(GeoObject *obj)
     : PyWrapper(obj)
 {
 }
@@ -47,7 +47,7 @@ void GroupPyWrapper::wrap()
 
 BOOST_PYTHON_MODULE(object){
     MindTree::PropertyData<Group>::registerType("GROUPDATA");
-    MindTree::PropertyData<Object>::registerType("SCENEOBJECT");
+    MindTree::PropertyData<GeoObject>::registerType("SCENEOBJECT");
     ObjectDataPyWrapper::wrap();
     ObjectPyWrapper::wrap();
     GroupPyWrapper::wrap();
