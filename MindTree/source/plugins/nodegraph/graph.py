@@ -136,7 +136,7 @@ class NodeGraph(QGraphicsView):
         self.scene().addNode(n)
 
     def removeNode(self, n):
-        self.scene.removeNode(n)
+        self.scene().removeNode(n)
 
     def __del__(self):
         #MT.nodegraphs.remove(self)
