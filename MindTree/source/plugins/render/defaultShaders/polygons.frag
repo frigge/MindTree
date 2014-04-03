@@ -3,8 +3,8 @@ in vec3 pos;
 in vec3 sn;
 in vec3 eye;
 vec3 Nn;
-uniform vec4 color;
-uniform int flatShading;
+uniform vec4 color = vec4(1);
+uniform int flatShading = 0;
 out vec4 outcolor;
 
 struct Light {
@@ -51,5 +51,5 @@ void main(){
     float ambientIntensity = .15;
     float diffint = .8;
     float specint = .7;
-    outcolor = color.a * vec4(color.rgb * lambert()*diffint + ambient*ambientIntensity + phong()*specint, 1);
+    outcolor = vec4(color.rgb * lambert()*diffint + ambient*ambientIntensity + phong()*specint, 1);
 }

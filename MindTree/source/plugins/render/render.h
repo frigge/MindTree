@@ -6,7 +6,7 @@
 #include "vector"
 #include "glm/glm.hpp"
 
-class Object;
+class GeoObject;
 namespace MindTree
 {
 namespace GL
@@ -22,7 +22,7 @@ class RenderConfig;
 class Render
 {
 public:
-    Render(std::shared_ptr<Object> o);
+    Render(std::shared_ptr<GeoObject> o);
     virtual ~Render();
 
     virtual void init();
@@ -43,7 +43,7 @@ public:
     static ShaderProgram* defaultPolyProgram();
 
 protected:
-    std::shared_ptr<Object> obj;
+    std::shared_ptr<GeoObject> obj;
     std::unique_ptr<VAO> vao;
     std::unique_ptr<ShaderProgram> pointProgram;
     std::unique_ptr<ShaderProgram> edgeProgram;
@@ -53,6 +53,7 @@ protected:
     std::vector<uint> triangles;
 
 private:
+    void setUniforms(ShaderProgram *prog);
 
     bool initialized;
 };
@@ -60,12 +61,16 @@ private:
 class MeshRender : public Render
 {
 public:
-    MeshRender(std::shared_ptr<Object> o);
+    MeshRender(std::shared_ptr<GeoObject> o);
     virtual ~MeshRender();
 
     virtual void init();
     void generateIndices();
     void tesselate();
+
+    void initPointProgram();
+    void initEdgeProgram();
+    void initPolyProgram();
 
 private:
 };
@@ -79,7 +84,7 @@ public:
     void draw(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config);
 
 private:
-    void addObject(std::shared_ptr<Object> obj);
+    void addObject(std::shared_ptr<GeoObject> obj);
 
     std::shared_ptr<Group> group;
     std::vector<std::unique_ptr<Render>> renders;

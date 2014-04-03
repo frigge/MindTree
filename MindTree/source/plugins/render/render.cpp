@@ -10,7 +10,7 @@
 
 using namespace MindTree::GL;
 
-Render::Render(std::shared_ptr<Object> o)
+Render::Render(std::shared_ptr<GeoObject> o)
     : obj(o), initialized(false)
 {
 }
@@ -31,7 +31,7 @@ void Render::draw(const glm::mat4 &view, const glm::mat4 &projection, const Rend
     if(!initialized)
         init();
 
-    auto props = obj->getPropertyMap();
+    auto props = obj->getProperties();
     glm::mat4 model = obj->getWorldTransformation();
     glm::mat4 modelView = view * model;
     vao->bind();
@@ -55,28 +55,48 @@ void Render::draw(const glm::mat4 &view, const glm::mat4 &projection, const Rend
     vao->release();
 }
 
+void Render::setUniforms(ShaderProgram *prog)
+{
+    auto propmap = obj->getProperties();
+    for(const auto &p : propmap) {
+        std::string str = p.first;
+        std::string sub = str.substr(0, str.find("."));
+        if(sub == "display") {
+            if(p.second.getType() == "FLOAT")
+                prog->setUniform(str.substr(str.find(".")+1, str.length()), 
+                                 (float)p.second.getData<double>());
+
+            else if(p.second.getType() == "INTEGER")
+                prog->setUniform(str.substr(str.find(".")+1, str.length()), 
+                                 p.second.getData<int>());
+
+            else if(p.second.getType() == "BOOLEAN")
+                prog->setUniform(str.substr(str.find(".")+1, str.length()), 
+                                 p.second.getData<bool>());
+
+            else if(p.second.getType() == "COLOR") {
+                std::string temp = str.substr(str.find(".")+1, str.length());
+                prog->setUniform(temp, 
+                                 p.second.getData<glm::vec4>());
+            }
+
+            else if(p.second.getType() == "VECTOR3D")
+                prog->setUniform(str.substr(str.find(".")+1, str.length()), 
+                                 p.second.getData<glm::vec3>());
+        }
+    }
+}
+
 void Render::drawPoints(const glm::mat4 &view, const glm::mat4 &projection)    
 {
     if(!pointProgram) return;
     pointProgram->bind();
     pointProgram->setUniform("modelView", view);
     pointProgram->setUniform("projection", projection);
-    
-    glm::vec4 color = glm::vec4(1, 0, 0, 1);
-    auto props = obj->getPropertyMap();
-    if(props.find("display.pointColor") != props.end())
-        color = props["display.pointColor"].getData<glm::vec4>();
-
-    pointProgram->setUniform("color", color);
-
-    int pointSize = 3;
-    if(props.find("display.pointSize") != props.end())
-        pointSize = props["display.pointSize"].getData<int>();
-
-    pointProgram->setUniform("size", pointSize);
+    setUniforms(pointProgram.get());
 
     auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
-    auto verts = mesh->getProperty<std::shared_ptr<VertexList>>("P");
+    auto verts = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
     glDrawArrays(GL_POINTS, 0, verts->size());
     pointProgram->release();
 }
@@ -87,14 +107,8 @@ void Render::drawEdges(const glm::mat4 &view, const glm::mat4 &projection)
     edgeProgram->bind();
     edgeProgram->setUniform("modelView", view);
     edgeProgram->setUniform("projection", projection);
+    setUniforms(edgeProgram.get());
 
-    glm::vec4 color = glm::vec4(1, 1, 1, 1);
-    auto props = obj->getPropertyMap();
-    if(props.find("display.edgeColor") != props.end())
-        color = props["display.edgeColor"].getData<glm::vec4>();
-
-    edgeProgram->setUniform("color", color);
-    
     glMultiDrawElements(GL_LINE_LOOP, //Primitive type
                         (const GLsizei*)&polysizes[0], //polygon sizes
                         GL_UNSIGNED_INT, //index datatype
@@ -117,8 +131,8 @@ void Render::drawVertexNormals(const glm::mat4 &view, const glm::mat4 &projectio
                             ");
 
     auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
-    auto normals = mesh->getProperty<std::shared_ptr<VertexList>>("N");
-    auto verts = mesh->getProperty<std::shared_ptr<VertexList>>("P");
+    auto normals = mesh->getProperty("N").getData<std::shared_ptr<VertexList>>();
+    auto verts = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
     std::vector<glm::vec3> lines;
 
     for(size_t i=0; i<verts->size(); i++){
@@ -129,7 +143,7 @@ void Render::drawVertexNormals(const glm::mat4 &view, const glm::mat4 &projectio
     glm::vec4 color(1, 1, 0, 1);
     int linewidth = 1;
 
-    auto props = obj->getPropertyMap();
+    auto props = obj->getProperties();
     if(props.find("display.vertexNormalWidth") != props.end())
         linewidth = props["display.vertexNormalWidth"].getData<int>();
     if(props.find("display.vertexNormalColor") != props.end())
@@ -163,13 +177,8 @@ void Render::drawPolygons(const glm::mat4 &view, const glm::mat4 &projection, co
     polyProgram->bind();
     polyProgram->setUniform("modelView", view * obj->getWorldTransformation());
     polyProgram->setUniform("projection", projection);
+    setUniforms(polyProgram.get());
 
-    glm::vec4 color = glm::vec4(1, 1, 1, 1);
-    auto props = obj->getPropertyMap();
-    if(props.find("display.polyColor") != props.end())
-        color = props["display.polyColor"].getData<glm::vec4>();
-
-    polyProgram->setUniform("color", color);
     polyProgram->setUniform("flatShading", (int)config.flatShading());
 
     glMultiDrawElements(GL_TRIANGLE_FAN, //Primitive type
@@ -244,7 +253,7 @@ void Render::setPolyProgram(ShaderProgram *prog)
     polyProgram = std::unique_ptr<ShaderProgram>(prog);
 }
 
-MeshRender::MeshRender(std::shared_ptr<Object> o)
+MeshRender::MeshRender(std::shared_ptr<GeoObject> o)
     : Render(o)
 {
 }
@@ -256,7 +265,7 @@ MeshRender::~MeshRender()
 void MeshRender::generateIndices()    
 {
     auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
-    auto plist = mesh->getProperty<std::shared_ptr<PolygonList>>("polygon");
+    auto plist = mesh->getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
     for (auto const &p : *plist) {
         //get the size of each polygon
         polysizes.push_back(p.size());
@@ -275,8 +284,8 @@ void MeshRender::tesselate()
 {
     //setting up polygon indices
     auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
-    auto &plist = *mesh->getProperty<std::shared_ptr<PolygonList>>("polygon");
-    auto &verts = *mesh->getProperty<std::shared_ptr<VertexList>>("P");
+    auto &plist = *mesh->getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
+    auto &verts = *mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
     int offset = 0;
     for (auto const &p : plist) {
         auto vertsi(p.verts()); //copy indices
@@ -298,22 +307,106 @@ void MeshRender::tesselate()
     }
 }
 
+void MeshRender::initPointProgram()
+{
+    std::string vertPropID = "display.GLSL.pointVertexShader";
+    std::string fragPropID = "display.GLSL.pointFragmentShader";
+
+    ShaderProgram *prog = nullptr;
+
+    if(obj->hasProperty(vertPropID) && obj->hasProperty(fragPropID)) {
+        std::string vertSrc = obj->getProperty(vertPropID)
+            .getData<std::string>(); 
+
+        std::string fragSrc = obj->getProperty(vertPropID)
+            .getData<std::string>(); 
+
+        prog = new ShaderProgram();
+        prog->bind();
+        prog->addShaderFromSource(vertSrc, GL_VERTEX_SHADER);
+        prog->addShaderFromSource(fragSrc, GL_FRAGMENT_SHADER);
+        prog->link();
+        prog->release();
+    }
+    else {
+        prog = defaultPointProgram();
+    }
+
+    setPointProgram(prog);
+}
+
+void MeshRender::initEdgeProgram()
+{
+    std::string vertPropID = "display.GLSL.edgeVertexShader";
+    std::string fragPropID = "display.GLSL.edgeFragmentShader";
+
+    ShaderProgram *prog = nullptr;
+
+    if(obj->hasProperty(vertPropID) && obj->hasProperty(fragPropID)) {
+        std::string vertSrc = obj->getProperty(vertPropID)
+            .getData<std::string>(); 
+
+        std::string fragSrc = obj->getProperty(vertPropID)
+            .getData<std::string>(); 
+
+        prog = new ShaderProgram();
+        prog->bind();
+        prog->addShaderFromSource(vertSrc, GL_VERTEX_SHADER);
+        prog->addShaderFromSource(fragSrc, GL_FRAGMENT_SHADER);
+        prog->link();
+        prog->release();
+    }
+    else {
+        prog = defaultEdgeProgram();
+    }
+
+    setEdgeProgram(prog);
+}
+
+void MeshRender::initPolyProgram()
+{
+    std::string vertPropID = "display.GLSL.polyVertexShader";
+    std::string fragPropID = "display.GLSL.polyFragmentShader";
+
+    ShaderProgram *prog = nullptr;
+
+    if(obj->hasProperty(vertPropID) && obj->hasProperty(fragPropID)) {
+        std::string vertSrc = obj->getProperty(vertPropID)
+            .getData<std::string>(); 
+
+        std::string fragSrc = obj->getProperty(vertPropID)
+            .getData<std::string>(); 
+
+        prog = new ShaderProgram();
+        prog->bind();
+        prog->addShaderFromSource(vertSrc, GL_VERTEX_SHADER);
+        prog->addShaderFromSource(fragSrc, GL_FRAGMENT_SHADER);
+        prog->link();
+        prog->release();
+    }
+    else {
+        prog = defaultPolyProgram();
+    }
+
+    setPolyProgram(prog);
+}
+
 void MeshRender::init()    
 {
     Render::init();
     vao = std::unique_ptr<VAO>(new VAO());
     auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
 
+    initPointProgram();
+    initEdgeProgram();
+    initPolyProgram();
+
     generateIndices();
     //tesselate();
 
     vao->bind();
 
-    setPointProgram(defaultPointProgram());
-    setEdgeProgram(defaultEdgeProgram());
-    setPolyProgram(defaultPolyProgram());
-
-    auto propmap = mesh->getPropertyMap();
+    auto propmap = mesh->getProperties();
     for(auto propPair : propmap){
         bool pointprog_has = pointProgram->hasAttribute(propPair.first);
         bool edgeprog_has = edgeProgram->hasAttribute(propPair.first);
@@ -349,14 +442,14 @@ RenderGroup::~RenderGroup()
 {
 }
 
-void RenderGroup::addObject(std::shared_ptr<Object> obj)    
+void RenderGroup::addObject(std::shared_ptr<GeoObject> obj)    
 {
     auto data = obj->getData();
     switch(data->getType()){
         case ObjectData::MESH:
             auto render = new MeshRender(obj);
             for(auto child : obj->getChildren()){
-                addObject(std::static_pointer_cast<Object>(child));
+                addObject(std::static_pointer_cast<GeoObject>(child));
             }
             renders.push_back(std::unique_ptr<Render>(render));
             break;
