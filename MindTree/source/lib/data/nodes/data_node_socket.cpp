@@ -648,6 +648,11 @@ std::vector<DNodeLink> DoutSocket::getLinks() const
     return links;
 }
 
+std::vector<DinSocket*> DoutSocket::getCntdSockets() const
+{
+    return cntdSockets;
+}
+
 void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
 {
     auto it = std::find(cntdSockets.begin(), cntdSockets.end(), socket);

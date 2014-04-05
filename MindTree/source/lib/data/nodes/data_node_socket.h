@@ -227,6 +227,7 @@ public:
     bool operator==(DoutSocket &socket)const;
     bool operator!=(DoutSocket &socket)const;
     std::vector<DNodeLink> getLinks() const;
+    std::vector<DinSocket*> getCntdSockets() const;
     void registerSocket(DSocket *socket);
     void unregisterSocket(DinSocket *socket, bool decr=true);
 
