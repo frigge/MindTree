@@ -20,7 +20,6 @@
 
 #define PROPERTIES_K7LMQN2D
 
-#include "boost/python.hpp"
 #include "data/python/wrapper.h"
 #include "unordered_map"
 
