@@ -16,4 +16,8 @@ def setupGui(gui_dict, parent=""):
             elif key == "VERTICAL" or key == "HORIZONTAL":
                 other = MT.gui.showSplitWindow(value[0], other, key, value[1])
 
-MT.gui.__dict__["setupGui"] = setupGui
+def isCompatible(socket1, socket2):
+    return (socket1.type == socket2.type or socket1.type in ["VARIABLE", ""]
+        or socket2.type in ["VARIABLE", ""])
+
+MT.__dict__["isCompatible"] = isCompatible
