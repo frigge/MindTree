@@ -105,7 +105,21 @@ PyWrapper::~PyWrapper()
 
 void PyWrapper::wrap()
 {
-    BPy::class_<PyWrapper>("PyWrapper", BPy::no_init);
+    BPy::class_<PyWrapper>("PyWrapper", BPy::no_init)
+        .def("__eq__", &PyWrapper::equal)
+        .def("__ne__", &PyWrapper::notequal);
+}
+
+bool PyWrapper::equal(PyWrapper *other)
+{
+    if (!alive() || !other || !other->alive()) return false;
+    return getWrapped<PyExposable>() == other->getWrapped<PyExposable>();
+}
+
+bool PyWrapper::notequal(PyWrapper *other)
+{
+    if (!alive() || !other || !other->alive()) return false;
+    return !equal(other);
 }
 
 std::string PyWrapper::__str__StringVector(std::vector<std::string> &self)    
@@ -739,7 +753,21 @@ DoutSocketPyWrapper::~DoutSocketPyWrapper()
 
 void DoutSocketPyWrapper::wrap()    
 {
-    BPy::class_<DoutSocketPyWrapper, BPy::bases<DSocketPyWrapper> >("DoutSocket", BPy::no_init);
+    BPy::class_<DoutSocketPyWrapper, BPy::bases<DSocketPyWrapper> >("DoutSocket", BPy::no_init)
+        .add_property("cntdSockets", &DoutSocketPyWrapper::getCntdSockets);
+}
+
+BPy::object DoutSocketPyWrapper::getCntdSockets()
+{
+    if(!alive()) return BPy::object();
+
+    BPy::list l;
+
+    for(DinSocket *socket : getWrapped<DoutSocket>()->getCntdSockets()) {
+        l.append(new DinSocketPyWrapper(socket));
+    }
+
+    return l;
 }
 
 void PropertyPyWrapper::wrap()    

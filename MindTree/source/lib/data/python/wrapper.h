@@ -125,6 +125,9 @@ public:
     PyWrapper(PyExposable *exp);
     virtual ~PyWrapper();
 
+    bool equal(PyWrapper *other);
+    bool notequal(PyWrapper *other);
+
     static void wrap();
 
     static void regNode(PyObject *nodeClass);
@@ -291,6 +294,8 @@ public:
     DoutSocketPyWrapper(DoutSocket *socket);
     virtual ~DoutSocketPyWrapper();
     static void wrap();
+
+    BPy::object getCntdSockets();
 };
 PYWRAPPERFUNC(DoutSocket)
 
