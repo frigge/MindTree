@@ -27,6 +27,7 @@
 #include "QGLShaderProgram"
 #include "QGLFramebufferObject"
 #include "QPointF"
+#include "QMetaObject"
 #include "GL/glut.h"
 
 #include "iostream"
@@ -34,7 +35,6 @@
 
 #include "math.h"
 
-#include "source/plugins/datatypes/Object/object_cache.h"
 #include "graphics/viewport_widget.h"
 #include "source/data/base/raytracing/ray.h"
 
@@ -358,7 +358,7 @@ void Viewport::zoomView(float xdist, float ydist)
 
 void Viewport::render()    
 {
-    updateGL();
+    QMetaObject::invokeMethod(this, "updateGL", Qt::QueuedConnection);
 }
 
 void Viewport::render(DNode *node)    
