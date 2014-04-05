@@ -5,6 +5,7 @@
 #include "QObject"
 #include "QList"
 #include "map"
+#include "vector"
 #include "unordered_map"
 
 class QDockWidget;
