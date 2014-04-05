@@ -38,10 +38,6 @@ public:
     void setEdgeProgram(ShaderProgram *prog);
     void setPolyProgram(ShaderProgram *prog);
 
-    static ShaderProgram* defaultPointProgram();
-    static ShaderProgram* defaultEdgeProgram();
-    static ShaderProgram* defaultPolyProgram();
-
 protected:
     std::shared_ptr<GeoObject> obj;
     std::unique_ptr<VAO> vao;

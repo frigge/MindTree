@@ -155,7 +155,15 @@ public:
     std::shared_ptr<VBO> createVBO(std::shared_ptr<MeshData> data, std::string name);
     std::shared_ptr<VBO> getVBO(std::shared_ptr<MeshData> data, std::string name);
 
+    void scheduleCleanUp(std::unique_ptr<ShaderProgram> prog);
+    void scheduleCleanUp(std::unique_ptr<VAO> prog);
+
 private:
+    friend class RenderManager;
+
+    void cleanUp();
+    std::vector<std::unique_ptr<ShaderProgram>> _scheduledShaders;
+    std::vector<std::unique_ptr<VAO>> _scheduledVAOs;
     std::unordered_map<std::shared_ptr<MeshData>, std::vector<std::shared_ptr<VBO>>> vbo_map;
     std::unordered_map<std::shared_ptr<MeshData>, std::vector<std::shared_ptr<IBO>>> ibo_map;
     std::unordered_map<std::shared_ptr<MeshData>, std::vector<std::shared_ptr<VBO>>> ubo_map;

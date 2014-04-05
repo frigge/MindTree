@@ -392,6 +392,22 @@ ResourceManager::~ResourceManager()
 {
 }
 
+void ResourceManager::scheduleCleanUp(std::unique_ptr<ShaderProgram> prog)
+{
+    _scheduledShaders.push_back(std::move(prog));
+}
+
+void ResourceManager::scheduleCleanUp(std::unique_ptr<VAO> prog)
+{
+    _scheduledVAOs.push_back(std::move(prog));
+}
+
+void ResourceManager::cleanUp()
+{
+    _scheduledShaders.clear();
+    _scheduledVAOs.clear();
+}
+
 std::shared_ptr<VBO> ResourceManager::createVBO(std::shared_ptr<MeshData> data, std::string name)    
 {
     auto &vbos = vbo_map[data];

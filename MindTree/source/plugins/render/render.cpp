@@ -19,6 +19,14 @@ Render::~Render()
 {
     for(auto *indices : polyindices)
         delete [] indices;
+
+    auto manager = QtContext::getCurrent()->getManager();
+
+    if(pointProgram) manager->scheduleCleanUp(std::move(pointProgram));
+    if(edgeProgram) manager->scheduleCleanUp(std::move(edgeProgram));
+    if(polyProgram) manager->scheduleCleanUp(std::move(polyProgram));
+
+    if(vao) manager->scheduleCleanUp(std::move(vao));
 }
 
 void Render::init()    
@@ -190,54 +198,6 @@ void Render::drawPolygons(const glm::mat4 &view, const glm::mat4 &projection, co
     polyProgram->release();
 }
 
-ShaderProgram* Render::defaultPointProgram()    
-{
-    auto *prog = new ShaderProgram;
-    prog->bind();
-
-    prog->addShaderFromFile("../plugins/render/defaultShaders/points.vert", 
-                            GL_VERTEX_SHADER);
-
-    prog->addShaderFromFile("../plugins/render/defaultShaders/points.frag", 
-                            GL_FRAGMENT_SHADER);
-
-    prog->link();
-    prog->release();
-    return prog;
-}
-
-ShaderProgram* Render::defaultEdgeProgram()    
-{
-    auto *prog = new ShaderProgram;
-    prog->bind();
-
-    prog->addShaderFromFile("../plugins/render/defaultShaders/edges.vert", 
-                            GL_VERTEX_SHADER);
-
-    prog->addShaderFromFile("../plugins/render/defaultShaders/edges.frag", 
-                            GL_FRAGMENT_SHADER);
-
-    prog->link();
-    prog->release();
-    return prog;
-}
-
-ShaderProgram* Render::defaultPolyProgram()    
-{
-    auto *prog = new ShaderProgram;
-    prog->bind();
-
-    prog->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
-                            GL_VERTEX_SHADER);
-
-    prog->addShaderFromFile("../plugins/render/defaultShaders/polygons.frag", 
-                            GL_FRAGMENT_SHADER);
-
-    prog->link();
-    prog->release();
-    return prog;
-}
-
 void Render::setPointProgram(ShaderProgram *prog)    
 {
     pointProgram = std::unique_ptr<ShaderProgram>(prog);
@@ -312,26 +272,34 @@ void MeshRender::initPointProgram()
     std::string vertPropID = "display.GLSL.pointVertexShader";
     std::string fragPropID = "display.GLSL.pointFragmentShader";
 
-    ShaderProgram *prog = nullptr;
+    ShaderProgram *prog = new ShaderProgram;
+    prog->bind();
 
-    if(obj->hasProperty(vertPropID) && obj->hasProperty(fragPropID)) {
+    if(obj->hasProperty(vertPropID)) {
         std::string vertSrc = obj->getProperty(vertPropID)
             .getData<std::string>(); 
-
-        std::string fragSrc = obj->getProperty(vertPropID)
-            .getData<std::string>(); 
-
-        prog = new ShaderProgram();
-        prog->bind();
         prog->addShaderFromSource(vertSrc, GL_VERTEX_SHADER);
-        prog->addShaderFromSource(fragSrc, GL_FRAGMENT_SHADER);
-        prog->link();
-        prog->release();
     }
     else {
-        prog = defaultPointProgram();
+        prog->addShaderFromFile("../plugins/render/defaultShaders/points.vert", 
+                                GL_VERTEX_SHADER);
     }
 
+    if(obj->hasProperty(fragPropID)) {
+
+        std::string fragSrc = obj->getProperty(fragPropID)
+            .getData<std::string>(); 
+
+        prog->addShaderFromSource(fragSrc, GL_FRAGMENT_SHADER);
+    }
+    else {
+        prog->addShaderFromFile("../plugins/render/defaultShaders/points.frag", 
+                                GL_FRAGMENT_SHADER);
+
+    }
+
+    prog->link();
+    prog->release();
     setPointProgram(prog);
 }
 
@@ -340,26 +308,32 @@ void MeshRender::initEdgeProgram()
     std::string vertPropID = "display.GLSL.edgeVertexShader";
     std::string fragPropID = "display.GLSL.edgeFragmentShader";
 
-    ShaderProgram *prog = nullptr;
+    ShaderProgram *prog = new ShaderProgram();
+    prog->bind();
 
-    if(obj->hasProperty(vertPropID) && obj->hasProperty(fragPropID)) {
+    if(obj->hasProperty(vertPropID)) {
         std::string vertSrc = obj->getProperty(vertPropID)
             .getData<std::string>(); 
-
-        std::string fragSrc = obj->getProperty(vertPropID)
-            .getData<std::string>(); 
-
-        prog = new ShaderProgram();
-        prog->bind();
         prog->addShaderFromSource(vertSrc, GL_VERTEX_SHADER);
-        prog->addShaderFromSource(fragSrc, GL_FRAGMENT_SHADER);
-        prog->link();
-        prog->release();
     }
     else {
-        prog = defaultEdgeProgram();
+        prog->addShaderFromFile("../plugins/render/defaultShaders/edges.vert", 
+                                GL_VERTEX_SHADER);
     }
 
+    if(obj->hasProperty(fragPropID)) {
+        std::string fragSrc = obj->getProperty(fragPropID)
+            .getData<std::string>(); 
+
+        prog->addShaderFromSource(fragSrc, GL_FRAGMENT_SHADER);
+    }
+    else {
+        prog->addShaderFromFile("../plugins/render/defaultShaders/edges.frag", 
+                                GL_FRAGMENT_SHADER);
+    }
+
+    prog->link();
+    prog->release();
     setEdgeProgram(prog);
 }
 
@@ -368,26 +342,32 @@ void MeshRender::initPolyProgram()
     std::string vertPropID = "display.GLSL.polyVertexShader";
     std::string fragPropID = "display.GLSL.polyFragmentShader";
 
-    ShaderProgram *prog = nullptr;
+    ShaderProgram *prog = new ShaderProgram();
+    prog->bind();
 
-    if(obj->hasProperty(vertPropID) && obj->hasProperty(fragPropID)) {
+    if(obj->hasProperty(vertPropID)) {
         std::string vertSrc = obj->getProperty(vertPropID)
             .getData<std::string>(); 
-
-        std::string fragSrc = obj->getProperty(vertPropID)
-            .getData<std::string>(); 
-
-        prog = new ShaderProgram();
-        prog->bind();
         prog->addShaderFromSource(vertSrc, GL_VERTEX_SHADER);
-        prog->addShaderFromSource(fragSrc, GL_FRAGMENT_SHADER);
-        prog->link();
-        prog->release();
     }
     else {
-        prog = defaultPolyProgram();
+        prog->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
+                                GL_VERTEX_SHADER);
+    }
+    
+    if(obj->hasProperty(fragPropID)) {
+
+        std::string fragSrc = obj->getProperty(fragPropID)
+            .getData<std::string>(); 
+        prog->addShaderFromSource(fragSrc, GL_FRAGMENT_SHADER);
+    }
+    else {
+        prog->addShaderFromFile("../plugins/render/defaultShaders/polygons.frag", 
+                                GL_FRAGMENT_SHADER);
     }
 
+    prog->link();
+    prog->release();
     setPolyProgram(prog);
 }
 
@@ -575,6 +555,8 @@ RenderPass* RenderManager::getPass(uint index)
 
 void RenderManager::draw(const glm::mat4 &view, const glm::mat4 &projection)
 {
+    QtContext::getCurrent()->getManager()->cleanUp();
+
     for(auto &pass : passes){
         pass->render(view, projection, config);
     }
