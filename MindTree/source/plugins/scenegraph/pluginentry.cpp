@@ -24,11 +24,21 @@
 
 namespace BPy = boost::python;
 
+using namespace MindTree;
+
 MindTree::Viewer* addViewport(MindTree::DoutSocket *socket)    
 {
     return new ViewportViewer(socket);
 }
 
 BOOST_PYTHON_MODULE(scenegraph){
-    MindTree::ViewerList::instance()->addViewer(new MindTree::ViewerFactory("&Viewport", "GROUPDATA", addViewport));
+    ViewerList::instance()
+        ->addViewer(new MindTree::ViewerFactory("&Viewport", 
+                                                "GROUPDATA", 
+                                                addViewport));
+
+    ViewerList::instance()
+        ->addViewer(new MindTree::ViewerFactory("&Viewport", 
+                                                "SCENEOBJECT", 
+                                                addViewport));
 }

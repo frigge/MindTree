@@ -38,8 +38,18 @@ ViewportViewer::~ViewportViewer()
 
 void ViewportViewer::update(DinSocket *)
 {
-    static_cast<ViewportWidget*>(getWidget())->getViewport()
-        ->setData(cache.getData(0).getData<std::shared_ptr<Group>>());
+    auto *viewport = static_cast<ViewportWidget*>(getWidget())->getViewport();
+    Property data = cache.getData(0);
+
+    if(data.getType() == "GROUPDATA") {
+        viewport->setData(data.getData<GroupPtr>());
+    }
+    else if(data.getType() == "SCENEOBJECT") {
+        auto obj = data.getData<GeoObjectPtr>();
+        auto grp = std::make_shared<Group>();
+        grp->addMember(obj);
+        viewport->setData(grp);
+    }
 }
 
 ViewportWidget::ViewportWidget(ViewportViewer *viewer)
