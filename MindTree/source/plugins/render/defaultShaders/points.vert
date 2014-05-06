@@ -2,9 +2,9 @@
 in vec3 P;
 uniform mat4 modelView;
 uniform mat4 projection;
-uniform int size;
+uniform int size = 5;
 
 void main(){
-   gl_Position = projection * modelView * vec4(P, 1.);
-   gl_PointSize = size;
+    gl_Position = projection * modelView * vec4(P, 1.);
+    gl_PointSize = size;
 };
