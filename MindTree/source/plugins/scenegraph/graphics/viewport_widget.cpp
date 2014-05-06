@@ -22,7 +22,6 @@
 
 #include "iostream"
 #include "viewport.h"
-#include "data/frg.h"
 #include "data/nodes/data_node.h"
 
 using namespace MindTree;
@@ -39,7 +38,7 @@ ViewportViewer::~ViewportViewer()
 void ViewportViewer::update(DinSocket *)
 {
     auto *viewport = static_cast<ViewportWidget*>(getWidget())->getViewport();
-    Property data = cache.getData(0);
+    Property data = cache.getOutput(getStart());
 
     if(data.getType() == "GROUPDATA") {
         viewport->setData(data.getData<GroupPtr>());
@@ -101,6 +100,10 @@ void ViewportWidget::createToolbar()
     showFlatShadedAction->setCheckable(true);
     showFlatShadedAction->setChecked(false);
 
+    QAction *showGridAction = tools->addAction("Grid");
+    showGridAction->setCheckable(true);
+    showGridAction->setChecked(true);
+
     camBox = new QComboBox();
     tools->addWidget(camBox);
     //camBox->connect(dock->getViewport(), SIGNAL(sceneUpdated()), this, SLOT(refillCamBox()));
@@ -110,6 +113,7 @@ void ViewportWidget::createToolbar()
     connect(showEdgesAction, SIGNAL(toggled(bool)), this, SLOT(toggleEdges(bool)));
     connect(showPolygonsAction, SIGNAL(toggled(bool)), this, SLOT(togglePolygons(bool)));
     connect(showFlatShadedAction, SIGNAL(toggled(bool)), this, SLOT(toggleFlatShading(bool)));
+    connect(showGridAction, SIGNAL(toggled(bool)), this, SLOT(toggleGrid(bool)));
 }
 
 void ViewportWidget::refillCamBox()    
@@ -144,4 +148,9 @@ void ViewportWidget::togglePolygons(bool b)
 void ViewportWidget::toggleFlatShading(bool b)
 {
     viewport->setShowFlatShading(b);
+}
+
+void ViewportWidget::toggleGrid(bool b)
+{
+    viewport->setShowGrid(b);
 }

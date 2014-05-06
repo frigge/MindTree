@@ -56,6 +56,7 @@ public slots:
     void toggleEdges(bool b);
     void togglePoints(bool b);
     void toggleFlatShading(bool b);
+    void toggleGrid(bool b);
     void refillCamBox();
 
 private:

@@ -31,8 +31,6 @@
 #include "../../render/glwrapper.h"
 #include "../../render/render.h"
 
-class Viewport;
-
 class Viewport : public QGLWidget
 {
     Q_OBJECT
@@ -50,6 +48,7 @@ public slots:
     void setShowEdges(bool b);
     void setShowPolygons(bool b);
     void setShowFlatShading(bool b);
+    void setShowGrid(bool b);
     void changeCamera(QString cam);
     //void setSelectedNode();
     AbstractTransformableNode* getSelectedNode();
@@ -66,7 +65,6 @@ protected:
     void paintGL();
     void initializeGL();
     void drawGrid();
-    void drawScene();
     void drawOrigin();
     void transform(QPointF mpos);
     void checkTransform();
@@ -97,6 +95,7 @@ private:
     glm::vec3 mouseDistToObj;
     bool rotate, pan, zoom;
     bool selectionMode;
+    bool _showGrid;
     time_t start, end;
     unsigned short transformMode;
 };

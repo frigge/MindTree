@@ -37,6 +37,7 @@
 
 #include "graphics/viewport_widget.h"
 #include "source/data/base/raytracing/ray.h"
+#include "data/project.h"
 
 #include "viewport.h"
 
@@ -47,6 +48,7 @@ Viewport::Viewport()
     rotate(false), 
     zoom(false), 
     pan(false), 
+    _showGrid(true), 
     defaultCamera(std::make_shared<Camera>()),
     selectionMode(false), 
     transformMode(0), 
@@ -78,7 +80,7 @@ void Viewport::setData(std::shared_ptr<Group> value)
 
 void Viewport::changeCamera(QString cam)    
 {
-    CameraNode* cnode = (CameraNode*)FRG::CurrentProject->getItem(cam.toStdString());
+    CameraNode* cnode = (CameraNode*)Project::instance()->getItem(cam.toStdString());
     if(cnode) {
         activeCamera = std::static_pointer_cast<Camera>(cnode->getObject());
         if(selectedNode == cnode)
@@ -106,31 +108,15 @@ void Viewport::resizeGL(int width, int height)
 void Viewport::paintGL()    
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
-    if(selectionMode) {
-        glEnable(GL_DITHER);
-        glClearColor(.0f, .0f, .0f, 1.0f); 
-    }
-    else {
-        time(&start);
-        glClearColor(.2f, .2f, .2f, 1.0f); 
-        glEnable(GL_POINT_SMOOTH);
-    }
-    if(!selectionMode) {
-        drawGrid();
-        drawScene();
-        time(&end);
-        glColor3f(1, 1, 1);
-        swapBuffers();
-    }
-    else {
-        drawScene();
-        glDisable(GL_DITHER);
-    }
-}
 
-void Viewport::drawScene()    
-{
+    time(&start);
+    glEnable(GL_POINT_SMOOTH);
+
+    if(_showGrid) drawGrid();
     rendermanager->draw(activeCamera->getViewMatrix(), activeCamera->getProjection());
+    glFinish();
+    time(&end);
+    swapBuffers();
 }
 
 void Viewport::setShowPoints(bool b)    
@@ -162,6 +148,12 @@ void Viewport::setShowFlatShading(bool b)
     auto config = rendermanager->getConfig();
     config.setShowFlatShaded(b);
     rendermanager->setConfig(config);
+    updateGL();
+}
+
+void Viewport::setShowGrid(bool b)
+{
+    _showGrid = b;
     updateGL();
 }
 
