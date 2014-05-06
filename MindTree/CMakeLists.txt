@@ -10,19 +10,9 @@ SET(HEADER
             source/data/base/init.h
             source/data/gl/init.h
             source/data/python/init.h
-#            source/graphics/newnodeeditor.h
-#            source/graphics/nodelib.h
-#            source/graphics/scenewidgetcontainer.h
-#            source/graphics/shaderpreview.h
-#source/graphics/previewdock.h
-#            source/graphics/sourcedock.h
-#            source/graphics/properties_editor.h
             source/graphics/python/consolewindow.h
             source/data/base/raytracing/ray.h
             source/data/undo/frg_generic_undo.h
-            #source/graphics/gui.h
-#source/graphics/nodes/graphics_node.h
-#            source/graphics/nodes/graphics_node_socket.h
             source/graphics/base/mindtree_mainwindow.h
             source/graphics/base/consoledialog.h
 )
@@ -38,13 +28,6 @@ SET(SOURCE
             source/data/gl/init.cpp
             source/data/python/init.cpp
             #source/graphics/gui.cpp
-#            source/graphics/newnodeeditor.cpp
-#            source/graphics/nodelib.cpp
-#            source/graphics/scenewidgetcontainer.cpp
-#            source/graphics/shaderpreview.cpp
-#            source/graphics/previewdock.cpp
-#            source/graphics/sourcedock.cpp
-#            source/graphics/properties_editor.cpp
             source/graphics/python/consolewindow.cpp
             source/data/base/main.cpp
             source/graphics/base/consoledialog.cpp
@@ -116,6 +99,7 @@ target_link_libraries(mindTree
 )
 
 set(PROJECT_ROOT ${PROJECT_BINARY_DIR})
+add_subdirectory(source/intern)
 add_subdirectory(source/plugins)
 
 
