@@ -32,8 +32,6 @@ namespace MindTree
 {
     
 class DNode;
-class LLsocket;
-class DSocketList;
 
 template<class T>
 struct PyConverter{
@@ -195,7 +193,6 @@ public:
 };
 PYWRAPPERFUNC(DNSpace)
 
-class DSocketListPyWrapper;
 class DinSocketPyWrapper;
 class DoutSocketPyWrapper;
 class DNodePyWrapper : public PyWrapper
@@ -214,8 +211,8 @@ public:
     void setName(std::string name);
     BPy::tuple getPos();
     void setPos(BPy::tuple pos);
-    DSocketListPyWrapper* in();
-    DSocketListPyWrapper* out();
+    BPy::list in();
+    BPy::list out();
     BPy::object getProperty(std::string name);
     DinSocketPyWrapper* addInSocket(std::string name, std::string type);
     DoutSocketPyWrapper* addOutSocket(std::string name, std::string type);
@@ -227,37 +224,6 @@ public:
 PYWRAPPERFUNC(DNode)
 
 class DSocketPyWrapper;
-class LLsocketPyWrapper : public PyWrapper
-{
-public:
-    LLsocketPyWrapper(LLsocket *socket);
-    virtual ~LLsocketPyWrapper();
-    static void wrap();
-    LLsocketPyWrapper* __iter__();
-    DSocketPyWrapper* __next__();
-
-private:
-    LLsocket *iterator;
-};
-PYWRAPPERFUNC(LLsocket)
-
-class DSocketListPyWrapper : public PyWrapper
-{
-public:
-    DSocketListPyWrapper(DSocketList *list);
-    virtual ~DSocketListPyWrapper();
-    static void wrap();
-    std::string __str__();
-    std::string __repr__();
-    LLsocketPyWrapper* __iter__();
-    DSocketPyWrapper* getitemint(int i);
-    DSocketPyWrapper* getitemstr(std::string str);
-    unsigned int len();
-
-private:
-};
-PYWRAPPERFUNC(DSocketList)
-
 class DSocketPyWrapper : public PyWrapper
 {
 public:

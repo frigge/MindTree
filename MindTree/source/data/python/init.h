@@ -59,11 +59,6 @@ struct QListToPython
     }
 };
 
-struct DSocketListToPython
-{
-    static PyObject* convert(MindTree::DSocketList const &l);
-};
-
 //template<class T>
 //struct PointerToPython
 //{

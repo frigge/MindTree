@@ -31,44 +31,7 @@ class DinSocket;
 class DoutSocket;
 typedef std::vector<DinSocket*> DinSocketList;
 typedef std::vector<DoutSocket*> DoutSocketList;
-
-
-class LLsocket : public PyExposable
-{
-public:
-    LLsocket() : prev(0), next(0), socket(0) {}
-    LLsocket& operator++();
-    DSocket* operator*();
-    bool operator!=(const LLsocket& other);
-    LLsocket *prev, *next;
-    DSocket *socket;
-};
-
-class DSocketList : public PyExposable
-{
-public:
-    DSocketList();
-    DSocketList(const DSocketList &other);
-    void add(DSocket *socket);
-    void move(unsigned short oldpos, unsigned short newpos);
-    DinSocketList returnAsInSocketList()const;
-    DoutSocketList returnAsOutSocketList()const;
-    unsigned short len();
-    void rm(DSocket *socket);
-    LLsocket* getFirst()const;
-    LLsocket* getLLsocketAt(unsigned short pos);
-    DSocket* at(uint pos);
-    const LLsocket& begin();
-    const LLsocket& end();
-
-protected:
-    void initList(DSocket *socket);
-    LLsocket* getLLlastSocket()const;
-
-private:
-    unsigned int length;
-    LLsocket *first;
-};
+typedef std::vector<DSocket*> DSocketList;
 
 class LoadSocketIDMapper
 {

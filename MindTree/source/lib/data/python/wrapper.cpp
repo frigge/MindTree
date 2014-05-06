@@ -387,9 +387,7 @@ void DNodePyWrapper::wrap()
                 .add_property("name", &DNodePyWrapper::getName, &DNodePyWrapper::setName)
                 .add_property("type", &DNodePyWrapper::getType, &DNodePyWrapper::getType)
                 .add_property("pos", &DNodePyWrapper::getPos, &DNodePyWrapper::setPos)
-                .add_property("insockets", 
-                        BPy::make_function(&DNodePyWrapper::in, 
-                            BPy::return_value_policy<BPy::manage_new_object>()))
+                .add_property("insockets", &DNodePyWrapper::in)
                 .add_property("space", 
                         BPy::make_function(&DNodePyWrapper::getSpace, 
                             BPy::return_value_policy<BPy::manage_new_object>()))
@@ -397,8 +395,7 @@ void DNodePyWrapper::wrap()
                 .def("addOutSocket", &DNodePyWrapper::addOutSocket, BPy::return_value_policy<BPy::manage_new_object>())
                 .add_property("selected", &DNodePyWrapper::getSelected, &DNodePyWrapper::setSelected)
                 .add_property("outsockets", 
-                        BPy::make_function(&DNodePyWrapper::out, 
-                            BPy::return_value_policy<BPy::manage_new_object>()));
+                .add_property("outsockets", &DNodePyWrapper::out);
 }
 
 bool DNodePyWrapper::getSelected()
@@ -516,126 +513,22 @@ BPy::object DNodePyWrapper::getProperty(std::string name)
     return prop.toPython();
 }
 
-DSocketListPyWrapper* DNodePyWrapper::in()    
+BPy::list DNodePyWrapper::in()    
 {
-    if(!alive()) return 0;
-    return new DSocketListPyWrapper(getWrapped<DNode>()->getInSocketLlist());
-}
-
-DSocketListPyWrapper* DNodePyWrapper::out()    
-{
-    if(!alive())return 0;
-    return new DSocketListPyWrapper(getWrapped<DNode>()->getOutSocketLlist());
-}
-
-DSocketListPyWrapper::DSocketListPyWrapper(DSocketList *list)
-    : PyWrapper(list)
-{
-}
-
-DSocketListPyWrapper::~DSocketListPyWrapper()
-{
-}
-
-void DSocketListPyWrapper::wrap()    
-{
-    BPy::class_<DSocketListPyWrapper, BPy::bases<PyWrapper>>("DSocketList", BPy::no_init)
-                .def("__str__", &DSocketListPyWrapper::__str__)
-                .def("__repr__", &DSocketListPyWrapper::__repr__)
-                .def("__getitem__", &DSocketListPyWrapper::getitemint, BPy::return_value_policy<BPy::manage_new_object>())
-                .def("__getitem__", &DSocketListPyWrapper::getitemstr, BPy::return_value_policy<BPy::manage_new_object>())
-                .def("__len__", &DSocketListPyWrapper::len)
-                .def("__iter__", &DSocketListPyWrapper::__iter__, BPy::return_value_policy<BPy::manage_new_object>());
-}
-
-DSocketPyWrapper* DSocketListPyWrapper::getitemint(int i)    
-{
-    if(!alive()) return 0;
-    DSocket *s = getWrapped<DSocketList>()->at(i);
-    if(!s) return 0;
-    if(s->getDir() == DSocket::IN) {
-        return new DinSocketPyWrapper(s->toIn());
+    if(!alive()) return BPy::list();
+    BPy::list l;
+    for(DinSocket *socket : getWrapped<DNode>()->getInSockets()) {
+        l.append(new DinSocketPyWrapper(socket));
     }
-    return new DoutSocketPyWrapper(s->toOut());
+    return l;
 }
 
-unsigned int DSocketListPyWrapper::len()    
+BPy::list DNodePyWrapper::out()    
 {
-    if(!alive()) return -1;
-    return getWrapped<DSocketList>()->len();
-}
-
-DSocketPyWrapper* DSocketListPyWrapper::getitemstr(std::string str)    
-{
-    if(!alive()) return 0;
-    for(DSocket *s : *getWrapped<DSocketList>()) {
-        if(s->getName() == str) {
-            if(s->getDir() == DSocket::IN){
-                return new DinSocketPyWrapper(s->toIn());
-            }
-            return new DoutSocketPyWrapper(s->toOut());
-        }
-    }
-}
-
-std::string DSocketListPyWrapper::__str__()    
-{
-    if(!alive())return std::string();
-    std::string str("[");
-    LLsocket *iter = getWrapped<DSocketList>()->getFirst();
-    while(iter){
-        str += "\""+iter->socket->getName()+"\"";
-        if(iter->next) str += " ";
-        iter = iter->next;
-    }
-    str += "]";
-    return str;
-}
-
-std::string DSocketListPyWrapper::__repr__()    
-{
-    return "<"+__str__()+">";
-}
-
-LLsocketPyWrapper* DSocketListPyWrapper::__iter__()    
-{
-    if(!alive()) return 0;
-    return new LLsocketPyWrapper(getWrapped<DSocketList>()->getFirst());
-}
-
-LLsocketPyWrapper::LLsocketPyWrapper(LLsocket* socket)
-    : PyWrapper(socket), iterator(new LLsocket)
-{
-    iterator->next = socket;
-}
-
-LLsocketPyWrapper::~LLsocketPyWrapper()
-{
-}
-
-void LLsocketPyWrapper::wrap()    
-{
-    BPy::class_<LLsocketPyWrapper, BPy::bases<PyWrapper>>("SocketListIterator", BPy::no_init)
-            .def("__iter__", &LLsocketPyWrapper::__iter__, BPy::return_value_policy<BPy::manage_new_object>())
-            .def("next", &LLsocketPyWrapper::__next__, BPy::return_value_policy<BPy::manage_new_object>());
-}
-
-LLsocketPyWrapper* LLsocketPyWrapper::__iter__()    
-{
-    return this;
-}
-
-DSocketPyWrapper* LLsocketPyWrapper::__next__()    
-{
-    if(!alive() || !iterator->next) {
-        PyErr_SetNone(PyExc_StopIteration);
-        BPy::throw_error_already_set();
-        return 0;
-    }
-    iterator = iterator->next;
-    DSocket *s = iterator->socket;
-    if(s->getDir() == DSocket::IN) {
-        return new DinSocketPyWrapper(s->toIn());
+    if(!alive())return BPy::list();
+    BPy::list l;
+    for(DoutSocket *socket : getWrapped<DNode>()->getOutSockets()) {
+        l.append(new DoutSocketPyWrapper(socket));
     }
     return new DoutSocketPyWrapper(s->toOut());
 }

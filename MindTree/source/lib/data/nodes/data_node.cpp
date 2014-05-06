@@ -511,7 +511,10 @@ void DNode::setID(unsigned short value)
 
 DoutSocketList DNode::getOutSockets() const
 {
-    return outSockets.returnAsOutSocketList();
+    DoutSocketList out;
+    for(DSocket *socket : outSockets)
+        out.push_back(socket->toOut());
+    return out;
 }
 
 DSocketList *DNode::getOutSocketLlist() const
@@ -525,7 +528,10 @@ void DNode::setOutSockets(DoutSocketList value)
 
 DinSocketList DNode::getInSockets() const
 {
-    return inSockets.returnAsInSocketList();
+    DinSocketList in;
+    for(DSocket *socket : inSockets)
+        in.push_back(socket->toIn());
+    return in;
 }
 
 DSocketList* DNode::getInSocketLlist()    const

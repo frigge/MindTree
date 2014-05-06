@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "data/frg.h"
 #include "data/python/wrapper.h"
 #include "data/project.h"
 #include "QApplication"
@@ -29,6 +28,7 @@
 #include "data/python/pycache_main.h"
 #include "graphics/viewer.h"
 #include "graphics/pywindowlist.h"
+#include "data/python/pyutils.h"
 
 #include "init.h"
 
@@ -95,8 +95,6 @@ void MindTree::Python::wrap_all()
         DNSpacePyWrapper::wrap();
         DNodeListIteratorPyWrapper::wrap();
         DNodePyWrapper::wrap();
-        LLsocketPyWrapper::wrap();
-        DSocketListPyWrapper::wrap();
         DSocketPyWrapper::wrap();
         DinSocketPyWrapper::wrap();
         DoutSocketPyWrapper::wrap();
@@ -145,20 +143,6 @@ void PythonToQString::construct(PyObject *obj, BPy::converter::rvalue_from_pytho
     void *storage = ((BPy::converter::rvalue_from_python_storage<QString>*)data)->storage.bytes;
     new (storage) QString(str.c_str());
     data->convertible = storage;
-}
-
-PyObject* DSocketListToPython::convert(DSocketList const &l)
-{
-    BPy::list list;
-    LLsocket* iter = l.getFirst();
-    while(iter){
-        if(iter->socket->getDir() == DSocket::IN)
-            list.append<DinSocketPyWrapper*>(new DinSocketPyWrapper(iter->socket->toIn()));
-        else
-            list.append<DoutSocketPyWrapper*>(new DoutSocketPyWrapper(iter->socket->toOut()));
-        iter = iter->next;
-    }
-    return BPy::incref(list.ptr());
 }
 
 void MindTree::Python::loadPlugins()
@@ -245,14 +229,13 @@ void MindTree::Python::init(int argc, char *argv[])
         BPy::to_python_converter<QList<DNode*>, QListToPython<DNode*> >();
         BPy::to_python_converter<QList<QString>, QListToPython<QString> >();
         BPy::to_python_converter<QList<DoutSocket*>, QListToPython<DoutSocket*> >();
-        BPy::to_python_converter<DSocketList, DSocketListToPython >();
         PythonToQString();
         //initMT();// init_module_MT();
         BPy::object main = BPy::import("__main__");
         BPy::object global = main.attr("__dict__");
         BPy::object mtmodule = BPy::import("MT");
         global["MT"] = mtmodule;
-        ProjectPyWrapper *project = new ProjectPyWrapper(FRG::CurrentProject);
+        ProjectPyWrapper *project = new ProjectPyWrapper(Project::instance());
         BPy::scope(mtmodule).attr("project") = BPy::ptr(project);
         BPy::scope(mtmodule).attr("signalIDs") = BPy::ptr(&MindTree::Signal::emitterIDs);
     }catch(BPy::error_already_set const &){
