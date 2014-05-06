@@ -1,6 +1,7 @@
 import MT
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+from spinbox import *
 
 class StringEditor(QWidget):
     def __init__(self, socket):
@@ -31,25 +32,29 @@ class DirEditor(QWidget):
 
     def browseFilePath(self):
         self.path = str(QFileDialog.getOpenFileName())
-        print("thats what i get: "+self.path)
         self.widget.setText(self.path)
 
 class FloatEditor(QWidget):
+
     def __init__(self, socket):
         QWidget.__init__(self)
         self.socket = socket
-        self.widget = QDoubleSpinBox()
+        self.widget = SpinBox(0.0)
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
+
         if socket.value != None:
             self.widget.setValue(socket.value)
         self.widget.valueChanged.connect(lambda x: setattr(self.socket, "value", x))
+
 
 class IntEditor(QWidget):
     def __init__(self, socket):
         QWidget.__init__(self)
         self.socket = socket
         self.widget = QSpinBox()
+        self.widget.setRange(-100000, 100000)
+
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
         if socket.value != None:
@@ -90,9 +95,10 @@ class ColorButton(QPushButton):
         painter.drawRect(self.rect())
 
     def pickColor(self):
-        newcolor = QColorDialog.getColor(self.color)
-        if newcolor.isValid():
-            self.setColor(newcolor)
+        dialog =  QColorDialog(self.color)
+        dialog.currentColorChanged.connect(self.setColor)
+        dialog.setOptions(QColorDialog.ShowAlphaChannel)
+        dialog.exec_()
 
 class ColorEditor(QWidget):
     def __init__(self, socket):
@@ -113,7 +119,43 @@ class ColorEditor(QWidget):
                              float(color.blueF()),
                              float(color.alphaF()));
 
+class Vector3DEditor(QWidget):
+    def __init__(self, socket):
+        QWidget.__init__(self)
+        self.socket = socket
+
+        lay = QHBoxLayout()
+        self.setLayout(lay)
+        self.xspin = SpinBox(0.0)
+
+        self.yspin = SpinBox(0.0)
+        self.zspin = SpinBox(0.0)
+
+        lay.addWidget(self.xspin)
+        lay.addWidget(self.yspin)
+        lay.addWidget(self.zspin)
+        lay.setMargin(0)
+        lay.setSpacing(0)
+
+        if socket.value != None:
+            value = socket.value
+            self.xspin.setValue(value[0])
+            self.yspin.setValue(value[1])
+            self.zspin.setValue(value[2])
+            
+        self.xspin.valueChanged.connect(self.setVector)
+        self.yspin.valueChanged.connect(self.setVector)
+        self.zspin.valueChanged.connect(self.setVector)
+
+    def setVector(self):
+        x = self.xspin.value()
+        y = self.yspin.value()
+        z = self.zspin.value()
+        self.socket.value = (x, y, z)
+
 class Editor(QWidget):
+    customWidgets = {}
+
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         self.widget = QWidget()
@@ -132,7 +174,6 @@ class Editor(QWidget):
         return QSize(300, 100)
 
     def updateEditor(self, node):
-        print("updating Properties Editor")
         self.layout().removeWidget(self.widget)
         self.widget = QWidget()
         self.widget.setLayout(QFormLayout())
@@ -151,5 +192,17 @@ class Editor(QWidget):
                     self.widget.layout().addRow(s.name, BoolEditor(s))
                 elif s.type == "COLOR":
                     self.widget.layout().addRow(s.name, ColorEditor(s))
+                elif s.type == "VECTOR3D":
+                    self.widget.layout().addRow(s.name, Vector3DEditor(s))
+
+        type_ = node.type
+        customwidget = None;
+        if type_ in Editor.customWidgets:
+            customwidget = Editor.customWidgets[type_]
+
+        if customwidget is not None:
+            print("adding customwidget: %s to layout" % customwidget)
+            widget = customwidget(node, self)
+            self.widget.layout().addRow("", widget)
     
 MT.gui.registerWindow("PropertiesEditor", Editor)

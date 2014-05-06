@@ -7,14 +7,19 @@ from PySide.QtCore import *
 
 from nodebrowser import NodeBrowser
 
+MT.__dict__["customNodeVisualizations"] = {}
 class NodeSpace(QGraphicsScene):
+
     def __init__(self, space):
         self.space = space
         QGraphicsScene.__init__(self)
         self.setItemIndexMethod(QGraphicsScene.NoIndex)
         self.tmpLink = None
         self.createNetwork()
+
         self.nodes = {}
+        self.links = {}
+
         setattr(MT, "graph", self)
         self.cb = MT.attachToSignal("createLink", self.drawLink)
         self.setSceneRect(-5000, -5000, 10000, 10000)
@@ -37,7 +42,10 @@ class NodeSpace(QGraphicsScene):
         self.setSceneRect(combinedrect)
 
     def addNode(self, n):
-        item = node.NodeItem(n)
+        if n.type in MT.customNodeVisualizations:
+            item = MT.customNodeVisualizations[n.type](n)
+        else:
+            item = node.NodeItem(n)
         self.addItem(item)
         self.nodes[n.name] = item
 
@@ -46,12 +54,30 @@ class NodeSpace(QGraphicsScene):
         if item:
             self.removeItem(item)
 
+            #remove all links
+            for insocket in n.insockets:
+                self.removeLink(insocket)
+
+            for outsocket in n.outsockets:
+                for insocket in outsocket.cntdSockets:
+                    self.removeLink(insocket)
+
     def drawLink(self, insocket):
         link = node.NodeLink()
         link.start = self.nodes[insocket.node.name]
         link.end = self.nodes[insocket.connected.node.name]
-        print("blubb")
+
+        self.removeLink(insocket)
+
+        self.links[insocket] = link
         self.addItem(link)
+
+    def removeLink(self, insocket):
+        print(self.links.keys())
+        print(insocket)
+        for s in self.links.keys():
+            if s == insocket:
+                self.removeItem(self.links.pop(s))
 
     def showTmpLink(self, socket):
         self.tmpLink = node.NodeLink(socket, socket.parentItem(), temp=True)
@@ -126,11 +152,13 @@ class NodeGraph(QGraphicsView):
     def dropEvent(self, event):
         QGraphicsView.dropEvent(self, event)
         nodeLabel = str(event.mimeData().text())
-        node = MT.createNode(nodeLabel)
-        if node is not None:
-            self.scene().space.addNode(node)
+        _node = MT.createNode(nodeLabel)
+        if _node is not None:
+            self.scene().space.addNode(_node)
             scenePos = self.mapToScene(event.pos())
-            node.pos = (scenePos.x(), scenePos.y())
+            nw = node.NodeDesigner.width
+            nh = node.NodeDesigner.height
+            _node.pos = (scenePos.x() - nw/2, scenePos.y() - nh/2)
 
     def addNode(self, n):
         self.scene().addNode(n)
@@ -143,7 +171,7 @@ class NodeGraph(QGraphicsView):
         pass
 
     def drawBackground(self, painter, rect):
-        painter.setBrush(QBrush(QColor(30, 30, 30)))
+        painter.setBrush(QBrush(QColor(70, 70, 70)))
         painter.drawRect(self.sceneRect())
 
     def mousePressEvent(self, event):

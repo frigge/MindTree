@@ -15,9 +15,10 @@ class NodeBrowser(QTreeWidget):
         self.setHeaderLabel("")
         self.setHeaderHidden(True)
         self.setDragEnabled(True)
+        self.setAlternatingRowColors(True)
 
     def sizeHint(self):
-        return QSize(50, 50)
+        return QSize(100, 50)
 
     def mousePressEvent(self, event):
         QTreeWidget.mousePressEvent(self, event)
@@ -49,30 +50,21 @@ class NodeBrowser(QTreeWidget):
         nodeTypes = MT.getRegisteredNodes()
 
         for nt in nodeTypes:
-            currItem = self
+            currItem = self.invisibleRootItem();
             for c in nt.split("."):
-                if currItem is self:
-                    for i in range(self.topLevelItemCount()):
-                        if c == self.topLevelItem(i).text(0):
-                            currItem = self.topLevelItem(i)
-                            break
-
-                    if currItem is not self:
-                        continue
-
-                    item = QTreeWidgetItem([c])
-                    self.addTopLevelItem(item)
-                    currItem = item
-                    continue
-
+                exists = False
                 for i in range(currItem.childCount()):
-                    if c == currItem.child(i).text(0):
-                        currItem = currItem.child(i)
+                    child = currItem.child(i)
+                    if child is None: continue
+                    if c == child.text(0):
+                        currItem = child
+                        exists = True
                         continue
 
-                item = QTreeWidgetItem([c, nt])
-                currItem.addChild(item)
-                currItem = item
+                if not exists:
+                    item = QTreeWidgetItem([c, nt])
+                    currItem.addChild(item)
+                    currItem = item
 
     def createNode(self, nodeType):
         def nodeSlot():
