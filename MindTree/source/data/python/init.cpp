@@ -163,6 +163,7 @@ PyObject* DSocketListToPython::convert(DSocketList const &l)
 
 void MindTree::Python::loadPlugins()
 {
+    MindTree::Python::GILLocker locker;
     QDir plugDir("../plugins");
     if(!plugDir.exists()) {
         std::cout << "Plugin Directory not found: " << plugDir.absolutePath().toStdString() << std::endl;
@@ -179,6 +180,7 @@ void MindTree::Python::loadPlugins()
 
 void MindTree::Python::loadIntern()
 {
+    MindTree::Python::GILLocker locker;
     QDir plugDir("../intern");
     if(!plugDir.exists()) {
         std::cout << "Internal Directory not found: " << plugDir.absolutePath().toStdString() << std::endl;
@@ -195,6 +197,7 @@ void MindTree::Python::loadIntern()
 
 void MindTree::Python::loadSettings()
 {
+    MindTree::Python::GILLocker locker;
     QDir plugDir("../settings");
     if(!plugDir.exists()) {
         std::cout << "Settings Directory not found: " << plugDir.absolutePath().toStdString() << std::endl;
@@ -233,6 +236,7 @@ void MindTree::Python::init(int argc, char *argv[])
 {
     PyImport_AppendInittab("MT", &initMT);
     Py_Initialize();
+    PyEval_InitThreads();
     PySys_SetArgv(argc, argv);
     //BPy::to_python_converter<DNSpace*, PointerToPython<DNSpace*> >();
     try{
@@ -254,10 +258,13 @@ void MindTree::Python::init(int argc, char *argv[])
     }catch(BPy::error_already_set const &){
         PyErr_Print();
     }
+    // Release the GIL from the main thread initially => acquire it explicitly always
+    /*  PyThreadState *state = */PyEval_SaveThread();
 }
 
 void MindTree::Python::finalize()    
 {
+    PyGILState_Ensure();
     Py_Finalize();
 }
 

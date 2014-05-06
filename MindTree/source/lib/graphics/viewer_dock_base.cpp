@@ -148,6 +148,7 @@ void ViewerDockBase::setPythonWidget(BPy::object widget)
 {
     WId id;
     try{
+        Python::GILLocker locker;
         pywidget = widget();
         id = BPy::extract<WId>(pywidget.attr("winId")());
     } catch(BPy::error_already_set) {

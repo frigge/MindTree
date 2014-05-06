@@ -13,6 +13,7 @@
 #include "boost/python.hpp"
 #include "data/python/wrapper.h"
 #include "data/properties.h"
+#include "data/python/pyutils.h"
 
 #define MT_SIGNAL_EMITTER(...) MindTree::Signal::callHandler(__PRETTY_FUNCTION__, ##__VA_ARGS__)
 
@@ -109,6 +110,7 @@ public:
     template<typename... Args>
     void operator()(Args... args) {
         try {
+            Python::GILLocker locker;
             fn(typename PyConverter<Args>::t(args)...);
         } catch(BPy::error_already_set const &){
             PyErr_Print();

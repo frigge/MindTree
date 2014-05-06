@@ -1,5 +1,6 @@
 #include "console.h"
 #include "cstdio"
+#include "data/python/pyutils.h"
 #include "Python.h"
 
 namespace PyMT {
@@ -39,6 +40,8 @@ void PyConsole::start()
 
 void PyConsole::command(QString cmd)    
 {
+    MindTree::Python::GILLocker locker;
+
     BPy::object main = BPy::import("__main__");
     BPy::object global = main.attr("__dict__");
     auto sys_module = BPy::import("sys");

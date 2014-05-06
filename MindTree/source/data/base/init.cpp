@@ -1,5 +1,6 @@
 #include "source/data/python/init.h"
 #include "source/data/gl/init.h"
+#include "data/python/pyutils.h"
 #include "data/project.h"
 #include "data/properties.h"
 #include "init.h"
@@ -52,6 +53,7 @@ void MindTree::parseArguments(int argc, char* argv[])
 
 void MindTree::runTests(std::vector<std::string> testlist)    
 {
+    MindTree::Python::GILLocker locker;
     int failed = 0;
     std::cout << std::endl;
     for(auto test : testlist) {
