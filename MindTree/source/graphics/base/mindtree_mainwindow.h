@@ -38,19 +38,17 @@ public:
 private:
 };
 
-class frg_Shader_Author : public QMainWindow
+namespace MindTree {
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    frg_Shader_Author(QWidget *parent = 0);
-    ~frg_Shader_Author();
+    MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 
-    static void start_app();
-    bool isMouseNodeGraphPos();
-    static void togglePickWidget();
-    static void toggleMouseNodeGraphPos();
-
+    static MainWindow* create();
+    static MainWindow* window();
     void registerMenu(QMenu *menu);
 
 signals:
@@ -70,21 +68,21 @@ public slots:
     void showDock(QDockWidget* widget);
 
 protected:
-    void mouseMoveEvent(QMouseEvent *event);
     void createMenus();
     void createDocks();
     void createSpaceDock();
     void initDefaultProperties();
-    bool eventFilter(QObject *obj, QEvent *event);
 
 private:
+    static MainWindow *_window;
+
     qint64 style_age;
     QString stylePath;
 
-    static bool pickWidget, mouseNodeGraphPos;
     void change_window_title(QString);
     QDockWidget *nodelib, *nodeeditor, *propeditor, *detailsview, *spaceDock;
     QHash<QString, QMenu*> menus;
 };
+} // namespace MindTree
 
 #endif // FRG_SHADER_AUTHOR_H

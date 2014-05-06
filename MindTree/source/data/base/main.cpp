@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
 
-    frg_Shader_Author *w = new frg_Shader_Author;
+    MindTree::MainWindow *w = new MindTree::MainWindow();
 
     w->show();
     MindTree::initGui();

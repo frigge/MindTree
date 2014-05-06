@@ -18,9 +18,6 @@
 
 
 //#include "QtGui"
-#include "QGraphicsItem"
-#include "QGraphicsView"
-#include "QGraphicsScene"
 #include "QPainterPath"
 #include "QWheelEvent"
 #include "QPalette"
@@ -35,31 +32,27 @@
 #include "QResource"
 #include "QTextStream"
 #include "QFileDialog"
+#include "QVBoxLayout"
+#include "QPlastiqueStyle"
 #include "QDir"
 
 #include "iostream"
 
 #include "math.h"
 
-#include "data/frg.h"
 #include "data/dnspace.h"
 #include "data/nodes/data_node.h"
-//#include "source/graphics/shaderpreview.h"
-//#include "source/graphics/previewdock.h"
-#include "source/graphics/properties_editor.h"
-//#include "source/graphics/detailsview.h"
 #include "source/data/data_info_box.h"
-#include "source/graphics/sourcedock.h"
 #include "source/graphics/python/consolewindow.h"
 #include "source/data/python/init.h"
 #include "source/data/base/init.h"
 #include "data/properties.h"
 #include "graphics/windowlist.h"
 #include "data/signal.h"
-//#include "source/graphics/base/consoledialog.h"
 #include "mindtree_mainwindow.h"
 
 using namespace MindTree;
+
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent)
@@ -68,27 +61,26 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     setLayout(lay);
     QPushButton *reloadPluginsButton = new QPushButton("Reload Plugins");
     lay->addWidget(reloadPluginsButton);
-    connect(reloadPluginsButton, SIGNAL(clicked()), FRG::Author, SLOT(loadPlugins()));
+    connect(reloadPluginsButton, SIGNAL(clicked()), MainWindow::window(), SLOT(loadPlugins()));
 }
 
 SettingsDialog::~SettingsDialog()
 {
 }
 
-bool frg_Shader_Author::mouseNodeGraphPos = false;
-bool frg_Shader_Author::pickWidget = false;
+MainWindow* MainWindow::_window = nullptr;
 
-frg_Shader_Author::frg_Shader_Author(QWidget *parent)
+MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), style_age(-1)
 {
     setObjectName("MindTreeMainWindow");
-    FRG::Author = this;
     setWindowTitle("MindTree");
     resize(1500, 1000);
 
     setAnimated(false);
     setDockNestingEnabled(true);
     setTabPosition(Qt::AllDockWidgetAreas, QTabWidget::North);
+    setDocumentMode(true);
 
     auto windowList = MindTree::WindowList::instance();
     auto viewerList = MindTree::ViewerList::instance();
@@ -102,6 +94,7 @@ frg_Shader_Author::frg_Shader_Author(QWidget *parent)
     MindTree::WindowList::instance()->addFactory(fac);
 
     statusBar()->showMessage("Welcome to MindTree");
+    qApp->setStyle(new QPlastiqueStyle);
 
     setupStyle();
 
@@ -118,31 +111,42 @@ frg_Shader_Author::frg_Shader_Author(QWidget *parent)
     }).detach();
 };
 
-frg_Shader_Author::~frg_Shader_Author()
+MainWindow::~MainWindow()
 {
     MindTree::finalizeApp();
 }
 
-void frg_Shader_Author::showDock(QDockWidget* widget)    
+MainWindow* MainWindow::create()
+{
+    _window = new MainWindow(); 
+    return _window;
+}
+
+MainWindow* MainWindow::window()
+{
+    return _window;
+}
+
+void MainWindow::showDock(QDockWidget* widget)    
 {
     addDockWidget(Qt::LeftDockWidgetArea, widget);
     widget->show();
 }
 
-void frg_Shader_Author::registerMenu(QMenu *menu)    
+void MainWindow::registerMenu(QMenu *menu)    
 {
     menus.insert(menu->title(), menu);
     menuBar()->addMenu(menu);
 }
 
-void frg_Shader_Author::registerWindow(WindowFactory *factory)    
+void MainWindow::registerWindow(WindowFactory *factory)    
 {
     //windowFactories.append(factory); 
     std::cout << "adding menu entry for window" << std::endl;
     menus.value("&Window")->addAction(factory->action());
 }
 
-void frg_Shader_Author::lookupStyle()    
+void MainWindow::lookupStyle()    
 {
     if(style_age == -1){
         setupStyle();
@@ -157,39 +161,7 @@ void frg_Shader_Author::lookupStyle()
     }
 }
 
-void frg_Shader_Author::mouseMoveEvent(QMouseEvent *event)    
-{
-    if(!pickWidget){
-        QMainWindow::mouseMoveEvent(event);
-        return;
-    }
-
-    QWidget *w = qApp->widgetAt(QCursor::pos());
-    qint64 ptr = (qint64)w;
-    statusBar()->showMessage("Pointer: "+QString::number(ptr));
-}
-
-bool frg_Shader_Author::eventFilter(QObject *obj, QEvent *event)    
-{
-    if(event->type() == QEvent::MouseMove){
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-        if(pickWidget){
-            QWidget *w = qApp->widgetAt(QCursor::pos());
-            if(w)
-                statusBar()->showMessage(w->objectName()
-                                    + " " + w->metaObject()->className());
-        }
-    }
-    return QMainWindow::eventFilter(obj, event);
-}
-
-void frg_Shader_Author::togglePickWidget()    
-{
-    pickWidget = !pickWidget;
-    if(pickWidget) mouseNodeGraphPos = false;
-}
-
-void frg_Shader_Author::setupStyle()    
+void MainWindow::setupStyle()    
 {
 #ifdef QT_DEBUG
     QResource::unregisterResource(PyWrapper::getStylePath());
@@ -202,13 +174,13 @@ void frg_Shader_Author::setupStyle()
     qApp->setStyleSheet(style);
 }
 
-void frg_Shader_Author::openSettings()    
+void MainWindow::openSettings()    
 {
     SettingsDialog *dialog = new SettingsDialog(this);
     dialog->show(); 
 }
 
-QWidget* frg_Shader_Author::addConsole()    
+QWidget* MainWindow::addConsole()    
 {
     //char *argv = new char;
     //argv = '\0';
@@ -218,7 +190,7 @@ QWidget* frg_Shader_Author::addConsole()
     //ConsoleDialog *console = new ConsoleDialog(this);
 }
 
-void frg_Shader_Author::change_window_title(QString title)
+void MainWindow::change_window_title(QString title)
 {
     QString newtitle("MindTree");
     newtitle.append(" - ");
