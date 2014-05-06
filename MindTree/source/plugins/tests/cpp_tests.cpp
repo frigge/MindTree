@@ -1,4 +1,5 @@
 #include "mindtree_core.h"
+#include "../datatypes/Object/object.h"
 #include "data/cache_main.h"
 
 namespace BPy = boost::python;
@@ -49,8 +50,42 @@ bool testProperties()
     return success;
 }
 
+bool testPropertiesTypeInfo()
+{
+    MindTree::Property prop{2.5};
+    std::string type1 = prop.getType();
+    std::cout << "original Prop Type: " << type1 << std::endl;
+    if(type1 != "FLOAT") return false;
+
+    MindTree::Property copyProp(prop);
+    std::cout << "copy Prop Type: " << copyProp.getType() << std::endl;
+    if(type1 != copyProp.getType())
+        return false;
+
+    MindTree::Property assignmentProp;
+    assignmentProp = prop;
+    std::cout << "assignment Prop Type: " << assignmentProp.getType() << std::endl;
+    if(type1 != assignmentProp.getType())
+        return false;
+
+    return true;
+}
+
+bool testObjectInProperty()
+{
+    GeoObjectPtr obj = std::make_shared<GeoObject>();
+    MindTree::Property objProp{obj};
+    std::cout << "original Prop Type: " << objProp.getType() << std::endl;
+    if(objProp.getType() != "SCENEOBJECT")
+        return false;
+
+    return true;
+}
+
 BOOST_PYTHON_MODULE(cpp_tests)
 {
     BPy::def("testSocketPropertiesCPP", testSocketProperties);    
     BPy::def("testPropertiesCPP", testProperties);
+    BPy::def("testPropertiesTypeInfoCPP", testPropertiesTypeInfo);
+    BPy::def("testObjectInPropertyCPP", testObjectInProperty);
 }

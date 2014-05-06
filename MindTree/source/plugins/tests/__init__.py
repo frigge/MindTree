@@ -10,6 +10,7 @@ def testAll():
     tests = [t for t in dir(__import__(__name__)) if t.startswith("test") and not t == "testAll"]
     numberOfTests = len(tests)
     successfulTests = 0
+    failedTests = []
 
     for t in tests:
         print("\n-------------------------------------\n")
@@ -21,9 +22,16 @@ def testAll():
             successfulTests += 1
             print("%s passed" % t)
         else:
+            failedTests.append(t)
             print("%s failed" % t)
         print("\n-------------------------------------\n")
 
     print("%d out of %d tests were successful" % (successfulTests, numberOfTests))
+
+    print("\nfailed Tests:\n")
+    for t in failedTests:
+        print(t)
+
+    print("___")
 
     return successfulTests == numberOfTests

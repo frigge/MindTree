@@ -31,7 +31,7 @@ def testFloatCache():
         print("resulting datatype is: %s" % str(type(cache.getData(0))))
 
     print("expected value: %d" % (12+5+8))
-    return (12+5+8) == cache.getData(0)
+    return (12+5+8) == cache.getOutput()
 
 def testfloatvalue():
     return True
