@@ -19,7 +19,6 @@
 
 #include "boost/python.hpp"
 #include "data/project.h"
-#include "data/frg.h"
 #include "data/signal.h"
 #include "dnspace.h"
 

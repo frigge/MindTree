@@ -7,7 +7,6 @@
 #include "QScrollBar"
 #include "QVBoxLayout"
 
-#include "data/frg.h"
 #include "source/graphics/base/mindtree_mainwindow.h"
 #include "data/python/console.h"
 
@@ -194,14 +193,3 @@ void ConsoleWindow::enter()
     }
     if(!cmd.isEmpty())prompt->setText("... ");
 }
-
-ConsoleWindowDock::ConsoleWindowDock()
-    : console(new ConsoleWindow(this))
-{
-    setWidget(console);
-    MindTree::FRG::Author->addDockWidget(Qt::LeftDockWidgetArea, this);
-}
-
-ConsoleWindowDock::~ConsoleWindowDock()
-{
-}   

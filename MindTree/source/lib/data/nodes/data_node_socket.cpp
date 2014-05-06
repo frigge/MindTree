@@ -21,7 +21,6 @@
 #include "iostream"
 #include "stdio.h"
 
-#include "data/frg.h"
 #include "data/signal.h"
 #include "data_node.h"
 

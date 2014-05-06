@@ -1,10 +1,6 @@
-#include "project.h"
-
-#include "QFileDialog"
-
+#include "fstream"
 #include "data/signal.h"
-#include "data/frg.h"
-//#include "source/graphics/base/vnspace.h"
+#include "project.h"
 
 using namespace MindTree;
 

@@ -17,7 +17,6 @@
 */
 
 
-#include "data/frg.h"
 #include "data/dnspace.h"
 #include "data/project.h"
 #include "iostream"

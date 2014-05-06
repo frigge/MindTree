@@ -80,16 +80,4 @@ private:
     ConsoleArea *area;
     PyMT::PyConsole* console;
 };
-
-class ConsoleWindowDock : public QDockWidget
-{
-public:
-    ConsoleWindowDock();
-    virtual ~ConsoleWindowDock();
-
-private:
-    ConsoleWindow *console;
-};
-
-
 #endif /* end of include guard: CONSOLEWINDOW*/

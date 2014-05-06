@@ -18,7 +18,6 @@
 
 #include "data_info_box.h"
 
-#include "source/lib/data/frg.h"
 #include "source/lib/data/dnspace.h"
 
 DInfoBox::DInfoBox()
