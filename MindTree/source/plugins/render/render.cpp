@@ -44,10 +44,7 @@ void Render::draw(const glm::mat4 &view, const glm::mat4 &projection, const Rend
     glm::mat4 modelView = view * model;
     vao->bind();
     glEnable(GL_PROGRAM_POINT_SIZE);
-    glEnable(GL_POLYGON_OFFSET_LINE);
     glEnable(GL_POLYGON_OFFSET_POINT);
-    glLineWidth(1.1);
-    glPolygonOffset(2, 2.);
     if(config.drawPoints()) drawPoints(modelView, projection);
     if(config.drawEdges()) drawEdges(modelView, projection);
     if(config.drawPolygons()) drawPolygons(modelView, projection, config);
@@ -57,7 +54,6 @@ void Render::draw(const glm::mat4 &view, const glm::mat4 &projection, const Rend
             drawVertexNormals(modelView, projection);
 
     glDisable(GL_PROGRAM_POINT_SIZE);
-    glDisable(GL_POLYGON_OFFSET_LINE);
     glDisable(GL_POLYGON_OFFSET_POINT);
     glLineWidth(1);
     vao->release();
@@ -95,11 +91,11 @@ void Render::setUniforms(ShaderProgram *prog)
     }
 }
 
-void Render::drawPoints(const glm::mat4 &view, const glm::mat4 &projection)    
+void Render::drawPoints(const glm::mat4 &modelView, const glm::mat4 &projection)    
 {
     if(!pointProgram) return;
     pointProgram->bind();
-    pointProgram->setUniform("modelView", view);
+    pointProgram->setUniform("modelView", modelView);
     pointProgram->setUniform("projection", projection);
     setUniforms(pointProgram.get());
 
@@ -109,19 +105,27 @@ void Render::drawPoints(const glm::mat4 &view, const glm::mat4 &projection)
     pointProgram->release();
 }
 
-void Render::drawEdges(const glm::mat4 &view, const glm::mat4 &projection)    
+void Render::drawEdges(const glm::mat4 &modelView, const glm::mat4 &projection)    
 {
     if(!edgeProgram) return;
     edgeProgram->bind();
-    edgeProgram->setUniform("modelView", view);
+    edgeProgram->setUniform("modelView", modelView);
     edgeProgram->setUniform("projection", projection);
     setUniforms(edgeProgram.get());
 
+
+    float lineWidth = 1.5;
+
+    if (obj->hasProperty("display.lineWidth"))
+        lineWidth =  obj->getProperty("display.lineWidth").getData<double>();
+
+    glLineWidth(lineWidth);
     glMultiDrawElements(GL_LINE_LOOP, //Primitive type
                         (const GLsizei*)&polysizes[0], //polygon sizes
                         GL_UNSIGNED_INT, //index datatype
                         (const GLvoid**)&polyindices[0],
                         polysizes.size()); //primitive count
+
 
     edgeProgram->release();
 }
@@ -179,15 +183,17 @@ void Render::drawFaceNormals(const glm::mat4 &view, const glm::mat4 &projection)
 
 }
 
-void Render::drawPolygons(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config)    
+void Render::drawPolygons(const glm::mat4 &modelView, const glm::mat4 &projection, const RenderConfig &config)    
 {
     if(!polyProgram) return;
     polyProgram->bind();
-    polyProgram->setUniform("modelView", view * obj->getWorldTransformation());
+    polyProgram->setUniform("modelView", modelView);
     polyProgram->setUniform("projection", projection);
     setUniforms(polyProgram.get());
 
     polyProgram->setUniform("flatShading", (int)config.flatShading());
+
+    glPolygonOffset(1.0, 1.0);
 
     glMultiDrawElements(GL_TRIANGLE_FAN, //Primitive type
                         (const GLsizei*)&polysizes[0], //polygon sizes
@@ -504,7 +510,7 @@ bool RenderConfig::flatShading() const
 }
 
 RenderManager::RenderManager()
-    : backgroundColor(glm::vec4(.2, .2, .2, 1.))
+    : backgroundColor(glm::vec4(.275, .275, .275, 1.))
 {
 }
 
