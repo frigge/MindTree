@@ -73,6 +73,8 @@ private:
     std::unordered_map<std::string, ViewerDockBase*> openViewers;
 
     std::map<std::string, std::vector<ViewerFactory*>> windowFactories;
+
+    friend class MindTree::ViewerDockBase;
 };
 } /* MindTree */
 

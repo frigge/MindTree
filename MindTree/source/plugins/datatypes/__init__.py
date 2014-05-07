@@ -5,3 +5,6 @@ import Object
 
 import valuenodes
 import generic_processor
+import MT
+
+MT.addCompatibility("FLOAT", "INTEGER")
