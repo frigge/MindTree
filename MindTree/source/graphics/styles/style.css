@@ -1,90 +1,180 @@
 *{
     font-size:12px;
     border: none;
-    background: #1f1f1f;
+    padding: 0px;
+    margin: 0px;
+    background: none;
+    background-color: rgb(70, 70, 70);
     color: white;
     border-style: none;
+    outline: none;
 }
 
 
 QWidget {
     border-style: none;
     border: none;
-    //border-image: url(:./bg.svg) 2 2 2 2 stretch stretch;
-    background: #1f1f1f;
+    padding: 0px;
+    margin: 0px;
+    background: none;
+    background-color: rgb(70, 70, 70);
     color: white;
+    outline: none;
+}
+
+QMainWindow::separator {
+    border: none;
+    background-color: rgb(70, 70, 70);
+    width: 4px;
+    height: 4px;
+}
+
+QMainWindow::separator:hover {
+    border: none;
+    background-color: rgb(75, 75, 75);
+    width: 4px;
+    height: 4px;
+}
+
+QDockWidget {
+    titlebar-close-icon: url(":close_button.png");
+    titlebar-normal-icon: url(":float_button.png");
+    border: none;
+}
+
+QDockWidget:hover,
+QDockWidget:focus {
+    border: 1px solid blue;
+}
+
+QDockWidget::float-button,
+QDockWidget::close-button {
+    background-color: rgb(55, 55, 55);
+    icon-size: 16px;
+    border: none;
+}
+
+QDockWidget::float-button:hover,
+QDockWidget::close-button:hover {
+    background-color: rgb(60, 60, 60);
+    icon-size: 16px;
+}
+
+QDockWidget::title {
+    border: none;
+    background-color: rgb(55, 55, 55);
+}
+
+QSpinBox {
+    background-color: rgb(60, 60, 60);
+    padding: 4px;
+}
+
+QSpinBox::up-button {
+    background-image: url(:spinbox_uparrow.png);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+QSpinBox::down-button {
+    background-image: url(:spinbox_downarrow.png);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+QPushButton,
+QSpinBox::up-button,
+QSpinBox::down-button {
+    background-color: rgb(90, 90, 90);
+    padding: 4px;
+}
+
+QPushButton:hover,
+QSpinBox::up-button:hover,
+QSpinBox::down-button:hover {
+    background-color: rgb(70, 70, 70);
+}
+
+QPushButton:pressed,
+QSpinBox::up-button:pressed,
+QSpinBox::down-button:pressed {
+    background-color: rgb(55, 55, 55);
+}
+
+QScrollBar:horizontal {
+    height: 12px;
+    margin: 0px 12px 0px 12px;
+}
+
+QScrollBar:vertical {
+    width: 12px;
+    margin: 12px 0px 12px 0px;
+}
+
+QScrollBar::handle:horizontal,
+QScrollBar::handle:vertical {
+    background-color: rgb(100, 100, 100);
 }
 
 
-QMenuBar {
-    border-style: none;
-    background-color: rgb(40, 40, 40);
-    border-width: 0
+QScrollBar::sub-page:horizontal,
+QScrollBar::sub-page:vertical,
+QScrollBar::add-page:horizontal,
+QScrollBar::add-page:vertical {
+    background: rgb(70, 70, 70);
 }
 
-QMenu {
-    background-color: rgb(40, 40, 40);
+QScrollBar::sub-line:horizontal,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal,
+QScrollBar::add-line:vertical {
+    background: rgb(80, 80, 80);
+    width: 12px;
+    height: 12px;
+}
+
+QScrollBar::sub-line:horizontal {
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:horizontal {
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:vertical {
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
 }
 
 QMenu::item {
-    background-color: rgb(40 40, 40);
+    background-color: rgb(60, 60, 60);
     color: white;
     selection-background-color: rgb(150, 30, 0);
     border-style: none;
     border-width: 0;
-    margin: 2px;
-    padding: 2px;
+    padding: 4px;
 }
 
 QMenu::item:selected {
     border-image: none;
-    background-color:#222;
-    margin: 2px;
-    padding: 2px;
+    background-color:#aaa;
+    padding: 4px;
 }
 
-QLabel {
-    border-image: none;
+
+QLineEdit {
+    background-color: rgb(50, 50, 50);
+    border-image: url(:./lineedit.png) 2 2 2 2;
+    padding: 4px;
 }
 
-QTabWidget,
-QTabWidget::left-corner,
-QTabWidget::right-corner,
-QTabWidget::pane,
-QTabWidget::tab-bar,
-QTabBar,
-{
-    border: none
-}
-
-//QLineEdit {
-//    border-image: url(:./lineedit.png) 2 2 2 2;
-//}
-//
-QToolButton {
-    border: none
-}
-
-QToolButton:pressed {
-    border: none
-}
-
-//QPushButton {
-//    border-image: url(:./button_normal.png) 2 2 2 2;
-//    border-width: 2px;
-//    color: white;
-//}
-//
-//QPushButton:pressed {
-//    border-image: url(:./button_pressed.png) 2 2 2 2;
-//    border-width: 2px;
-//}
-//
-//QPushButton:hover {
-//    border-image: url(:./button_over.png) 2 2 2 2;
-//    border-width: 2px;
-//}
-//
 ConsoleWindow {
     font-family: "Courier New Regular";
     font-size: 8px
@@ -95,41 +185,38 @@ ConsoleInput {
     font-size: 8px
 }
 
-QToolBar {
-    border-style: none;
-}
-
-QToolBox {
-    border: none;
-    border-style: none;
-}
-
-QToolBox::tab {
-    border: none;
-    border-style: none;
-}
-
 QTreeWidget {
-    background-color: rgb(40, 40, 40);
-    alternate-background-color: rgb(50, 50, 50);
-    selection-background-color: rgb(150, 30, 0);
+    alternate-background-color: rgb(115, 115, 115);
+    selection-background-color: rgb(50, 50, 50);
 }
 
-QTreeWidget {
-    alternate-background-color: rgb(50, 50, 50);
-    selection-background-color: rgb(150, 30, 0);
+QTabBar::tab {
+    padding: 4px;
+    margin-bottom: 2px;
+    background-color: rgb(110, 110, 110);
 }
 
-QSplitterHandle {
-    width: 10px;
-    border: 1px solid green;
+QTabBar::tab:selected {
+    background-color: rgb(50, 90, 190);
 }
 
-QStatusBar {
-    background: "#000" ;
+QSplitter::handle {
+    width: 4px;
+    height: 4px;
+    border: none;
+    image: none;
 }
 
-QDockWidget {
-    background: red;
+QSplitter::handle:hover {
+    background-color: rgb(115, 115, 115);
 }
 
+QSplitter::handle:pressed {
+    background-color: rgb(60, 60, 60);
+    image: none;
+}
+
+QSplitter::handle:active {
+    background-color: rgb(60, 60, 60);
+    image: none;
+}

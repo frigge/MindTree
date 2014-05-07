@@ -6,6 +6,11 @@
 <file>./button_normal.png</file>
 <file>./button_pressed.png</file>
 <file>./button_over.png</file>
+<file>./close_button.png</file>
+<file>./float_button.png</file>
+<file>./spinbox_uparrow.png</file>
+<file>./spinbox_downarrow.png</file>
+<file>./node_show.svg</file>
 <file>./bg.svg</file>
 <file>./lineedit.png</file>
 </qresource>
