@@ -30,4 +30,6 @@ private:
     MindTree::DinSocket *_socket;
     int _mtime;
 };
+
+typedef std::shared_ptr<TextWatcher> TextWatcherPtr;
 #endif

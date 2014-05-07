@@ -24,10 +24,17 @@ class ColorNodeFactory(MT.pytypes.NodeFactory):
     insockets = [("Value", "COLOR")]
     outsockets = [("Value", "COLOR")]
 
+class Vector3DNodeFactory(MT.pytypes.NodeFactory):
+    type="VECTOR3DVALUE"
+    label="Values.Vector3D"
+    insockets = [("Value", "VECTOR3D")]
+    outsockets = [("Value", "VECTOR3D")]
+
 def registerNodes():
     MT.registerNode(FloatNodeFactory)
     MT.registerNode(IntNodeFactory)
     MT.registerNode(StringNodeFactory)
     MT.registerNode(ColorNodeFactory)
+    MT.registerNode(Vector3DNodeFactory)
 
 registerNodes()

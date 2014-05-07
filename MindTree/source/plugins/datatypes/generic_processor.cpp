@@ -1,24 +1,11 @@
+#include "Object/object.h"
 #include "generic_processor.h"
 
 using namespace MindTree;
 
-void initDefaultProperties()
-{
-    PropertyData<std::string>::registerType("STRING");
-    PropertyData<int>::registerType("INTEGER");
-    PropertyData<float>::registerType("FLOAT");
-    PropertyData<double>::registerType("FLOAT");
-    PropertyData<bool>::registerType("BOOLEAN");
-    PropertyData<glm::vec3>::registerType("VECTOR3D");
-    PropertyData<glm::vec4>::registerType("COLOR");
-    PropertyData<glm::vec2>::registerType("VECTOR2D");
-}
-
 BOOST_PYTHON_MODULE(generic_processor)
 {
     auto values = [](const DataCache *) { };
-
-    initDefaultProperties();
 
     DataCache::addProcessor("FLOAT", "FLOATVALUE", new CacheProcessor(values));
     DataCache::addProcessor("STRING", "STRINGVALUE", new CacheProcessor(values));
@@ -39,4 +26,12 @@ BOOST_PYTHON_MODULE(generic_processor)
     DataCache::addProcessor("STRING", 
                             "ADD", 
                             new CacheProcessor(Cache::Generic::add<std::string>));
+
+    DataCache::addProcessor("COLOR", 
+                            "ADD", 
+                            new CacheProcessor(Cache::Generic::add<glm::vec4>));
+
+    DataCache::addProcessor("VECTOR3D", 
+                            "ADD", 
+                            new CacheProcessor(Cache::Generic::add<glm::vec3>));
 }

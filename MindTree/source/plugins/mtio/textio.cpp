@@ -8,6 +8,7 @@
 
 using namespace MindTree;
 
+PROPERTY_TYPE_INFO(TextWatcherPtr, "TEXTWATCHER")
 TextWatcher::TextWatcher(DinSocket *socket, std::string filename)
     : _filename(filename), 
     _watching(false), 
@@ -87,7 +88,7 @@ BOOST_PYTHON_MODULE(textio) {
         std::string watched_filename;
         if(has_watcher)
             watched_filename = cache->getNode()->getProperty("_textWatcher")
-                .getData<std::shared_ptr<TextWatcher>>()->getFileName();
+                .getData<TextWatcherPtr>()->getFileName();
 
         if(autowatch) {
             if(!has_watcher || ( has_watcher && watched_filename != filename)) {
