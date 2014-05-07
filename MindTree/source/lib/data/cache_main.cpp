@@ -208,8 +208,9 @@ DataCache::DataCache(const DoutSocket *socket)
 DataCache::DataCache(const DataCache &other)
     : 
     node(other.node), 
+    cachedInputs(other.cachedInputs),
+    cachedOutputs(other.cachedOutputs),
     typeID(other.typeID),
-    cachedData(other.cachedData),
     startsocket(other.startsocket)
 {
 }
@@ -251,34 +252,59 @@ const std::vector<AbstractCacheProcessor::cacheList>& DataCache::getProcessors()
     return processors; 
 }
 
+//computes the value of the given input socket
+//either by evaluating the connected network or if nothing
+//is connected by just taking the property of the input socket
 void DataCache::cache(const DinSocket *socket)    
 {
    if(socket->getCntdSocket()){
-       //const DoutSocket *lastSocket = startsocket;
-       //const DNode *lastNode = node;
-       //startsocket = socket->getCntdSocket();
-       //node = socket->getCntdSocket()->getNode();
-
-       //cacheInputs();
        DataCache cache(socket->getCntdSocket());
-       pushData(cache.getData(0));
-
-       //restore previouse data when finished
-       //startsocket = lastSocket;
-       //node = lastNode;
+       cachedInputs.push_back(cache.getOutput());
    } 
    else
-       pushData(socket->getProperty());
+       cachedInputs.push_back(socket->getProperty());
 }
 
 void DataCache::pushData(Property prop)
 {
-    cachedData.push_front(prop);
+    cachedOutputs.push_back(prop);
 }
 
-const Property& DataCache::getData(int index) const
+//returns the value of the input socket at index i
+Property DataCache::getData(int index)
 {
-    return *std::next(cachedData.begin(), index);
+    auto insockets = getNode()->getInSockets();
+
+    if (index >= insockets.size()) 
+        return Property();
+
+    cache(insockets.at(index));
+
+    if (index >= cachedInputs.size()) 
+        return Property();
+
+    return cachedInputs[index];
+}
+
+Property DataCache::getOutput(DoutSocket* socket)
+{
+    int index = -1;
+    if(socket) {
+        //find out index of start socket
+        int i = -1;
+
+        for(const auto *socket : node->getOutSockets()) {
+            ++i;
+            if (socket == startsocket) index = i;
+        }
+    }
+    else {
+        index = 0;
+    }
+    if(index >= cachedOutputs.size())
+        return Property();
+
+    return cachedOutputs[index];
 }
 
 const DNode* DataCache::getNode() const
@@ -298,11 +324,6 @@ void DataCache::setStart(const DoutSocket *socket)
 
 void DataCache::cacheInputs()    
 {
-    auto insockets = node->getInSockets();
-    for(auto it = insockets.rbegin(); it != insockets.rend(); it++) {
-        cache(*it);
-    }
-
     unsigned long nodeTypeID = node->getType().id();
 
     if(typeID >= processors.size()){

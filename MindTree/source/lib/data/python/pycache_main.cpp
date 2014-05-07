@@ -43,6 +43,18 @@ BPy::object MindTree::wrap_DataCache_getData(MindTree::DataCache *self, int inde
     return self->getData(index).toPython();
 }
 
+BPy::object MindTree::wrap_DataCache_getOutput(MindTree::DataCache *self, DoutSocketPyWrapper *outsocket)
+{
+    if (outsocket->alive())  return BPy::object();
+
+    return self->getOutput(outsocket->getWrapped<DoutSocket>()).toPython();
+}
+
+BPy::object MindTree::wrap_DataCache_getOutput(MindTree::DataCache *self)
+{
+    return self->getOutput().toPython();
+}
+
 void MindTree::wrap_DataCache_setData(MindTree::DataCache *self, BPy::object data)
 {
     self->pushData(MindTree::Property::createPropertyFromPython(data));
@@ -91,6 +103,8 @@ void MindTree::wrap_DataCache()
         .add_property("node", BPy::make_function(&wrap_DataCache_getNode,
                                 BPy::return_value_policy<BPy::manage_new_object>()))
         .def("getData", &wrap_DataCache_getData)
+        .def("getOutput", static_cast<BPy::object(*)(DataCache*)>(&wrap_DataCache_getOutput))
+        .def("getOutput", static_cast<BPy::object(*)(DataCache*, DoutSocketPyWrapper*)>(&wrap_DataCache_getOutput))
         .def("setData", &wrap_DataCache_setData)
         .add_static_property("processors", &wrap_DataCache_getProcessors)
         .add_property("start", BPy::make_function(&wrap_DataCache_getStart,

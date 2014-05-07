@@ -105,7 +105,8 @@ public:
     int getTypeID() const;
 
     void pushData(Property prop);
-    const Property& getData(int index) const;
+    Property getData(int index);
+    Property getOutput(DoutSocket* socket = nullptr);
 
     const DNode* getNode()const;
 
@@ -121,7 +122,8 @@ private:
 
     const DNode *node;
     static std::vector<AbstractCacheProcessor::cacheList> processors;
-    std::list<Property> cachedData;
+    std::vector<Property> cachedInputs;
+    std::vector<Property> cachedOutputs;
     int typeID;
     const DoutSocket *startsocket;
 };

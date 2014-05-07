@@ -30,6 +30,8 @@ DNodePyWrapper* wrap_DataCache_getNode(DataCache *cache);
 DoutSocketPyWrapper* wrap_DataCache_getStart(DataCache *cache);
 void wrap_DataCache_addProcessor(BPy::object fn, std::string ntype, std::string stype);
 BPy::object wrap_DataCache_getData(DataCache *self, int index);
+BPy::object wrap_DataCache_getOutput(MindTree::DataCache *self, DoutSocketPyWrapper *outsocket);
+BPy::object wrap_DataCache_getOutput(MindTree::DataCache *self);
 void wrap_DataCache_setData(DataCache *self, BPy::object data);
 void wrap_DataCache_cache(MindTree::DataCache *self, MindTree::DinSocketPyWrapper* socket);
 BPy::dict wrap_DataCache_getProcessors();
