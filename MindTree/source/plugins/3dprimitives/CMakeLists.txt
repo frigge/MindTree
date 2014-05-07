@@ -19,8 +19,9 @@ link_directories(
 
 set(PRIMITIVES3D_SRC
     cube.cpp
-    sphere.cpp
     cylinder.cpp
+    plane.cpp
+    sphere.cpp
     torus.cpp
     entry.cpp
     )
