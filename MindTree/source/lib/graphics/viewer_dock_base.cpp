@@ -26,8 +26,10 @@
 
 #include "data/signal.h"
 
-#include "data/frg.h"
 #include "source/graphics/base/mindtree_mainwindow.h"
+#include "graphics/windowlist.h"
+#include "data/project.h"
+#include "data/python/pyutils.h"
 #include "viewer.h"
 
 using namespace MindTree;
@@ -112,9 +114,10 @@ QSize ViewerDockHeaderWidget::sizeHint()    const
 ViewerDockBase::ViewerDockBase(QString name)
     : startSocket(0), pinned(false), viewer(0)
 {
-    auto n = FRG::CurrentProject->registerItem(this, name.toStdString());
+    auto n = Project::instance()->registerItem(this, name.toStdString());
     setObjectName(n.c_str());
     setWindowTitle(n.c_str());
+    setAttribute(Qt::WA_DeleteOnClose, true);
     //setTitleBarWidget(new ViewerDockHeaderWidget(this));
     //FRG::Author->addDockWidget(Qt::RightDockWidgetArea, this);
     //connect(FRG::Space, SIGNAL(selectionChanged()), this, SLOT(updateFocus()));
@@ -124,8 +127,13 @@ ViewerDockBase::ViewerDockBase(QString name)
 
 ViewerDockBase::~ViewerDockBase()
 {
-    FRG::CurrentProject->unregisterItem(this);
+    Project::instance()->unregisterItem(this);
     MT_CUSTOM_SIGNAL_EMITTER("Viewer_Closed", this);
+    auto &openViewers = MindTree::ViewerList::instance()->openViewers;
+    for(auto &p : openViewers) {
+        if (p.second == this)
+            openViewers.erase(p.first);
+    }
 }
 
 void ViewerDockBase::setViewer(Viewer *view)    

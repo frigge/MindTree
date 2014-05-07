@@ -17,7 +17,7 @@ class Viewer
 public:
     Viewer(DoutSocket *socket);
     virtual ~Viewer();
-    virtual void update(DinSocket*);
+    virtual void update(DinSocket*)=0;
     DoutSocket* getStart();
     void setStart(DoutSocket* value);
     QWidget* getWidget();
@@ -29,7 +29,9 @@ protected:
 
 private:
     void update_viewer(DinSocket*);
+    void update_viewer(DNode *node);
     DoutSocket *start;
+    std::vector<Signal::CallbackHandler> cbhandlers;
 };
 
 class DoutSocketPyWrapper;
