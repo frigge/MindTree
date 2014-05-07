@@ -21,13 +21,24 @@
 #include "data/nodes/data_node_socket.h"
 #include "exception"
 #include "glm/glm.hpp"
+#include "iostream"
 
 #include "properties.h"
 
 using namespace MindTree;
 
+template<class T> const std::string MindTree::PropertyTypeInfo<T>::typestr = "undefined";
+
+PROPERTY_TYPE_INFO(float, "FLOAT");
+PROPERTY_TYPE_INFO(double, "FLOAT");
+PROPERTY_TYPE_INFO(int, "INTEGER");
+PROPERTY_TYPE_INFO(std::string, "STRING");
+PROPERTY_TYPE_INFO(glm::vec2, "VECTOR2D");
+PROPERTY_TYPE_INFO(glm::vec3, "VECTOR3D");
+PROPERTY_TYPE_INFO(glm::vec4, "COLOR");
+
 Property::Property()
-    : data(0),
+    : data(0), datasize(0),
      type("undefined"),
      /* default fn objects to avoid std::bad_function_call*/
      //by default reset property value as this property is empty as well
@@ -127,4 +138,34 @@ BPy::object Property::toPython() const
         return BPy::object();
     }
     return pyconverter(); 
+}
+
+
+std::vector<std::function<Property(std::istream&)>> IO::Input::_readers;
+
+void IO::Input::registerReader(std::function<Property(std::istream&)> reader, std::string t)
+{
+    int id = SocketType::getID(t);
+    if (id >= _readers.size()) {
+        _readers.resize(id + 1);
+        _readers[id] = reader;
+    }
+}
+
+Property IO::Input::read(std::istream &stream)
+{
+    std::string type;
+    stream >> type;
+
+    Property prop = _readers[SocketType::getID(type)](stream);
+
+    return prop;
+}
+
+std::ostream& MindTree::IO::writeProperty(std::ostream &stream, const Property &prop)
+{
+    const char *raw = prop.type.c_str();
+    stream.write(raw, prop.type.size());
+    stream.write(reinterpret_cast<char*>(prop.datasize), sizeof(prop.datasize));
+    return prop.writeData(stream, prop);
 }

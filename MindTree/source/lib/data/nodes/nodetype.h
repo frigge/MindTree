@@ -24,6 +24,11 @@
 
 namespace MindTree{
 
+class NodeType;
+namespace IO {
+    void write(std::ostream &, const NodeType&);
+}
+
 class NodeType
 {
 public:
@@ -45,6 +50,7 @@ public:
     bool operator!=(const NodeType &other)const;
 
 private:
+    friend void MindTree::IO::write(std::ostream&, const MindTree::NodeType&);
     std::string typeString;
     int _id;
     static int id_cnt;

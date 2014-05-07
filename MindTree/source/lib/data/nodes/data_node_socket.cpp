@@ -174,6 +174,17 @@ SocketType& SocketType::operator=(std::string str)
     return *this;
 }
 
+void IO::write(std::ostream& stream, const DSocket *socket)
+{
+    stream.write(socket->name.c_str(), socket->name.size());
+    stream.write(reinterpret_cast<char*>(socket->ID), sizeof(short));
+    stream.write(socket->type.toStr().c_str(), socket->type.toStr().size());
+    stream.write(reinterpret_cast<char*>(socket->variable), sizeof(bool));
+
+    if(socket->getDir() == DSocket::IN)
+        IO::write(stream, socket->toIn());
+}
+
 DSocket::DSocket(std::string name, SocketType type, DNode *node)
 :   name(name),
     type(type),
@@ -279,6 +290,17 @@ void DSocket::removeLink(DinSocket *in, DoutSocket *out)
 DSocket* DSocket::getSocket(unsigned short ID)    
 {
     return socketIDHash[ID];
+}
+
+void IO::write(std::ostream &stream, const DinSocket *socket)
+{
+    if(socket->cntdSocket)
+        stream.write(reinterpret_cast<char*>(socket->cntdSocket->ID),
+                     sizeof(short));
+    else
+        stream.write(reinterpret_cast<char*>((short)-1), sizeof(short));
+
+    IO::writeProperty(stream, socket->prop);
 }
 
 DinSocket::DinSocket(std::string name, SocketType type, DNode *node)

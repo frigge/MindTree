@@ -58,7 +58,7 @@ DNode* DNSpace::Iterator::operator*()    const
 DNSpace::DNSpace()
     : isCSpace(false)
 {
-    FRG::CurrentProject->registerSpace(this);
+    Project::instance()->registerSpace(this);
     Signal::mergeSignals<DNode*>("addNode", "graphChanged");
 }
 
@@ -74,7 +74,7 @@ DNSpace::DNSpace(const DNSpace &space)
 
 DNSpace::~DNSpace()
 {
-    FRG::CurrentProject->unregisterSpace(this);
+    Project::instance()->unregisterSpace(this);
     //try to clear all links before deleting nodes
     for(auto *node : getNodes())
         for(auto *socket : node->getInSockets())
@@ -257,4 +257,12 @@ void ContainerSpace::setContainer(ContainerNode* value)
 {
     node = value;
     parentSpace = node->getSpace();
+}
+
+void IO::write(std::ostream &stream, const DNSpace *space)
+{
+    stream.write(reinterpret_cast<char*>(space->nodes.size()), sizeof(size_t));
+    for (const DNode* node : space->nodes) {
+        IO::write(stream, node);
+    }
 }

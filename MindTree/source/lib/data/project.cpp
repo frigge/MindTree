@@ -4,13 +4,13 @@
 
 using namespace MindTree;
 
-Project* Project::project=0;
+Project* Project::_project=nullptr;
 
 Project::Project(std::string filename)
     : filename(filename)
 {
-    FRG::CurrentProject = this;
-    DNSpace *space = 0;
+    _project = this;
+    DNSpace *space = nullptr;
     if(filename != "")
     {
         fromFile(filename);
@@ -44,32 +44,26 @@ Project::~Project()
 {
     spaces.clear();
     delete root_scene;
-    //FRG::SpaceDataInFocus = 0;
 }
 
 Project* Project::create()    
 {
-    if(project) delete project;
-    project = new Project();
-    return project;
+    if(_project) delete _project;
+    new Project();
+    return _project;
 }
 
 Project* Project::load(std::string filename)    
 {
-    if(project) delete project;
-    project = new Project(filename.c_str());
-    return project;
+    if(_project) delete _project;
+    new Project(filename);
+    return _project;
 }
 
 Project* Project::instance()    
 {
-    return project;
+    return _project;
 }
-
-//QString Project::registerViewer(ViewerBase *viewer)    
-//{
-//    return QString(); 
-//}
 
 std::string Project::registerNode(DNode *node)    
 {
@@ -85,11 +79,6 @@ std::string Project::registerSocketType(SocketType t)
 {
     return "";
 }
-
-//QString Project::registerNodeType(NodeType t)    
-//{
-//    return QString(); 
-//}
 
 std::string Project::registerItem(void* ptr, std::string name)    
 {
@@ -129,27 +118,8 @@ void Project::unregisterItem(std::string idname)
 
 void Project::save()
 {
-    //if(getFilename() == "")
-    //{
-    //    setFilename(QFileDialog::getSaveFileName(0));
-    //}
-    //QFile file(getFilename());
-    //file.open(QIODevice::WriteOnly);
-    //QDataStream stream(&file);
-    //stream<<FRG_PROJECT_HEADER;
-    //stream<<getRootSpace();
-    //file.close();
-}
-
-void Project::saveAs()
-{
-    //filename = QFileDialog::getSaveFileName(0);
-    //QFile file(filename);
-    //file.open(QIODevice::WriteOnly);
-    //QDataStream stream(&file);
-    //stream<<FRG_PROJECT_HEADER;
-    //stream<<getRootSpace();
-    //file.close();
+    std::ofstream stream(filename, std::ios::out);
+    IO::write(stream, root_scene);
 }
 
 void Project::registerSpace(DNSpace *space)    

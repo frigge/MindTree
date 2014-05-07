@@ -90,4 +90,10 @@ int NodeType::getID(std::string name)
     }
     return registerType(name);
 }
+
+void IO::write(std::ostream &stream, const NodeType& type)
+{
+    std::string str = type.toStr();
+    stream.write(str.c_str(), str.size());
+}
 }

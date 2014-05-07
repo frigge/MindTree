@@ -28,6 +28,10 @@
 namespace MindTree
 {
 
+namespace IO {
+    void write(std::ostream &stream, const DNSpace *space);
+}
+
 class DNSpace : public FRGUndoBase, public PyExposable
 {
 public:
@@ -67,6 +71,7 @@ public:
     std::vector<DInfoBox*> getInfoBoxes();
 
 private:
+    friend void MindTree::IO::write(std::ostream &, const DNSpace*);
     std::vector<DInfoBox*> infos;
     std::string name;
     NodeList nodes;

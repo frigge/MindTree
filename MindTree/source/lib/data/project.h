@@ -54,7 +54,7 @@ public:
 private:
     std::string filename;
     DNSpace *root_scene;
-    static Project *project;
+    static Project *_project;
 
     std::vector<DNSpace*>spaces;
     std::unordered_map<std::string, void*> idNames;

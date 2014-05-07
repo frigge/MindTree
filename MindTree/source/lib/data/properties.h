@@ -29,6 +29,22 @@ namespace MindTree
 {
 
 class Property;
+template<class T>
+struct PropertyTypeInfo
+{
+    static const std::string typestr;
+};
+
+#define PROPERTY_TYPE_INFO(type, str) \
+    template<> const std::string MindTree::PropertyTypeInfo<type>::typestr = str;
+
+template<class T>
+class PropertyConverter
+{
+public:
+private:
+    std::vector<std::function<char*(char*)>> _fromTConverter;
+};
 
 template<class T>
 class PropertyData
@@ -48,72 +64,20 @@ public:
         data = d;
     }
 
-    static void registerType(std::string id)
-    {
-        propertyTypeID = id;
-    }
-
-    static std::string getType()
-    {
-        return propertyTypeID;
-    }
-
     static void* clone(const void *other)
     {
         return new PropertyData<T>(*((PropertyData<T>*)other));
     }
 
 private:
-    static std::string propertyTypeID;
     T data;
 };
 
-//template<class T>
-//class PropertyData<T*>
-//{
-//public:
-//    PropertyData() : data(0) {}
-//    PropertyData(T *data) : data(data) {}
-//    PropertyData(const PropertyData &prop) : data(new T(*prop.data)) {}
-//    virtual ~PropertyData() {if(data)delete data;}
-//
-//    T* getData()const
-//    {
-//        return data;
-//    }
-//
-//    void setData(T *d)
-//    {
-//        data = d;
-//    }
-//
-//    static void registerType(std::string id)
-//    {
-//        propertyTypeID = id;
-//    }
-//
-//    static std::string getType()
-//    {
-//        return propertyTypeID;
-//    }
-//
-//    static QString getType(T type)
-//    {
-//        return propertyTypeID;
-//    }
-//
-//    static void* clone(const void *other)
-//    {
-//        return new PropertyData<T>(*((PropertyData<T>*)other));
-//    }
-//
-//private:
-//    static std::string propertyTypeID;
-//    T *data;
-//};
+namespace IO {
+template<class T> struct Writer;
+std::ostream& writeProperty(std::ostream& stream, const Property &prop);
+}
 
-template<class T> std::string PropertyData<T>::propertyTypeID = "undefined";
-//template<class T> std::string PropertyData<T*>::propertyTypeID = "undefined";
 
 class Property
 {
@@ -142,10 +106,14 @@ public:
             other.setData<T>(this->getData<T>());
         };
 
+        writeData = &IO::Writer<T>::write;
+
+        datasize = sizeof(d);
+
         if(data)deleteFunc();
         pyconverter = [this]{ return PyConverter<T>::pywrap(this->getData<T>()); };
         data = new PropertyData<T>(d);
-        type = PropertyData<T>::getType();
+        type = PropertyTypeInfo<T>::typestr;
         deleteFunc = [this]{delete reinterpret_cast<PropertyData<T>*>(this->data); this->data=0; type="undefined";};
     }
 
@@ -155,7 +123,7 @@ public:
         if(!data) {
             data = new PropertyData<T>();
         }
-        if(PropertyData<T>::getType() != type)
+        if(PropertyTypeInfo<T>::typestr != type)
             return T();
         return ((PropertyData<T>*)data)->getData();
     }
@@ -164,14 +132,53 @@ public:
     std::string getType() const;
 
 private:
+    friend std::ostream& MindTree::IO::writeProperty(std::ostream& stream, const Property &prop);
+
     std::function<void(Property&)> cloneData;
+    std::function<std::ostream&(std::ostream&, const Property&)> writeData;
     std::function<void()> deleteFunc;
     std::function<BPy::object()> pyconverter;
+    size_t datasize;
     mutable void *data;
     std::string type;
 };
 
+
 typedef std::unordered_map<std::string, Property> PropertyMap;
     
+namespace IO {
+template <typename T>
+struct Writer {
+    static std::ostream& write(std::ostream &stream, const Property &prop)
+    {
+        T data = prop.getData<T>();
+        const char *raw = reinterpret_cast<const char*>(&data);
+        stream.write(raw, sizeof(data));
+        return stream;
+    }
+};
+
+template <>
+struct Writer<std::string> {
+    static std::ostream& write(std::ostream &stream, const Property &prop)
+    {
+        std::string data = prop.getData<std::string>();
+        const char *raw = data.c_str();
+        stream.write(raw, data.size());
+        return stream;
+    }
+};
+
+class Input
+{
+public:
+    static void registerReader(std::function<Property(std::istream&)> reader,  std::string t);
+    static Property read(std::istream &stream);
+        
+private:
+    static std::vector<std::function<Property(std::istream&)>> _readers;
+};
+}
 } /* MindTree */
+
 #endif /* end of include guard: PROPERTIES_K7LMQN2D */

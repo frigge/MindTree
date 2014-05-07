@@ -171,6 +171,7 @@ PYWRAPPERCLASS(Project)
     PYWRAPHEAD(Project)
     std::string getFilename();
     void setFilename(std::string name);
+    void save();
     DNSpacePyWrapper* getRoot();
 };
 PYWRAPPERFUNC(Project)
@@ -202,6 +203,7 @@ public:
     virtual ~DNodePyWrapper();
     static void init(BPy::object self);
     static void wrap();
+    void setDynamicInSockets();
     bool getSelected();
     void setSelected(bool sel);
     std::string getName();

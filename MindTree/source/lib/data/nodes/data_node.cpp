@@ -21,6 +21,7 @@
 #include "data/project.h"
 #include "iostream"
 #include "data/properties.h"
+#include "data/project.h"
 
 
 #include "data_node.h"
@@ -66,27 +67,43 @@ DNode * CopyNodeMapper::getCopy(DNode *original)
     return nodeMap[original];
 }
 
+void IO::write(std::ostream &stream, const DNode *node)
+{
+    stream.write(node->nodeName.c_str(), node->nodeName.size());
+    IO::write(stream, node->type);
+
+    stream.write(reinterpret_cast<char*>(node->inSockets.size()), sizeof(size_t));
+    for(const DSocket *socket : node->inSockets) {
+        IO::write(stream, socket);
+    }
+
+    stream.write(reinterpret_cast<char*>(node->outSockets.size()), sizeof(size_t));
+    for(const DSocket *socket : node->inSockets) {
+        IO::write(stream, socket);
+    }
+
+    //TODO: write container data stuff
+}
+
 DNode::DNode(std::string name)
-    : space(0),
-      selected(false),
-      varcnt(0),
-      ID(count++),
-      nodeName(FRG::CurrentProject->registerItem(this, name.c_str())),
+    : selected(false),
+      space(0),
       varsocket(0),
       lastsocket(0),
-      blockCBregister(false),
+      varcnt(0),
+      ID(count++),
+      nodeName(Project::instance()->registerItem(this, name.c_str())),
       _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
 };
 
 DNode::DNode(const DNode& node)
-    : space(0),
-      selected(false),
+    : selected(false),
+      space(0),
       varcnt(0),
       ID(count++),
-      nodeName(FRG::CurrentProject->registerItem(this, node.getNodeName())),
+      nodeName(Project::instance()->registerItem(this, node.getNodeName())),
       type(node.getType()),
-      blockCBregister(false),
       _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
     for(DinSocket *socket : node.getInSockets())
@@ -109,7 +126,7 @@ DNode::~DNode()
 
     if(space)space->unregisterNode(this);
 
-    FRG::CurrentProject->unregisterItem(this);
+    Project::instance()->unregisterItem(this);
 }
 
 bool DNode::getSelected()
@@ -189,22 +206,30 @@ NodeList DNode::copy(NodeList nodes)
    return nodeCopies;
 }
 
-NodeList DNode::getAllInNodes(NodeList nodes) 
+NodeList DNode::getAllInNodes()
 {
+    NodeList nodes;
     nodes.push_back(this);
     for (auto socket : inSockets) {
-        if(socket->toIn()->getCntdSocket())
-            nodes = socket->toIn()->getCntdSocket()->getNode()->getAllInNodes(nodes);
+        if(socket->toIn()->getCntdSocket()) {
+            DNode *nextNode = socket->toIn()->getCntdSocket()->getNode();
+            NodeList morenodes = nextNode->getAllInNodes();
+            nodes.insert(nodes.end(), morenodes.begin(), morenodes.end());
+        }
     }
     return nodes;
 }
 
-ConstNodeList DNode::getAllInNodesConst(ConstNodeList nodes) const
+ConstNodeList DNode::getAllInNodesConst() const
 {
+    ConstNodeList nodes;
     nodes.push_back(this);
     for (auto socket : inSockets) {
-        if(socket->toIn()->getCntdSocket())
-            nodes = socket->toIn()->getCntdSocket()->getNode()->getAllInNodesConst(nodes);
+        if(socket->toIn()->getCntdSocket()) {
+            const DNode *nextNode = socket->toIn()->getCntdSocket()->getNode();
+            ConstNodeList morenodes = nextNode->getAllInNodesConst();
+            nodes.insert(nodes.end(), morenodes.begin(), morenodes.end());
+        }
     }
     return nodes;
 }
@@ -412,15 +437,15 @@ void DNode::setNodeType(NodeType t)
 
 void DNode::setNodeName(std::string name)
 {
-    FRG::CurrentProject->unregisterItem(this);
-    nodeName = FRG::CurrentProject->registerItem(this, name);
+    Project::instance()->unregisterItem(this);
+    nodeName = Project::instance()->registerItem(this, name);
 }
 
 void DNode::addSocket(DSocket *socket)
 {
     setSocketIDName(socket);
-    if(socket->getDir()== DSocket::IN) inSockets.add(socket);
-    else outSockets.add(socket);
+    if(socket->getDir()== DSocket::IN) inSockets.push_back(socket);
+    else outSockets.push_back(socket);
 }
 
 void DNode::setSocketIDName(DSocket *socket)    
@@ -456,11 +481,13 @@ void DNode::removeSocket(DSocket *socket)
 {
     if(!socket)return;
     if(socket->getDir() == DSocket::IN) {
-        inSockets.rm(socket);
+        auto it = std::find(inSockets.begin(), inSockets.end(), socket);
+        inSockets.erase(it);
         delete socket;
     }
     else {
-        outSockets.rm(socket);
+        auto it = std::find(outSockets.begin(), outSockets.end(), socket);
+        outSockets.erase(it);
         delete socket;
     }
 }
@@ -486,11 +513,6 @@ void DNode::clearSocketLinks()
 {
     foreach(DinSocket *socket, getInSockets())
        socket->clearLink();
-}
-
-bool DNode::isGhost()
-{
-    return ghost;
 }
 
 std::string DNode::getNodeName() const
@@ -767,24 +789,28 @@ ContainerNode::~ContainerNode()
     if(containerData) delete containerData;
 }
 
-NodeList ContainerNode::getAllInNodes(NodeList nodes)    
+NodeList ContainerNode::getAllInNodes()
 {
-    nodes = DNode::getAllInNodes(nodes);
+    NodeList nodes = DNode::getAllInNodes();
     for(auto socket : getOutputs()->getInSockets()) {
         DoutSocket *cntd = nullptr;
-        if((cntd = socket->toIn()->getCntdSocket()))
-            nodes = cntd->getNode()->getAllInNodes(nodes);
+        if((cntd = socket->toIn()->getCntdSocket())) {
+            NodeList morenodes = cntd->getNode()->getAllInNodes();
+            nodes.insert(nodes.end(), morenodes.begin(), morenodes.end());
+        }
     }
     return nodes;
 }
 
-ConstNodeList ContainerNode::getAllInNodesConst(ConstNodeList nodes)    const
+ConstNodeList ContainerNode::getAllInNodesConst() const
 {
-    nodes = DNode::getAllInNodesConst(nodes);
+    ConstNodeList nodes = DNode::getAllInNodesConst();
     for(auto socket : getOutputs()->getInSockets()) {
         DoutSocket *cntd = nullptr;
-        if((cntd = socket->toIn()->getCntdSocket()))
-            nodes = cntd->getNode()->getAllInNodesConst(nodes);
+        if((cntd = socket->toIn()->getCntdSocket())) {
+            ConstNodeList morenodes = cntd->getNode()->getAllInNodesConst();
+            nodes.insert(nodes.end(), morenodes.begin(), morenodes.end());
+        }
     }
     return nodes;
 }

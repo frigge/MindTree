@@ -21,7 +21,6 @@
 #include "data/nodes/data_node_socket.h"
 #include "data/dnspace.h"
 #include "pyexposable.h"
-#include "data/frg.h"
 #include "graphics/windowlist.h"
 #include "graphics/viewer_dock_base.h"
 #include "graphics/viewer.h"
@@ -242,6 +241,7 @@ void ProjectPyWrapper::wrap()
    BPy::class_<ProjectPyWrapper, BPy::bases<PyWrapper>>("Project", BPy::no_init)
             .add_property("filename", &ProjectPyWrapper::getFilename, 
                     &ProjectPyWrapper::setFilename)
+            .def("save", &ProjectPyWrapper::save)
             .add_property("root", 
                     BPy::make_function(&ProjectPyWrapper::getRoot, 
                         BPy::return_value_policy<BPy::manage_new_object>()));
@@ -251,6 +251,12 @@ std::string ProjectPyWrapper::getFilename()
 {
     if(!alive()) return std::string();
     return getWrapped<Project>()->getFilename();
+}
+
+void ProjectPyWrapper::save()
+{
+    if(!alive()) return;
+    getWrapped<Project>()->save();
 }
 
 void ProjectPyWrapper::setFilename(std::string name)    
@@ -394,7 +400,7 @@ void DNodePyWrapper::wrap()
                 .def("addInSocket", &DNodePyWrapper::addInSocket, BPy::return_value_policy<BPy::manage_new_object>())
                 .def("addOutSocket", &DNodePyWrapper::addOutSocket, BPy::return_value_policy<BPy::manage_new_object>())
                 .add_property("selected", &DNodePyWrapper::getSelected, &DNodePyWrapper::setSelected)
-                .add_property("outsockets", 
+                .def("setDynamicInSockets", &DNodePyWrapper::setDynamicInSockets)
                 .add_property("outsockets", &DNodePyWrapper::out);
 }
 
@@ -408,6 +414,12 @@ void DNodePyWrapper::setSelected(bool value)
 {
     if(!alive())return;
     getWrapped<DNode>()->setSelected(value);
+}
+
+void DNodePyWrapper::setDynamicInSockets()
+{
+    if(!alive()) return;
+    getWrapped<DNode>()->setDynamicSocketsNode(DSocket::IN);
 }
 
 BPy::list DNodePyWrapper::dir(BPy::object self)    
@@ -530,7 +542,7 @@ BPy::list DNodePyWrapper::out()
     for(DoutSocket *socket : getWrapped<DNode>()->getOutSockets()) {
         l.append(new DoutSocketPyWrapper(socket));
     }
-    return new DoutSocketPyWrapper(s->toOut());
+    return l;
 }
 
 DSocketPyWrapper::DSocketPyWrapper(DSocket *socket)

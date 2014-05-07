@@ -29,6 +29,7 @@ namespace MindTree
 class DSocket;
 class DinSocket;
 class DoutSocket;
+
 typedef std::vector<DinSocket*> DinSocketList;
 typedef std::vector<DoutSocket*> DoutSocketList;
 typedef std::vector<DSocket*> DSocketList;
@@ -64,8 +65,6 @@ public:
     SocketType(const char *str);
     virtual ~SocketType();
 
-    void mapToNew();
-
     std::string toStr()const;
     void setType(std::string value);
     static int getID(std::string str);
@@ -89,6 +88,12 @@ private:
 class DNode;
 class DinSocket;
 class DoutSocket;
+
+namespace IO {
+void write(std::ostream &stream, const DSocket *socket);
+void write(std::ostream &stream, const DinSocket *socket);
+}
+
 
 class DSocket : public PyExposable
 {
@@ -133,6 +138,8 @@ public:
 	void setName(std::string value);
 
 private:
+    friend void MindTree::IO::write(std::ostream& stream, const MindTree::DSocket *socket);
+    friend void MindTree::IO::write(std::ostream& stream, const MindTree::DinSocket *socket);
     std::string idName;
     std::string name;
     SocketType type;
@@ -174,6 +181,7 @@ public:
     void clearLink();
 
 private:
+    friend void MindTree::IO::write(std::ostream &stream, const DinSocket *socket);
 	unsigned short tempCntdID;
     DoutSocket* cntdSocket;
 

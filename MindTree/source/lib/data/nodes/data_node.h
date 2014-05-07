@@ -63,6 +63,9 @@ class ContainerNode;
 typedef std::vector<DNode*> NodeList;
 typedef std::vector<const DNode*> ConstNodeList;
 
+namespace IO {
+    void write(std::ostream&, const DNode*);
+}
 
 class DNode : public Object, public PyExposable
 {
@@ -89,8 +92,8 @@ public:
     template<class C>
     C* getDerived();
 
-    virtual NodeList getAllInNodes(NodeList nodes=NodeList());
-    virtual ConstNodeList getAllInNodesConst(ConstNodeList nodes=ConstNodeList()) const;
+    virtual NodeList getAllInNodes();
+    virtual ConstNodeList getAllInNodesConst() const;
 
     virtual void setNodeName(std::string name);
     std::string getNodeName() const;
@@ -132,20 +135,18 @@ public:
     virtual bool operator==(const DNode &node)const;
     virtual bool operator!=(const DNode &node)const;
 
-    bool isGhost();
-
     DNode *createFuncNode(std::string filepath);
     static DNode *dropNode(std::string filepath);
 
 private:
     static std::vector<std::function<DNode_ptr()>> newNodeFactory;
 
+    friend void MindTree::IO::write(std::ostream&, const DNode*);
+
     bool selected;
     DNSpace *space;
     DSocket *varsocket;
     DSocket *lastsocket;
-    bool ghost;
-    bool blockCBregister;
     int varcnt;
     unsigned short ID;
     static unsigned short count;
@@ -188,8 +189,8 @@ public:
     void mapOnToIn(const DSocket *on, const DSocket *in);
     int getSocketMapSize() const;
 
-    NodeList getAllInNodes(NodeList nodes);
-    ConstNodeList getAllInNodesConst(ConstNodeList nodes)const;
+    NodeList getAllInNodes();
+    ConstNodeList getAllInNodesConst() const;
 
     ContainerSpace* getContainerData() const;
     void setContainerData(ContainerSpace* value);
