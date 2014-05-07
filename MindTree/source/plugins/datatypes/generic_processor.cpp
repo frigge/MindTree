@@ -5,7 +5,7 @@ using namespace MindTree;
 
 BOOST_PYTHON_MODULE(generic_processor)
 {
-    auto values = [](const DataCache *) { };
+    auto values = [](DataCache *cache) { cache->pushData(cache->getData(0)); };
 
     DataCache::addProcessor("FLOAT", "FLOATVALUE", new CacheProcessor(values));
     DataCache::addProcessor("STRING", "STRINGVALUE", new CacheProcessor(values));
