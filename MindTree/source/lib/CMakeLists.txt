@@ -2,7 +2,6 @@ project(mindtree_core)
 cmake_minimum_required(VERSION 2.8)
 set(LIB_SRC
     data/cache_main.cpp
-    data/data_nodelink.cpp
     data/datatypes.cpp
     data/dnspace.cpp
     #data/nodes/buildin_nodes.cpp
@@ -28,7 +27,6 @@ set(LIB_SRC
 
 set(LIB_HEAD
     data/cache_main.h
-    data/data_nodelink.h
     data/datatypes.h
     data/dnspace.h
     #data/nodes/buildin_nodes.h

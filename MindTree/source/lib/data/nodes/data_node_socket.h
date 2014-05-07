@@ -21,7 +21,6 @@
 
 #include "data/datatypes.h"
 #include "data/python/pyexposable.h"
-#include "data/data_nodelink.h"
 #include "data/properties.h"
 
 namespace MindTree
@@ -128,7 +127,7 @@ public:
     std::string getIDName();
 
     static unsigned short count;
-    static DNodeLink createLink(DSocket *socket1, DSocket *socket2);
+    static void createLink(DSocket *socket1, DSocket *socket2);
     static void removeLink(DinSocket *in, DoutSocket *out);
     static bool isCompatible(DSocket *s1, DSocket *s2);
     static bool isCompatible(SocketType s1, SocketType s2);
@@ -197,7 +196,6 @@ public:
     ~DoutSocket();
     bool operator==(DoutSocket &socket)const;
     bool operator!=(DoutSocket &socket)const;
-    std::vector<DNodeLink> getLinks() const;
     std::vector<DinSocket*> getCntdSockets() const;
     void registerSocket(DSocket *socket);
     void unregisterSocket(DinSocket *socket, bool decr=true);

@@ -1,7 +1,6 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 #include "data/nodes/data_node.h"
-#include "data/data_nodelink.h"
 #include "data/dnspace.h"
 #include "data/python/pyexposable.h"
 
@@ -22,11 +21,6 @@ public:
     static Project* load(std::string filename);
 
     void removeSelectedNodes(NodeList nodes);
-
-    static std::vector<DNodeLink*> getOutLinks(NodeList nodes);
-    static std::vector<DNodeLink*> getInLinks(NodeList nodes);
-    static std::vector<DNodeLink*> getOutLinks(DNode *node);
-    static std::vector<DNodeLink*> getInLinks(DNode *node);
 
     void save(); 
     void saveAs(); 

@@ -260,7 +260,7 @@ bool DSocket::isCompatible(SocketType s1, SocketType s2)
     return true;
 }
 
-DNodeLink DSocket::createLink(DSocket *socket1, DSocket *socket2)    
+void DSocket::createLink(DSocket *socket1, DSocket *socket2)    
 {
     DinSocket *in = 0;
     DoutSocket *out = 0;
@@ -277,9 +277,7 @@ DNodeLink DSocket::createLink(DSocket *socket1, DSocket *socket2)
     }
     if(in) {
         in->setCntdSocket(out);
-        return DNodeLink(in, out);
     }
-    return DNodeLink(in, out);
 }
 
 void DSocket::removeLink(DinSocket *in, DoutSocket *out)    
@@ -470,14 +468,6 @@ void DoutSocket::registerSocket(DSocket *socket)
                  cntdSockets.end(), 
                  socket->toIn()) == cntdSockets.end())
         cntdSockets.push_back(socket->toIn()); 
-}
-
-std::vector<DNodeLink> DoutSocket::getLinks() const
-{
-    std::vector<DNodeLink> links;
-    for(DinSocket *socket : cntdSockets)
-        links.push_back(DNodeLink(socket, const_cast<DoutSocket*>(this)));
-    return links;
 }
 
 std::vector<DinSocket*> DoutSocket::getCntdSockets() const
