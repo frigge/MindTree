@@ -53,7 +53,9 @@ private:
 };
 
 typedef std::vector<glm::vec3> VertexList;
+typedef std::shared_ptr<VertexList> VertexListPtr;
 typedef std::vector<Polygon> PolygonList;
+typedef std::shared_ptr<PolygonList> PolygonListPtr;
 
 class MeshData;
 class AbstractTransformableNode;
@@ -65,6 +67,8 @@ public:
     };
     AbstractTransformable(eObjType t);
     virtual ~AbstractTransformable();
+    AbstractTransformable(const AbstractTransformable &other);
+
     AbstractTransformable::eObjType getType();
     std::string getName();
     void setName(std::string value);
@@ -105,8 +109,9 @@ class ObjectData : public MindTree::Object, public MindTree::PyExposable
 {
 public:
     enum eDataType {
-        MESH, SPLINE, NURBS, PATCH
+        MESH
     };
+
     ObjectData(eDataType t);
     eDataType getType();
     void setType(eDataType type);
@@ -115,6 +120,8 @@ public:
 private:
     eDataType type;
 };
+
+typedef std::shared_ptr<ObjectData> ObjectDataPtr;
 
 class MeshData : public ObjectData
 {
@@ -125,18 +132,20 @@ public:
 
     void computeFaceNormals();
     void computeVertexNormals();
-    const MindTree::DNode* getNode();
 
 private:
     std::string name;
 };
+typedef std::shared_ptr<MeshData> MeshDataPtr;
 
+class GeoObject;
+typedef std::shared_ptr<GeoObject> GeoObjectPtr;
 class GeoObject : public AbstractTransformable, public MindTree::PyExposable
 {
 public:
     GeoObject();
+    GeoObject(const GeoObject &other);
     ~GeoObject();
-    void makeInstance(std::shared_ptr<GeoObject> obj);
     std::shared_ptr<ObjectData> getData();
     void setData(std::shared_ptr<ObjectData> value);
 
@@ -165,6 +174,8 @@ public:
 private:
     std::list<std::shared_ptr<AbstractTransformable>> members;
 };
+
+typedef std::shared_ptr<Group> GroupPtr;
 
 class Camera : public AbstractTransformable
 {

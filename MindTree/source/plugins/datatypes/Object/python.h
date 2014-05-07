@@ -34,4 +34,8 @@ public:
     static void wrap();
 };
 
+namespace MindTree { class DataCache; }
+void groupProc(MindTree::DataCache *cache);
+void transformProc(MindTree::DataCache *cache);
+
 #endif /* end of include guard: PYTHON_VQNZMITG */

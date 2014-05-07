@@ -1,5 +1,7 @@
 #include "data/properties.h"
 #include "object.h"
+#include "data/cache_main.h"
+#include "glm/gtc/matrix_transform.hpp"
 #include "python.h"
 
 ObjectDataPyWrapper::ObjectDataPyWrapper(ObjectData *data)
@@ -27,7 +29,6 @@ ObjectPyWrapper::~ObjectPyWrapper()
 
 void ObjectPyWrapper::wrap()    
 {
-    MindTree::PropertyData<VertexList>::registerType("VertexList");
     BPy::class_<ObjectPyWrapper>("Object", BPy::no_init);
 }
 
@@ -45,31 +46,60 @@ void GroupPyWrapper::wrap()
     BPy::class_<GroupPyWrapper>("Group", BPy::no_init);
 }
 
+void groupProc(MindTree::DataCache *cache)
+{
+    auto *node = cache->getNode();
+
+    auto grp = std::make_shared<Group>();
+    for (size_t i = 0; i < node->getInSockets().size(); ++i) {
+        auto *socket = node->getInSockets()[i];
+        if (socket->getCntdSocket()) {
+            auto data = cache->getData(i);
+            if (data.getType() == "SCENEOBJECT")
+                grp->addMember(data.getData<GeoObjectPtr>());
+            else if (data.getType() == "GROUPDATA")
+                grp->addMembers(data.getData<GroupPtr>()->getMembers());
+        }
+            
+    }
+
+    cache->pushData(grp);
+}
+
+void transformProc(MindTree::DataCache *cache)
+{
+    auto obj = cache->getData(0).getData<GeoObjectPtr>();
+    glm::vec3 translate = cache->getData(1).getData<glm::vec3>();
+    glm::vec3 rotation = cache->getData(2).getData<glm::vec3>();
+    glm::vec3 scale = cache->getData(3).getData<glm::vec3>();
+
+    auto newobj = std::make_shared<GeoObject>(*obj);
+
+    glm::mat4 rotx = glm::rotate(glm::mat4(), rotation.x, glm::vec3(1, 0, 0));
+    glm::mat4 roty = glm::rotate(glm::mat4(), rotation.y, glm::vec3(0, 1, 0));
+    glm::mat4 rotz = glm::rotate(glm::mat4(), rotation.z, glm::vec3(0, 0, 1));
+
+    glm::mat4 rot = rotz * roty * rotx;
+    
+    glm::mat4 scalemat = glm::scale(glm::mat4(), scale);
+    glm::mat4 trans = glm::translate(glm::mat4(), translate);
+    glm::mat4 newtrans;
+    newtrans = trans * scalemat * rot;
+
+    newobj->applyTransform(newtrans);
+    
+    cache->pushData(newobj);
+}
+
 BOOST_PYTHON_MODULE(object){
-    MindTree::PropertyData<Group>::registerType("GROUPDATA");
-    MindTree::PropertyData<GeoObject>::registerType("SCENEOBJECT");
+    using namespace MindTree;
+    auto proc = new CacheProcessor(groupProc);
+    DataCache::addProcessor("GROUPDATA", "GROUP", proc);
+
+    proc = new CacheProcessor(transformProc);
+    DataCache::addProcessor("SCENEOBJECT", "TRANSFORM", proc);
+
     ObjectDataPyWrapper::wrap();
     ObjectPyWrapper::wrap();
     GroupPyWrapper::wrap();
-
-    //register Nodes
-    MindTree::NodeDataBase::registerNodeType(new MindTree::BuildInFactory("OBJECT", "Objects.Object",
-                                    []{
-                                        return new ObjectNode();
-                                    }));
-
-    MindTree::NodeDataBase::registerNodeType(new MindTree::BuildInFactory("SCENEGROUP", "Objects.Group",
-                                    []{
-                                        return new CreateGroupNode();
-                                    }));
-
-    MindTree::NodeDataBase::registerNodeType(new MindTree::BuildInFactory("CAMERANODE", "Objects.Camera",
-                                    []{
-                                        return new CreateGroupNode();
-                                    }));
-
-    MindTree::NodeDataBase::registerNodeType(new MindTree::BuildInFactory("LIGHTNODE", "Objects.Light",
-                                    []{
-                                        return new CreateGroupNode();
-                                    }));
 }

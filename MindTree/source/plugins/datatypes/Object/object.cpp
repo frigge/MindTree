@@ -20,7 +20,6 @@
 #include "object.h"
 
 #include "cmath"
-#include "data/frg.h"
 #include "data/project.h"
 #include "data/nodes/nodetype.h"
 #include "data/nodes/node_db.h"
@@ -29,10 +28,25 @@
 //#include "graphics/object_node_vis.h"
 
 using namespace MindTree;
+PROPERTY_TYPE_INFO(GroupPtr, "GROUPDATA");
+PROPERTY_TYPE_INFO(GeoObjectPtr, "SCENEOBJECT");
+PROPERTY_TYPE_INFO(VertexListPtr, "VERTEXLIST");
+PROPERTY_TYPE_INFO(PolygonListPtr, "POLYGONLIST");
 
 AbstractTransformable::AbstractTransformable(eObjType t)
-    : parent(nullptr), center(0, 0, 0), type(t)
+    : center(0, 0, 0), type(t)
 {
+}
+
+AbstractTransformable::AbstractTransformable(const AbstractTransformable &other)
+    : MindTree::Object(other),
+    type(other.type),
+    center(other.center),
+    transformation(other.transformation),
+    name(other.name)
+
+{
+    
 }
 
 AbstractTransformable::~AbstractTransformable()
@@ -284,6 +298,12 @@ GeoObject::GeoObject()
 {
 }
 
+GeoObject::GeoObject(const GeoObject &other)
+    : AbstractTransformable(other), data(other.data)
+{
+}
+
+
 GeoObject::~GeoObject()
 {
 }
@@ -296,10 +316,6 @@ std::shared_ptr<ObjectData> GeoObject::getData()
 void GeoObject::setData(std::shared_ptr<ObjectData> value)
 {
     data = value;
-}
-
-void GeoObject::makeInstance(std::shared_ptr<GeoObject> obj)
-{
 }
 
 Group::Group()
