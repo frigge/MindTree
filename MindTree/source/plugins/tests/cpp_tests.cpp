@@ -20,30 +20,30 @@ bool testProperties()
 {
     bool success=true;
     MindTree::Property floatprop{2.5};
-    std::cout << "created " << floatprop.getType() << " Property: "
+    std::cout << "created " << floatprop.getType().toStr() << " Property: "
         << floatprop.getData<double>() << std::endl;
     success = success && floatprop.getData<double>() == 2.5;
 
     MindTree::Property intprop{2};
-    std::cout << "created " << intprop.getType() << " Property: "
+    std::cout << "created " << intprop.getType().toStr() << " Property: "
         << intprop.getData<int>() << std::endl;
     success = success && intprop.getData<int>() == 2;
 
     MindTree::Property stringprop{std::string("hallo test")};
-    std::cout << "created " << stringprop.getType() << " Property: "
+    std::cout << "created " << stringprop.getType().toStr() << " Property: "
         << stringprop.getData<std::string>() << std::endl;
     success = success && stringprop.getData<std::string>() == "hallo test";
 
     MindTree::Property colorprop{glm::vec4(1, 0, 0, 1)};
     glm::vec4 color = colorprop.getData<glm::vec4>();
-    std::cout << "created " << colorprop.getType() << " Property: ("
+    std::cout << "created " << colorprop.getType().toStr() << " Property: ("
         << color.r << ", " << color.g << ", " << color.b << ", " << color.a << ")" << std::endl;
     success = success && colorprop.getData<glm::vec4>() == glm::vec4(1, 0, 0, 1);
 
     glm::vec3 oldvec = glm::vec3(24454.456, 10, 25);
     MindTree::Property vec3prop{oldvec};
     glm::vec3 vec3 = vec3prop.getData<glm::vec3>();
-    std::cout << "created " << vec3prop.getType() << " Property: ("
+    std::cout << "created " << vec3prop.getType().toStr() << " Property: ("
         << vec3.x << ", " << vec3.y << ", " << vec3.z << ")" << std::endl;
     success = success && vec3 == oldvec;
 
@@ -53,19 +53,19 @@ bool testProperties()
 bool testPropertiesTypeInfo()
 {
     MindTree::Property prop{2.5};
-    std::string type1 = prop.getType();
+    std::string type1 = prop.getType().toStr();
     std::cout << "original Prop Type: " << type1 << std::endl;
     if(type1 != "FLOAT") return false;
 
     MindTree::Property copyProp(prop);
-    std::cout << "copy Prop Type: " << copyProp.getType() << std::endl;
-    if(type1 != copyProp.getType())
+    std::cout << "copy Prop Type: " << copyProp.getType().toStr() << std::endl;
+    if(type1 != copyProp.getType().toStr())
         return false;
 
     MindTree::Property assignmentProp;
     assignmentProp = prop;
-    std::cout << "assignment Prop Type: " << assignmentProp.getType() << std::endl;
-    if(type1 != assignmentProp.getType())
+    std::cout << "assignment Prop Type: " << assignmentProp.getType().toStr() << std::endl;
+    if(type1 != assignmentProp.getType().toStr())
         return false;
 
     return true;
@@ -75,7 +75,7 @@ bool testObjectInProperty()
 {
     GeoObjectPtr obj = std::make_shared<GeoObject>();
     MindTree::Property objProp{obj};
-    std::cout << "original Prop Type: " << objProp.getType() << std::endl;
+    std::cout << "original Prop Type: " << objProp.getType().toStr() << std::endl;
     if(objProp.getType() != "SCENEOBJECT")
         return false;
 

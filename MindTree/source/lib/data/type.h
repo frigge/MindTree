@@ -11,7 +11,7 @@ template<typename T>
 class Type
 {
 public:
-    Type(const std::string &typeStr="")
+    Type(const std::string &typeStr="undefined")
         : typeString(typeStr), _id(getID(typeStr))
     { }
 
@@ -78,6 +78,19 @@ private:
     int _id;
     static int id_cnt;
     static std::vector<std::string> id_map;
+};
+
+class DataType : public Type<DataType> 
+{
+public:
+    DataType(const std::string &typeStr="")
+        : Type<DataType>(typeStr)
+    {}
+
+    DataType(const char *typeStr)
+        : Type<DataType>(typeStr)
+    {}
+
 };
 
 template<typename T>

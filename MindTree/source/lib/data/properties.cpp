@@ -27,7 +27,7 @@
 
 using namespace MindTree;
 
-template<class T> const std::string MindTree::PropertyTypeInfo<T>::typestr = "undefined";
+template<class T> const MindTree::DataType MindTree::PropertyTypeInfo<T>::_type;
 
 PROPERTY_TYPE_INFO(float, "FLOAT");
 PROPERTY_TYPE_INFO(double, "FLOAT");
@@ -127,7 +127,7 @@ Property Property::clone()const
     return Property(*this);
 }
 
-std::string Property::getType() const
+DataType Property::getType() const
 {
     return type;
 }
@@ -164,8 +164,8 @@ Property IO::Input::read(std::istream &stream)
 
 std::ostream& MindTree::IO::writeProperty(std::ostream &stream, const Property &prop)
 {
-    const char *raw = prop.type.c_str();
-    stream.write(raw, prop.type.size());
+    const char *raw = prop.type.toStr().c_str();
+    stream.write(raw, prop.type.toStr().size());
     stream.write(reinterpret_cast<char*>(prop.datasize), sizeof(prop.datasize));
     return prop.writeData(stream, prop);
 }

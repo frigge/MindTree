@@ -22,6 +22,7 @@
 
 #include "data/python/wrapper.h"
 #include "unordered_map"
+#include "data/type.h"
 
 namespace BPy=boost::python;
 
@@ -32,18 +33,23 @@ class Property;
 template<class T>
 struct PropertyTypeInfo
 {
-    static const std::string typestr;
+    static const DataType _type;
 };
 
-#define PROPERTY_TYPE_INFO(type, str) \
-    template<> const std::string MindTree::PropertyTypeInfo<type>::typestr = str;
+#define PROPERTY_TYPE_INFO(TYPE, STR) \
+    template<> const MindTree::DataType MindTree::PropertyTypeInfo<TYPE>::_type{STR}
+
+typedef std::pair<char*, size_t> RawData;
+typedef std::function<RawData(RawData)> ConverterFunctor;
+typedef std::vector<ConverterFunctor> ConverterList;
 
 template<class T>
 class PropertyConverter
 {
 public:
 private:
-    std::vector<std::function<char*(char*)>> _fromTConverter;
+    static ConverterList _fromTConverter;
+    friend class Property;
 };
 
 template<class T>
@@ -105,7 +111,7 @@ public:
         cloneData = [this](Property &other) {
             other.setData<T>(this->getData<T>());
         };
-
+        
         writeData = &IO::Writer<T>::write;
 
         datasize = sizeof(d);
@@ -113,8 +119,8 @@ public:
         if(data)deleteFunc();
         pyconverter = [this]{ return PyConverter<T>::pywrap(this->getData<T>()); };
         data = new PropertyData<T>(d);
-        type = PropertyTypeInfo<T>::typestr;
-        deleteFunc = [this]{delete reinterpret_cast<PropertyData<T>*>(this->data); this->data=0; type="undefined";};
+        type = PropertyTypeInfo<T>::_type;
+        deleteFunc = [this]{delete reinterpret_cast<PropertyData<T>*>(this->data); this->data=0; this->type=DataType();};
     }
 
     template<typename T>
@@ -123,13 +129,13 @@ public:
         if(!data) {
             data = new PropertyData<T>();
         }
-        if(PropertyTypeInfo<T>::typestr != type)
+        if(PropertyTypeInfo<T>::_type != type)
             return T();
         return ((PropertyData<T>*)data)->getData();
     }
 
     BPy::object toPython() const;
-    std::string getType() const;
+    DataType getType() const;
 
 private:
     friend std::ostream& MindTree::IO::writeProperty(std::ostream& stream, const Property &prop);
@@ -140,7 +146,8 @@ private:
     std::function<BPy::object()> pyconverter;
     size_t datasize;
     mutable void *data;
-    std::string type;
+    ConverterList *_converterList;
+    DataType type;
 };
 
 

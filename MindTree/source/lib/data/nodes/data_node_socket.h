@@ -58,18 +58,7 @@ private:
 };
 
 
-class SocketType : public Type<SocketType> 
-{
-public:
-    SocketType(const std::string &typeStr="")
-        : Type<SocketType>(typeStr)
-    {}
-
-    SocketType(const char *typeStr)
-        : Type<SocketType>(typeStr)
-    {}
-
-};
+typedef DataType SocketType;
 
 class DNode;
 class DinSocket;
