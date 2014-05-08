@@ -22,6 +22,7 @@
 #include "data/datatypes.h"
 #include "data/python/pyexposable.h"
 #include "data/properties.h"
+#include "data/type.h"
 
 namespace MindTree
 {
@@ -57,31 +58,17 @@ private:
 };
 
 
-class SocketType
+class SocketType : public Type<SocketType> 
 {
 public:
-    SocketType(const std::string &str="");
-    SocketType(const char *str);
-    virtual ~SocketType();
+    SocketType(const std::string &typeStr="")
+        : Type<SocketType>(typeStr)
+    {}
 
-    std::string toStr()const;
-    void setType(std::string value);
-    static int getID(std::string str);
-    static SocketType byID(int id);
-    static int registerType(std::string type);
-    static std::vector<std::string> getTypes();
-    int id();
+    SocketType(const char *typeStr)
+        : Type<SocketType>(typeStr)
+    {}
 
-    bool operator==(const SocketType &other);
-    bool operator!=(const SocketType &other);
-
-    SocketType& operator=(std::string str);
-
-private:
-    std::string type;
-    int _id;
-    static int id_cnt;
-    static std::vector<std::string> id_map;
 };
 
 class DNode;

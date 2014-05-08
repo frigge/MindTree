@@ -25,7 +25,7 @@ using namespace MindTree;
 std::unordered_map<DataCache*, const DoutSocket*>CacheControl::caches;
 std::unordered_map<const LoopNode*, LoopCache*> LoopCacheControl::loops;
 ConstNodeList CacheControl::updateNodes;
-std::vector<AbstractCacheProcessor::cacheList> DataCache::processors;
+TypeDispatcher<SocketType, AbstractCacheProcessor::CacheList> DataCache::processors;
 
 bool CacheControl::isCached(const DoutSocket *socket)    
 {
@@ -192,14 +192,13 @@ void CacheProcessor::operator()(DataCache* cache)
 
 DataCache::DataCache()
     : node(nullptr),
-    typeID(-1),
     startsocket(nullptr)
 {
 }
 
 DataCache::DataCache(const DoutSocket *socket)
     : node(socket->getNode()),
-    typeID(socket->getType().id()),
+    type(socket->getType()),
     startsocket(socket)
 {
     cacheInputs();
@@ -210,7 +209,7 @@ DataCache::DataCache(const DataCache &other)
     node(other.node), 
     cachedInputs(other.cachedInputs),
     cachedOutputs(other.cachedOutputs),
-    typeID(other.typeID),
+    type(other.type),
     startsocket(other.startsocket)
 {
 }
@@ -224,32 +223,23 @@ void DataCache::start(const DoutSocket *socket)
 {
     startsocket = socket;
     node = socket->getNode();
-    typeID = socket->getType().id();
+    type = socket->getType();
     cacheInputs();
 }
 
 int DataCache::getTypeID() const
 {
-    return  typeID;
+    return  type.id();
 }
 
 void DataCache::addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc)
 {
-    unsigned long node_type = nt.id();
-    unsigned long socket_type = st.id();
-    if(processors.size() <= socket_type) {
-        processors.resize(socket_type+1);
-        processors[socket_type] = AbstractCacheProcessor::cacheList();
-    }
-    if(processors[socket_type].size() <= node_type) {
-        processors[socket_type].resize(node_type+1);
-    }
-    processors[socket_type][node_type] = proc;
+    processors[st][nt] = proc;
 }
 
-const std::vector<AbstractCacheProcessor::cacheList>& DataCache::getProcessors()
+const std::vector<AbstractCacheProcessor::CacheList>& DataCache::getProcessors()
 {
-    return processors; 
+    return processors.getAll(); 
 }
 
 //computes the value of the given input socket
@@ -326,16 +316,16 @@ void DataCache::cacheInputs()
 {
     unsigned long nodeTypeID = node->getType().id();
 
-    if(typeID >= processors.size()){
+    if(type.id() >= processors.size()){
         std::cout<< "no processors defined for this data type ("
-                 << SocketType::byID(typeID).toStr()
+                 << type.toStr()
                  << " id:" 
-                 << typeID
+                 << type.id()
                  << ")"
                  << std::endl;
         return;
     }
-    auto list = processors[typeID];
+    auto list = processors[type];
     if(nodeTypeID >= list.size()){
         std::cout<< "no processors defined for this node type (" 
                  << node->getType().toStr() 
@@ -345,13 +335,13 @@ void DataCache::cacheInputs()
                  << std::endl;
         return;
     }
-    auto datacache = list[nodeTypeID];
+    auto datacache = list[node->getType()];
     if(!datacache) {
         std::cout<<"Node Type ID:" << nodeTypeID << std::endl;
-        std::cout<<"Socket Type ID:" << typeID << std::endl;
+        std::cout<<"Socket Type ID:" << type.id() << std::endl;
         return;
     }
-    std::cout << "caching " << SocketType::byID(typeID).toStr() << " on " << node->getType().toStr() << std::endl;
+    std::cout << "caching " << type.toStr() << " on " << node->getType().toStr() << std::endl;
     (*datacache)(this);
     //Property prop(cachedData.front());
     //cachedData.pop_front();

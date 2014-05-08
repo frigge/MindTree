@@ -19,8 +19,7 @@
 
 #define NODETYPE_QDRSY1S8
 
-#include "string"
-#include "vector"
+#include "data/type.h"
 
 namespace MindTree{
 
@@ -29,32 +28,17 @@ namespace IO {
     void write(std::ostream &, const NodeType&);
 }
 
-class NodeType
+class NodeType : public Type<NodeType> 
 {
 public:
-    NodeType(const std::string &typeStr="");
-    NodeType(const char *typeStr);
+    NodeType(const std::string &typeStr="")
+        : Type<NodeType>(typeStr)
+    {}
 
-    virtual ~NodeType();
-    static NodeType byID(int id);
-    int id()const;
-    std::string toStr()const;
+    NodeType(const char *typeStr)
+        : Type<NodeType>(typeStr)
+    {}
 
-    static std::vector<std::string> getTypes();
-
-    static int registerType(std::string name);
-    static void unregisterType(std::string name);
-    static int getID(std::string name);
-
-    bool operator==(const NodeType &other)const;
-    bool operator!=(const NodeType &other)const;
-
-private:
-    friend void MindTree::IO::write(std::ostream&, const MindTree::NodeType&);
-    std::string typeString;
-    int _id;
-    static int id_cnt;
-    static std::vector<std::string> id_map;
 };
 
 };

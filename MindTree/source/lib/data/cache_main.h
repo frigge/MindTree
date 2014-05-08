@@ -21,6 +21,7 @@
 #define CACHE_MAIN_PD1QWTW9
 
 #include "data/nodes/data_node.h"
+#include "data/type.h"
 
 namespace MindTree
 {
@@ -74,7 +75,7 @@ private:
 class AbstractCacheProcessor
 {
 public:
-    typedef std::vector<AbstractCacheProcessor*> cacheList;
+    typedef TypeDispatcher<NodeType, AbstractCacheProcessor*> CacheList;
     AbstractCacheProcessor();
     virtual ~AbstractCacheProcessor();
     virtual void operator()(DataCache*)=0;
@@ -114,17 +115,17 @@ public:
     void setStart(const DoutSocket *socket);
 
     static void addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc);
-    static const std::vector<AbstractCacheProcessor::cacheList>& getProcessors();
+    static const std::vector<AbstractCacheProcessor::CacheList>& getProcessors();
 
 private:
     void cacheInputs();
     void cache(const DinSocket *socket);
 
     const DNode *node;
-    static std::vector<AbstractCacheProcessor::cacheList> processors;
+    static TypeDispatcher<SocketType, AbstractCacheProcessor::CacheList> processors;
     std::vector<Property> cachedInputs;
     std::vector<Property> cachedOutputs;
-    int typeID;
+    SocketType type;
     const DoutSocket *startsocket;
 };
 
