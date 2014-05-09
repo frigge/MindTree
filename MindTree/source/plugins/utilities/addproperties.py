@@ -16,7 +16,7 @@ class CustomWidget(MT.pytypes.CustomNodeWidget):
         self.node.addInSocket("Property VALUE", "VARIABLE")
         self.editor.updateEditor(self.node)
 
-class AddPropertiesNodeFactory(MT.pytypes.NodeFactory):
+class AddPropertiesNodeDecorator(MT.pytypes.NodeDecorator):
     type="ADDPROPERTIES"
     label="Objects.Add Properties"
     insockets = [("Object(s)", "GROUPDATA"),
@@ -25,7 +25,7 @@ class AddPropertiesNodeFactory(MT.pytypes.NodeFactory):
     outsockets = [("Object(s)", "GROUPDATA")]
     customwidget = CustomWidget
 
-class FilterObjectsNodeFactory(MT.pytypes.NodeFactory):
+class FilterObjectsNodeDecorator(MT.pytypes.NodeDecorator):
     type="FILTEROBJECTS"
     label="Objects.Filter"
     insockets = [("Objects", "GROUPDATA"),
@@ -34,7 +34,7 @@ class FilterObjectsNodeFactory(MT.pytypes.NodeFactory):
 
 
 def registerNodes():
-    MT.registerNode(AddPropertiesNodeFactory)
-    MT.registerNode(FilterObjectsNodeFactory)
+    MT.registerNode(AddPropertiesNodeDecorator)
+    MT.registerNode(FilterObjectsNodeDecorator)
 
 registerNodes()

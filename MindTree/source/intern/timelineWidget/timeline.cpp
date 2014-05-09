@@ -177,12 +177,12 @@ TimelineNode::~TimelineNode()
 
 
 BOOST_PYTHON_MODULE(mttimeline) {
-    auto *timelineNodeFactory = 
-        new MindTree::BuildInFactory("TIMELINE", 
+    auto *timelineNodeDecorator = 
+        new MindTree::BuildInDecorator("TIMELINE", 
                                      "Values.Frame", 
                                      []()->MindTree::DNode*{ return new TimelineNode(); });
 
-    MindTree::NodeDataBase::registerNodeType(timelineNodeFactory);
+    MindTree::NodeDataBase::registerNodeType(timelineNodeDecorator);
 
     auto frameProc = [](MindTree::DataCache* cache) {
         std::cout <<  "caching current frame: " << Timeline::frame() << std::endl;

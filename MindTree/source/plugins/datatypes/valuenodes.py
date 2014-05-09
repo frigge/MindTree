@@ -1,40 +1,40 @@
 import MT
 
-class FloatNodeFactory(MT.pytypes.NodeFactory):
+class FloatNodeDecorator(MT.pytypes.NodeDecorator):
     type="FLOATVALUE"
     label="Values.Float Value"
     insockets = [("Value", "FLOAT")]
     outsockets = [("Value", "FLOAT")]
 
-class IntNodeFactory(MT.pytypes.NodeFactory):
+class IntNodeDecorator(MT.pytypes.NodeDecorator):
     type="INTVALUE"
     label="Values.Int Value"
     insockets = [("Value", "INTEGER")]
     outsockets = [("Value", "INTEGER")]
 
-class StringNodeFactory(MT.pytypes.NodeFactory):
+class StringNodeDecorator(MT.pytypes.NodeDecorator):
     type="STRINGVALUE"
     label="Values.String Value"
     insockets = [("Value", "STRING")]
     outsockets = [("Value", "STRING")]
 
-class ColorNodeFactory(MT.pytypes.NodeFactory):
+class ColorNodeDecorator(MT.pytypes.NodeDecorator):
     type="COLORVALUE"
     label="Values.Color Value"
     insockets = [("Value", "COLOR")]
     outsockets = [("Value", "COLOR")]
 
-class Vector3DNodeFactory(MT.pytypes.NodeFactory):
+class Vector3DNodeDecorator(MT.pytypes.NodeDecorator):
     type="VECTOR3DVALUE"
     label="Values.Vector3D"
     insockets = [("Value", "VECTOR3D")]
     outsockets = [("Value", "VECTOR3D")]
 
 def registerNodes():
-    MT.registerNode(FloatNodeFactory)
-    MT.registerNode(IntNodeFactory)
-    MT.registerNode(StringNodeFactory)
-    MT.registerNode(ColorNodeFactory)
-    MT.registerNode(Vector3DNodeFactory)
+    MT.registerNode(FloatNodeDecorator)
+    MT.registerNode(IntNodeDecorator)
+    MT.registerNode(StringNodeDecorator)
+    MT.registerNode(ColorNodeDecorator)
+    MT.registerNode(Vector3DNodeDecorator)
 
 registerNodes()

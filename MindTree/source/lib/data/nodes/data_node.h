@@ -139,7 +139,7 @@ public:
     static DNode *dropNode(std::string filepath);
 
 private:
-    static std::vector<std::function<DNode_ptr()>> newNodeFactory;
+    static std::vector<std::function<DNode_ptr()>> newNodeDecorator;
 
     friend void MindTree::IO::write(std::ostream&, const DNode*);
 

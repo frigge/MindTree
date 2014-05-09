@@ -1,16 +1,16 @@
 import object, MT
 
-class GroupObjectsNodeFactory(MT.pytypes.NodeFactory):
+class GroupObjectsNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Group"
     type = "GROUP"
     insockets = [("+", "VARIABLE")]
     outsockets = [("Group", "GROUPDATA")]
 
     def __init__(self, node):
-        MT.pytypes.NodeFactory.__init__(self, node)
+        MT.pytypes.NodeDecorator.__init__(self, node)
         node.setDynamicInSockets()
 
-class TransformObjectNodeFactory(MT.pytypes.NodeFactory):
+class TransformObjectNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Transform"
     type = "TRANSFORM"
     insockets = [
@@ -22,5 +22,5 @@ class TransformObjectNodeFactory(MT.pytypes.NodeFactory):
     outsockets = [("Object", "SCENEOBJECT")]
 
 
-MT.registerNode(GroupObjectsNodeFactory)
-MT.registerNode(TransformObjectNodeFactory)
+MT.registerNode(GroupObjectsNodeDecorator)
+MT.registerNode(TransformObjectNodeDecorator)

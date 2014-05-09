@@ -9,7 +9,7 @@ class CustomNodeWidget(QWidget):
         self.node = node
         self.editor = parent
 
-class NodeFactory:
+class NodeDecorator:
     type=""
     label=""
 
@@ -33,5 +33,5 @@ class NodeFactory:
         if self.customwidget is not None:
             Editor.customWidgets[self.type] = self.customwidget
 
-MT.pytypes.__dict__["NodeFactory"] = NodeFactory
+MT.pytypes.__dict__["NodeDecorator"] = NodeDecorator
 MT.pytypes.__dict__["CustomNodeWidget"] = CustomNodeWidget

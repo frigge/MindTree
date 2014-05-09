@@ -1,6 +1,6 @@
 import MT
 
-class ReadTextNode(MT.pytypes.NodeFactory):
+class ReadTextNode(MT.pytypes.NodeDecorator):
     type = "TEXTREAD"
     label = "IO.Read Text"
     insockets = [("Filename", "DIRECTORY"),

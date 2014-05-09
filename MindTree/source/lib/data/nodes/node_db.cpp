@@ -3,53 +3,53 @@
 
 using namespace MindTree;
 
-std::vector<AbstractNodeFactory*> NodeDataBase::nodeFactories;
+std::vector<AbstractNodeDecorator*> NodeDataBase::nodeFactories;
 std::vector<std::function<void()>> NodeDataBase::registerCallbackStack;
 
-AbstractNodeFactory::AbstractNodeFactory(std::string type, std::string label)
+AbstractNodeDecorator::AbstractNodeDecorator(std::string type, std::string label)
     : type(type), label(label)
 {
     NodeType::registerType(type);
 }
 
-AbstractNodeFactory::~AbstractNodeFactory()
+AbstractNodeDecorator::~AbstractNodeDecorator()
 {
 }
 
-void AbstractNodeFactory::setLabel(std::string l)    
+void AbstractNodeDecorator::setLabel(std::string l)    
 {
     label=l;
 }
 
-std::string AbstractNodeFactory::getLabel()    
+std::string AbstractNodeDecorator::getLabel()    
 {
     return label;
 }
 
-void AbstractNodeFactory::setType(std::string t)    
+void AbstractNodeDecorator::setType(std::string t)    
 {
     type = t;
 }
 
-std::string AbstractNodeFactory::getType()    
+std::string AbstractNodeDecorator::getType()    
 {
     return type;
 }
 
-DNode* AbstractNodeFactory::operator()()    
+DNode* AbstractNodeDecorator::operator()()    
 {
 }
 
-BuildInFactory::BuildInFactory(std::string type, std::string label, std::function<DNode*()> func)
-    : AbstractNodeFactory(type, label), func(func)
+BuildInDecorator::BuildInDecorator(std::string type, std::string label, std::function<DNode*()> func)
+    : AbstractNodeDecorator(type, label), func(func)
 {
 }
 
-BuildInFactory::~BuildInFactory()
+BuildInDecorator::~BuildInDecorator()
 {
 }
 
-DNode* BuildInFactory::operator()()    
+DNode* BuildInDecorator::operator()()    
 {
     return func();
 }
@@ -63,7 +63,7 @@ void NodeDataBase::regCB(std::function<void()> fun)
     registerCallbackStack.push_back(fun);
 }
 
-void NodeDataBase::registerNodeType(AbstractNodeFactory *factory)    
+void NodeDataBase::registerNodeType(AbstractNodeDecorator *factory)    
 {
     nodeFactories.push_back(factory);
     for(auto f : registerCallbackStack) f();
@@ -81,7 +81,7 @@ void NodeDataBase::unregisterNodeType()
 {
 }
 
-std::vector<AbstractNodeFactory*> NodeDataBase::getFactories()    
+std::vector<AbstractNodeDecorator*> NodeDataBase::getFactories()    
 {
     return nodeFactories;    
 }

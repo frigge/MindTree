@@ -63,18 +63,18 @@ DNodePyWrapper* DNodeListIteratorPyWrapper::next()
     return node;
 }
 
-PythonNodeFactory::PythonNodeFactory(BPy::object cls)
+PythonNodeDecorator::PythonNodeDecorator(BPy::object cls)
     : cls(cls) 
 {
     setType(BPy::extract<std::string>(cls.attr("type")));
     setLabel(BPy::extract<std::string>(cls.attr("label")));
 }
 
-PythonNodeFactory::~PythonNodeFactory()
+PythonNodeDecorator::~PythonNodeDecorator()
 {
 }
 
-DNode* PythonNodeFactory::operator()()    
+DNode* PythonNodeDecorator::operator()()    
 {
     DNode *node = new DNode();
     node->setNodeType(getType());
@@ -168,7 +168,7 @@ void PyWrapper::regNode(PyObject *nodeClass)
 {
     try {
         BPy::object cls(BPy::handle<>(BPy::borrowed(nodeClass)));
-        NodeDataBase::registerNodeType(new PythonNodeFactory(cls));
+        NodeDataBase::registerNodeType(new PythonNodeDecorator(cls));
     } catch(BPy::error_already_set const &) {
         PyErr_Print();
     }
@@ -195,7 +195,7 @@ DNodePyWrapper* PyWrapper::createNode(std::string name)
 BPy::list PyWrapper::getRegisteredNodes()    
 {
     BPy::list pylist;
-    for(AbstractNodeFactory *fac : NodeDataBase::getFactories()){
+    for(AbstractNodeDecorator *fac : NodeDataBase::getFactories()){
         pylist.append(fac->getLabel());
     }
     return pylist;

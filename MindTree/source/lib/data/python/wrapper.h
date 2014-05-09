@@ -103,11 +103,11 @@ private:
     std::vector<DNode*> nodelist;
 };
 
-class PythonNodeFactory : public MindTree::AbstractNodeFactory
+class PythonNodeDecorator : public MindTree::AbstractNodeDecorator
 {
 public:
-    PythonNodeFactory(BPy::object cls);
-    virtual ~PythonNodeFactory();
+    PythonNodeDecorator(BPy::object cls);
+    virtual ~PythonNodeDecorator();
     DNode* operator()();
 
 private:

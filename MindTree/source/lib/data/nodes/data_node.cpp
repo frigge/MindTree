@@ -31,7 +31,7 @@ using namespace MindTree;
 unsigned short DNode::count = 1;
 std::unordered_map<unsigned short, DNode_ptr>LoadNodeIDMapper::loadIDMapper;
 std::unordered_map<DNode*, DNode*> CopyNodeMapper::nodeMap;
-std::vector<std::function<DNode_ptr()>> DNode::newNodeFactory;
+std::vector<std::function<DNode_ptr()>> DNode::newNodeDecorator;
 
 unsigned short LoadNodeIDMapper::getID(DNode_ptr node)
 {
@@ -290,7 +290,7 @@ bool DNode::isContainer() const
 
 DNode_ptr DNode::newNode(std::string name, NodeType t, int insize, int outsize)
 {
-    DNode_ptr node = newNodeFactory[t.id()](); 
+    DNode_ptr node = newNodeDecorator[t.id()](); 
     node->setNodeName(name);
     return node;
 }

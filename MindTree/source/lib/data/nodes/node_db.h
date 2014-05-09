@@ -9,11 +9,11 @@
 namespace MindTree
 {
 class DNode;
-class AbstractNodeFactory
+class AbstractNodeDecorator
 {
 public:
-    AbstractNodeFactory(std::string type="", std::string label="");
-    virtual ~AbstractNodeFactory();
+    AbstractNodeDecorator(std::string type="", std::string label="");
+    virtual ~AbstractNodeDecorator();
     virtual DNode* operator()();
     void setLabel(std::string l);
     std::string getLabel();
@@ -24,11 +24,11 @@ private:
     std::string type, label;
 };
 
-class BuildInFactory : public AbstractNodeFactory
+class BuildInDecorator : public AbstractNodeDecorator
 {
 public:
-    BuildInFactory(std::string type, std::string label, std::function<DNode*()> func);
-    virtual ~BuildInFactory();
+    BuildInDecorator(std::string type, std::string label, std::function<DNode*()> func);
+    virtual ~BuildInDecorator();
     virtual DNode* operator()();
 
 private:
@@ -39,14 +39,14 @@ class NodeDataBase
 {
 public:
     static void scanFolders();
-    static void registerNodeType(AbstractNodeFactory *factory);
+    static void registerNodeType(AbstractNodeDecorator *factory);
     static void unregisterNodeType();
-    static std::vector<AbstractNodeFactory*> getFactories();
+    static std::vector<AbstractNodeDecorator*> getFactories();
     static void regCB(std::function<void()> fun);
     static DNode* createNode(std::string name);
 
 private:
-    static std::vector<AbstractNodeFactory*> nodeFactories;
+    static std::vector<AbstractNodeDecorator*> nodeFactories;
     static std::vector<std::function<void()>> registerCallbackStack;
 
 };
