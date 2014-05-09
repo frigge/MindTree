@@ -82,10 +82,25 @@ bool testObjectInProperty()
     return true;
 }
 
+bool testPropertyConversion()
+{
+    int a = 25;
+    std::cout << "creating int value: " << a << std::endl;
+    MindTree::Property intprop{a};
+    std::cout << "Property has type: " << intprop.getType().toStr() << std::endl;
+    double converted = intprop.getData<double>();
+
+    std::cout << "converted to double the resulting value is: " << converted << std::endl;
+
+    int b = converted;
+    return a == b;
+}
+
 BOOST_PYTHON_MODULE(cpp_tests)
 {
     BPy::def("testSocketPropertiesCPP", testSocketProperties);    
     BPy::def("testPropertiesCPP", testProperties);
     BPy::def("testPropertiesTypeInfoCPP", testPropertiesTypeInfo);
     BPy::def("testObjectInPropertyCPP", testObjectInProperty);
+    BPy::def("testPropertyConversionCPP", testPropertyConversion);
 }

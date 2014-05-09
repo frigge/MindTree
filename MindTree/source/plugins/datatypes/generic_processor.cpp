@@ -1,11 +1,20 @@
 #include "Object/object.h"
 #include "generic_processor.h"
+#include "data/properties.h"
 
 using namespace MindTree;
 
 BOOST_PYTHON_MODULE(generic_processor)
 {
     auto values = [](DataCache *cache) { cache->pushData(cache->getData(0)); };
+
+    PropertyConverter::registerConverter("FLOAT", 
+                                         "INTEGER", 
+                                         defaultPropertyConverter<double, int>);
+
+    PropertyConverter::registerConverter("INTEGER", 
+                                         "FLOAT", 
+                                         defaultPropertyConverter<int, double>);
 
     DataCache::addProcessor("FLOAT", "FLOATVALUE", new CacheProcessor(values));
     DataCache::addProcessor("STRING", "STRINGVALUE", new CacheProcessor(values));

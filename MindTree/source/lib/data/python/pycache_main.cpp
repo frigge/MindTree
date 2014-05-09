@@ -72,6 +72,11 @@ void MindTree::wrap_DataCache_addProcessor(BPy::object fn, std::string ntype, st
                                         new MindTree::PyCacheProcessor(fn));
 }
 
+std::string MindTree::wrap_DataCache_getType(DataCache *self)
+{
+    return self->getType().toStr();
+}
+
 //void MindTree::wrap_DataCache_cache(MindTree::DataCache *self, MindTree::DinSocketPyWrapper* socket)
 //{
 //    if(!socket->alive()) return;
@@ -106,6 +111,7 @@ void MindTree::wrap_DataCache()
         .def("getOutput", static_cast<BPy::object(*)(DataCache*)>(&wrap_DataCache_getOutput))
         .def("getOutput", static_cast<BPy::object(*)(DataCache*, DoutSocketPyWrapper*)>(&wrap_DataCache_getOutput))
         .def("setData", &wrap_DataCache_setData)
+        .add_property("type", &wrap_DataCache_getType)
         .add_static_property("processors", &wrap_DataCache_getProcessors)
         .add_property("start", BPy::make_function(&wrap_DataCache_getStart,
                                 BPy::return_value_policy<BPy::manage_new_object>()));

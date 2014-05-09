@@ -222,6 +222,8 @@ DataCache::~DataCache()
 void DataCache::start(const DoutSocket *socket)
 {
     startsocket = socket;
+    cachedInputs.clear();
+    cachedOutputs.clear();
     node = socket->getNode();
     type = socket->getType();
     cacheInputs();
@@ -230,6 +232,11 @@ void DataCache::start(const DoutSocket *socket)
 int DataCache::getTypeID() const
 {
     return  type.id();
+}
+
+DataType DataCache::getType() const
+{
+    return type;
 }
 
 void DataCache::addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc)
@@ -248,8 +255,9 @@ const std::vector<AbstractCacheProcessor::CacheList>& DataCache::getProcessors()
 void DataCache::cache(const DinSocket *socket)    
 {
    if(socket->getCntdSocket()){
-       DataCache cache(socket->getCntdSocket());
-       cachedInputs.push_back(cache.getOutput());
+       DoutSocket *out = socket->getCntdSocket();
+       DataCache cache(out);
+       cachedInputs.push_back(cache.getOutput(out));
    } 
    else
        cachedInputs.push_back(socket->getProperty());

@@ -104,6 +104,7 @@ public:
     void start(const DoutSocket *socket);
 
     int getTypeID() const;
+    DataType getType() const;
 
     void pushData(Property prop);
     Property getData(int index);

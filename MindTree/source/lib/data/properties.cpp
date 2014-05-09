@@ -37,6 +37,26 @@ PROPERTY_TYPE_INFO(glm::vec2, "VECTOR2D");
 PROPERTY_TYPE_INFO(glm::vec3, "VECTOR3D");
 PROPERTY_TYPE_INFO(glm::vec4, "COLOR");
 
+TypeDispatcher<DataType, ConverterList> PropertyConverter::_converters;
+
+void PropertyConverter::registerConverter(DataType from, DataType to, ConverterFunctor fn)
+{
+    _converters[from][to] = fn; 
+}
+
+bool PropertyConverter::isConvertible(DataType from, DataType to)
+{
+    auto fn = _converters[from][to];
+    if(fn)
+        return true;
+    return false;
+}
+
+ConverterFunctor PropertyConverter::get(DataType from, DataType to)
+{
+    return _converters[from][to];
+}
+
 Property::Property()
     : data(0), datasize(0),
      type("undefined"),

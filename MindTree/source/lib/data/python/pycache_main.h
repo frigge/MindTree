@@ -35,6 +35,7 @@ BPy::object wrap_DataCache_getOutput(MindTree::DataCache *self);
 void wrap_DataCache_setData(DataCache *self, BPy::object data);
 void wrap_DataCache_cache(MindTree::DataCache *self, MindTree::DinSocketPyWrapper* socket);
 BPy::dict wrap_DataCache_getProcessors();
+std::string wrap_DataCache_getType(DataCache *self);
 
 //template<typename T>
 //class PyWrapCache : public T

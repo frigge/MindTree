@@ -39,17 +39,18 @@ struct PropertyTypeInfo
 #define PROPERTY_TYPE_INFO(TYPE, STR) \
     template<> const MindTree::DataType MindTree::PropertyTypeInfo<TYPE>::_type{STR}
 
-typedef std::pair<char*, size_t> RawData;
-typedef std::function<RawData(RawData)> ConverterFunctor;
-typedef std::vector<ConverterFunctor> ConverterList;
+typedef std::function<void(void*, void*)> ConverterFunctor;
+typedef TypeDispatcher<DataType, ConverterFunctor> ConverterList;
 
-template<class T>
 class PropertyConverter
 {
 public:
+    static void registerConverter(DataType from, DataType to, ConverterFunctor fn);
+    static bool isConvertible(DataType from, DataType to);
+    static ConverterFunctor get(DataType from, DataType to);
+
 private:
-    static ConverterList _fromTConverter;
-    friend class Property;
+    static TypeDispatcher<DataType, ConverterList> _converters;
 };
 
 template<class T>
@@ -78,6 +79,14 @@ public:
 private:
     T data;
 };
+
+template<typename F, typename T>
+void defaultPropertyConverter(void* from, void* to)
+{
+    F _from = reinterpret_cast<PropertyData<F>*>(from)->getData();
+    T *_to = reinterpret_cast<T*>(to);
+    *_to = _from;
+}
 
 namespace IO {
 template<class T> struct Writer;
@@ -129,9 +138,17 @@ public:
         if(!data) {
             data = new PropertyData<T>();
         }
-        if(PropertyTypeInfo<T>::_type != type)
-            return T();
-        return ((PropertyData<T>*)data)->getData();
+        if(PropertyTypeInfo<T>::_type != type) {
+            if(!PropertyConverter::isConvertible(PropertyTypeInfo<T>::_type, type))
+                return T();
+
+            auto converter = PropertyConverter::get(type, PropertyTypeInfo<T>::_type);
+            T converted;
+            converter(data, reinterpret_cast<void*>(&converted));
+
+            return converted;
+        }
+        return reinterpret_cast<PropertyData<T>*>(data)->getData();
     }
 
     BPy::object toPython() const;
