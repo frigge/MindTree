@@ -545,17 +545,22 @@ RenderConfig RenderManager::getConfig()
 RenderPass* RenderManager::addPass()
 {
     auto pass = new RenderPass();
-    passes.push_back(std::unique_ptr<RenderPass>(pass));
+    {
+        std::lock_guard<std::mutex> lock(_managerLock);
+        passes.push_back(std::unique_ptr<RenderPass>(pass));
+    }
     return pass;
 }
 
 void RenderManager::removePass(uint index)    
 {
+    std::lock_guard<std::mutex> lock(_managerLock);
     passes.remove(*std::next(passes.begin(), index));
 }
 
 RenderPass* RenderManager::getPass(uint index)
 {
+    std::lock_guard<std::mutex> lock(_managerLock);
     return std::next(begin(passes), index)->get();
 }
 
@@ -563,7 +568,10 @@ void RenderManager::draw(const glm::mat4 &view, const glm::mat4 &projection)
 {
     QtContext::getCurrent()->getManager()->cleanUp();
 
-    for(auto &pass : passes){
-        pass->render(view, projection, config);
+    {
+        std::lock_guard<std::mutex> lock(_managerLock);
+        for(auto &pass : passes){
+            pass->render(view, projection, config);
+        }
     }
 }

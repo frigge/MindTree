@@ -1,6 +1,7 @@
 import PyQt4, MT, math, mttimeline
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from functools import partial
 
 class TimelineScrubWidget(QWidget):
     def __init__(self, timeline, parent=None):
@@ -136,7 +137,7 @@ class TimelineWidget(QWidget):
         mttimeline.setFrame(int(frame))
         self.scrubwidget.setValue(frame)
         self.frameBox.blockSignals(True)
-        self.frameBox.setValue(frame)
+        QMetaObject.invokeMethod(self.frameBox, "setValue", Qt.QueuedConnection, Q_ARG("int", frame))
         self.frameBox.blockSignals(False)
 
 

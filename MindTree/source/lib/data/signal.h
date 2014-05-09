@@ -109,8 +109,8 @@ public:
     bool operator!=(const Callback& other) {return other.sigID != sigID;}
     template<typename... Args>
     void operator()(Args... args) {
+        Python::GILLocker locker;
         try {
-            Python::GILLocker locker;
             fn(typename PyConverter<Args>::t(args)...);
         } catch(BPy::error_already_set const &){
             PyErr_Print();

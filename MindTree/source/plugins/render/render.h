@@ -4,6 +4,7 @@
 
 #include "memory"
 #include "vector"
+#include "mutex"
 #include "glm/glm.hpp"
 
 class GeoObject;
@@ -135,6 +136,7 @@ public:
     RenderConfig getConfig();
 
 private:
+    std::mutex _managerLock;
     glm::vec4 backgroundColor;
     std::list<std::unique_ptr<RenderPass>> passes;
     RenderConfig config;
