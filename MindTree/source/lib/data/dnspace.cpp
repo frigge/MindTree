@@ -20,6 +20,7 @@
 #include "boost/python.hpp"
 #include "data/project.h"
 #include "data/signal.h"
+#include "data/nodes/containernode.h"
 #include "dnspace.h"
 
 using namespace MindTree;

@@ -32,6 +32,7 @@ namespace IO {
     void write(std::ostream &stream, const DNSpace *space);
 }
 
+class ContainerSpace;
 class DNSpace : public FRGUndoBase, public PyExposable
 {
 public:

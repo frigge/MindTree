@@ -21,6 +21,7 @@
 #define CACHE_MAIN_PD1QWTW9
 
 #include "data/nodes/data_node.h"
+#include "data/nodes/containernode.h"
 #include "data/type.h"
 
 namespace MindTree

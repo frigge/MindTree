@@ -4,8 +4,8 @@ set(LIB_SRC
     data/cache_main.cpp
     data/datatypes.cpp
     data/dnspace.cpp
-    #data/nodes/buildin_nodes.cpp
     data/nodes/data_node.cpp
+    data/nodes/containernode.cpp
     data/mtobject.cpp
     data/nodes/data_node_socket.cpp
     data/nodes/node_db.cpp
@@ -26,28 +26,10 @@ set(LIB_SRC
 )
 
 set(LIB_HEAD
-    data/cache_main.h
-    data/datatypes.h
-    data/dnspace.h
-    #data/nodes/buildin_nodes.h
-    data/nodes/data_node.h
-    data/mtobject.h
-    data/nodes/data_node_socket.h
-    data/nodes/node_db.h
-    data/nodes/nodetype.h
-    data/project.h
-    data/properties.h
     data/python/console.h
-    data/python/pycache_main.h
-    data/python/pyexposable.h
-    data/python/wrapper.h
-    data/python/pyutils.h
-    data/signal.h
     data/windowfactory.h
-    graphics/viewer.h
     graphics/viewer_dock_base.h
     graphics/windowlist.h
-    graphics/pywindowlist.h
 )
 
 set(QT_USE_QTOPENGL TRUE)

@@ -33,11 +33,6 @@ PyConsole::~PyConsole()
     //thread.wait();
 }
 
-void PyConsole::start()    
-{
-    //timer.start(100);
-}
-
 void PyConsole::command(QString cmd)    
 {
     MindTree::Python::GILLocker locker;

@@ -1,7 +1,6 @@
 #ifndef CONSOLE
 
 #define CONSOLE
-#include "QTimer"
 #include "QThread"
 #include "boost/python.hpp"
 namespace BPy = boost::python;
@@ -26,14 +25,12 @@ public:
     void write(QString string);
 
 public slots:
-    void start();
     void command(QString cmd);
 
 signals:
     void updated(QString);
 
 private:
-    QTimer timer;
     QString readConsole();
     FILE *file;
     QThread thread;

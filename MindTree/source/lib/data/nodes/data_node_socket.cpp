@@ -444,55 +444,6 @@ DoutSocket* DinSocket::getCntdSocket() const
 	return cntdSocket;
 }
 
-DoutSocket* DinSocket::getCntdFunctionalSocket() const
-{
-        if(!cntdSocket)
-            return nullptr;
-
-        DNode *cntdNode = cntdSocket->getNode();
-        if(cntdNode->isContainer())
-        {
-            return cntdNode->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdFunctionalSocket();
-        }
-        return cntdSocket;
-}
-
-DoutSocket* DinSocket::getCntdWorkSocket() const
-{
-        if(!cntdSocket)
-            return nullptr;
-
-        DNode *cntdNode = cntdSocket->getNode();
-        if(cntdSocket->getNode()->isContainer())
-        {
-            //if (cntdNode->getNodeType() != CONTAINER)
-            //    return cntdSocket;
-            //else
-            //    return cntdSocket->getNode()->getDerived<ContainerNode>()->getSocketInContainer(cntdSocket)->toIn()->getCntdWorkSocket();
-        }
-        //else if(cntdSocket->getNode()->getNodeType() == INSOCKETS) {
-        //    //||cntdSocket->getNode()->getNodeType() == LOOPINSOCKETS){
-        //    DSocket *onContainer = cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket); 
-        //    if(onContainer)
-        //        return onContainer->toIn()->getCntdWorkSocket();
-        //    else 
-        //        return cntdSocket;
-        //}
-        /*  
-        else if (cntdSocket->getNode()->getNodeType() == LOOPINSOCKETS)
-        {
-            ns = cntdSocket->getNode()->getDerived<LoopSocketNode>()->getPartnerSocket(cntdSocket);
-            if(ns)return ns->toIn()->getCntdFunctionalSocket();
-            else
-            {
-                ns = cntdSocket->getNode()->getDerived<SocketNode>()->getContainer()->getSocketOnContainer(cntdSocket);
-                if(ns) return ns->toIn()->getCntdFunctionalSocket();
-            }
-        }*/
-
-        return cntdSocket;
-}
-
 bool DSocket::getVariable() const
 {
 	return variable;
