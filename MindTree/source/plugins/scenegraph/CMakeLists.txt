@@ -51,6 +51,6 @@ target_link_libraries(scenegraph
             ${OPENGL_LIBRARIES}
 )
 
-message("Root dir: "${PROJECT_ROOT})
+message("Root dir: " ${PROJECT_ROOT})
 set(SCENEGRAPH_LIB_DIR ${PROJECT_ROOT}/plugins/scenegraph)
 install(TARGETS scenegraph LIBRARY DESTINATION ${SCENEGRAPH_LIB_DIR})

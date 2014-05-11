@@ -45,8 +45,7 @@ BPy::object MindTree::wrap_DataCache_getData(MindTree::DataCache *self, int inde
 
 BPy::object MindTree::wrap_DataCache_getOutput(MindTree::DataCache *self, DoutSocketPyWrapper *outsocket)
 {
-    if (outsocket->alive())  return BPy::object();
-
+    if (!outsocket->alive())  return BPy::object();
     return self->getOutput(outsocket->getWrapped<DoutSocket>()).toPython();
 }
 

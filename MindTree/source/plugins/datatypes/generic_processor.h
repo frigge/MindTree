@@ -11,11 +11,12 @@ namespace Generic
 {
 
 template <typename T>
-void add(MindTree::DataCache * cache)
+void add(MindTree::DataCache *cache)
 {
-    T data;
-    for(size_t i=0; i< cache->getNode()->getInSockets().size(); i++){
-        data += cache->getData(i).getData<T>();
+    T data = cache->getData(0).getData<T>();
+    for(size_t i=1; i<cache->getNode()->getInSockets().size(); i++){
+        if(cache->getNode()->getInSockets().at(i)->getType() != "VARIABLE")
+            data += cache->getData(i).getData<T>();
     }
 
     cache->pushData(data);
@@ -24,6 +25,22 @@ void add(MindTree::DataCache * cache)
 template <typename T>
 void subtract(MindTree::DataCache *cache)
 {
+    T value1 = cache->getData(0).getData<T>();
+    T value2 = cache->getData(1).getData<T>();
+
+    cache->pushData(value1 - value2);
+}
+
+template <typename T>
+void multiply(MindTree::DataCache *cache)
+{
+    T data = cache->getData(0).getData<T>();
+    for(size_t i=1; i<cache->getNode()->getInSockets().size(); i++){
+        if(cache->getNode()->getInSockets().at(i)->getType() != "VARIABLE")
+            data *= cache->getData(i).getData<T>();
+    }
+
+    cache->pushData(data);
 }
 
 } // Generic

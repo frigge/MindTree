@@ -1,29 +1,33 @@
 import MT
 
 def testStringCache():
+    value1 = "!1+"
+    value2 = "+2+"
+    value3 = "+3!"
+    
     add = MT.createNode("Math.Add")
-    add.insockets[0].name = "value01"
-    add.addInSocket("value02", "STRING")
-    add.insockets[0].value = "bla"
-    add.outsockets[0].type = "STRING"
-    value3 = "blubb"
-    add.insockets[1].value = "blubb"
+    valuenode = MT.createNode("Values.String Value")
+    valuenode2 = MT.createNode("Values.String Value")
 
-    add2 = MT.createNode("Math.Add")
-    value1 = "trallalla"
-    add2.insockets[0].value = "trallalla"
-    add2.insockets[0].name = "value01"
-    add2.addInSocket("value02", "STRING")
-    add2.insockets[1].value = "lalalla"
-    value2 = "lalalla"
+    valuenode.insockets[0].value = value1
+    valuenode2.insockets[0].value = value2
 
-    add2.outsockets[0].type = "STRING"
-    pos = add2.pos
-    add2.pos = (pos[0] - 20, pos[1])
+    print("setting the input of valuenode to %s" % value1)
 
     MT.project.root.addNode(add)
-    MT.project.root.addNode(add2)
-    add.insockets[0].connected = add2.outsockets[0]
+    MT.project.root.addNode(valuenode)
+    MT.project.root.addNode(valuenode2)
+
+    pos = valuenode.pos
+    valuenode.pos = (pos[0] - 150, pos[1] - 50)
+    valuenode2.pos = (pos[0] - 150, pos[1] + 50)
+
+    add.insockets[0].connected = valuenode.outsockets[0]
+    add.insockets[1].connected = valuenode2.outsockets[0]
+    add.insockets[2].value = value3
 
     cache = MT.cache.DataCache(add.outsockets[0])
+
+    print("resulting value: %s" % cache.getOutput())
+    print("expected value: %s" % value1 + value2 + value3)
     return (value1 + value2 + value3) == cache.getOutput()

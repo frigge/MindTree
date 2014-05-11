@@ -8,6 +8,12 @@ class StringViewerGUI(QScrollArea):
         QScrollArea.__init__(self)
         self.label = QLabel("")
         self.setWidget(self.label)
+        self.setStyleSheet("""
+        * { 
+            background: black;
+            color: white;
+        }
+        """)
 
     def setText(self, text):
         self.label.setText(text)
@@ -24,7 +30,7 @@ class StringViewer(MT.pytypes.Viewer):
 
     def update(self, s):
         print("updating viewer: s:"+str(s)+" , self.socket:"+str(self.socket))
-        data = self.cache.getData(0)
+        data = self.cache.getOutput(self.socket)
         self.viewer.setText(data)
 
 MT.gui.registerViewer("StringViewer", "STRING", StringViewer)

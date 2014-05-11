@@ -25,32 +25,32 @@
 using namespace MindTree;
 
 BOOST_PYTHON_MODULE(mathnodes){
-    NodeDataBase::registerNodeType(new BuildInFactory( "ADD", "Math.Add",
+    NodeDataBase::registerNodeType(new BuildInDecorator( "ADD", "Math.Add",
                                     []{
                                         return new MathNode(NodeType("ADD"));
                                     }));
 
-    NodeDataBase::registerNodeType(new BuildInFactory( "SUBTRACT", "Math.Subtract",
+    NodeDataBase::registerNodeType(new BuildInDecorator( "SUBTRACT", "Math.Subtract",
                                     []{
                                         return new MathNode(NodeType("SUBTRACT"));
                                     }));
 
-    NodeDataBase::registerNodeType(new BuildInFactory( "MULTIPLY", "Math.Multiply",
+    NodeDataBase::registerNodeType(new BuildInDecorator( "MULTIPLY", "Math.Multiply",
                                     []{
                                         return new MathNode(NodeType("MULTIPLY"));
                                     }));
 
-    NodeDataBase::registerNodeType(new BuildInFactory( "DIVIDE", "Math.Divide", 
+    NodeDataBase::registerNodeType(new BuildInDecorator( "DIVIDE", "Math.Divide", 
                                     []{
                                         return new MathNode(NodeType("DIVIDE"));
                                     }));
 
-    NodeDataBase::registerNodeType(new BuildInFactory( "DOTPRODUCT", "Math.Dot Product",
+    NodeDataBase::registerNodeType(new BuildInDecorator( "DOTPRODUCT", "Math.Dot Product",
                                     []{
                                         return new MathNode(NodeType("DOTPRODUCT"));
                                     }));
 
-    NodeDataBase::registerNodeType(new BuildInFactory( "MODULO", "Math.Modulo",
+    NodeDataBase::registerNodeType(new BuildInDecorator( "MODULO", "Math.Modulo",
                                     []{
                                         return new MathNode(NodeType("MODULO"));
                                     }));
@@ -60,17 +60,52 @@ BOOST_PYTHON_MODULE(mathnodes){
 MathNode::MathNode(NodeType t, bool raw)
 {
     setNodeType(t);
-    if(t == "ADD") setNodeName("Add");
-    else if(t == "SUBTRACT") setNodeName("Subtract");
-    else if(t == "MULTIPLY") setNodeName("Multiply");
-    else if(t == "DIVIDE") setNodeName("Divide");
-    else if(t == "DOTPRODUCT") setNodeName("Dot Product");
-    else if(t == "MODULO") setNodeName("Modulo");
+    if(t == "ADD") {
+        setNodeName("Add");
+    }
+    else if(t == "SUBTRACT") {
+        setNodeName("Subtract");
+    }
+    else if(t == "MULTIPLY") {
+        setNodeName("Multiply");
+    }
+    else if(t == "DIVIDE") {
+        setNodeName("Divide");
+    }
+    else if(t == "DOTPRODUCT") {
+        setNodeName("Dot Product");
+    }
+    else if(t == "MODULO") {
+        setNodeName("Modulo");
+    }
 
-    if(!raw)
-    {
-        setDynamicSocketsNode(DSocket::IN);
-        new DoutSocket("Result", "VARIABLE", this);
+    if(!raw) {
+        auto *out = new DoutSocket("Result", "VARIABLE", this);
+
+        if(t != "ADD" && t != "MULTIPLY") {
+            new DinSocket("value1", "VARIABLE", this);
+            new DinSocket("value2", "VARIABLE", this);
+        }
+        else {
+            setDynamicSocketsNode(DSocket::IN);
+            auto *varsocket = getVarSocket();
+            Signal::getBoundHandler<DoutSocket*>(varsocket)
+                .connect("linkChanged", [varsocket, out](DoutSocket *newConnection){
+                             if(newConnection) {
+                                 varsocket->setName(newConnection->getName());
+                                 varsocket->setType(newConnection->getType());
+                             } else {
+                                 if(!newConnection && out->getNode()->getVarcnt() == 1)
+                                     out->setType("VARIABLE");
+                             }
+                         }).detach();
+
+            Signal::getBoundHandler<SocketType>(varsocket)
+                .connect("typeChanged", [out](SocketType newtype){
+                             out->setType(newtype);
+                         }).detach();
+        }
+
     }
 }
 
@@ -79,9 +114,34 @@ MathNode::MathNode(const MathNode &node)
 {
 }
 
-void MathNode::dec_var_socket(DSocket *socket)
+void MathNode::incVarSocket()
 {
-    DNode::dec_var_socket(socket);
+    DNode::incVarSocket();
+    auto *varsocket = getVarSocket();
+    auto *out = getOutSockets().at(0);
+
+    Signal::getBoundHandler<DoutSocket*>(varsocket)
+        .connect("linkChanged", [varsocket, out](DoutSocket *newConnection){
+                    if(newConnection) {
+                        varsocket->setName(newConnection->getName());
+                        varsocket->setType(newConnection->getType());
+                        if(out->getType() == "VARIABLE")
+                            out->setType(newConnection->getType()); 
+                    } else {
+                        if(!newConnection && out->getNode()->getVarcnt() == 1)
+                            out->setType("VARIABLE");
+                    }
+                 }).detach();
+
+    Signal::getBoundHandler<SocketType>(varsocket)
+        .connect("typeChanged", [out](SocketType newtype){
+                     out->setType(newtype);
+                 }).detach();
+}
+
+void MathNode::decVarSocket(DSocket *socket)
+{
+    DNode::decVarSocket(socket);
     DoutSocket *outsocket = getOutSockets().at(0);
     if(getVarcnt() == 0)
     {

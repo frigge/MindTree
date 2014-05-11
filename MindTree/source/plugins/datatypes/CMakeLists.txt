@@ -26,7 +26,7 @@ link_directories(
             ${PYTHON_LIBRARIES}
 )
 
-add_library(generic_processor SHARED generic_processor.cpp)
+add_library(generic_processor SHARED generic_processor.cpp converternodes.cpp)
 set_target_properties(generic_processor PROPERTIES PREFIX "")
 
 target_link_libraries(generic_processor

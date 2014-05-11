@@ -1,6 +1,8 @@
 #include "Object/object.h"
-#include "generic_processor.h"
 #include "data/properties.h"
+#include "converternodes.h"
+#include "cmath"
+#include "generic_processor.h"
 
 using namespace MindTree;
 
@@ -43,4 +45,14 @@ BOOST_PYTHON_MODULE(generic_processor)
     DataCache::addProcessor("VECTOR3D", 
                             "ADD", 
                             new CacheProcessor(Cache::Generic::add<glm::vec3>));
+
+    auto sinfunc = [] (DataCache *cache) {
+        auto value = cache->getData(0).getData<double>();
+        
+        cache->pushData(std::sin(value * 3.14159265359 / 180));
+    };
+
+    DataCache::addProcessor("FLOAT", "SIN", new CacheProcessor(sinfunc));
+
+    registerConverteNodeOperators();
 }

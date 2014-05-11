@@ -23,6 +23,7 @@
 
 #include "data/signal.h"
 #include "data_node.h"
+#include "data/signal.h"
 
 #include "data_node_socket.h"
 
@@ -114,7 +115,8 @@ DSocket::DSocket(std::string name, SocketType type, DNode *node)
     type(type),
     node(node),
     variable(false),
-    ID(++count)
+    ID(++count),
+    _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
     socketIDHash.insert({ID, this});
 }
@@ -124,7 +126,8 @@ DSocket::DSocket(const DSocket& socket, DNode *node)
     type(socket.getType()), 
     node(node),
     variable(socket.getVariable()),
-    ID(++count)
+    ID(++count),
+    _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
     CopySocketMapper::setSocketPair(&socket, this);
     socketIDHash.insert({ID, this});
@@ -273,7 +276,7 @@ void DinSocket::addLink(DoutSocket *socket)
     //here we set the actual link
     setCntdSocket(socket);
     if (getVariable())
-        getNode()->inc_var_socket();
+        getNode()->incVarSocket();
 }
 
 void DinSocket::clearLink()
@@ -282,7 +285,7 @@ void DinSocket::clearLink()
 	cntdSocket = nullptr;
 
     if(getVariable())
-        getNode()->dec_var_socket(this);
+        getNode()->decVarSocket(this);
 }
 
 unsigned short DinSocket::getTempCntdID() const
@@ -322,6 +325,7 @@ void DSocket::setName(std::string value)
 {
     if(value == name) return;
 	name = value;
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "nameChanged", value);
 }
 
 SocketType DSocket::getType() const
@@ -333,6 +337,7 @@ void DSocket::setType(SocketType value)
 {
     if(value == type) return;
 	type = value;
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "typeChanged", value);
 }
 
 DSocket::SocketDir DSocket::getDir() const
@@ -386,7 +391,7 @@ bool DoutSocket::operator !=(DoutSocket &socket)const
 void DoutSocket::registerSocket(DSocket *socket)    
 {
     if(this == getNode()->getVarSocket()) 
-        getNode()->inc_var_socket();
+        getNode()->incVarSocket();
 
     if(std::find(cntdSockets.begin(), 
                  cntdSockets.end(), 
@@ -404,11 +409,12 @@ void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
     auto it = std::find(cntdSockets.begin(), cntdSockets.end(), socket);
     cntdSockets.erase(it); 
     if(cntdSockets.size() == 0 && getVariable() && decr) 
-        getNode()->dec_var_socket(this);
+        getNode()->decVarSocket(this);
 }
 
 void DinSocket::setCntdSocket(DoutSocket *socket)
 {
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "linkChanged", socket);
     if(!socket) {
         clearLink();
         return;
@@ -416,15 +422,15 @@ void DinSocket::setCntdSocket(DoutSocket *socket)
     if(cntdSocket == socket)
         return;
 
-    //here we set the actual link
+    //unregister the old one
     if(cntdSocket) cntdSocket->unregisterSocket(this, false);
 
+    //here we set the actual link
 	cntdSocket = socket;
     cntdSocket->registerSocket(this);
     if (getVariable())
-        getNode()->inc_var_socket();
+        getNode()->incVarSocket();
 
-    MT_SIGNAL_EMITTER(this);
     MT_CUSTOM_SIGNAL_EMITTER("createLink", this);
 }
 

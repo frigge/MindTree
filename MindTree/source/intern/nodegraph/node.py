@@ -236,7 +236,6 @@ class NodeOptionsButton(QGraphicsSvgItem):
     def __init__(self, node):
         QGraphicsSvgItem.__init__(self, node)
         self.node = node
-        self.createMenu()
         self.setSharedRenderer(NodeDesigner.view_renderer)
         self.setElementId("node_view")
         self.setAcceptHoverEvents(True)
@@ -264,6 +263,8 @@ class NodeOptionsButton(QGraphicsSvgItem):
     def mousePressEvent(self, event):
         self.setElementId("node_view_pressed")
         QGraphicsSvgItem.mousePressEvent(self, event)
+        self.createMenu()
+
         if self.menu == None:
             self.showViewer()
         else:

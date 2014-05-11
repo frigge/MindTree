@@ -103,8 +103,8 @@ public:
     void setSocketIDName(DSocket *socket);
     DSocket* getSocketByIDName(std::string idname);
     void removeSocket(DSocket *socket);
-    virtual void dec_var_socket(DSocket *socket);
-    virtual void inc_var_socket();
+    virtual void decVarSocket(DSocket *socket);
+    virtual void incVarSocket();
     void setDynamicSocketsNode(DSocket::SocketDir dir);
     void clearSocketLinks();
     bool isContainer() const;

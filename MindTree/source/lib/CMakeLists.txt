@@ -48,8 +48,8 @@ include_directories(
             ${OPENGL_ICNLUDE_DIRS}
 )
 
-message("core lib src directory: "${PROJECT_SOURCE_DIR})
-message("core lib bin directory: "${MINDTREE_CORE_LIB_DIR})
+message("core lib src directory: " ${PROJECT_SOURCE_DIR})
+message("core lib bin directory: " ${MINDTREE_CORE_LIB_DIR})
 link_directories(
             ${PROJECT_SOURCE_DIR}
             ${Boost_LIBRARY_DIRS}

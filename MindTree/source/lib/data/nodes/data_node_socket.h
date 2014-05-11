@@ -69,6 +69,9 @@ void write(std::ostream &stream, const DSocket *socket);
 void write(std::ostream &stream, const DinSocket *socket);
 }
 
+namespace Signal {
+    class LiveTimeTracker;
+}
 
 class DSocket : public PyExposable
 {
@@ -109,12 +112,16 @@ public:
     static bool isCompatible(SocketType s1, SocketType s2);
     static DSocket* getSocket(unsigned short ID);
 
-	virtual void setType(SocketType value);
+	void setType(SocketType value);
 	void setName(std::string value);
+
+protected:
+    Signal::LiveTimeTracker* _signalLiveTime;
 
 private:
     friend void MindTree::IO::write(std::ostream& stream, const MindTree::DSocket *socket);
     friend void MindTree::IO::write(std::ostream& stream, const MindTree::DinSocket *socket);
+
     std::string idName;
     std::string name;
     SocketType type;

@@ -87,9 +87,9 @@ void IO::write(std::ostream &stream, const DNode *node)
 
 DNode::DNode(std::string name)
     : selected(false),
-      space(0),
-      varsocket(0),
-      lastsocket(0),
+      space(nullptr),
+      varsocket(nullptr),
+      lastsocket(nullptr),
       varcnt(0),
       ID(count++),
       nodeName(Project::instance()->registerItem(this, name.c_str())),
@@ -99,7 +99,7 @@ DNode::DNode(std::string name)
 
 DNode::DNode(const DNode& node)
     : selected(false),
-      space(0),
+      space(nullptr),
       varcnt(0),
       ID(count++),
       nodeName(Project::instance()->registerItem(this, node.getNodeName())),
@@ -119,9 +119,9 @@ DNode::DNode(const DNode& node)
 
 DNode::~DNode()
 {
-    foreach(DinSocket *socket, getInSockets())
+    for(DinSocket *socket : getInSockets())
         delete socket;
-    foreach(DoutSocket *socket, getOutSockets())
+    for(DoutSocket *socket : getOutSockets())
         delete socket;
 
     if(space)space->unregisterNode(this);
@@ -492,13 +492,13 @@ void DNode::removeSocket(DSocket *socket)
     }
 }
 
-void DNode::dec_var_socket(DSocket *socket)
+void DNode::decVarSocket(DSocket *socket)
 {
     removeSocket(socket);
-    varcnt -= 1;
+    varcnt--;
 }
 
-void DNode::inc_var_socket()
+void DNode::incVarSocket()
 {
     lastsocket = varsocket;
     if(lastsocket->getDir() == DSocket::IN)
@@ -506,12 +506,12 @@ void DNode::inc_var_socket()
     else
         varsocket = new DoutSocket("+", "VARIABLE", this);
     varsocket->setVariable(true);
-    varcnt +=1;
+    varcnt++;
 }
 
 void DNode::clearSocketLinks()
 {
-    foreach(DinSocket *socket, getInSockets())
+    for(DinSocket *socket : getInSockets())
        socket->clearLink();
 }
 
@@ -606,7 +606,6 @@ void DNode::setSpace(DNSpace* value)
 
 void DNode::setDynamicSocketsNode(DSocket::SocketDir dir)
 {
-    DSocket *varsocket = 0;
     if(dir == DSocket::IN)
         varsocket = new DinSocket("+", "VARIABLE", this);
     else

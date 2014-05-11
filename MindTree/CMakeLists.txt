@@ -105,7 +105,7 @@ add_subdirectory(source/plugins)
 
 message("Binary Dir:" ${PROJECT_BINARY_DIR})
 message("mindtree core lib:" ${MINDTREE_CORE_LIB})
-message("Python Libs: "${PYTHON_LIBRARIES})
+message("Python Libs: " ${PYTHON_LIBRARIES})
 install(TARGETS mindTree RUNTIME DESTINATION ${PROJECT_BINARY_DIR}/bin)
 install(DIRECTORY source/plugins DESTINATION ${PROJECT_BINARY_DIR} PATTERN ".h .cpp" EXCLUDE)
 install(DIRECTORY source/intern DESTINATION ${PROJECT_BINARY_DIR} PATTERN ".h .cpp" EXCLUDE)

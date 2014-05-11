@@ -289,11 +289,14 @@ Property DataCache::getOutput(DoutSocket* socket)
     int index = -1;
     if(socket) {
         //find out index of start socket
-        int i = -1;
+        int i = 0;
 
-        for(const auto *socket : node->getOutSockets()) {
+        for(const auto *_socket : node->getOutSockets()) {
+            if (_socket == socket) {
+                index = i;
+                break;
+            }
             ++i;
-            if (socket == startsocket) index = i;
         }
     }
     else {

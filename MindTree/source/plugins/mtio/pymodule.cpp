@@ -12,7 +12,7 @@ BOOST_PYTHON_MODULE(objio)
         return new ObjImportNode();
     };
 
-    NodeDataBase::registerNodeType(new BuildInFactory("OBJIMPORT", 
+    NodeDataBase::registerNodeType(new BuildInDecorator("OBJIMPORT", 
                                                       "Objects.Import",
                                                       importFn));
 

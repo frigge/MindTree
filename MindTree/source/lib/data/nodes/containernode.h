@@ -61,8 +61,8 @@ public:
     void setInSocketNode(ContainerNode *contnode);
     virtual void setOutSocketNode(ContainerNode *contnode);
 
-    virtual void inc_var_socket();
-    virtual void dec_var_socket(DSocket *socket);
+    virtual void incVarSocket();
+    virtual void decVarSocket(DSocket *socket);
 
     void connectToContainer(ContainerNode*);
     ContainerNode* getContainer() const;
@@ -92,7 +92,7 @@ public:
     LoopSocketNode(DSocket::SocketDir dir, LoopNode *contnode, bool raw=false);
     LoopSocketNode(const LoopSocketNode* node);
 
-    virtual void dec_var_socket(DSocket *socket);
+    virtual void decVarSocket(DSocket *socket);
     void createPartnerSocket(DSocket *);
     void deletePartnerSocket(DSocket *);
     void mapPartner(DSocket* here, DSocket *partner);
@@ -102,7 +102,7 @@ public:
     std::vector<DSocket*> getLoopedSockets() const;
     uint getLoopedSocketsCount() const;
 
-    virtual void inc_var_socket();
+    virtual void incVarSocket();
 
 private:
     QHash<DSocket*, DSocket*> loopSocketMap;

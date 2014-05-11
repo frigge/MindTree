@@ -271,9 +271,9 @@ ContainerNode* SocketNode::getContainer() const
     return container;
 }
 
-void SocketNode::inc_var_socket()
+void SocketNode::incVarSocket()
 {
-    DNode::inc_var_socket();
+    DNode::incVarSocket();
 	DSocket *newsocket;
 //    unsigned short arrID = container->getSocketOnContainer(getLastSocket())->getArrayID();
 	if(getLastSocket()->getDir() == DSocket::IN)
@@ -285,10 +285,10 @@ void SocketNode::inc_var_socket()
  //       newsocket->setArray(arrID);
 }
 
-void SocketNode::dec_var_socket(DSocket *socket)
+void SocketNode::decVarSocket(DSocket *socket)
 {
     if(container)container->removeSocket(container->getSocketOnContainer(socket));
-    DNode::dec_var_socket(socket);
+    DNode::decVarSocket(socket);
 }
 
 //LoopSocketNode::LoopSocketNode(socket_dir dir, LoopNode *contnode, bool raw)
@@ -315,9 +315,9 @@ void SocketNode::dec_var_socket(DSocket *socket)
 //                             const_cast<DSocket*>(CopySocketMapper::getCopy(node->getPartnerSocket(original))));        
 //}
 //
-//void LoopSocketNode::dec_var_socket(DSocket *socket)
+//void LoopSocketNode::decVarSocket(DSocket *socket)
 //{
-//    SocketNode::dec_var_socket(socket);
+//    SocketNode::decVarSocket(socket);
 //    if(partner != 0)
 //    {
 //        LoopSocketNode *tmpp = partner;
@@ -377,9 +377,9 @@ void SocketNode::dec_var_socket(DSocket *socket)
 //    else return 0;
 //}
 //
-//void LoopSocketNode::inc_var_socket()
+//void LoopSocketNode::incVarSocket()
 //{
-//    SocketNode::inc_var_socket();
+//    SocketNode::incVarSocket();
 //    if(getNodeType() == LOOPOUTSOCKETS)
 //        createPartnerSocket(getLastSocket());
 //}
