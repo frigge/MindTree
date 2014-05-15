@@ -46,6 +46,14 @@ BOOST_PYTHON_MODULE(generic_processor)
                             "ADD", 
                             new CacheProcessor(Cache::Generic::add<glm::vec3>));
 
+    DataCache::addProcessor("FLOAT", 
+                            "MULTIPLY", 
+                            new CacheProcessor(Cache::Generic::multiply<double>));
+
+    DataCache::addProcessor("INTEGER", 
+                            "MULTIPLY", 
+                            new CacheProcessor(Cache::Generic::multiply<int>));
+
     auto sinfunc = [] (DataCache *cache) {
         auto value = cache->getData(0).getData<double>();
         
