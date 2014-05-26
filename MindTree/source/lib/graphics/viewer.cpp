@@ -8,7 +8,9 @@ using namespace MindTree;
 
 Viewer::Viewer(DoutSocket *start)
     : widget(0),
-    start(start)
+    start(start),
+    _needToUpdate(false),
+    _running(true)
 {
     auto cbhandler = Signal::getHandler<DinSocket*>()
         .connect("createLink", 
@@ -31,10 +33,48 @@ Viewer::Viewer(DoutSocket *start)
     cbhandlers.push_back(cbhandler);
     cbhandlers.push_back(cbhandler2);
     cbhandlers.push_back(cbhandler3);
+
+    auto updateFunc = [this]{
+        while(this->running()) {
+            if(this->needToUpdate()) {
+                this->cache.start(this->start);
+                {
+                    std::lock_guard<std::mutex> lock(_updateMutex);
+                    this->_needToUpdate = false;
+                }
+                this->update();
+            }
+        }
+    };
+
+    _updateThread = std::thread(updateFunc);
 }
 
 Viewer::~Viewer()
 {
+    {
+        std::lock_guard<std::mutex> lock(_runningMutex);
+        _running = false;
+    }
+    _updateThread.join();
+}
+
+bool Viewer::running()
+{
+    std::lock_guard<std::mutex> lock(_runningMutex);
+    return _running;
+}
+
+bool Viewer::needToUpdate()
+{
+    std::lock_guard<std::mutex> lock(_updateMutex);
+    return _needToUpdate;
+}
+
+void Viewer::notifyUpdate()
+{
+    std::lock_guard<std::mutex> lock(_updateMutex);
+    _needToUpdate = true;
 }
 
 void Viewer::update_viewer(DNode *node)
@@ -55,8 +95,7 @@ void Viewer::update_viewer(DNode *node)
     }
 
     if(connected) {
-        cache.start(start);
-        update(nullptr);
+        notifyUpdate();
     }
 }
 
@@ -81,8 +120,7 @@ void Viewer::update_viewer(DinSocket *socket)
     }
 
     if(connected) {
-        cache.start(start);
-        update(socket);
+        notifyUpdate();
     }
 }
 

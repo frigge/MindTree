@@ -4,6 +4,8 @@
 
 #include "data/cache_main.h"
 #include "boost/python.hpp"
+#include "thread"
+#include "mutex"
 
 namespace BPy=boost::python;
 class QWidget;
@@ -17,7 +19,7 @@ class Viewer
 public:
     Viewer(DoutSocket *socket);
     virtual ~Viewer();
-    virtual void update(DinSocket*)=0;
+    virtual void update()=0;
     DoutSocket* getStart();
     void setStart(DoutSocket* value);
     QWidget* getWidget();
@@ -28,10 +30,19 @@ protected:
     MindTree::DataCache cache;
 
 private:
+    bool needToUpdate();
+    void notifyUpdate();
+    bool running();
     void update_viewer(DinSocket*);
     void update_viewer(DNode *node);
+
     DoutSocket *start;
     std::vector<Signal::CallbackHandler> cbhandlers;
+    bool _needToUpdate;
+    bool _running;
+    std::thread _updateThread;
+    std::mutex _updateMutex;
+    std::mutex _runningMutex;
 };
 
 class DoutSocketPyWrapper;

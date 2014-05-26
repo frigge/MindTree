@@ -20,7 +20,6 @@ class FloatViewer(MT.pytypes.Viewer):
         self.setWidget(self.viewer)
 
     def update(self, s):
-        print("updating viewer: s:"+str(s)+" , self.socket:"+str(self.socket))
         data = self.cache.getOutput(self.socket)
         self.viewer.setText(str(data))
 
