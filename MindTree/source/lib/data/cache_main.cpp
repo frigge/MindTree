@@ -186,7 +186,6 @@ CacheProcessor::~CacheProcessor()
 
 void CacheProcessor::operator()(DataCache* cache)    
 {
-    std::cout << "calling c++ processor ..." << std::endl;
     processor(cache); 
 }
 
@@ -216,7 +215,6 @@ DataCache::DataCache(const DataCache &other)
 
 DataCache::~DataCache()
 {
-    std::cout << "delete datacache" << std::endl;
 }
 
 void DataCache::start(const DoutSocket *socket)
@@ -352,7 +350,6 @@ void DataCache::cacheInputs()
         std::cout<<"Socket Type ID:" << type.id() << std::endl;
         return;
     }
-    std::cout << "caching " << type.toStr() << " on " << node->getType().toStr() << std::endl;
     (*datacache)(this);
     //Property prop(cachedData.front());
     //cachedData.pop_front();

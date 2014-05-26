@@ -193,6 +193,8 @@ private:
     double near, far;
 };
 
+typedef std::shared_ptr<Camera> CameraPtr;
+
 class Light : public AbstractTransformable
 {
 public:
