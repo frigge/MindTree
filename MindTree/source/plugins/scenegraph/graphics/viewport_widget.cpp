@@ -35,7 +35,7 @@ ViewportViewer::~ViewportViewer()
 {
 }
 
-void ViewportViewer::update(DinSocket *)
+void ViewportViewer::update()
 {
     auto *viewport = static_cast<ViewportWidget*>(getWidget())->getViewport();
     Property data = cache.getOutput(getStart());
@@ -106,8 +106,6 @@ void ViewportWidget::createToolbar()
 
     camBox = new QComboBox();
     tools->addWidget(camBox);
-    //camBox->connect(dock->getViewport(), SIGNAL(sceneUpdated()), this, SLOT(refillCamBox()));
-    //camBox->connect(camBox, SIGNAL(currentIndexChanged(QString)), dock->getViewport(), SLOT(changeCamera(QString)));
 
     connect(showPointsAction, SIGNAL(toggled(bool)), this, SLOT(togglePoints(bool)));
     connect(showEdgesAction, SIGNAL(toggled(bool)), this, SLOT(toggleEdges(bool)));

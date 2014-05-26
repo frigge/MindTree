@@ -1,11 +1,10 @@
 #define GLM_SWIZZLE
 
 #include "GL/glew.h"
-#include "memory"
-#include "../datatypes/Object/object.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glwrapper.h"
 
+#include "rendermanager.h"
 #include "render.h"
 
 using namespace MindTree::GL;
@@ -20,7 +19,7 @@ Render::~Render()
     for(auto *indices : polyindices)
         delete [] indices;
 
-    auto manager = QtContext::getCurrent()->getManager();
+    auto manager = QtContext::getSharedContext()->getManager();
 
     if(pointProgram) manager->scheduleCleanUp(std::move(pointProgram));
     if(edgeProgram) manager->scheduleCleanUp(std::move(edgeProgram));
@@ -34,24 +33,22 @@ void Render::init()
     initialized = true;
 }
 
-void Render::draw(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config)    
+void Render::draw(const CameraPtr camera, const RenderConfig &config)
 {
     if(!initialized)
         init();
 
     auto props = obj->getProperties();
-    glm::mat4 model = obj->getWorldTransformation();
-    glm::mat4 modelView = view * model;
     vao->bind();
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_POLYGON_OFFSET_POINT);
-    if(config.drawPoints()) drawPoints(modelView, projection);
-    if(config.drawEdges()) drawEdges(modelView, projection);
-    if(config.drawPolygons()) drawPolygons(modelView, projection, config);
+    if(config.drawPoints()) drawPoints(camera);
+    if(config.drawEdges()) drawEdges(camera);
+    if(config.drawPolygons()) drawPolygons(camera, config);
 
     if(props.find("display.drawVertexNormal") != props.end())
         if(props["display.drawVertexNormal"].getData<bool>())
-            drawVertexNormals(modelView, projection);
+            drawVertexNormals(camera);
 
     glDisable(GL_PROGRAM_POINT_SIZE);
     glDisable(GL_POLYGON_OFFSET_POINT);
@@ -91,9 +88,12 @@ void Render::setUniforms(ShaderProgram *prog)
     }
 }
 
-void Render::drawPoints(const glm::mat4 &modelView, const glm::mat4 &projection)    
+void Render::drawPoints(const CameraPtr camera)
 {
     if(!pointProgram) return;
+    glm::mat4 model = obj->getWorldTransformation();
+    glm::mat4 modelView = camera->getViewMatrix() * model;
+    glm::mat4 projection = camera->getProjection();
     pointProgram->bind();
     pointProgram->setUniform("modelView", modelView);
     pointProgram->setUniform("projection", projection);
@@ -105,9 +105,12 @@ void Render::drawPoints(const glm::mat4 &modelView, const glm::mat4 &projection)
     pointProgram->release();
 }
 
-void Render::drawEdges(const glm::mat4 &modelView, const glm::mat4 &projection)    
+void Render::drawEdges(const CameraPtr camera)
 {
     if(!edgeProgram) return;
+    glm::mat4 model = obj->getWorldTransformation();
+    glm::mat4 modelView = camera->getViewMatrix() * model;
+    glm::mat4 projection = camera->getProjection();
     edgeProgram->bind();
     edgeProgram->setUniform("modelView", modelView);
     edgeProgram->setUniform("projection", projection);
@@ -130,8 +133,11 @@ void Render::drawEdges(const glm::mat4 &modelView, const glm::mat4 &projection)
     edgeProgram->release();
 }
 
-void Render::drawVertexNormals(const glm::mat4 &view, const glm::mat4 &projection)
+void Render::drawVertexNormals(const CameraPtr camera)
 {
+    glm::mat4 model = obj->getWorldTransformation();
+    glm::mat4 modelView = camera->getViewMatrix() * model;
+    glm::mat4 projection = camera->getProjection();
     MindTree::GL::ShaderProgram prog;
     std::string vertexShader(
                              "in vec3 vertex;\
@@ -167,7 +173,7 @@ void Render::drawVertexNormals(const glm::mat4 &view, const glm::mat4 &projectio
     prog.vertexAttribute("vertex", lines);
 
     prog.enableAttribute("vertex");
-    prog.setUniform("mvMat", view);
+    prog.setUniform("mvMat", modelView);
     prog.setUniform("projection", projection);
     prog.setUniform("color", color);
 
@@ -178,14 +184,17 @@ void Render::drawVertexNormals(const glm::mat4 &view, const glm::mat4 &projectio
     glLineWidth(1);
 }
 
-void Render::drawFaceNormals(const glm::mat4 &view, const glm::mat4 &projection)
+void Render::drawFaceNormals(const CameraPtr camera)
 {
 
 }
 
-void Render::drawPolygons(const glm::mat4 &modelView, const glm::mat4 &projection, const RenderConfig &config)    
+void Render::drawPolygons(const CameraPtr camera, const RenderConfig &config)    
 {
     if(!polyProgram) return;
+    glm::mat4 model = obj->getWorldTransformation();
+    glm::mat4 modelView = camera->getViewMatrix() * model;
+    glm::mat4 projection = camera->getProjection();
     polyProgram->bind();
     polyProgram->setUniform("modelView", modelView);
     polyProgram->setUniform("projection", projection);
@@ -399,7 +408,7 @@ void MeshRender::init()
         bool polyprog_has = polyProgram->hasAttribute(propPair.first);
         if (pointprog_has || edgeprog_has || polyprog_has) {
             //vao->addData(propPair.second.getData<std::shared_ptr<VertexList>>());
-            auto vbo = QtContext::getCurrent()->getManager()->getVBO(mesh, propPair.first);
+            auto vbo = Context::getSharedContext()->getManager()->getVBO(mesh, propPair.first);
             vbo->bind();
             vbo->data(propPair.second.getData<std::shared_ptr<VertexList>>());
             if(pointprog_has) pointProgram->bindAttributeLocation(vbo->getIndex(), propPair.first);
@@ -442,13 +451,14 @@ void RenderGroup::addObject(std::shared_ptr<GeoObject> obj)
     }
 }
 
-void RenderGroup::draw(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config)    
+void RenderGroup::draw(const CameraPtr camera, const RenderConfig &config)    
 {
     for(auto &render : renders)
-        render->draw(view, projection, config);
+        render->draw(camera, config);
 }
 
 RenderPass::RenderPass()
+    : _viewportChanged(true)
 {
 }
 
@@ -456,122 +466,54 @@ RenderPass::~RenderPass()
 {
 }
 
+void RenderPass::setSize(int width, int height)
+{
+    std::lock_guard<std::mutex> lock(_sizeLock);
+    if(_width != width || _height != height)
+        _viewportChanged = true;
+
+    _width = width;
+    _height = height;
+}
+
+void RenderPass::setCamera(CameraPtr camera)
+{
+    _camera = camera;
+}
+
+CameraPtr RenderPass::getCamera()
+{
+    return _camera;
+}
+
 void RenderPass::setGeometry(std::shared_ptr<Group> g)    
 {
+    std::lock_guard<std::mutex> lock(_geometryLock);
     group = std::make_shared<RenderGroup>(g);
 }
 
-void RenderPass::render(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config)
+void RenderPass::render(const RenderConfig &config)
 {
+    GLObjectBinder<std::shared_ptr<FBO>> fbobinder(target);
+
     if(!group) return;
-    if(target) target->bind();
-    group->draw(view, projection, config);
-    if(target) target->release();
-}
-
-void RenderConfig::setDrawPoints(bool draw)    
-{
-    _drawPoints = draw;
-}
-
-void RenderConfig::setDrawEdges(bool draw)    
-{
-    _drawEdges = draw;
-}
-
-void RenderConfig::setDrawPolygons(bool draw)    
-{
-    _drawPolygons = draw;
-}
-
-void RenderConfig::setShowFlatShaded(bool b)
-{
-    _flatShading = b;
-}
-
-bool RenderConfig::drawPoints()    const 
-{
-    return _drawPoints;
-}
-
-bool RenderConfig::drawEdges()    const 
-{
-    return _drawEdges;
-}
-
-bool RenderConfig::drawPolygons()    const 
-{
-    return _drawPolygons;
-}
-
-bool RenderConfig::flatShading() const
-{
-    return _flatShading;
-}
-
-RenderManager::RenderManager()
-    : backgroundColor(glm::vec4(.275, .275, .275, 1.))
-{
-}
-
-RenderManager::~RenderManager()
-{
-}
-
-void RenderManager::init()
-{
-    glewInit();
-    glClearColor(backgroundColor.r, 
-                 backgroundColor.g, 
-                 backgroundColor.b, 
-                 backgroundColor.a);
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-void RenderManager::setConfig(RenderConfig cfg)    
-{
-    config = cfg;
-}
-
-RenderConfig RenderManager::getConfig()    
-{
-    return config;
-}
-
-RenderPass* RenderManager::addPass()
-{
-    auto pass = new RenderPass();
-    {
-        std::lock_guard<std::mutex> lock(_managerLock);
-        passes.push_back(std::unique_ptr<RenderPass>(pass));
-    }
-    return pass;
-}
-
-void RenderManager::removePass(uint index)    
-{
-    std::lock_guard<std::mutex> lock(_managerLock);
-    passes.remove(*std::next(passes.begin(), index));
-}
-
-RenderPass* RenderManager::getPass(uint index)
-{
-    std::lock_guard<std::mutex> lock(_managerLock);
-    return std::next(begin(passes), index)->get();
-}
-
-void RenderManager::draw(const glm::mat4 &view, const glm::mat4 &projection)
-{
-    QtContext::getCurrent()->getManager()->cleanUp();
 
     {
-        std::lock_guard<std::mutex> lock(_managerLock);
-        for(auto &pass : passes){
-            pass->render(view, projection, config);
+        std::lock_guard<std::mutex> lock(_sizeLock);
+        if(!_width || !_height) {
+            std::cout << "No viewport geometry" << std::endl;
+            return;
         }
     }
+
+    if(_viewportChanged) {
+        glViewport(0, 0, (GLint)_width, (GLint)_height);
+        _viewportChanged = false;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(_geometryLock);
+        group->draw(_camera, config);
+    }
 }
+

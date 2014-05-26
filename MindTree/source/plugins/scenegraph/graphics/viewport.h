@@ -29,7 +29,7 @@
 #include "source/lib/mindtree_core.h"
 #include "source/plugins/datatypes/Object/object.h"
 #include "../../render/glwrapper.h"
-#include "../../render/render.h"
+#include "../../render/rendermanager.h"
 
 class Viewport : public QGLWidget
 {
@@ -41,9 +41,6 @@ public:
     MindTree::DoutSocket* getStartSocket();
 
 public slots:
-    void render(MindTree::DNode *node);
-    void render();
-    void repaint();
     void setShowPoints(bool b);
     void setShowEdges(bool b);
     void setShowPolygons(bool b);
@@ -61,9 +58,11 @@ signals:
     void nodeChanged(MindTree::DNode*);
 
 protected:
-    void resizeGL(int width, int height);
-    void paintGL();
-    void initializeGL();
+    void resizeEvent(QResizeEvent *event);
+    void paintEvent(QPaintEvent *);
+    void showEvent(QShowEvent *);
+    void hideEvent(QHideEvent *);
+
     void drawGrid();
     void drawOrigin();
     void transform(QPointF mpos);
@@ -86,12 +85,8 @@ private:
     std::unique_ptr<MindTree::GL::QtContext> ctx;
     std::unique_ptr<MindTree::GL::RenderManager> rendermanager;
 
-    QHash<MeshData*, QGLBuffer*> buffer_hash;
-
-    QGLBuffer grid;
     QPointF lastpos;
     QPointF winClickPos;
-    QTimer timer;
     glm::vec3 mouseDistToObj;
     bool rotate, pan, zoom;
     bool selectionMode;

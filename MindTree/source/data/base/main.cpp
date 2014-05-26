@@ -31,8 +31,11 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    QApplication a(argc, argv);
+#ifdef __linux__
+    QApplication::setAttribute(Qt::AA_X11InitThreads);
+#endif
 
+    QApplication a(argc, argv);
     MindTree::MainWindow *w = new MindTree::MainWindow();
 
     w->show();

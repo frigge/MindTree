@@ -13,6 +13,18 @@ namespace MindTree
 namespace GL
 {
 
+template<typename T>
+class GLObjectBinder
+{
+public:
+    GLObjectBinder(T glObj) : _glObj(glObj) { if(_glObj) _glObj->bind(); }
+    ~GLObjectBinder() { if(_glObj) _glObj->release(); }
+
+private:
+    T _glObj;
+
+};
+
 class VBO;
 class IBO;
 
@@ -169,22 +181,51 @@ private:
     std::unordered_map<std::shared_ptr<MeshData>, std::vector<std::shared_ptr<VBO>>> ubo_map;
 };
 
-class QtContext : public QGLContext
+class Context
+{
+public:
+    Context();
+
+    virtual void makeCurrent();
+    virtual void doneCurrent();
+    virtual void swapBuffers() = 0;
+
+    std::shared_ptr<ResourceManager> getManager();
+
+    static Context* getCurrent();
+    static Context* getSharedContext();
+
+protected:
+    static Context* _sharedContext;
+    static Context* currentContext;
+
+private:
+    std::shared_ptr<ResourceManager> manager;
+};
+
+class SharedContextRAII
+{
+public:
+    SharedContextRAII();
+    ~SharedContextRAII();
+};
+
+class QtContext : public Context
 {
 public:
     QtContext();
-    virtual ~QtContext();
 
     static QtContext* getContext();
-    std::shared_ptr<ResourceManager> getManager();
 
     void makeCurrent();
     void doneCurrent();
-    static QtContext* getCurrent();
+    void swapBuffers();
+
+    QGLContext* getNativeContext();
+    static QtContext* getSharedContext();
 
 private:
-    static QtContext* currentContext;
-    std::shared_ptr<ResourceManager> manager;
+    QGLContext _context;
     QGLFormat format;
 };
 

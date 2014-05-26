@@ -429,45 +429,94 @@ std::shared_ptr<VBO> ResourceManager::getVBO(std::shared_ptr<MeshData> data, std
     return vbo;
 }
 
-QtContext* QtContext::currentContext=nullptr;
+Context* Context::currentContext = nullptr;
+Context* Context::_sharedContext = nullptr;
 
-QtContext::QtContext()
-    : QGLContext(QGLFormat::defaultFormat()),
-      manager(std::make_shared<ResourceManager>())
-{
-    auto format = QGLFormat::defaultFormat();
-    //format.setVersion(3, 2);
-    //format.setProfile(QGLFormat::CoreProfile);
-    setFormat(format);
-}
-
-QtContext::~QtContext()
+Context::Context()
+    : manager(std::make_shared<ResourceManager>())
 {
 }
 
-QtContext* QtContext::getContext()    
+std::shared_ptr<ResourceManager> Context::getManager()    
 {
-    return new QtContext();
+    return manager;
 }
 
-void QtContext::makeCurrent()    
-{
-    QGLContext::makeCurrent();
-    currentContext = this;
-}
-
-void QtContext::doneCurrent()    
-{
-    QGLContext::doneCurrent();
-    currentContext = nullptr;
-}
-
-QtContext* QtContext::getCurrent()    
+Context* Context::getCurrent()    
 {
     return currentContext;
 }
 
-std::shared_ptr<ResourceManager> QtContext::getManager()    
+Context* Context::getSharedContext()
 {
-    return manager;
+    return _sharedContext;
+}
+
+void Context::makeCurrent()    
+{
+    currentContext = this;
+}
+
+void Context::doneCurrent()    
+{
+    currentContext = nullptr;
+}
+
+SharedContextRAII::SharedContextRAII()
+{
+    Context::getSharedContext()->makeCurrent();
+}
+
+SharedContextRAII::~SharedContextRAII()
+{
+    Context::getSharedContext()->doneCurrent();
+}
+
+QtContext::QtContext()
+    : Context(), _context(QGLFormat::defaultFormat())
+{
+    auto format = QGLFormat::defaultFormat();
+    _context.setFormat(format);
+}
+
+void QtContext::makeCurrent()    
+{
+    Context::makeCurrent();
+    if (!_context.isValid()) {
+        if (!_context.create()) {
+            std::cout << "couldn't create context" << std::endl;
+            return;
+        }
+    }
+    _context.makeCurrent();
+}
+
+void QtContext::doneCurrent()    
+{
+    Context::doneCurrent();
+    _context.doneCurrent();
+}
+
+void QtContext::swapBuffers()
+{
+    _context.swapBuffers();
+}
+
+QGLContext* QtContext::getNativeContext()
+{
+    return &_context;
+}
+
+QtContext* QtContext::getSharedContext()
+{
+    QtContext* context = nullptr;
+    if(!_sharedContext) {
+        context = new QtContext();
+        _sharedContext = context;
+    }
+    else {
+        context = static_cast<QtContext*>(_sharedContext);
+    }
+
+    return context;
 }

@@ -1,12 +1,8 @@
 project(render)
 set(RENDER_SRC
     render.cpp
+    rendermanager.cpp
     glwrapper.cpp
-)
-
-set(RENDER_HEADER
-    render.h
-    glwrapper.h
 )
 
 find_package(Boost COMPONENTS python REQUIRED)

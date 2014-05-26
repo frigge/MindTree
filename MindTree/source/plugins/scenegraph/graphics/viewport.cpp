@@ -38,13 +38,14 @@
 #include "graphics/viewport_widget.h"
 #include "source/data/base/raytracing/ray.h"
 #include "data/project.h"
+#include "../../render/render.h"
 
 #include "viewport.h"
 
 using namespace MindTree;
 
 Viewport::Viewport()
-    : QGLWidget(MindTree::GL::QtContext::getContext()), 
+    : QGLWidget(MindTree::GL::QtContext::getSharedContext()->getNativeContext()), 
     rotate(false), 
     zoom(false), 
     pan(false), 
@@ -58,12 +59,10 @@ Viewport::Viewport()
     DNode *snode = 0;
     setAutoBufferSwap(false);
 
-    connect(&timer, SIGNAL(timeout()), this, SLOT(repaint()));
-    //timer.start(1);
-
     rendermanager = std::unique_ptr<MindTree::GL::RenderManager>(new MindTree::GL::RenderManager());
 
-    rendermanager->addPass();
+    auto *pass = rendermanager->addPass();
+    pass->setCamera(activeCamera);
 }
 
 Viewport::~Viewport()
@@ -75,7 +74,6 @@ void Viewport::setData(std::shared_ptr<Group> value)
     if(!value) return;
 
     rendermanager->getPass(0)->setGeometry(value);
-    render();
 }
 
 void Viewport::changeCamera(QString cam)    
@@ -86,37 +84,27 @@ void Viewport::changeCamera(QString cam)
         if(selectedNode == cnode)
             selectedNode = 0;
     }
-    updateGL();
 }
 
-void Viewport::repaint()
+void Viewport::resizeEvent(QResizeEvent *)
 {
-    updateGL();
+    activeCamera->setProjection((GLdouble)width()/(GLdouble)height());
+    rendermanager->getPass(0)->setSize(width(), height());
 }
 
-void Viewport::initializeGL()    
+void Viewport::paintEvent(QPaintEvent *)
 {
-    rendermanager->init();
+    //do nothing here
 }
 
-void Viewport::resizeGL(int width, int height)    
+void Viewport::showEvent(QShowEvent *)
 {
-    activeCamera->setProjection((GLdouble)width/(GLdouble)height);
-    glViewport(0, 0, (GLint)width, (GLint)height);
+    rendermanager->start();
 }
 
-void Viewport::paintGL()    
+void Viewport::hideEvent(QHideEvent *)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
-
-    time(&start);
-    glEnable(GL_POINT_SMOOTH);
-
-    if(_showGrid) drawGrid();
-    rendermanager->draw(activeCamera->getViewMatrix(), activeCamera->getProjection());
-    glFinish();
-    time(&end);
-    swapBuffers();
+    rendermanager->stop();
 }
 
 void Viewport::setShowPoints(bool b)    
@@ -124,7 +112,6 @@ void Viewport::setShowPoints(bool b)
     auto config = rendermanager->getConfig();
     config.setDrawPoints(b);
     rendermanager->setConfig(config);
-    updateGL();
 }
 
 void Viewport::setShowEdges(bool b)    
@@ -132,7 +119,6 @@ void Viewport::setShowEdges(bool b)
     auto config = rendermanager->getConfig();
     config.setDrawEdges(b);
     rendermanager->setConfig(config);
-    updateGL();
 }
 
 void Viewport::setShowPolygons(bool b)    
@@ -140,7 +126,6 @@ void Viewport::setShowPolygons(bool b)
     auto config = rendermanager->getConfig();
     config.setDrawPolygons(b);
     rendermanager->setConfig(config);
-    updateGL();
 }
 
 void Viewport::setShowFlatShading(bool b)
@@ -148,13 +133,11 @@ void Viewport::setShowFlatShading(bool b)
     auto config = rendermanager->getConfig();
     config.setShowFlatShaded(b);
     rendermanager->setConfig(config);
-    updateGL();
 }
 
 void Viewport::setShowGrid(bool b)
 {
     _showGrid = b;
-    updateGL();
 }
 
 void Viewport::drawTransformable(std::shared_ptr<AbstractTransformable> transformable)
@@ -289,14 +272,12 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
         panView(xdist, ydist);
     else if(zoom)
         zoomView(xdist, ydist);
-    updateGL();
     lastpos = event->posF();
 }
 
 void Viewport::wheelEvent(QWheelEvent *event)    
 {
     zoomView(0, event->delta());
-    updateGL();
 }
 
 AbstractTransformableNode* Viewport::getSelectedNode()    
@@ -346,14 +327,4 @@ void Viewport::zoomView(float xdist, float ydist)
         return;
     //glm::vec3 zvec = activeCamera->getCenter() - activeCamera->getPosition();
     activeCamera->moveToCenter(ydist/height());
-}
-
-void Viewport::render()    
-{
-    QMetaObject::invokeMethod(this, "updateGL", Qt::QueuedConnection);
-}
-
-void Viewport::render(DNode *node)    
-{
-    updateGL();
 }

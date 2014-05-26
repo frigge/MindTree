@@ -37,7 +37,7 @@ public:
     ViewportViewer(MindTree::DoutSocket *socket);
     virtual ~ViewportViewer();
 
-    void update(MindTree::DinSocket *socket);
+    void update();
 };
 
 class ViewportWidget : public QWidget

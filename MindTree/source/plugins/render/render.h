@@ -3,8 +3,9 @@
 #define RENDER_GR953KUN
 
 #include "memory"
-#include "vector"
 #include "mutex"
+#include "vector"
+#include "../datatypes/Object/object.h"
 #include "glm/glm.hpp"
 
 class GeoObject;
@@ -27,13 +28,13 @@ public:
     virtual ~Render();
 
     virtual void init();
-    void draw(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config);
+    void draw(const CameraPtr camera, const RenderConfig &config);
 
-    void drawPoints(const glm::mat4 &view, const glm::mat4 &projection);
-    void drawEdges(const glm::mat4 &view, const glm::mat4 &projection);
-    void drawPolygons(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config);
-    void drawVertexNormals(const glm::mat4 &view, const glm::mat4 &projection);
-    void drawFaceNormals(const glm::mat4 &view, const glm::mat4 &projection);
+    void drawPoints(const CameraPtr camera);
+    void drawEdges(const CameraPtr camera);
+    void drawPolygons(const CameraPtr camera, const RenderConfig &config);
+    void drawVertexNormals(const CameraPtr camera);
+    void drawFaceNormals(const CameraPtr camera);
 
     void setPointProgram(ShaderProgram *prog);
     void setEdgeProgram(ShaderProgram *prog);
@@ -78,7 +79,7 @@ public:
     RenderGroup(std::shared_ptr<Group> g);
     virtual ~RenderGroup();
 
-    void draw(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config);
+    void draw(const CameraPtr camera, const RenderConfig &config);
 
 private:
     void addObject(std::shared_ptr<GeoObject> obj);
@@ -92,54 +93,22 @@ class RenderPass
 public:
     RenderPass();
     virtual ~RenderPass();
-    void render(const glm::mat4 &view, const glm::mat4 &projection, const RenderConfig &config);
+    void render(const RenderConfig &config);
 
     void setGeometry(std::shared_ptr<Group> g);
+    void setCamera(CameraPtr camera);
+    CameraPtr getCamera();
+
+    void setSize(int width, int height);
 
 private:
+    int _width, _height;
+    bool _viewportChanged;
     std::shared_ptr<RenderGroup> group;
+    std::shared_ptr<Camera> _camera;
     std::shared_ptr<FBO> target;
-};
-
-class RenderConfig
-{
-public:
-    void setDrawPoints(bool draw);
-    void setDrawEdges(bool draw);
-    void setDrawPolygons(bool draw);
-    void setShowFlatShaded(bool b);
-    bool drawPoints() const;
-    bool drawEdges() const;
-    bool drawPolygons() const;
-    bool flatShading() const;
-
-private:
-    bool _drawPoints = true;
-    bool _drawEdges = true;
-    bool _drawPolygons = true;
-    bool _flatShading = false;
-};
-
-class RenderManager
-{
-public:
-    RenderManager();
-    virtual ~RenderManager();
-
-    void init();
-
-    RenderPass* addPass();
-    void removePass(uint index);
-    void draw(const glm::mat4 &view, const glm::mat4 &projection);
-    RenderPass* getPass(uint index);
-    void setConfig(RenderConfig cfg);
-    RenderConfig getConfig();
-
-private:
-    std::mutex _managerLock;
-    glm::vec4 backgroundColor;
-    std::list<std::unique_ptr<RenderPass>> passes;
-    RenderConfig config;
+    std::mutex _sizeLock;
+    std::mutex _geometryLock;
 };
 
 } /* GL */
