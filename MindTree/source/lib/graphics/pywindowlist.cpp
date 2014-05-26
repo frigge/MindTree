@@ -1,6 +1,7 @@
 #include "graphics/windowlist.h"
 #include "graphics/viewer_dock_base.h"
 #include "data/python/wrapper.h"
+#include "data/python/pyutils.h"
 #include "data/nodes/data_node_socket.h"
 #include "pywindowlist.h"
 
@@ -43,8 +44,12 @@ MindTree::ViewerDockBase* PythonViewerFactory::createViewer(DoutSocket *socket)
 {
     std::cout<<"creating Python Viewer"<<std::endl;
     ViewerDockBase *dock = new ViewerDockBase(getName());
-    BPy::object obj = cls(new DoutSocketPyWrapper(socket));
-    PyViewerBase* base = BPy::extract<PyViewerBase*>(obj);
+    PyViewerBase *base = nullptr;
+    {
+        GILLocker locker;
+        BPy::object obj = cls(new DoutSocketPyWrapper(socket));
+        base = BPy::extract<PyViewerBase*>(obj);
+    }
     dock->setViewer(base);
     dock->setStart(socket);
     return dock;
@@ -71,19 +76,22 @@ void PyViewerBase::wrap()
 
 DoutSocketPyWrapper* PyViewerBase::getSocket()
 {
+    GILReleaser releaser;
     return new DoutSocketPyWrapper(getStart());
 }
 
 DataCache PyViewerBase::getCache() const
 {
+    GILReleaser releaser;
     return cache;
 }
 
-void PyViewerBase::update(DinSocket *socket)    
+void PyViewerBase::update()
 {
+    GILLocker locker;
     std::cout<<"updating python viewer ... " << std::endl;
     if(auto f = get_override("update"))
-        f(new DinSocketPyWrapper(socket));
+        f();
 }
 
 void PyViewerBase::setWidget(BPy::object pywidget)
@@ -173,6 +181,7 @@ void MindTree::Python::regViewer(QString name, QString type, BPy::object viewerC
 
 BPy::list MindTree::Python::getWindows()    
 {
+    GILReleaser releaser;
     BPy::list window_types;
     for(auto &fac : MindTree::WindowList::instance()->getFactories()){
         window_types.append(fac->getName());
@@ -182,6 +191,7 @@ BPy::list MindTree::Python::getWindows()
 
 BPy::dict MindTree::Python::getViewers()    
 {
+    GILReleaser releaser;
     BPy::dict viewer_types;
     for(auto &vectors : MindTree::ViewerList::instance()->getFactories()){
         BPy::list viewers;
@@ -196,6 +206,9 @@ BPy::dict MindTree::Python::getViewers()
 QString MindTree::Python::showViewer(DoutSocketPyWrapper *pyout, unsigned int index)    
 {
     if(!pyout->alive()) return "";
-    return MindTree::ViewerList::instance()->showViewer(pyout->getWrapped<DoutSocket>(), index); 
+    {
+        GILReleaser releaser;
+        return MindTree::ViewerList::instance()->showViewer(pyout->getWrapped<DoutSocket>(), index); 
+    }
 }
 

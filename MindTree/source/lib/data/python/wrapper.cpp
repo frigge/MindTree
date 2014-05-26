@@ -21,6 +21,7 @@
 #include "data/nodes/data_node_socket.h"
 #include "data/dnspace.h"
 #include "pyexposable.h"
+#include "pyutils.h"
 #include "graphics/windowlist.h"
 #include "graphics/viewer_dock_base.h"
 #include "graphics/viewer.h"
@@ -29,6 +30,7 @@
 #include "wrapper.h"
 
 using namespace MindTree;
+using namespace MindTree::Python;
 
 DNodeListIteratorPyWrapper::DNodeListIteratorPyWrapper(NodeList nodelist)
     : nodelist(nodelist), iterator(nodelist.begin())
@@ -76,6 +78,7 @@ PythonNodeDecorator::~PythonNodeDecorator()
 
 DNode* PythonNodeDecorator::operator()()    
 {
+    GILLocker releaser;
     DNode *node = new DNode();
     node->setNodeType(getType());
     try{
@@ -186,6 +189,7 @@ std::vector<std::string> PyWrapper::getSocketTypes()
 
 DNodePyWrapper* PyWrapper::createNode(std::string name)    
 {
+    GILReleaser releaser;
     DNode *node = MindTree::NodeDataBase::createNode(name);
     if(!node) return nullptr;
 
@@ -412,6 +416,7 @@ bool DNodePyWrapper::getSelected()
 
 void DNodePyWrapper::setSelected(bool value)
 {
+    GILReleaser releaser;
     if(!alive())return;
     getWrapped<DNode>()->setSelected(value);
 }
@@ -436,6 +441,7 @@ BPy::list DNodePyWrapper::dir(BPy::object self)
 
 void DNodePyWrapper::setattr(BPy::object self, BPy::object name, BPy::object value)    
 {
+    GILReleaser releaser;
     DNodePyWrapper *node = 0;
     node = BPy::extract<DNodePyWrapper*>(self);
     if(!node->alive())return;
@@ -479,6 +485,7 @@ DNSpacePyWrapper* DNodePyWrapper::getSpace()
 
 void DNodePyWrapper::setName(std::string name)    
 {
+    GILReleaser releaser;
     if(!alive())return;
     getWrapped<DNode>()->setNodeName(name);
 }
@@ -498,6 +505,7 @@ std::string DNodePyWrapper::getType()
 
 void DNodePyWrapper::setType(std::string value)
 {
+    GILReleaser releaser;
     if(!alive())return;
     getWrapped<DNode>()->setType(value);
 }
@@ -512,6 +520,7 @@ BPy::tuple DNodePyWrapper::getPos()
 
 void DNodePyWrapper::setPos(BPy::tuple pos)
 {
+    GILReleaser releaser;
     if(!alive())return;
     float x = BPy::extract<float>(pos[0]);
     float y = BPy::extract<float>(pos[1]);
@@ -574,6 +583,7 @@ std::string DSocketPyWrapper::getName()
 
 void DSocketPyWrapper::setName(std::string name)    
 {
+    GILReleaser releaser;
     if(!alive()) return;
     getWrapped<DSocket>()->setName(name);
 }
@@ -587,6 +597,7 @@ std::string DSocketPyWrapper::getType()
 
 void DSocketPyWrapper::setType(std::string value)
 {
+    GILReleaser releaser;
     if(!alive())return;
     getWrapped<DSocket>()->setType(value);
 }
@@ -628,9 +639,12 @@ void DinSocketPyWrapper::setProp(BPy::object value)
 {
     if(!alive())return;
     auto prop = Property::createPropertyFromPython(value);
-    auto socket = getWrapped<DinSocket>();
-    socket->setProperty(prop);
-    socket->setType(prop.getType());
+    {
+        GILReleaser releaser;
+        auto socket = getWrapped<DinSocket>();
+        socket->setProperty(prop);
+        socket->setType(prop.getType());
+    }
 }
 
 DoutSocketPyWrapper* DinSocketPyWrapper::getCntd()    
@@ -643,6 +657,7 @@ DoutSocketPyWrapper* DinSocketPyWrapper::getCntd()
 
 void DinSocketPyWrapper::setCntd(DoutSocketPyWrapper *socket)    
 {
+    GILReleaser releaser;
     if(!alive())return;
     getWrapped<DinSocket>()->setCntdSocket(socket->getWrapped<DoutSocket>());  
 }

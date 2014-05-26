@@ -56,7 +56,7 @@ public:
     PyViewerBase(DoutSocketPyWrapper *start);
     virtual ~PyViewerBase();
     static void wrap();
-    void update(DinSocket *socket);
+    void update();
     void setWidget(BPy::object widget);
     DoutSocketPyWrapper* getSocket();
     DataCache getCache() const;
