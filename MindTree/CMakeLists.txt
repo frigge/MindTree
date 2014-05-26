@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(mindTree)
 SET(HEADER
-            source/data/data_info_box.h
 #            source/data/code_generator/shaderwriter.h
 #            source/data/code_generator/rslwriter.h
 #            source/data/code_generator/glslwriter.h
@@ -18,7 +17,6 @@ SET(HEADER
 )
 
 SET(SOURCE
-            source/data/data_info_box.cpp
 #            source/data/code_generator/shaderwriter.cpp
 #            source/data/code_generator/rslwriter.cpp
 #            source/data/code_generator/glslwriter.cpp

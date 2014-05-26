@@ -42,7 +42,6 @@
 
 #include "data/dnspace.h"
 #include "data/nodes/data_node.h"
-#include "source/data/data_info_box.h"
 #include "source/graphics/python/consolewindow.h"
 #include "source/data/python/init.h"
 #include "source/data/base/init.h"

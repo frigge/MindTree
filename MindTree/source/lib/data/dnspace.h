@@ -22,7 +22,6 @@
 #include "data/nodes/data_node.h"
 //#include "source/graphics/nodelink.h"
 #include "source/data/undo/frg_generic_undo.h"
-#include "source/data/data_info_box.h"
 #include "data/python/pyexposable.h"
 
 namespace MindTree
@@ -67,13 +66,8 @@ public:
     void setContainerSpace(bool value);
     ContainerSpace* toContainer();
 
-    void addInfoBox(DInfoBox *box);
-    void removeInfoBox(DInfoBox *box);
-    std::vector<DInfoBox*> getInfoBoxes();
-
 private:
     friend void MindTree::IO::write(std::ostream &, const DNSpace*);
-    std::vector<DInfoBox*> infos;
     std::string name;
     NodeList nodes;
     bool isCSpace;

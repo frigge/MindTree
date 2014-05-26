@@ -195,21 +195,6 @@ ContainerSpace* DNSpace::toContainer()
     return dynamic_cast<ContainerSpace*>(this);
 }
 
-void DNSpace::addInfoBox(DInfoBox *box)    
-{
-    infos.push_back(box);
-}
-
-void DNSpace::removeInfoBox(DInfoBox *box)
-{
-    infos.erase(std::find(infos.begin(), infos.end(), box)); 
-}
-
-std::vector<DInfoBox*> DNSpace::getInfoBoxes()    
-{
-    return infos; 
-}
-
 ContainerSpace::ContainerSpace()
     : node(0), parentSpace(0)
 {
