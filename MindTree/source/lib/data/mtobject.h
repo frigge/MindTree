@@ -1,6 +1,7 @@
 #ifndef MTOBJECT_H
 #define MTOBJECT_H
 
+#include "mutex"
 #include "data/properties.h"
 
 namespace MindTree {
@@ -21,6 +22,7 @@ public:
 
 private:
     mutable PropertyMap properties;
+    mutable std::mutex _propertiesLock;
 };
 }
 #endif
