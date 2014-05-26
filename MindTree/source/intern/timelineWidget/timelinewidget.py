@@ -137,7 +137,7 @@ class TimelineWidget(QWidget):
         mttimeline.setFrame(int(frame))
         self.scrubwidget.setValue(frame)
         self.frameBox.blockSignals(True)
-        QMetaObject.invokeMethod(self.frameBox, "setValue", Qt.QueuedConnection, Q_ARG("int", frame))
+        self.frameBox.setValue(frame)
         self.frameBox.blockSignals(False)
 
 

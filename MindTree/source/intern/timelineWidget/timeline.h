@@ -62,4 +62,23 @@ private:
     MindTree::Signal::CallbackVector callbacks;
 };
 
+namespace Python {
+class Timeline 
+{
+public:
+    static void setFrame(int frame);
+    static int frame();
+    static void setStart(int start);
+    static int start();
+    static void setEnd(int end);
+    static int end();
+    static void setFps(int fps);
+    static int fps();
+
+    static void playpause();
+    static void stop();
+    static bool isPlaying();
+    static void registerAPI();
+};
+};
 #endif

@@ -131,7 +131,6 @@ int Timeline::fps()
 
 void Timeline::playpause()
 {
-    MindTree::Python::GILReleaser releaser;
     if (!_timer.isRunning()) {
         _timer.start();
     }
@@ -142,7 +141,6 @@ void Timeline::playpause()
 
 void Timeline::stop()
 {
-    MindTree::Python::GILReleaser releaser;
     _timer.stop();
     setFrame(_start);
 }
@@ -150,6 +148,87 @@ void Timeline::stop()
 bool Timeline::isPlaying()
 {
     return _timer.isRunning();
+}
+
+void Python::Timeline::setFrame(int frame)
+{
+    MindTree::Python::GILReleaser releaser;
+    ::Timeline::setFrame(frame);
+}
+
+void Python::Timeline::setStart(int start)
+{
+    MindTree::Python::GILReleaser releaser;
+    ::Timeline::setStart(start);
+}
+
+void Python::Timeline::setEnd(int end)
+{
+    MindTree::Python::GILReleaser releaser;
+    ::Timeline::setEnd(end);
+}
+
+void Python::Timeline::setFps(int fps)
+{
+    MindTree::Python::GILReleaser releaser;
+    ::Timeline::setFps(fps);
+}
+
+int Python::Timeline::start()
+{
+    MindTree::Python::GILReleaser releaser;
+    return ::Timeline::start();
+}
+
+int Python::Timeline::end()
+{
+    MindTree::Python::GILReleaser releaser;
+    return ::Timeline::end();
+}
+
+int Python::Timeline::frame()
+{
+    MindTree::Python::GILReleaser releaser;
+    return ::Timeline::frame();
+}
+
+int Python::Timeline::fps()
+{
+    MindTree::Python::GILReleaser releaser;
+    return ::Timeline::fps();
+}
+
+void Python::Timeline::playpause()
+{
+    MindTree::Python::GILReleaser releaser;
+    ::Timeline::playpause();
+}
+
+void Python::Timeline::stop()
+{
+    MindTree::Python::GILReleaser releaser;
+    ::Timeline::stop();
+}
+
+bool Python::Timeline::isPlaying()
+{
+    MindTree::Python::GILReleaser releaser;
+    return ::Timeline::isPlaying();
+}
+
+void Python::Timeline::registerAPI()
+{
+    BPy::def("frame", Python::Timeline::frame);
+    BPy::def("setFrame", Python::Timeline::setFrame);
+    BPy::def("start", Python::Timeline::start);
+    BPy::def("setStart", Python::Timeline::setStart);
+    BPy::def("end", Python::Timeline::end);
+    BPy::def("setEnd", Python::Timeline::setEnd);
+    BPy::def("fps", Python::Timeline::fps);
+    BPy::def("setFps", Python::Timeline::setFps);
+    BPy::def("isPlaying", Python::Timeline::isPlaying);
+    BPy::def("playpause", Python::Timeline::playpause);
+    BPy::def("stop", Python::Timeline::stop);
 }
 
 TimelineNode::TimelineNode()
@@ -185,7 +264,6 @@ BOOST_PYTHON_MODULE(mttimeline) {
     MindTree::NodeDataBase::registerNodeType(timelineNodeDecorator);
 
     auto frameProc = [](MindTree::DataCache* cache) {
-        std::cout <<  "caching current frame: " << Timeline::frame() << std::endl;
         cache->pushData(Timeline::frame());
     };
 
@@ -194,16 +272,5 @@ BOOST_PYTHON_MODULE(mttimeline) {
                                       new MindTree::CacheProcessor(frameProc));
 
     Timeline::init();
-
-    BPy::def("frame", Timeline::frame);
-    BPy::def("setFrame", Timeline::setFrame);
-    BPy::def("start", Timeline::start);
-    BPy::def("setStart", Timeline::setStart);
-    BPy::def("end", Timeline::end);
-    BPy::def("setEnd", Timeline::setEnd);
-    BPy::def("fps", Timeline::fps);
-    BPy::def("setFps", Timeline::setFps);
-    BPy::def("isPlaying", Timeline::isPlaying);
-    BPy::def("playpause", Timeline::playpause);
-    BPy::def("stop", Timeline::stop);
+    Python::Timeline::registerAPI();
 }
