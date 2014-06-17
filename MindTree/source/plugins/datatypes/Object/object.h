@@ -28,6 +28,7 @@
 #include "QMatrix4x4"
 #include "data/python/pyexposable.h"
 #include "data/properties.h"
+#include "material.h"
 
 class Polygon
 {
@@ -149,8 +150,12 @@ public:
     std::shared_ptr<ObjectData> getData();
     void setData(std::shared_ptr<ObjectData> value);
 
+    MaterialInstancePtr getMaterial();
+    void setMaterial(MaterialInstancePtr material);
+
 private:
     std::shared_ptr<ObjectData> data;
+    MaterialInstancePtr _material;
 };
 
 class CreateGroupNode;

@@ -1,6 +1,9 @@
 project(render)
 set(RENDER_SRC
     render.cpp
+    polygon_renderer.cpp
+    geoobject_renderer.cpp
+    primitive_renderer.cpp
     rendermanager.cpp
     glwrapper.cpp
 )

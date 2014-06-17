@@ -308,6 +308,16 @@ GeoObject::~GeoObject()
 {
 }
 
+MaterialInstancePtr GeoObject::getMaterial()
+{
+    return _material;
+}
+
+void GeoObject::setMaterial(MaterialInstancePtr material)
+{
+    _material = material;
+}
+
 std::shared_ptr<ObjectData> GeoObject::getData()
 {
     return data;

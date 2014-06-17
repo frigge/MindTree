@@ -1,33 +1,34 @@
 #include "material.h"
 
-std::unordered_map<std::string, Material*> Material::materials;
-
 Material::Material(std::string name)
+    : _name(name)
 {
-    auto idname = name;
-    int id = 1;
-    while(materials.count(idname))
-        idname = name + std::to_string(id++);
-    this->name = idname;
-    materials.insert(std::make_pair(idname, this));
 }
 
 Material::~Material()
 {
-   materials.erase(name); 
-}
-
-void Material::setProp(std::string name, MindTree::Property prop)    
-{
-    properties[name] = prop;
 }
 
 std::string Material::getName() const
 {
-    return name;
+    return _name;
 }
 
-std::unordered_map<std::string, Material*> Material::getMaterials()    
+void Material::setName(std::string name)
 {
-    return materials;
+    _name = name;
+}
+
+MaterialInstance::MaterialInstance(MaterialPtr material)
+    : _material(material)
+{
+}
+
+MaterialInstance::~MaterialInstance()
+{
+}
+
+MaterialPtr MaterialInstance::getMaterial()
+{
+    return _material;
 }

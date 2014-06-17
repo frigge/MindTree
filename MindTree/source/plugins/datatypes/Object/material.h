@@ -1,32 +1,36 @@
 #ifndef MATERIAL_RES1NWMZ
 
 #define MATERIAL_RES1NWMZ
-#include "data/properties.h"
+#include "memory"
+#include "data/mtobject.h"
 
-class Material
+class Material : public MindTree::Object
 {
 public:
-    Material(std::string name = "");
+    Material(std::string name = "Material");
     virtual ~Material();
 
-    template<typename T>
-    T getProp(std::string name) {
-        try {
-            return properties[name].getData<T>();
-        } catch (const std::out_of_range &e){ 
-            std::cout << "no Property of name "<< name << " stored" << std::endl;
-            return T();
-        }
-    }
-
-    void setProp(std::string name, MindTree::Property prop);
     std::string getName() const;
-    static std::unordered_map<std::string, Material*> getMaterials();
+    void setName(std::string name);
 
 private:
-    static std::unordered_map<std::string, Material*> materials;
-    MindTree::PropertyMap properties;
-    std::string name;
+    MindTree::PropertyMap _properties;
+    std::string _name;
 };
 
+typedef std::shared_ptr<Material> MaterialPtr;
+
+class MaterialInstance : public MindTree::Object
+{
+public:
+    MaterialInstance(MaterialPtr material);
+    virtual ~MaterialInstance();
+
+    MaterialPtr getMaterial();
+
+private:
+    MaterialPtr _material;
+};
+
+typedef std::shared_ptr<MaterialInstance> MaterialInstancePtr;
 #endif /* end of include guard: MATERIAL_RES1NWMZ */
