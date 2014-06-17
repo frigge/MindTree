@@ -31,6 +31,12 @@
 #include "../../render/glwrapper.h"
 #include "../../render/rendermanager.h"
 
+namespace MindTree {
+namespace GL {
+    class GridRenderer;
+}
+}
+
 class Viewport : public QGLWidget
 {
     Q_OBJECT
@@ -47,7 +53,6 @@ public slots:
     void setShowFlatShading(bool b);
     void setShowGrid(bool b);
     void changeCamera(QString cam);
-    //void setSelectedNode();
     AbstractTransformableNode* getSelectedNode();
     glm::vec3 getCamPivot();
 
@@ -63,12 +68,8 @@ protected:
     void showEvent(QShowEvent *);
     void hideEvent(QHideEvent *);
 
-    void drawGrid();
-    void drawOrigin();
     void transform(QPointF mpos);
     void checkTransform();
-    void drawTransformable(std::shared_ptr<AbstractTransformable> transformable);
-    void drawAxisGizmo();
     void rotateView(float xdist, float ydist);
     void panView(float xdist, float ydist);
     void zoomView(float xdist, float ydist);
@@ -82,8 +83,9 @@ protected:
 private:
     AbstractTransformableNode *selectedNode;
     std::shared_ptr<Camera> activeCamera, defaultCamera;
-    std::unique_ptr<MindTree::GL::QtContext> ctx;
     std::unique_ptr<MindTree::GL::RenderManager> rendermanager;
+
+    MindTree::GL::GridRenderer *grid;
 
     QPointF lastpos;
     QPointF winClickPos;

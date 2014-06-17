@@ -39,6 +39,7 @@
 #include "source/data/base/raytracing/ray.h"
 #include "data/project.h"
 #include "../../render/render.h"
+#include "../../render/primitive_renderer.h"
 
 #include "viewport.h"
 
@@ -61,8 +62,20 @@ Viewport::Viewport()
 
     rendermanager = std::unique_ptr<MindTree::GL::RenderManager>(new MindTree::GL::RenderManager());
 
-    auto *pass = rendermanager->addPass();
+    auto pass = rendermanager->addPass();
     pass->setCamera(activeCamera);
+
+    grid = new GL::GridRenderer(100, 100, 100, 100);
+    auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
+
+    grid->setTransformation(trans);
+    grid->setColor(glm::vec4(.5, .5, .5, .5));
+
+    pass->addRenderer(grid);
+    pass->addOutput("outcolor");
+
+    auto pixelpass = rendermanager->addPass();
+    pixelpass->addRenderer(new GL::FullscreenQuadRenderer(pass.get()));
 }
 
 Viewport::~Viewport()
@@ -73,7 +86,7 @@ void Viewport::setData(std::shared_ptr<Group> value)
 {
     if(!value) return;
 
-    rendermanager->getPass(0)->setGeometry(value);
+    rendermanager->getPass(0)->setRenderersFromGroup(value);
 }
 
 void Viewport::changeCamera(QString cam)    
@@ -89,7 +102,8 @@ void Viewport::changeCamera(QString cam)
 void Viewport::resizeEvent(QResizeEvent *)
 {
     activeCamera->setProjection((GLdouble)width()/(GLdouble)height());
-    rendermanager->getPass(0)->setSize(width(), height());
+    rendermanager->setSize(width(), height());
+    rendermanager->setSize(width(), height());
 }
 
 void Viewport::paintEvent(QPaintEvent *)
@@ -137,114 +151,12 @@ void Viewport::setShowFlatShading(bool b)
 
 void Viewport::setShowGrid(bool b)
 {
-    _showGrid = b;
-}
-
-void Viewport::drawTransformable(std::shared_ptr<AbstractTransformable> transformable)
-{
-    DNode *node=0;
-    drawOrigin();
-}
-
-void Viewport::drawOrigin()    
-{
-    glDisable(GL_DEPTH_TEST);
-    if(selectionMode) return;
-    QGLShaderProgram prog;
-    QString vertsrc("#version 330\n"
-                    "in vec3 vertex;\n"
-                    "uniform mat4 mvMat;\n"
-                    "uniform mat4 pMat;\n"
-                    
-                    "void main(){\n"
-                        "mat4 mvpMat = pMat * mvMat;\n"
-                        "gl_Position = mvpMat * vec4(vertex, 1);\n"
-                    "}\n"
-                    );
-    QString fragsrc("#version 330\n"
-                    "out vec4 color;\n"
-                    
-                    "void main(){\n"
-                        "color = vec4(1, 0, 0, 1);\n"
-                    "}\n"
-                    );
-    prog.addShaderFromSourceCode(QGLShader::Vertex, vertsrc);
-    prog.addShaderFromSourceCode(QGLShader::Fragment, fragsrc);
-    prog.bind();
-    GLfloat point[3];
-    point[0] = 0;
-    point[1] = 0;
-    point[2] = 0;
-    prog.setAttributeArray("vertex", point, 3);
-    prog.enableAttributeArray("vertex");
-    //prog.setUniformValue("mvMat", activeCamera->getViewMatrix());
-    //prog.setUniformValue("pMat", activeCamera->getProjection());
-    glPointSize(4.0f);
-    glDrawArrays(GL_POINTS, 0, 1);
-    prog.disableAttributeArray("vertex");
-    prog.release();
-    glEnable(GL_DEPTH_TEST);
-}
-
-void Viewport::drawGrid()    
-{
-    int xsegments = 100;
-    int zsegments = 100;
-
-    float xsize = 100;
-    float zsize = 100;
-    MindTree::GL::ShaderProgram prog;
-    std::string vert("#version 330\n"
-        "in vec3 vertex;\n"
-        "uniform mat4 mvMat;\n"
-        "uniform mat4 pMat;\n"
-        "out vec4 vertColor;\n"
-
-        "void main(){\n"
-            "mat4 mvpMat = pMat*mvMat;\n"
-            "vertColor = vec4(1., 1., 1., .3);\n"
-            "gl_Position = mvpMat * vec4(vertex, 1.0);\n"
-        "}\n"
-    ); 
-
-    std::string frag("#version 330\n"
-                 "out vec4 color;\n"
-                 "in vec4 vertColor;\n"
-
-                 "void main(){\n"
-                    "color = vertColor;\n"
-                 "}\n"
-                 );
-    auto verts = std::vector<glm::vec3>(xsegments*2 + zsegments*2 + 2);
-    for(int i=0; i<=xsegments; i++){
-        verts.push_back(glm::vec3((float(i)/xsegments * xsize) - xsize/2, 0, -zsize/2));
-        verts.push_back(glm::vec3((float(i)/xsegments * xsize) - xsize/2, 0, zsize/2));
-    }
-
-    for(int i=0; i<=zsegments; i++){
-        verts.push_back(glm::vec3(-xsize/2, 0, (float(i)/zsegments * zsize) - zsize/2));
-        verts.push_back(glm::vec3(xsize/2, 0, (float(i)/zsegments * zsize) - zsize/2));
-    }
-
-    prog.addShaderFromSource(vert, GL_VERTEX_SHADER);
-    prog.addShaderFromSource(frag, GL_FRAGMENT_SHADER);
-    prog.link();
-    prog.bind();
-    prog.vertexAttribute("vertex", verts);
-    prog.enableAttribute("vertex");
-    prog.setUniform("mvMat", activeCamera->getViewMatrix());
-    prog.setUniform("pMat", activeCamera->getProjection());
-
-    glLineWidth(1);
-    glDrawArrays(GL_LINES, 0, verts.size());
-    prog.disableAttribute("vertex");
-    prog.release();
+    grid->setVisible(b);
 }
 
 void Viewport::mousePressEvent(QMouseEvent *event)    
 {
     lastpos = event->posF();
-    //NodeList selectedNodes = FRG::Space->selectedNodes();
     if(event->modifiers() & Qt::ControlModifier)
         zoom = true;
     else if (event->modifiers() & Qt::ShiftModifier)

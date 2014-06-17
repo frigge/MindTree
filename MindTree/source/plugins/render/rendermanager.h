@@ -42,11 +42,13 @@ public:
     void stop();
     bool isRendering();
 
-    RenderPass* addPass();
+    std::shared_ptr<RenderPass> addPass();
     void removePass(uint index);
     RenderPass* getPass(uint index);
     void setConfig(RenderConfig cfg);
     RenderConfig getConfig();
+
+    void setSize(int width, int height);
 
 private:
     void init();
@@ -56,10 +58,13 @@ private:
     std::mutex _managerLock;
     std::mutex _renderingLock;
     glm::vec4 backgroundColor;
-    std::list<std::unique_ptr<RenderPass>> passes;
+    std::vector<std::shared_ptr<RenderPass>> passes;
     RenderConfig config;
     bool _initialized;
     bool _rendering;
+    double renderTime;
+
+    int _width, _height;
 };
 
 }

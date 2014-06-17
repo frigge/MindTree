@@ -100,9 +100,44 @@ void RenderManager::init()
                  backgroundColor.a);
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+    //setup textures
+    uint i=0;
+    for(auto &pass : passes){
+        pass->init();
+        if(i > 0) {
+            auto lastPass = passes[i - 1];
+            auto shadernodes = pass->getShaderNodes();
+            for (auto shadernode : shadernodes) {
+                auto textures = lastPass->getOutputTextures();
+                auto names = lastPass->getOutputs();
+                for(size_t i = 0; i < textures.size(); i++) {
+                    shadernode->program()->setTexture("in_" + names[i], textures[i]);
+                }
+                shadernode->program()->setTexture("depth", lastPass->getOutDepthTexture());
+            }
+        }
+        ++i;
+    }
+}
+
+void RenderManager::setSize(int width, int height)
+{
+    if(_width == width && _height == height) 
+        return;
+
+    _width = width;
+    _height = height;
+
+    for (auto pass : passes)
+        pass->setSize(_width, _height);
+
+    //invalidate renderpass so that FBO and textures are regenerated
+    _initialized = false;
 }
 
 void RenderManager::setConfig(RenderConfig cfg)    
@@ -115,18 +150,17 @@ RenderConfig RenderManager::getConfig()
     return config;
 }
 
-RenderPass* RenderManager::addPass()
+std::shared_ptr<RenderPass> RenderManager::addPass()
 {
-    auto pass = new RenderPass();
     std::lock_guard<std::mutex> lock(_managerLock);
-    passes.push_back(std::unique_ptr<RenderPass>(pass));
+    auto pass = std::make_shared<RenderPass>();
+    passes.push_back(pass);
     return pass;
 }
 
 void RenderManager::removePass(uint index)    
 {
     std::lock_guard<std::mutex> lock(_managerLock);
-    passes.remove(*std::next(passes.begin(), index));
 }
 
 RenderPass* RenderManager::getPass(uint index)
@@ -141,8 +175,9 @@ void RenderManager::draw()
     if(!_initialized) {
         init();
     }
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
     glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_POLYGON_OFFSET_POINT);
 
     auto start = std::chrono::steady_clock::now();
     Context::getSharedContext()->getManager()->cleanUp();
@@ -153,12 +188,14 @@ void RenderManager::draw()
         }
     }
 
+    glFinish();
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
-    double seconds = duration.count() / 1000000000.0;
-    std::cout << "Rendering took " << seconds << "s"
-        << " ==> " << 1.0 / seconds << "fps" << std::endl;
-    glFinish();
+    renderTime = duration.count() / 1000000000.0;
+    //std::cout << "Rendering took " << seconds << "s"
+    //    << " ==> " << 1.0 / seconds << "fps" << std::endl;
     glDisable(GL_POINT_SMOOTH);
+    glDisable(GL_PROGRAM_POINT_SIZE);
+    glDisable(GL_POLYGON_OFFSET_POINT);
     Context::getSharedContext()->swapBuffers();
 }
