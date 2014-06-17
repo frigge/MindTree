@@ -47,7 +47,13 @@ class NodeSpace(QGraphicsScene):
         else:
             item = node.NodeItem(n)
         self.addItem(item)
+        item.setSelected(True)
         self.nodes[n.name] = item
+
+    def setViewedNode(self, node):
+        for n in self.nodes.values():
+            n.setViewed(False)
+        node.setViewed(True)
 
     def removeNode(self, n):
         item = self.nodes[n.name]

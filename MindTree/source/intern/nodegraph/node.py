@@ -269,18 +269,29 @@ class NodeOptionsButton(QGraphicsSvgItem):
             self.showViewer()
         else:
             self.menu.exec_(event.screenPos())
+        self.scene().setViewedNode(self.node)
 
     def mouseReleaseEvent(self, event):
-        self.setElementId("node_view")
+        if self.node.viewed:
+            self.setElementId("node_view_viewed")
+        else:
+            self.setElementId("node_view")
         self.update()
         QGraphicsSvgItem.mouseReleaseEvent(self, event)
 
     def hoverEnterEvent(self, event):
-        self.setElementId("node_view_hover")
+        if self.node.viewed:
+            self.setElementId("node_view_viewed_hover")
+        else:
+            self.setElementId("node_view_hover")
+
         QGraphicsSvgItem.hoverEnterEvent(self, event)
 
     def hoverLeaveEvent(self, event):
-        self.setElementId("node_view")
+        if self.node.viewed:
+            self.setElementId("node_view_viewed")
+        else:
+            self.setElementId("node_view")
         QGraphicsSvgItem.hoverLeaveEvent(self, event)
 
     def boundingRect(self):
@@ -312,8 +323,11 @@ class NodeItem(QGraphicsSvgItem):
             height=NodeDesigner.height):
         QGraphicsSvgItem.__init__(self, parent)
         self.data = data
+
         self.width = width
         self.height = height
+        
+        self.viewed = False
 
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemIsFocusable, True)
@@ -337,6 +351,13 @@ class NodeItem(QGraphicsSvgItem):
 
     def __del__(self):
         print("deleting node vis")
+
+    def setViewed(self, viewed):
+        self.viewed = viewed
+        if viewed:
+            self.nodeOptions.setElementId("node_view_viewed")
+        else:
+            self.nodeOptions.setElementId("node_view")
 
     def updatePositionFromData(self):
         if (self.pos().x(), self.pos().y()) != self.data.pos:
