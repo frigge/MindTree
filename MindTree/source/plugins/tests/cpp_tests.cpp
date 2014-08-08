@@ -1,6 +1,7 @@
 #include "mindtree_core.h"
 #include "../datatypes/Object/object.h"
 #include "data/cache_main.h"
+#include "data/raytracing/ray.h"
 
 namespace BPy = boost::python;
 
@@ -96,6 +97,32 @@ bool testPropertyConversion()
     return a == b;
 }
 
+bool testRaycasting()
+{
+    glm::vec3 start(0, 0, -1);
+    glm::vec3 dir(0, 0, 1);
+
+    Ray r(start, dir);
+
+    glm::vec3 hitpoint, uvdist;
+
+    glm::vec3 p1(-1, -1, 0);
+    glm::vec3 p2(2, -1, 0);
+    glm::vec3 p3(-1, 2, 0);
+
+    bool hit = r.intersectTriangle(p1, p2, p3, &uvdist, &hitpoint);
+
+    std::cout << "uvcoords are: " << uvdist.x << ", " << uvdist.y << std::endl;
+    std::cout << "distance is: " << uvdist.z << std::endl;
+    std::cout << "the hitpoint is: ("
+        << hitpoint.x
+        << ", "
+        << hitpoint.y
+        << ", "
+        << hitpoint.z << ")" << std::endl;
+    return hit && (start + dir * uvdist.z) == hitpoint;
+}
+
 BOOST_PYTHON_MODULE(cpp_tests)
 {
     BPy::def("testSocketPropertiesCPP", testSocketProperties);    
@@ -103,4 +130,5 @@ BOOST_PYTHON_MODULE(cpp_tests)
     BPy::def("testPropertiesTypeInfoCPP", testPropertiesTypeInfo);
     BPy::def("testObjectInPropertyCPP", testObjectInProperty);
     BPy::def("testPropertyConversionCPP", testPropertyConversion);
+    BPy::def("testRaycastingCPP", testRaycasting);
 }
