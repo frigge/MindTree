@@ -111,6 +111,7 @@ public:
 };
 
 class Texture2D;
+class Renderbuffer;
 class FBO
 {
 public:
@@ -122,16 +123,61 @@ public:
     void bind();
     void release();
 
-    void attachColorTexture(std::string name, std::shared_ptr<Texture2D> tex);
+    void attachColorTexture(std::shared_ptr<Texture2D> tex);
     void attachDepthTexture(std::shared_ptr<Texture2D> tex);
 
-    std::vector<std::string> getAttachements();
+    void attachColorRenderbuffer(std::shared_ptr<Renderbuffer> rb);
+    void attachDepthRenderbuffer(std::shared_ptr<Renderbuffer> rb);
+
+    std::vector<std::string> getAttachments();
+    int getAttachmentPos(std::string name);
 
 private:
-    uint color_attachements;
+    uint color_attachments;
     GLuint id;
-    std::vector<std::string> _attachements;
+    std::vector<std::string> _attachments;
     std::vector<std::shared_ptr<Texture2D>> _textures;
+    std::vector<std::shared_ptr<Renderbuffer>> _renderbuffers;
+};
+
+class Renderbuffer
+{
+public:
+    enum Format {
+        RGB,
+        RGB8,
+        RGBA,
+        RGBA8,
+        RGBA16F,
+        DEPTH,
+        DEPTH16,
+        DEPTH32F
+    };
+
+    Renderbuffer(std::string name, Renderbuffer::Format format = RGBA, uint width = 1, uint height = 1);
+    ~Renderbuffer();
+
+    void init();
+
+    int width();
+    int height();
+    void setWidth(int w);
+    void setHeight(int h);
+
+    std::string getName();
+    GLuint getID();
+
+    void bind();
+    void release();
+
+    Format getFormat();
+
+private:
+    GLuint _id;
+    Format _format;
+    uint _width, _height;
+    std::string _name;
+    bool _initialized;
 };
 
 class ShaderProgram
@@ -156,14 +202,18 @@ public:
     void addShaderFromSource(std::string src, ShaderType type);
     void addShaderFromFile(std::string filename, ShaderType type);
 
+    GLuint getID();
+
+    void setUniform(std::string name, const glm::ivec2 &value);
+    void setUniform(std::string name, const glm::ivec3 &value);
+    void setUniform(std::string name, const glm::vec2 &value);
     void setUniform(std::string name, const glm::vec3 &value);
     void setUniform(std::string name, const glm::vec4 &value);
     void setUniform(std::string name, float value);
     void setUniform(std::string name, int value);
     void setUniform(std::string name, const glm::mat4 &value);
 
-    void setTexture(std::string name, std::shared_ptr<Texture2D> texture);
-    void resetTextureSlots();
+    void setTexture(std::shared_ptr<Texture2D> texture);
 
     void bindAttributeLocation(unsigned int index, std::string name);
     void bindFragmentLocation(unsigned int index, std::string name);
@@ -180,10 +230,10 @@ public:
     void disableAttribute(std::string name);
 
     void link();
+    void init();
 
 private:
     void _addShaderFromSource(std::string src, GLenum type);
-    void init();
 
     GLuint _id;
     bool _isBound, _initialized;
@@ -202,38 +252,66 @@ private:
 class Texture
 {
 public:
-    enum Channels {
+    enum Format {
         RGB,
+        RGB8,
         RGBA,
-        DEPTH
+        RGBA8,
+        RGBA16F,
+        DEPTH,
+        DEPTH16,
+        DEPTH32F
     };
 
-    Texture(Texture::Channels channels);
+    enum Target {
+        TEXTURE2D
+    };
+
+    Texture(std::string name, Texture::Format format, Target target);
+    std::string getName();
     virtual ~Texture();
-    virtual void bind() = 0;
-    virtual void release() = 0;
+    virtual void bind();
+    virtual void release();
     GLuint getID();
-    void setChannels(Texture::Channels channels);
-    Channels getChannels();
+    void setFormat(Texture::Format format);
+    Format getFormat();
+
+    GLenum getGLSize();
 
 protected:
+    virtual void init() = 0;
+    void invalidate();
+
+private:
+    void _init();
+    GLenum getGLTarget();
+
     GLuint _id;
-    Channels _channels;
+    Format _format;
+    Target _target;
+
+    bool _initialized;
+    std::string _name;
 };
 
 class Texture2D : public Texture
 {
 public:
-    Texture2D(Texture::Channels channels, int width, int height);
+    Texture2D(std::string name, 
+              Texture::Format format = RGBA, 
+              int width = 1, 
+              int height = 1);
     ~Texture2D();
 
     int width();
     int height();
+    void setWidth(int w);
+    void setHeight(int h);
 
     void bind();
-    void release();
 
-    void create(void* data = 0);
+protected:
+    void init();
 
 private:
     int _width, _height;

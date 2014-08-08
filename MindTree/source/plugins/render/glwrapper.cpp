@@ -237,16 +237,16 @@ UBO::~UBO()
 }
 
 FBO::FBO()
-    : color_attachements(0)
+    : color_attachments(0)
 {
     glGenFramebuffers(1, &id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 FBO::~FBO()
 {
     glDeleteFramebuffers(1, &id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 GLuint FBO::getID()
@@ -257,50 +257,190 @@ GLuint FBO::getID()
 void FBO::bind()    
 {
     glBindFramebuffer(GL_FRAMEBUFFER, id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void FBO::release()    
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
-void FBO::attachColorTexture(std::string name, std::shared_ptr<Texture2D> tex)    
+void FBO::attachColorTexture(std::shared_ptr<Texture2D> tex)    
 {
     if(std::find(begin(_textures), end(_textures), tex) != end(_textures))
         return;
 
     _textures.push_back(tex);
-    _attachements.push_back(name);
+    _attachments.push_back(tex->getName());
 
-    getGLError("dummy");
+    MTGLERROR;
     glFramebufferTexture2D(GL_FRAMEBUFFER, 
-        GL_COLOR_ATTACHMENT0 + color_attachements++,
+        GL_COLOR_ATTACHMENT0 + color_attachments++,
         GL_TEXTURE_2D,
         tex->getID(),
         0);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 
-    std::cout << "attaching texture: " 
-        << name << "(" << tex->getID() << ") to framebuffer attachement: " 
-        << color_attachements - 1 << std::endl;
+}
+
+void FBO::attachColorRenderbuffer(std::shared_ptr<Renderbuffer> rb)
+{
+    if(std::find(begin(_renderbuffers), end(_renderbuffers), rb) != end(_renderbuffers))
+        return;
+
+    _renderbuffers.push_back(rb);
+    _attachments.push_back(rb->getName());
+
+    MTGLERROR;
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, 
+        GL_COLOR_ATTACHMENT0 + color_attachments++,
+        GL_RENDERBUFFER,
+        rb->getID());
+    MTGLERROR;
+
+}
+
+int FBO::getAttachmentPos(std::string name)
+{
+    int index = 0;
+    for(auto attachment : _attachments) {
+        if(attachment == name)
+            break;
+        ++index;
+    }
+
+    std::cout << "attachment: " << name << " is at pos: " << index << std::endl;
+    return index;
 }
 
 void FBO::attachDepthTexture(std::shared_ptr<Texture2D> tex)    
 {
-    getGLError("dummy");
+    MTGLERROR;
     glFramebufferTexture2D(GL_FRAMEBUFFER, 
         GL_DEPTH_ATTACHMENT,
         GL_TEXTURE_2D,
         tex->getID(),
         0);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
-std::vector<std::string> FBO::getAttachements()
+void FBO::attachDepthRenderbuffer(std::shared_ptr<Renderbuffer> rb)
 {
-    return _attachements;
+    MTGLERROR;
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, 
+        GL_DEPTH_ATTACHMENT,
+        GL_RENDERBUFFER,
+        rb->getID());
+    MTGLERROR;
+}
+
+std::vector<std::string> FBO::getAttachments()
+{
+    return _attachments;
+}
+
+Renderbuffer::Renderbuffer(std::string name, Renderbuffer::Format format, uint width, uint height)
+    : _id(0), _width(width), _height(height), _format(format), _name(name), _initialized(false)
+{
+}
+
+Renderbuffer::~Renderbuffer()
+{
+    glDeleteRenderbuffers(1, &_id);
+}
+
+int Renderbuffer::width()
+{
+    return _width;
+}
+
+int Renderbuffer::height()
+{
+    return _height;
+}
+
+void Renderbuffer::setWidth(int w)
+{
+    _width = w;
+    _initialized = false;
+}
+
+void Renderbuffer::setHeight(int h)
+{
+    _height = h;
+    _initialized = false;
+}
+
+void Renderbuffer::init()
+{
+    _initialized = true;
+
+    if(!_id) glGenRenderbuffers(1, &_id);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, _id);
+    MTGLERROR;
+    GLenum _internalFormat;
+    switch(getFormat()) {
+        case RGB:
+            _internalFormat = GL_RGB;
+            break;
+        case RGB8:
+            _internalFormat = GL_RGB8;
+            break;
+        case RGBA:
+            _internalFormat = GL_RGBA;
+            break;
+        case RGBA8:
+            _internalFormat = GL_RGBA8;
+            break;
+        case RGBA16F:
+            _internalFormat = GL_RGBA16F;
+            break;
+        case DEPTH:
+            _internalFormat = GL_DEPTH_COMPONENT;
+            break;
+        case DEPTH16:
+            _internalFormat = GL_DEPTH_COMPONENT16;
+            break;
+        case DEPTH32F:
+            _internalFormat = GL_DEPTH_COMPONENT32F;
+            break;
+    }
+
+    glRenderbufferStorage(GL_RENDERBUFFER,
+                 _internalFormat,
+                 _width,
+                 _height);
+    MTGLERROR;
+}
+
+std::string Renderbuffer::getName()
+{
+    return _name;
+}
+
+GLuint Renderbuffer::getID()
+{
+    return _id;
+}
+
+void Renderbuffer::bind()
+{
+    if(!_initialized) 
+        init();
+    else
+        glBindRenderbuffer(GL_RENDERBUFFER, _id);
+}
+
+void Renderbuffer::release()
+{
+    glBindRenderbuffer(GL_RENDERBUFFER, _id);
+}
+
+Renderbuffer::Format Renderbuffer::getFormat()
+{
+    return _format;
 }
 
 ShaderProgram::ShaderProgram()
@@ -311,14 +451,16 @@ ShaderProgram::ShaderProgram()
 ShaderProgram::~ShaderProgram()
 {
     glDeleteProgram(_id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void ShaderProgram::init()
 {
     _initialized = true;
+    if(_id) glDeleteProgram(_id);
+
     _id = glCreateProgram();
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 
     _addShaderFromSource(_vertexSource, GL_VERTEX_SHADER);
     _addShaderFromSource(_fragmentSource, GL_FRAGMENT_SHADER);
@@ -330,9 +472,8 @@ void ShaderProgram::bind()
 {
     if(!_initialized) init();
     if(!_id) return;
-    getGLError("dummy");
     glUseProgram(_id);
-    _isBound  = !getGLError(__PRETTY_FUNCTION__);
+    _isBound  = !MTGLERROR;
 }
 
 void ShaderProgram::release()    
@@ -345,6 +486,8 @@ void ShaderProgram::release()
 
 void ShaderProgram::link()    
 {
+    _textures.clear();
+
     glLinkProgram(_id);
     GLint linkStatus;
     glGetProgramiv(_id, GL_LINK_STATUS, &linkStatus);
@@ -380,13 +523,13 @@ void ShaderProgram::_addShaderFromSource(std::string src, GLenum type)
 {
 
     GLuint shader = glCreateShader(type);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     const char* c_str = src.c_str();
     glShaderSource(shader, 1, &c_str, 0);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 
     glCompileShader(shader);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     GLsizei infologlength;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, (GLint*)&infologlength);
     GLchar *infolog = new GLchar[infologlength];
@@ -415,7 +558,7 @@ void ShaderProgram::_addShaderFromSource(std::string src, GLenum type)
     }
 
     glAttachShader(_id, shader);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void ShaderProgram::addShaderFromFile(std::string filename, ShaderProgram::ShaderType type)
@@ -436,6 +579,41 @@ void ShaderProgram::addShaderFromFile(std::string filename, ShaderProgram::Shade
     }
 
     addShaderFromSource(content, type);
+}
+
+GLuint ShaderProgram::getID()
+{
+    return _id;
+}
+
+void ShaderProgram::setUniform(std::string name, const glm::ivec2 &value)    
+{
+    if(!_initialized) init();
+
+    GLint location = glGetUniformLocation(_id, name.c_str());
+    MTGLERROR;
+    if(location > -1) glUniform2i(location, value.x, value.y);
+    MTGLERROR;
+}
+
+void ShaderProgram::setUniform(std::string name, const glm::ivec3 &value)    
+{
+    if(!_initialized) init();
+
+    GLint location = glGetUniformLocation(_id, name.c_str());
+    MTGLERROR;
+    if(location > -1) glUniform3i(location, value.x, value.y, value.z);
+    MTGLERROR;
+}
+
+void ShaderProgram::setUniform(std::string name, const glm::vec2 &value)    
+{
+    if(!_initialized) init();
+
+    GLint location = glGetUniformLocation(_id, name.c_str());
+    getGLError(__PRETTY_FUNCTION__);
+    if(location > -1) glUniform2f(location, value.x, value.y);
+    getGLError(__PRETTY_FUNCTION__);
 }
 
 void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)    
@@ -474,7 +652,9 @@ void ShaderProgram::setUniform(std::string name, int value)
 
     GLint location = glGetUniformLocation(_id, name.c_str());
     getGLError(__PRETTY_FUNCTION__);
-    if(location > -1) glUniform1i(location, value);
+    if(location > -1) {
+        glUniform1i(location, value);
+    }
     if(getGLError(__PRETTY_FUNCTION__))
        std::cout << "unifrom name: " << name << std::endl;
 }
@@ -490,7 +670,7 @@ void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)
        std::cout << "unifrom name: " << name << std::endl;
 }
 
-void ShaderProgram::setTexture(std::string name, std::shared_ptr<Texture2D> texture)
+void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture)
 {
     if(!_initialized) init();
 
@@ -503,23 +683,17 @@ void ShaderProgram::setTexture(std::string name, std::shared_ptr<Texture2D> text
         bind();
     }
 
-    glActiveTexture(GL_TEXTURE0 + _textures.size());
-
-    getGLError(__PRETTY_FUNCTION__);
-    std::cout << "setting active texture to slot: " << _textures.size() 
-        << " on program: " << _id << std::endl;
-
-    texture->bind();
-    setUniform(name, (int)_textures.size());
+    int textureSlot = _textures.size();
     _textures.push_back(texture);
 
-    if(wasntbound) release();
-}
+    glActiveTexture(GL_TEXTURE0 + textureSlot);
 
-void ShaderProgram::resetTextureSlots()
-{
-    std::cout << "texture slots of program: " << _id << " are cleared" << std::endl;
-    _textures.clear();
+    getGLError(__PRETTY_FUNCTION__);
+
+    texture->bind();
+    setUniform(texture->getName(), textureSlot);
+
+    if(wasntbound) release();
 }
 
 void ShaderProgram::bindAttributeLocation(unsigned int index, std::string name)    
@@ -552,8 +726,6 @@ void ShaderProgram::bindFragmentLocation(unsigned int index, std::string name)
 
     glBindFragDataLocation(_id, index, name.c_str());
     getGLError(__PRETTY_FUNCTION__);
-
-    std::cout << "binding fragment output: " << name << " to location: " << index << std::endl;
 
     link();
     if(wasntbound) release();
@@ -634,11 +806,13 @@ void ShaderProgram::disableAttribute(std::string name)
     getGLError(__PRETTY_FUNCTION__);
 }
 
-Texture::Texture(Texture::Channels channels)
-    : _channels(channels)
+Texture::Texture(std::string name, Texture::Format format, Target target)
+    : _format(format), 
+    _initialized(false), 
+    _target(target), 
+    _name(name), 
+    _id(0)
 {
-    glGenTextures(1, &_id);
-    getGLError(__PRETTY_FUNCTION__);
 }
 
 Texture::~Texture()
@@ -647,28 +821,139 @@ Texture::~Texture()
     getGLError(__PRETTY_FUNCTION__);
 }
 
+std::string Texture::getName()
+{
+    return _name;
+}
+
+void Texture::bind()
+{
+    if(!_initialized) _init();
+    glBindTexture(getGLTarget(), _id);
+}
+
+void Texture::release()
+{
+    glBindTexture(getGLTarget(), 0);
+}
+
+GLenum Texture::getGLTarget()
+{
+    switch(_target) {
+        case TEXTURE2D:
+            return GL_TEXTURE_2D;
+    }
+}
+
+void Texture::_init()
+{
+    _initialized = true;
+
+    if(!_id) glGenTextures(1, &_id);
+
+    MTGLERROR;
+
+    init();
+}
+
 GLuint Texture::getID()    
 {
     return _id; 
 }
 
-Texture::Channels Texture::getChannels()
+Texture::Format Texture::getFormat()
 {
-    return _channels;
+    return _format;
 }
 
-void Texture::setChannels(Texture::Channels channels)
+void Texture::setFormat(Texture::Format format)
 {
-    _channels = channels;
+    _format = format;
 }
 
-Texture2D::Texture2D(Texture::Channels channels, int width, int height)
-    : Texture(channels), _width(width), _height(height)
+void Texture::invalidate()
+{
+    _initialized = false;
+}
+
+Texture2D::Texture2D(std::string name, Texture::Format format, int width, int height)
+    : Texture(name, format, TEXTURE2D), _width(width), _height(height)
 {
 }
 
 Texture2D::~Texture2D()
 {
+}
+
+void Texture2D::setWidth(int w)
+{
+    _width = w;
+    invalidate();
+}
+
+void Texture2D::setHeight(int h)
+{
+    _height = h;
+    invalidate();
+}
+
+void Texture2D::init()
+{
+    GLenum format, internalFormat, type;
+    switch(getFormat()) {
+        case RGB:
+            format = GL_RGB;
+            internalFormat = GL_RGB;
+            type = GL_UNSIGNED_BYTE;
+            break;
+        case RGB8:
+            format = GL_RGB;
+            internalFormat = GL_RGB8;
+            type = GL_UNSIGNED_BYTE;
+            break;
+        case RGBA:
+            format = GL_RGBA;
+            internalFormat = GL_RGBA;
+            type = GL_UNSIGNED_BYTE;
+            break;
+        case RGBA8:
+            format = GL_RGBA;
+            internalFormat = GL_RGBA8;
+            type = GL_UNSIGNED_BYTE;
+            break;
+        case RGBA16F:
+            format = GL_RGBA;
+            internalFormat = GL_RGBA16F;
+            type = GL_FLOAT;
+            break;
+        case DEPTH:
+            format = GL_DEPTH_COMPONENT;
+            internalFormat = GL_DEPTH_COMPONENT;
+            type = GL_UNSIGNED_BYTE;
+            break;
+        case DEPTH16:
+            format = GL_DEPTH_COMPONENT;
+            internalFormat = GL_DEPTH_COMPONENT16;
+            type = GL_UNSIGNED_BYTE;
+            break;
+        case DEPTH32F:
+            format = GL_DEPTH_COMPONENT;
+            internalFormat = GL_DEPTH_COMPONENT32F;
+            type = GL_FLOAT;
+            break;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, getID());
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 format,
+                 _width,
+                 _height,
+                 0,
+                 internalFormat,
+                 type,
+                 nullptr);
+    MTGLERROR;
 }
 
 int Texture2D::width()
@@ -683,58 +968,17 @@ int Texture2D::height()
 
 void Texture2D::bind()    
 {
-    glBindTexture(GL_TEXTURE_2D, _id);
-    getGLError(__PRETTY_FUNCTION__);
+    Texture::bind();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    if(getChannels() == DEPTH) {
+    if(getFormat() == DEPTH || getFormat() == DEPTH16 || getFormat() == DEPTH32F) {
         glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     }
 }
-
-void Texture2D::release()    
-{
-    glBindTexture(GL_TEXTURE_2D, 0);
-    getGLError(__PRETTY_FUNCTION__);
-}
-
-void Texture2D::create(void* data)
-{
-    GLenum _format, _internalFormat, _type;
-    switch(getChannels()) {
-        case RGB:
-            _format = GL_RGB;
-            _internalFormat = GL_RGB;
-            _type = GL_UNSIGNED_BYTE;
-            break;
-        case RGBA:
-            _format = GL_RGBA;
-            _internalFormat = GL_RGBA;
-            _type = GL_UNSIGNED_BYTE;
-            break;
-        case DEPTH:
-            _format = GL_DEPTH_COMPONENT24;
-            _internalFormat = GL_DEPTH_COMPONENT;
-            _type = GL_UNSIGNED_BYTE;
-            break;
-    }
-
-    glTexImage2D(GL_TEXTURE_2D,
-                 0,
-                 _format,
-                 _width,
-                 _height,
-                 0,
-                 _internalFormat,
-                 _type,
-                 data);
-    getGLError(__PRETTY_FUNCTION__);
-}
-
 
 ResourceManager::ResourceManager()
 {
@@ -872,7 +1116,18 @@ SharedContextRAII::~SharedContextRAII()
 QtContext::QtContext()
     : Context(), _context(QGLFormat::defaultFormat())
 {
-    auto format = QGLFormat::defaultFormat();
+    auto options = QGL::DoubleBuffer
+        | QGL::DepthBuffer
+        | QGL::Rgba
+        | QGL::DirectRendering
+        | QGL::AlphaChannel
+        | QGL::StencilBuffer;
+
+    auto format = QGLFormat(options);
+
+    format.setVersion(4, 3);
+    format.setProfile(QGLFormat::CompatibilityProfile);
+
     _context.setFormat(format);
 }
 
