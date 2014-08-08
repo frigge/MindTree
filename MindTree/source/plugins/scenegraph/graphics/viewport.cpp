@@ -21,6 +21,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "GL/glew.h"
 
+#include "QApplication"
 #include "QMenu"
 #include "QGraphicsSceneContextMenuEvent"
 #include "QMouseEvent"
@@ -35,10 +36,11 @@
 
 #include "math.h"
 
-#include "graphics/viewport_widget.h"
-#include "source/data/base/raytracing/ray.h"
+#include "../../3dwidgets/widgets.h"
+#include "data/raytracing/ray.h"
 #include "data/project.h"
 #include "../../render/render.h"
+#include "../../render/renderpass.h"
 #include "../../render/primitive_renderer.h"
 
 #include "viewport.h"
@@ -46,21 +48,20 @@
 using namespace MindTree;
 
 Viewport::Viewport()
-    : QGLWidget(MindTree::GL::QtContext::getSharedContext()->getNativeContext()), 
-    rotate(false), 
-    zoom(false), 
-    pan(false), 
-    _showGrid(true), 
+    : QGLWidget(GL::QtContext::getSharedContext()->getNativeContext()), 
+    selectedNode(0),
     defaultCamera(std::make_shared<Camera>()),
+    rotate(false), 
+    pan(false), 
+    zoom(false), 
     selectionMode(false), 
-    transformMode(0), 
-    selectedNode(0)
+    _showGrid(true), 
+    transformMode(0)
 {
     activeCamera = defaultCamera;
-    DNode *snode = 0;
     setAutoBufferSwap(false);
 
-    rendermanager = std::unique_ptr<MindTree::GL::RenderManager>(new MindTree::GL::RenderManager());
+    rendermanager = std::unique_ptr<GL::RenderManager>(new GL::RenderManager());
 
     auto pass = rendermanager->addPass();
     pass->setCamera(activeCamera);
@@ -69,17 +70,36 @@ Viewport::Viewport()
     auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
 
     grid->setTransformation(trans);
-    grid->setColor(glm::vec4(.5, .5, .5, .5));
+    grid->setBorderColor(glm::vec4(.5, .5, .5, .5));
+    grid->setAlternatingColor(glm::vec4(.8, .8, .8, .8));
+    grid->setBorderWidth(2.);
 
     pass->addRenderer(grid);
-    pass->addOutput("outcolor");
+    pass->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
+    pass->addOutput(std::make_shared<GL::Texture2D>("outcolor"));
+    pass->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
+    pass->addOutput(std::make_shared<GL::Texture2D>("outposition"));
+
+    auto overlaypass = rendermanager->addPass();
+    overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
+    overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
+    overlaypass->addOutput(std::make_shared<GL::Renderbuffer>("id"));
+    overlaypass->addOutput(std::make_shared<GL::Renderbuffer>("position", GL::Renderbuffer::RGBA16F));
+    overlaypass->setCamera(activeCamera);
+
+    //testing translate widgets
+
+    Widget3D::insertWidgetsIntoRenderPass(overlaypass);
 
     auto pixelpass = rendermanager->addPass();
     pixelpass->addRenderer(new GL::FullscreenQuadRenderer(pass.get()));
+
+    setMouseTracking(true);
 }
 
 Viewport::~Viewport()
 {
+    rendermanager->stop();
 }
 
 void Viewport::setData(std::shared_ptr<Group> value)
@@ -102,7 +122,6 @@ void Viewport::changeCamera(QString cam)
 void Viewport::resizeEvent(QResizeEvent *)
 {
     activeCamera->setProjection((GLdouble)width()/(GLdouble)height());
-    rendermanager->setSize(width(), height());
     rendermanager->setSize(width(), height());
 }
 
@@ -156,6 +175,14 @@ void Viewport::setShowGrid(bool b)
 
 void Viewport::mousePressEvent(QMouseEvent *event)    
 {
+    glm::ivec2 pos;
+    pos.x = event->pos().x();
+    pos.y = height() - event->pos().y();
+
+    auto viewportSize = glm::ivec2(width(), height());
+    if (Widget3D::mousePressEvent(activeCamera, pos, viewportSize))
+        return;
+
     lastpos = event->posF();
     if(event->modifiers() & Qt::ControlModifier)
         zoom = true;
@@ -172,10 +199,21 @@ void Viewport::mouseReleaseEvent(QMouseEvent *event)
     zoom = false;
     selectionMode =false;
     lastpos = QPointF();
+    
+    Widget3D::mouseReleaseEvent();
 }
 
 void Viewport::mouseMoveEvent(QMouseEvent *event)    
 {
+    glm::ivec2 pos;
+    pos.x = event->pos().x();
+    pos.y = height() - event->pos().y();
+
+    auto viewportSize = glm::ivec2(width(), height());
+
+    if (Widget3D::mouseMoveEvent(activeCamera, pos, viewportSize))
+        return;
+
     float xdist = lastpos.x()  - event->posF().x();
     float ydist = event->posF().y() - lastpos.y();
     if(rotate)

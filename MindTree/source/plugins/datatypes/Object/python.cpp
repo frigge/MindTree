@@ -2,6 +2,8 @@
 #include "object.h"
 #include "data/cache_main.h"
 #include "glm/gtc/matrix_transform.hpp"
+
+#include "../../3dwidgets/translate_widgets.h"
 #include "python.h"
 
 ObjectDataPyWrapper::ObjectDataPyWrapper(ObjectData *data)
@@ -91,6 +93,25 @@ void transformProc(MindTree::DataCache *cache)
     cache->pushData(newobj);
 }
 
+void createTranslateWidget()
+{
+    auto translater1 = std::make_shared<TranslateXWidget>();
+    auto translater2 = std::make_shared<TranslateYWidget>();
+    auto translater3 = std::make_shared<TranslateZWidget>();
+    auto translater4 = std::make_shared<TranslateXYPlaneWidget>();
+    auto translater5 = std::make_shared<TranslateXZPlaneWidget>();
+    auto translater6 = std::make_shared<TranslateYZPlaneWidget>();
+    auto screenPlaneTranslater = std::make_shared<TranslateScreenPlaneWidget>();
+
+    Widget3D::registerWidget(translater1);
+    Widget3D::registerWidget(translater2);
+    Widget3D::registerWidget(translater3);
+    Widget3D::registerWidget(translater4);
+    Widget3D::registerWidget(translater5);
+    Widget3D::registerWidget(translater6);
+    Widget3D::registerWidget(screenPlaneTranslater);
+}
+
 BOOST_PYTHON_MODULE(object){
     using namespace MindTree;
     auto proc = new CacheProcessor(groupProc);
@@ -102,4 +123,6 @@ BOOST_PYTHON_MODULE(object){
     ObjectDataPyWrapper::wrap();
     ObjectPyWrapper::wrap();
     GroupPyWrapper::wrap();
+
+    createTranslateWidget();
 }

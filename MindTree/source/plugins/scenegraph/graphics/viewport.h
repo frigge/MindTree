@@ -28,6 +28,7 @@
 
 #include "source/lib/mindtree_core.h"
 #include "source/plugins/datatypes/Object/object.h"
+#include "data/nodes/nodetype.h"
 #include "../../render/glwrapper.h"
 #include "../../render/rendermanager.h"
 

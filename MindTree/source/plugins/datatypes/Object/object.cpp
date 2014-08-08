@@ -131,7 +131,8 @@ void AbstractTransformable::setCenter(double x, double y, double z)
 
 glm::vec3 AbstractTransformable::getPosition()    
 {
-    return glm::vec4(transformation[3]).xyz();
+    glm::vec4 pos = transformation * glm::vec4(0, 0, 0, 1);
+    return pos.xyz();
 }
 
 void AbstractTransformable::setPosition(glm::vec3 pos)    
@@ -385,7 +386,7 @@ std::list<std::shared_ptr<Light>> Group::getLights()
 
 Camera::Camera()
     : AbstractTransformable(CAMERA), fov(45), perspective(true),
-    near(.1), far(1000)
+    near(.1), far(10000)
 {
     setPosition(0, 10, -10);
     setCenter(0, 0, 0);

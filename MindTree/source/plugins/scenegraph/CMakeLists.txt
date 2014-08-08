@@ -42,6 +42,7 @@ add_library(scenegraph SHARED ${SCE_SRC} ${SCE_MOC_SRC})
 set_target_properties(scenegraph PROPERTIES PREFIX "")
 target_link_libraries(scenegraph 
             objectlib
+            widgets3d
             render
             mindtree_core
             ${MINDTREE_CORE_LIB}

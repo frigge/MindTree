@@ -60,6 +60,7 @@ set_target_properties(object PROPERTIES PREFIX "")
 target_link_libraries(object
                     mindtree_core
                     objectlib
+                    widgets3d
                     ${MINDTREE_CORE_LIB}
                     ${QT_LIBRARIES}
                     ${Boost_LIBRARIES}
