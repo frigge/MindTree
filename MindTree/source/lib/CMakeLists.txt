@@ -24,6 +24,7 @@ set(LIB_SRC
     graphics/viewer_dock_base.cpp
     graphics/windowlist.cpp
     graphics/pywindowlist.cpp
+    graphics/shapes.cpp
 )
 
 set(LIB_HEAD
