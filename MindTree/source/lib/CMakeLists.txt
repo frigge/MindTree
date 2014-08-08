@@ -19,6 +19,7 @@ set(LIB_SRC
     data/python/pyutils.cpp
     data/signal.cpp
     data/windowfactory.cpp
+    data/raytracing/ray.cpp
     graphics/viewer.cpp
     graphics/viewer_dock_base.cpp
     graphics/windowlist.cpp

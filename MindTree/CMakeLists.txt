@@ -10,7 +10,6 @@ SET(HEADER
             source/data/gl/init.h
             source/data/python/init.h
             source/graphics/python/consolewindow.h
-            source/data/base/raytracing/ray.h
             source/data/undo/frg_generic_undo.h
             source/graphics/base/mindtree_mainwindow.h
             source/graphics/base/consoledialog.h
@@ -29,7 +28,6 @@ SET(SOURCE
             source/graphics/python/consolewindow.cpp
             source/data/base/main.cpp
             source/graphics/base/consoledialog.cpp
-            source/data/base/raytracing/ray.cpp
             source/data/undo/frg_generic_undo.cpp
             source/graphics/base/mindtree_mainwindow.cpp
 )

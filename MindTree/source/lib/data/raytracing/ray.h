@@ -20,18 +20,28 @@
 
 #define RAY
 
-#include "data/properties.h"
-#include "data/datatypes.h"
+#include "glm/glm.hpp"
+#include "graphics/shapes.h"
+#include "memory"
+
+class Camera;
 
 class Ray
 {
 public:
-    Ray(Vector start, Vector dir);
+    Ray(glm::vec3 start, glm::vec3 dir);
     virtual ~Ray();
-    bool intersectPlane(Vector orig, Vector v1, Vector v2, double *u=0, double *v=0, double *distance=0, Vector *hitpoint=0);
+
+    bool intersectPlane(const Plane &plane, glm::vec3 *hitpoint=nullptr) const;
+    bool intersectTriangle(const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3, glm::vec3 *uvdist=nullptr, glm::vec3 *hitpoint=nullptr) const;
+    bool intersectRectangle(const Rectangle &rect, glm::vec3 *hitpoint=nullptr) const;
+    bool intersectBox(const Box &box, glm::vec3 *hitpoint=nullptr) const;
+    bool intersectSphere(const Sphere &sphere, glm::vec3 *hitpoint=nullptr) const;
+
+    static Ray primaryRay(glm::mat4 mvp, glm::vec3 camPos, glm::ivec2 pixel, glm::ivec2 viewportSize);
 
 private:
-    Vector start, dir;
+    glm::vec3 start, dir;
 };
 
 #endif /* end of include guard: RAY*/
