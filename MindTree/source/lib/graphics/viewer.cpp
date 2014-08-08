@@ -10,7 +10,8 @@ Viewer::Viewer(DoutSocket *start)
     : widget(0),
     start(start),
     _needToUpdate(false),
-    _running(true)
+    _running(true),
+    _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
     auto cbhandler = Signal::getHandler<DinSocket*>()
         .connect("createLink", 
@@ -79,6 +80,7 @@ void Viewer::notifyUpdate()
 
 void Viewer::update_viewer(DNode *node)
 {
+    if(node) DataCache::invalidate(node);
     //check whether start and socket are connected
     bool connected = false;
     if (!node || node == start->getNode()) {
@@ -101,6 +103,7 @@ void Viewer::update_viewer(DNode *node)
 
 void Viewer::update_viewer(DinSocket *socket)    
 {
+    if(socket) DataCache::invalidate(socket->getNode());
     //check whether start and socket are connected
     bool connected = false;
     if (!socket || socket->getNode() == start->getNode()) {

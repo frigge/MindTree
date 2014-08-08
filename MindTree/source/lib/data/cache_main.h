@@ -22,6 +22,7 @@
 
 #include "data/nodes/data_node.h"
 #include "data/nodes/containernode.h"
+#include "mutex"
 #include "data/type.h"
 
 namespace MindTree
@@ -118,17 +119,24 @@ public:
 
     static void addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc);
     static const std::vector<AbstractCacheProcessor::CacheList>& getProcessors();
+    static std::vector<Property>& getCachedOutputs(const DNode *node);
+    static void invalidate(const DNode *node);
+    static bool isCached(const DNode *node);
+
 
 private:
+    std::vector<Property>& _getCachedOutputs();
+
     void cacheInputs();
     void cache(const DinSocket *socket);
 
     const DNode *node;
     static TypeDispatcher<SocketType, AbstractCacheProcessor::CacheList> processors;
     std::vector<Property> cachedInputs;
-    std::vector<Property> cachedOutputs;
     SocketType type;
     const DoutSocket *startsocket;
+    static std::unordered_map<const DNode*, std::vector<Property>> _cachedOutputs;
+    static std::mutex _cachedOutputsMutex;
 };
 
 

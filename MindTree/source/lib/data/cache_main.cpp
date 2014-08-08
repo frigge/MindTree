@@ -189,6 +189,8 @@ void CacheProcessor::operator()(DataCache* cache)
     processor(cache); 
 }
 
+std::unordered_map<const DNode*, std::vector<Property>> DataCache::_cachedOutputs;
+std::mutex DataCache::_cachedOutputsMutex;
 DataCache::DataCache()
     : node(nullptr),
     startsocket(nullptr)
@@ -207,7 +209,6 @@ DataCache::DataCache(const DataCache &other)
     : 
     node(other.node), 
     cachedInputs(other.cachedInputs),
-    cachedOutputs(other.cachedOutputs),
     type(other.type),
     startsocket(other.startsocket)
 {
@@ -217,11 +218,23 @@ DataCache::~DataCache()
 {
 }
 
+void DataCache::invalidate(const DNode *node)
+{
+    auto cacheIter = _cachedOutputs.find(node);
+    if(cacheIter != end(_cachedOutputs))
+        _cachedOutputs.erase(cacheIter);
+}
+
+bool DataCache::isCached(const DNode *node)
+{
+    return _cachedOutputs.find(node) != end(_cachedOutputs)
+        && !_cachedOutputs[node].empty();
+}
+
 void DataCache::start(const DoutSocket *socket)
 {
     startsocket = socket;
     cachedInputs.clear();
-    cachedOutputs.clear();
     node = socket->getNode();
     type = socket->getType();
     cacheInputs();
@@ -230,6 +243,18 @@ void DataCache::start(const DoutSocket *socket)
 int DataCache::getTypeID() const
 {
     return  type.id();
+}
+
+std::vector<Property>& DataCache::_getCachedOutputs()
+{
+    return getCachedOutputs(node);
+}
+
+std::vector<Property>& DataCache::getCachedOutputs(const DNode *node)
+{
+    if(_cachedOutputs.find(node) == end(_cachedOutputs))
+        _cachedOutputs.insert({node, std::vector<Property>()});
+    return _cachedOutputs[node];
 }
 
 DataType DataCache::getType() const
@@ -263,7 +288,8 @@ void DataCache::cache(const DinSocket *socket)
 
 void DataCache::pushData(Property prop)
 {
-    cachedOutputs.push_back(prop);
+    std::lock_guard<std::mutex> lock(_cachedOutputsMutex);
+    _getCachedOutputs().push_back(prop);
 }
 
 //returns the value of the input socket at index i
@@ -284,6 +310,8 @@ Property DataCache::getData(int index)
 
 Property DataCache::getOutput(DoutSocket* socket)
 {
+    std::lock_guard<std::mutex> lock(_cachedOutputsMutex);
+
     int index = -1;
     if(socket) {
         //find out index of start socket
@@ -300,10 +328,10 @@ Property DataCache::getOutput(DoutSocket* socket)
     else {
         index = 0;
     }
-    if(index >= cachedOutputs.size())
+    if(index >= _getCachedOutputs().size())
         return Property();
 
-    return cachedOutputs[index];
+    return _getCachedOutputs()[index];
 }
 
 const DNode* DataCache::getNode() const

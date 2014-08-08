@@ -11,6 +11,10 @@ namespace BPy=boost::python;
 class QWidget;
 namespace MindTree
 {
+namespace Signal {
+    class LiveTimeTracker;
+}
+
     
 class DoutSocket;
 class DinSocket;
@@ -37,6 +41,7 @@ private:
     void update_viewer(DNode *node);
 
     DoutSocket *start;
+    Signal::LiveTimeTracker *_signalLiveTime;
     std::vector<Signal::CallbackHandler> cbhandlers;
     bool _needToUpdate;
     bool _running;
