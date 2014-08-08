@@ -1,6 +1,7 @@
 project(render)
 set(RENDER_SRC
     render.cpp
+    renderpass.cpp
     polygon_renderer.cpp
     geoobject_renderer.cpp
     primitive_renderer.cpp

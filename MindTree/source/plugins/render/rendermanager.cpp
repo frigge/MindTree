@@ -3,6 +3,7 @@
 #include "glwrapper.h"
 #include "chrono"
 #include "render.h"
+#include "renderpass.h"
 #include "rendermanager.h"
 
 using namespace MindTree::GL;
@@ -48,8 +49,7 @@ bool RenderConfig::flatShading() const
 }
 
 RenderManager::RenderManager()
-    : backgroundColor(glm::vec4(.275, .275, .275, 1.)),
-    _initialized(false),
+    : _initialized(false),
     _rendering(false)
 {
 }
@@ -94,31 +94,30 @@ void RenderManager::init()
 
     _initialized = true;
     glewInit();
-    glClearColor(backgroundColor.r, 
-                 backgroundColor.g, 
-                 backgroundColor.b, 
-                 backgroundColor.a);
+    glClearColor( 0., 0., 0., 0. );
 
     glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-    //setup textures
+    //connect output textures to all following passes
     uint i=0;
     for(auto &pass : passes){
         pass->init();
         if(i > 0) {
-            auto lastPass = passes[i - 1];
-            auto shadernodes = pass->getShaderNodes();
-            for (auto shadernode : shadernodes) {
+            for (uint j = 0; j < i; ++j){
+                auto lastPass = passes[j];
                 auto textures = lastPass->getOutputTextures();
-                auto names = lastPass->getOutputs();
-                for(size_t i = 0; i < textures.size(); i++) {
-                    shadernode->program()->setTexture("in_" + names[i], textures[i]);
+
+                auto shadernodes = pass->getShaderNodes();
+                for (auto shadernode : shadernodes) {
+                    for(auto texture : textures) {
+                        shadernode->program()->setTexture(texture);
+                    }
+                    if(lastPass->_depthOutput == RenderPass::TEXTURE)
+                        shadernode->program()->setTexture(lastPass->getOutDepthTexture());
                 }
-                shadernode->program()->setTexture("depth", lastPass->getOutDepthTexture());
             }
         }
         ++i;
@@ -183,19 +182,20 @@ void RenderManager::draw()
     Context::getSharedContext()->getManager()->cleanUp();
     {
         std::lock_guard<std::mutex> lock(_managerLock);
+        int i = 0;
         for(auto &pass : passes){
             pass->render(config);
         }
     }
 
+    glDisable(GL_POINT_SMOOTH);
+    glDisable(GL_PROGRAM_POINT_SIZE);
+    glDisable(GL_POLYGON_OFFSET_POINT);
+    Context::getSharedContext()->swapBuffers();
     glFinish();
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
     renderTime = duration.count() / 1000000000.0;
     //std::cout << "Rendering took " << seconds << "s"
     //    << " ==> " << 1.0 / seconds << "fps" << std::endl;
-    glDisable(GL_POINT_SMOOTH);
-    glDisable(GL_PROGRAM_POINT_SIZE);
-    glDisable(GL_POLYGON_OFFSET_POINT);
-    Context::getSharedContext()->swapBuffers();
 }

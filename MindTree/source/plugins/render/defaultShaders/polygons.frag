@@ -14,6 +14,8 @@ uniform float specrough1 = 0.15;
 uniform float specrough2 = 0.01;
 
 out vec4 outcolor;
+out vec4 outnormal;
+out vec4 outposition;
 
 const float GAMMA=2.2;
 
@@ -93,4 +95,6 @@ void main(){
                    );
 
     outcolor.a = polygoncolor.a;
+    outposition = vec4(pos, 1);
+    outnormal = vec4(Nn, 1);
 }
