@@ -2,9 +2,6 @@ project(objectlib)
 include_directories(
             ${PROJECT_SOURCE_DIR}
             ${MINDTREE_SRC_LIB_DIR}
-            ${Boost_INCLUDE_DIRS}
-            ${PYTHON_INCLUDE_DIRS}
-            ${OPENGL_ICNLUDE_DIRS}
 )
 
 link_directories(
@@ -13,9 +10,6 @@ link_directories(
             ${MINDTREE_CORE_LIB_DIR}
             ${MINDTREE_SRC_LIB_DIR}
             ${MAIN_INCLUDE_DIR}
-            ${Boost_LIBRARY_DIRS}
-            ${PYTHON_LIBRARIES}
-            ${OPENGL_LIBRARY_DIRS}
 )
 
 set(object_source_files
@@ -28,19 +22,12 @@ add_library(objectlib SHARED ${object_source_files})
 target_link_libraries(objectlib
                     mindtree_core
                     ${MINDTREE_CORE_LIB}
-                    ${QT_LIBRARIES}
-                    ${Boost_LIBRARIES}
-                    ${PYTHON_LIBRARIES}
-                    ${OPENGL_LIBRARIES}
 )
 
 project(object)
 include_directories(
             ${PROJECT_SOURCE_DIR}
             ${MINDTREE_SRC_LIB_DIR}
-            ${Boost_INCLUDE_DIRS}
-            ${PYTHON_INCLUDE_DIRS}
-            ${OPENGL_ICNLUDE_DIRS}
 )
 
 link_directories(
@@ -49,9 +36,6 @@ link_directories(
             ${MINDTREE_CORE_LIB_DIR}
             ${MINDTREE_SRC_LIB_DIR}
             ${MAIN_INCLUDE_DIR}
-            ${Boost_LIBRARY_DIRS}
-            ${PYTHON_LIBRARIES}
-            ${OPENGL_LIBRARY_DIRS}
 )
 
 add_library(object SHARED python.cpp)

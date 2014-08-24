@@ -26,33 +26,33 @@ using namespace MindTree;
 
 BOOST_PYTHON_MODULE(mathnodes){
     NodeDataBase::registerNodeType(new BuildInDecorator( "ADD", "Math.Add",
-                                    []{
-                                        return new MathNode(NodeType("ADD"));
+                                    [] (bool raw){
+                                        return new MathNode(NodeType("ADD"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "SUBTRACT", "Math.Subtract",
-                                    []{
-                                        return new MathNode(NodeType("SUBTRACT"));
+                                    [] (bool raw){
+                                        return new MathNode(NodeType("SUBTRACT"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "MULTIPLY", "Math.Multiply",
-                                    []{
-                                        return new MathNode(NodeType("MULTIPLY"));
+                                    [](bool raw){
+                                        return new MathNode(NodeType("MULTIPLY"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "DIVIDE", "Math.Divide", 
-                                    []{
-                                        return new MathNode(NodeType("DIVIDE"));
+                                    [] (bool raw){
+                                        return new MathNode(NodeType("DIVIDE"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "DOTPRODUCT", "Math.Dot Product",
-                                    []{
-                                        return new MathNode(NodeType("DOTPRODUCT"));
+                                    [] (bool raw){
+                                        return new MathNode(NodeType("DOTPRODUCT"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "MODULO", "Math.Modulo",
-                                    []{
-                                        return new MathNode(NodeType("MODULO"));
+                                    [] (bool raw){
+                                        return new MathNode(NodeType("MODULO"), raw);
                                     }));
 
 }

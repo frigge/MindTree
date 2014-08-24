@@ -12,10 +12,6 @@ Object::Object(const Object &other)
         properties[prop.first] = prop.second;
 }
 
-Object::~Object()
-{
-}
-
 const Property Object::getProperty(std::string name)const
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);

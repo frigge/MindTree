@@ -98,12 +98,20 @@ BPy::dict MindTree::wrap_DataCache_getProcessors()
     return dict;
 }
 
+void MindTree::wrap_DataCache_invalidate(DNodePyWrapper *node)
+{
+    if(!node->alive()) return;
+    MindTree::DataCache::invalidate(node->getWrapped<DNode>());
+}
+
 void MindTree::wrap_DataCache()    
 {
     BPy::class_<MindTree::DataCache>("_DataCache", BPy::no_init)
         //.def("cache", &wrap_DataCache_cache)
         .def("addProcessor", &wrap_DataCache_addProcessor)
+        .def("invalidate", &wrap_DataCache_invalidate)
         .staticmethod("addProcessor")
+        .staticmethod("invalidate")
         .add_property("node", BPy::make_function(&wrap_DataCache_getNode,
                                 BPy::return_value_policy<BPy::manage_new_object>()))
         .def("getData", &wrap_DataCache_getData)

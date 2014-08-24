@@ -8,7 +8,6 @@ set(w3d_src
 include_directories(
             ${PROJECT_SOURCE_DIR}
             ${MINDTREE_SRC_LIB_DIR}
-            ${OPENGL_ICNLUDE_DIRS}
 )
 
 link_directories(
@@ -17,7 +16,6 @@ link_directories(
             ${MINDTREE_CORE_LIB_DIR}
             ${MINDTREE_SRC_LIB_DIR}
             ${MAIN_INCLUDE_DIR}
-            ${OPENGL_LIBRARY_DIRS}
 )
 
 add_library(widgets3d SHARED ${w3d_src})
@@ -26,7 +24,6 @@ target_link_libraries(widgets3d
             render
             mindtree_core
             ${MINDTREE_CORE_LIB}
-            ${OPENGL_LIBRARIES}
 )
 
 install(TARGETS widgets3d LIBRARY DESTINATION ${PROJECT_ROOT}/lib)

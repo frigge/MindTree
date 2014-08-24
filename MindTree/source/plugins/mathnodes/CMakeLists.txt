@@ -2,14 +2,6 @@ project(mathnodes)
 set(math_src mathnodes.cpp)
 set(math_head mathnodes.h)
     
-find_package(Qt4 COMPONENTS QtCore QtGui QtOpenGL REQUIRED)
-find_package(Boost COMPONENTS python REQUIRED)
-find_package(PythonLibs REQUIRED)
-find_package(OpenGL REQUIRED)
-
-QT4_WRAP_CPP(math_moc_src ${math_head} OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
-include(${QT_USE_FILE})
-
 include_directories(
             ${PROJECT_SOURCE_DIR}
             ${MINDTREE_SRC_LIB_DIR}
@@ -35,7 +27,6 @@ set_target_properties(mathnodes PROPERTIES PREFIX "")
 target_link_libraries(mathnodes 
             mindtree_core
             ${MINDTREE_CORE_LIB}
-            ${QT_LIBRARIES}
             ${Boost_LIBRARIES}
             ${PYTHON_LIBRARIES}
             ${OPENGL_LIBRARIES}

@@ -223,6 +223,13 @@ void DataCache::invalidate(const DNode *node)
     auto cacheIter = _cachedOutputs.find(node);
     if(cacheIter != end(_cachedOutputs))
         _cachedOutputs.erase(cacheIter);
+
+    //recursively invalidate everything following this node
+    for(const auto *out : node->getOutSockets()) {
+        for(const auto *ins : out->getCntdSockets()) {
+            invalidate(ins->getNode());
+        }
+    }
 }
 
 bool DataCache::isCached(const DNode *node)

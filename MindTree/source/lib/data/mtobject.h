@@ -10,7 +10,6 @@ class Object {
 public:
     Object();
     Object(const Object &other);
-    ~Object();
 
     Property getProperty(std::string name);
     const Property getProperty(std::string name)const;
