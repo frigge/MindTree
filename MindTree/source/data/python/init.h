@@ -22,7 +22,6 @@
 
 #include "QPointF"
 #include "QString"
-#include "Python.h"
 #include "data/nodes/data_node_socket.h"
 #include "boost/python.hpp"
 
@@ -52,7 +51,7 @@ struct QListToPython
     static PyObject* convert(QList<T> const &l)
     {
         BPy::list list;
-        foreach(T e, l){
+        for(T e : l){
             list.append<T>(e);
         }
         return BPy::incref(list.ptr());

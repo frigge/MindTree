@@ -20,10 +20,13 @@
 
 #define VIEWER_DOCK_BASE_3EFJLTLO
 
+#ifndef Q_MOC_RUN
+#include "boost/python.hpp"
+#endif
+
 #include "QDockWidget"
 #include "QToolBar"
 #include "QToolButton"
-#include "boost/python.hpp"
 
 namespace BPy = boost::python;
 
@@ -50,9 +53,8 @@ public:
     ViewerDockHeaderWidget(ViewerDockBase *viewer);
     QSize sizeHint()const;
 
-public slots:
-    void addToViewerBox(DNode*);
-    void fillViewerBox();
+    Q_SLOT void addToViewerBox(DNode*);
+    Q_SLOT void fillViewerBox();
 
 private:
     void createButtons();
@@ -82,15 +84,14 @@ public:
     void setStart(DoutSocket* value);
     void setPythonWidget(BPy::object widget);
 
-public slots:
-    void deleteThis(bool del);
-    void toggleFloating();
-    void destroy();
-    void updateFocus();
-    void update();
-    void update(DNode* node);
-    void adjust(bool vis);
-    void setPinned(bool pin);
+    Q_SLOT void deleteThis(bool del);
+    Q_SLOT void toggleFloating();
+    Q_SLOT void destroy();
+    Q_SLOT void updateFocus();
+    Q_SLOT void update();
+    Q_SLOT void update(DNode* node);
+    Q_SLOT void adjust(bool vis);
+    Q_SLOT void setPinned(bool pin);
 
 private:
     BPy::object pywidget;

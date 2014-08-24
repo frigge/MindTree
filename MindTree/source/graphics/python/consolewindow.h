@@ -58,13 +58,11 @@ public:
     ConsoleWindow(QWidget *parent = 0);
     virtual ~ConsoleWindow();
 
-public slots:
-    void printOutput(QString out);
-    void enter();
+    Q_SLOT void printOutput(QString out);
+    Q_SLOT void enter();
 
-signals:
-    void execCmd(QString);
-    void contentChanged();
+    Q_SIGNAL void execCmd(QString);
+    Q_SIGNAL void contentChanged();
 
 protected:
     QLineEdit *edit;

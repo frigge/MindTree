@@ -1,5 +1,5 @@
-#include "graphics/windowlist.h"
 #include "graphics/viewer_dock_base.h"
+#include "graphics/windowlist.h"
 #include "data/python/wrapper.h"
 #include "data/python/pyutils.h"
 #include "data/nodes/data_node_socket.h"

@@ -41,9 +41,7 @@ public:
     QAction* action();
     void setWindowFunc(std::function<QWidget*()> fn);
     virtual MindTree::ViewerDockBase* createWindow();
-
-public slots:
-    virtual QString showWindow();
+    Q_SLOT virtual QString showWindow();
 
 private:
     QString name;

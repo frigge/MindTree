@@ -16,10 +16,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "graphics/windowlist.h"
 #include "iostream"
-#include "windowfactory.h"
+
+#include "graphics/windowlist.h"
+#ifndef Q_MOC_RUN
 #include "graphics/viewer_dock_base.h"
+#endif
+
+#include "windowfactory.h"
 
 using namespace MindTree;
 WindowFactory::WindowFactory(QString name, std::function<QWidget*()> func)

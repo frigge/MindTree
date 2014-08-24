@@ -103,7 +103,7 @@ void ShaderCodeGenerator::init()
 {
     setVariables();
     QString outputvar;
-    foreach(const DinSocket *socket, start->getInSockets())
+    for(const DinSocket *socket : start->getInSockets())
     {
         if(!socket->getCntdWorkSocket())
             continue;
@@ -164,7 +164,7 @@ void ShaderCodeGenerator::setVariables(const DNode *node)
         }
     }
 
-    foreach(DinSocket *socket, node->getInSockets())
+    for(DinSocket *socket : node->getInSockets())
     {
         DoutSocket *cntdSocket = socket->getCntdWorkSocket();
         if(!cntdSocket)
@@ -201,16 +201,16 @@ DoutSocket* ShaderCodeGenerator::getSimilar(DoutSocket *socket)
 {
     const DNode *node = socket->getNode();
     const DNode *simnode = 0;
-    foreach(const DNode *n, start->getAllInNodesConst())
+    for(const DNode *n : start->getAllInNodesConst())
     {
         if(n != node
             && *n == *node)
             {
                 simnode = n;
-                foreach(const DNode *inn, n->getAllInNodesConst())
+                for(const DNode *inn : n->getAllInNodesConst())
                 {
                     bool hasSim = false;
-                    foreach(const DNode *inNode, node->getAllInNodesConst())
+                    for(const DNode *inNode : node->getAllInNodesConst())
                         if(*inn == *inNode)
                         {
                             hasSim = true;
@@ -226,7 +226,7 @@ DoutSocket* ShaderCodeGenerator::getSimilar(DoutSocket *socket)
     }
     if(!simnode) return 0;
 
-    foreach(DoutSocket *out, simnode->getOutSockets())
+    for(DoutSocket *out : simnode->getOutSockets())
         if(*out == *socket)
             return out;
 }
@@ -539,7 +539,7 @@ void ShaderCodeGenerator::writeFunction(const DoutSocket *socket)
     FunctionNode *fnode = (FunctionNode*)socket->getNode();
     output.append(fnode->getFunctionName());
     output.append("(");
-    foreach(const DinSocket *nsocket, fnode->getInSockets())
+    for(const DinSocket *nsocket : fnode->getInSockets())
     {
         if(nsocket->getToken())
         {
@@ -568,7 +568,7 @@ QString ShaderCodeGenerator::writeMath(const DoutSocket *socket, QString mathOpe
     QString output;
     output.append("(");
     int i = 1;
-    foreach(const DinSocket *nsocket, socket->getNode()->getInSockets())
+    for(const DinSocket *nsocket : socket->getNode()->getInSockets())
     {
         i++;
 		if(nsocket->getCntdWorkSocket())
@@ -602,7 +602,7 @@ QString ShaderCodeGenerator::writeCondition(const DoutSocket *socket, QString co
     QString output;
     output.append("(");
     int i = 0;
-    foreach(const DinSocket *nsocket, socket->getNode()->getInSockets())
+    for(const DinSocket *nsocket : socket->getNode()->getInSockets())
     {
         i++;
 		if(nsocket->getCntdWorkSocket())
@@ -809,7 +809,7 @@ void ShaderCodeGenerator::addParameter(QString name, socket_type t)
 QString ShaderCodeGenerator::createShaderParameterCode()
 {
     QString parameters;
-    foreach(QString parameter, ShaderParameter)
+    for(QString parameter : ShaderParameter)
     {
         if(parameter != ShaderParameter.first()
                 &&(!(parameter == ShaderParameter.last())
@@ -834,7 +834,7 @@ void ShaderCodeGenerator::addToOutputVars(QString ov)
 QString ShaderCodeGenerator::createOutputVars()
 {
     QString vars;
-    foreach(QString var, OutputVars)
+    for(QString var : OutputVars)
     {
         if(var != OutputVars.last())
         {
@@ -858,7 +858,7 @@ void ShaderCodeGenerator::addToVarDeclares(QString vd)
 QString ShaderCodeGenerator::createVarDeclares()
 {
     QString vars;
-    foreach(QString var, VarDeclares)
+    for(QString var : VarDeclares)
     {
         vars.append("\n    ");
         vars.append(var);

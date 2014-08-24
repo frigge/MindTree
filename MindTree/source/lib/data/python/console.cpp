@@ -1,7 +1,7 @@
-#include "console.h"
 #include "cstdio"
 #include "data/python/pyutils.h"
-#include "Python.h"
+
+#include "console.h"
 
 namespace PyMT {
 PyStdCatcher::PyStdCatcher(PyConsole *console)
@@ -47,7 +47,7 @@ void PyConsole::command(QString cmd)
         std::string evalstr = BPy::extract<std::string>(BPy::str(eval));
         BPy::object strobj = BPy::str(eval);
         std::string str = BPy::extract<std::string>(strobj);
-        if(str != "None")emit updated(QString(str.c_str())+"\n");
+        if(str != "None")updated(QString(str.c_str())+"\n");
     } catch(BPy::error_already_set const &){
         PyErr_Clear();
         try{
@@ -63,7 +63,7 @@ void PyConsole::command(QString cmd)
 void PyConsole::write(QString string)    
 {
     if(!string.isEmpty()) {
-        emit updated(string);
+        Q_EMIT updated(string);
     }
 }
 

@@ -36,8 +36,7 @@ public:
 
     static WindowList* instance();
 
-signals:
-    void windowFactoryAdded(MindTree::WindowFactory*);
+    Q_SIGNAL void windowFactoryAdded(MindTree::WindowFactory*);
 
 private:
     //singleton

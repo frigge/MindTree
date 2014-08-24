@@ -1,8 +1,10 @@
-#include "data/windowfactory.h"
-#include "iostream"
 #include "data/nodes/data_node_socket.h"
+#include "data/windowfactory.h"
 #include "graphics/viewer_dock_base.h"
+
+#include "iostream"
 #include "QMainWindow"
+
 #include "windowlist.h"
 
 MindTree::WindowList *MindTree::WindowList::windowList = 0;
@@ -38,7 +40,7 @@ bool MindTree::WindowList::isRegistered(QString name)
 void MindTree::WindowList::addFactory(MindTree::WindowFactory* value)
 {
     windowFactories.append(value);
-    emit windowFactoryAdded(value);
+    Q_EMIT windowFactoryAdded(value);
 }
 
 MindTree::ViewerDockBase* MindTree::WindowList::createWindow(QString name)    
@@ -54,6 +56,7 @@ MindTree::ViewerDockBase* MindTree::WindowList::createWindow(QString name)
 QString MindTree::WindowList::showWindow(QString name)    
 {
     auto dock = createWindow(name);
+    if(!dock) return "";
     window->addDockWidget(Qt::LeftDockWidgetArea, dock);
     return dock->objectName();
 }
@@ -72,6 +75,7 @@ QString MindTree::WindowList::showSplitWindow(QString name, QString other, Qt::O
 QString MindTree::WindowList::showTabbedWindow(QString name, QString other)    
 {
     auto dock = createWindow(name);
+    if(!dock) return "";
     auto otherDock = window->findChild<QDockWidget*>(other);
     window->tabifyDockWidget(otherDock, dock);
     return dock->objectName();

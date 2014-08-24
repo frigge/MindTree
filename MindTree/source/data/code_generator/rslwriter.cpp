@@ -96,7 +96,7 @@ bool ShaderWriter::isInputVar(const DoutSocket *socket)
 {
     QStringList vars;
     vars<<"P"<<"N"<<"I"<<"s"<<"t"<<"u"<<"v"<<"Cl"<<"Cs"<<"Os"<<"L"<<"Oi"<<"Ci"<<"Ps"<<"Ns"<<"du"<<"dv";
-    foreach(QString var, vars)
+    for(QString var : vars)
     {
         if(var == getVariable(socket))
             return true;

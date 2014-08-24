@@ -24,11 +24,9 @@ public:
     virtual ~PyConsole();
     void write(QString string);
 
-public slots:
-    void command(QString cmd);
+    Q_SLOT void command(QString cmd);
 
-signals:
-    void updated(QString);
+    Q_SIGNAL void updated(QString);
 
 private:
     QString readConsole();

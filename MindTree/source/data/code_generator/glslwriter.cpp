@@ -79,7 +79,7 @@ void GLSLWriter::initVar(const DSocket *socket)
 bool GLSLWriter::isInputVar(const DoutSocket *socket)
 {
     QStringList vars;
-    foreach(QString var, vars)
+    for(QString var : vars)
     {
         if(var == getVariable(socket))
             return true;

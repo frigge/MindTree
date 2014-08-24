@@ -16,21 +16,23 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "viewer_dock_base.h"
-
 #include "QAction"
 #include "QStyle"
 #include "QSizePolicy"
 #include "QApplication"
 #include "QComboBox"
 
+#ifndef Q_MOC_RUN
 #include "data/signal.h"
+#endif
 
 #include "source/graphics/base/mindtree_mainwindow.h"
 #include "graphics/windowlist.h"
 #include "data/project.h"
 #include "data/python/pyutils.h"
 #include "viewer.h"
+
+#include "viewer_dock_base.h"
 
 using namespace MindTree;
 

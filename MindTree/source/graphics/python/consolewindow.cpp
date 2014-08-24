@@ -186,7 +186,7 @@ void ConsoleWindow::enter()
             &&!scope 
             &&!cmd.startsWith("@")
             &&!cmd.endsWith("\\")){
-        emit execCmd(multilineCmd);
+        Q_EMIT execCmd(multilineCmd);
         multilineCmd = "";
         prompt->setText(">>> ");
         return;

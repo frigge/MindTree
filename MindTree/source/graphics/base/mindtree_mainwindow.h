@@ -51,21 +51,19 @@ public:
     static MainWindow* window();
     void registerMenu(QMenu *menu);
 
-signals:
-    void projectChanged();
+    Q_SIGNAL void projectChanged();
 
-public slots:
-    void registerWindow(MindTree::WindowFactory *factory);
-    void openSettings();
+    Q_SLOT void registerWindow(MindTree::WindowFactory *factory);
+    Q_SLOT void openSettings();
 
-    //void createPreviewDock(DShaderPreview *prev);
+    Q_SLOT //void createPreviewDock(DShaderPreview *prev);
 
-    static QWidget* addConsole();
+    Q_SLOT static QWidget* addConsole();
 
-    void setupStyle();
-    void lookupStyle();
+    Q_SLOT void setupStyle();
+    Q_SLOT void lookupStyle();
 
-    void showDock(QDockWidget* widget);
+    Q_SLOT void showDock(QDockWidget* widget);
 
 protected:
     void createMenus();
