@@ -3,6 +3,7 @@
 #include "data/python/pyutils.h"
 #include "data/project.h"
 #include "data/properties.h"
+#include "data/nodes/buildin_nodes.h"
 #include "init.h"
 
 namespace {
@@ -15,6 +16,8 @@ void MindTree::initApp(int argc, char *argv[])
     MindTree::Python::init(argc, argv);
     MindTree::Python::loadIntern();
     MindTree::Python::loadPlugins();
+    MindTree::registerBuildInNodes();
+
     MindTree::parseArguments(argc, argv);
 }
 

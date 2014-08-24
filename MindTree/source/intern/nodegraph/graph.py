@@ -24,11 +24,29 @@ class NodeSpace(QGraphicsScene):
         self.cb = MT.attachToSignal("createLink", self.drawLink)
         self.setSceneRect(-5000, -5000, 10000, 10000)
 
+    def changeSpace(self, space):
+        print("changing from {} to {}".format(self.space, space))
+        self.space = space
+        for node in self.nodes.values():
+            self.removeItem(node)
+
+        for link in self.links.values():
+            self.removeItem(link)
+
+        self.nodes = {}
+        self.links = {}
+
+        self.createNetwork()
+        view = self.views()[0]
+        view.widget.populateToolBar()
+
     def createNetwork(self):
         for n in self.space:
-            addNode(n)
+            self.addNode(n)
+
+        for n in self.space:
             for s in n.insockets:
-                if s.cntdsocket:
+                if s.connected:
                     self.drawLink(s)
 
     def updateSceneRect(self):
@@ -47,8 +65,9 @@ class NodeSpace(QGraphicsScene):
         else:
             item = node.NodeItem(n)
         self.addItem(item)
-        item.setSelected(True)
+        item.setPos(n.pos[0], n.pos[1])
         self.nodes[n.name] = item
+        return item
 
     def setViewedNode(self, node):
         for n in self.nodes.values():
@@ -79,8 +98,6 @@ class NodeSpace(QGraphicsScene):
         self.addItem(link)
 
     def removeLink(self, insocket):
-        print(self.links.keys())
-        print(insocket)
         for s in self.links.keys():
             if s == insocket:
                 self.removeItem(self.links.pop(s))
@@ -114,9 +131,10 @@ class NodeSpace(QGraphicsScene):
 
 class NodeGraph(QGraphicsView):
 
-    def __init__(self):
+    def __init__(self, widget):
         QGraphicsView.__init__(self)
 
+        self.widget = widget
         self.setScene(NodeSpace(MT.project.root))
         #QGL.setPreferredPaintEngine(QPaintEngine.OpenGL2)
         #glFmt = QGLFormat.defaultFormat()
@@ -167,7 +185,8 @@ class NodeGraph(QGraphicsView):
             _node.pos = (scenePos.x() - nw/2, scenePos.y() - nh/2)
 
     def addNode(self, n):
-        self.scene().addNode(n)
+        item = self.scene().addNode(n)
+        item.setSelected(True)
 
     def removeNode(self, n):
         self.scene().removeNode(n)
@@ -217,12 +236,16 @@ class NodeGraphWidget(QWidget):
 
     def __init__(self):
         QWidget.__init__(self)
+        mainlay = QVBoxLayout()
+        self.graphtool = QToolBar()
+        mainlay.addWidget(self.graphtool)
         lay = QHBoxLayout()
-        self.setLayout(lay)
+        mainlay.addLayout(lay)
+        self.setLayout(mainlay)
         #self.toolbar = QToolBar()
         #self.toolbar.setOrientation(core.Qt.Vertical)
         #lay.addWidget(self.toolbar)
-        self.graph = NodeGraph()
+        self.graph = NodeGraph(self)
         self.nodeBrowser = NodeBrowser(self.graph)
         self.nodeBrowser.initList()
         self.nodeBrowser.resize(100, self.nodeBrowser.height())
@@ -235,5 +258,30 @@ class NodeGraphWidget(QWidget):
         splitter.addWidget(self.graph)
         lay.setSpacing(0)
         #lay.setContentsMargin(0, 0, 0, 0)
+
+        self.populateToolBar()
+
+    def populateToolBar(self):
+        currGraph = self.graph.scene().space
+        graphList = []
+        self.graphtool.clear()
+        while(True):
+            graphList.append(currGraph)
+            if not hasattr(currGraph, "parent"):
+                break
+            currGraph = currGraph.parent
+
+        graphList.reverse()
+
+        def getChangeFunc(graph):
+            def change():
+                self.graph.scene().changeSpace(graph)
+
+            return change
+
+            
+        for graph in graphList:
+            graphAction = self.graphtool.addAction(graph.name + "/")
+            graphAction.triggered.connect(getChangeFunc(graph))
 
 MT.gui.registerWindow("NodeGraph", NodeGraphWidget)

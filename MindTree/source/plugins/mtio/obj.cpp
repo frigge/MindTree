@@ -16,10 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "obj.h"
-#include "glm/glm.hpp"
 #include "QFile"
 #include "QFileInfo"
+#include "QString"
+#include "glm/glm.hpp"
+
+#include "obj.h"
 
 using namespace MindTree;
 
@@ -79,7 +81,7 @@ void ObjImporter::addVertex(QString line, std::shared_ptr<GeoObject> obj)
     double d[3];
     int i=0;
     l.takeFirst();
-    foreach(QString vstr, l){
+    for(QString vstr : l){
         d[i] = vstr.toDouble();
         ++i;
     }
@@ -94,7 +96,7 @@ void ObjImporter::addFace(QString line, std::shared_ptr<GeoObject> obj)
     QStringList l = line.split(" ");
     std::vector<uint> p;
     l.takeFirst();
-    foreach(QString vstr, l){
+    for(QString vstr : l){
         QStringList tmp = vstr.split("/");
         p.push_back(tmp.at(0).toInt() - 1);
     }

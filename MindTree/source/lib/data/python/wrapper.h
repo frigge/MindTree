@@ -23,8 +23,8 @@
 #include "boost/python.hpp"
 #include "iostream"
 
-#include "data/nodes/node_db.h"
 #include "glm/glm.hpp"
+#include "data/nodes/node_db.h"
 #include "data/windowfactory.h"
 
 namespace BPy = boost::python;
@@ -32,6 +32,10 @@ namespace MindTree
 {
     
 class DNode;
+class ContainerSpace;
+class ContainerNode;
+
+BPy::object getPyObject(DNode* node);
 
 template<class T>
 struct PyConverter{
@@ -96,10 +100,10 @@ public:
     virtual ~DNodeListIteratorPyWrapper();
     static void wrap();
     DNodeListIteratorPyWrapper* iter();
-    DNodePyWrapper* next();
+    BPy::object next();
 
 private:
-    std::vector<DNode*>::iterator iterator;
+    size_t _index;
     std::vector<DNode*> nodelist;
 };
 
@@ -108,7 +112,7 @@ class PythonNodeDecorator : public MindTree::AbstractNodeDecorator
 public:
     PythonNodeDecorator(BPy::object cls);
     virtual ~PythonNodeDecorator();
-    DNode* operator()();
+    DNode* operator()(bool);
 
 private:
     BPy::object cls;
@@ -121,22 +125,13 @@ class PyWrapper
 {
 public:
     PyWrapper(PyExposable *exp);
+    PyWrapper(const PyWrapper &other);
     virtual ~PyWrapper();
-
-    bool equal(PyWrapper *other);
-    bool notequal(PyWrapper *other);
 
     static void wrap();
 
-    static void regNode(PyObject *nodeClass);
-    static DNodePyWrapper* createNode(std::string name);
-    static BPy::list getRegisteredNodes();
-    static Signal::CallbackHandler attachToSignal(std::string id, BPy::object fn);
-    static Signal::CallbackHandler attachToBoundSignal(BPy::object livetime, std::string id, BPy::object fn);
-    static std::vector<std::string> getNodeTypes();
-    static std::string __str__StringVector(std::vector<std::string> &self);
-    static std::string __repr__StringVector(std::vector<std::string> &self);
-    static std::vector<std::string> getSocketTypes();
+    bool equal(PyWrapper *other);
+    bool notequal(PyWrapper *other);
     void elementDestroyed();
     template<class T>
     T* getWrapped() const
@@ -186,13 +181,25 @@ public:
     void removeNode(DNodePyWrapper *node);
     bool isContainer();
     void setName(std::string name);
+    int len();
     std::string __str__();
     std::string __repr__();
-    DNodePyWrapper* __getitem__(std::string name);
-    DNodePyWrapper* __getitem__(int index);
+    BPy::object __getitem__(std::string name);
+    BPy::object __getitem__(int index);
     DNodeListIteratorPyWrapper* iter();
 };
 PYWRAPPERFUNC(DNSpace)
+
+class ContainerNodePyWrapper;
+class ContainerSpacePyWrapper: public DNSpacePyWrapper
+{
+public:
+    PYWRAPHEAD(ContainerSpace);
+
+    ContainerNodePyWrapper* getContainer();
+    BPy::object getParent();
+};
+PYWRAPPERFUNC(ContainerSpace)
 
 class DinSocketPyWrapper;
 class DoutSocketPyWrapper;
@@ -201,6 +208,7 @@ class DNodePyWrapper : public PyWrapper
 public:
     DNodePyWrapper(DNode *node);
     virtual ~DNodePyWrapper();
+
     static void init(BPy::object self);
     static void wrap();
     void setDynamicInSockets();
@@ -218,12 +226,21 @@ public:
     BPy::object getProperty(std::string name);
     DinSocketPyWrapper* addInSocket(std::string name, std::string type);
     DoutSocketPyWrapper* addOutSocket(std::string name, std::string type);
-    DNSpacePyWrapper* getSpace();
-    static void setattr(BPy::object self, BPy::object name, BPy::object value);
-    static BPy::object getattr(BPy::object self, std::string key);
-    static BPy::list dir(BPy::object self);
+    BPy::object getSpace();
 };
-PYWRAPPERFUNC(DNode)
+template<>
+struct PyConverter<DNode*> {
+    static BPy::object pywrap(DNode *data) { return getPyObject(data); }
+};
+
+class ContainerSpacePyWrapper;
+class ContainerNodePyWrapper: public DNodePyWrapper
+{
+    PYWRAPHEAD(ContainerNode);
+    ContainerSpacePyWrapper* getGraph();
+
+};
+PYWRAPPERFUNC(ContainerNode)
 
 class DSocketPyWrapper;
 class DSocketPyWrapper : public PyWrapper
@@ -232,7 +249,7 @@ public:
     DSocketPyWrapper(DSocket *socket);
     virtual ~DSocketPyWrapper();
     static void wrap();
-    DNodePyWrapper* getNode();
+    BPy::object getNode();
     std::string getName();
     void setName(std::string name);
     void setType(std::string value);

@@ -47,21 +47,19 @@ public:
     void setStartSocket(MindTree::DoutSocket *socket);
     MindTree::DoutSocket* getStartSocket();
 
-public slots:
-    void setShowPoints(bool b);
-    void setShowEdges(bool b);
-    void setShowPolygons(bool b);
-    void setShowFlatShading(bool b);
-    void setShowGrid(bool b);
-    void changeCamera(QString cam);
-    AbstractTransformableNode* getSelectedNode();
-    glm::vec3 getCamPivot();
+    Q_SLOT void setShowPoints(bool b);
+    Q_SLOT void setShowEdges(bool b);
+    Q_SLOT void setShowPolygons(bool b);
+    Q_SLOT void setShowFlatShading(bool b);
+    Q_SLOT void setShowGrid(bool b);
+    Q_SLOT void changeCamera(QString cam);
+    Q_SLOT AbstractTransformableNode* getSelectedNode();
+    Q_SLOT glm::vec3 getCamPivot();
 
-    void setData(std::shared_ptr<Group> value);
+    Q_SLOT void setData(std::shared_ptr<Group> value);
 
-signals:
-    void sceneUpdated();
-    void nodeChanged(MindTree::DNode*);
+    Q_SIGNAL void sceneUpdated();
+    Q_SIGNAL void nodeChanged(MindTree::DNode*);
 
 protected:
     void resizeEvent(QResizeEvent *event);

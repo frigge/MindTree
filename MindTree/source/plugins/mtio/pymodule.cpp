@@ -7,9 +7,9 @@ using namespace MindTree;
 
 BOOST_PYTHON_MODULE(objio)
 {
-    auto importFn = []
+    auto importFn = [] (bool raw)
     {
-        return new ObjImportNode();
+        return new ObjImportNode(raw);
     };
 
     NodeDataBase::registerNodeType(new BuildInDecorator("OBJIMPORT", 

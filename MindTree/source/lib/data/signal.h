@@ -111,7 +111,7 @@ public:
     void operator()(Args... args) {
         Python::GILLocker locker;
         try {
-            fn(typename PyConverter<Args>::t(args)...);
+            fn(PyConverter<Args>::pywrap(args)...);
         } catch(BPy::error_already_set const &){
             PyErr_Print();
         }

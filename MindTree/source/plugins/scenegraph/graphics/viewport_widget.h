@@ -51,13 +51,12 @@ public:
 
     Viewport* getViewport();
 
-public slots:
-    void togglePolygons(bool b);
-    void toggleEdges(bool b);
-    void togglePoints(bool b);
-    void toggleFlatShading(bool b);
-    void toggleGrid(bool b);
-    void refillCamBox();
+    Q_SLOT void togglePolygons(bool b);
+    Q_SLOT void toggleEdges(bool b);
+    Q_SLOT void togglePoints(bool b);
+    Q_SLOT void toggleFlatShading(bool b);
+    Q_SLOT void toggleGrid(bool b);
+    Q_SLOT void refillCamBox();
 
 private:
     void createToolbar();

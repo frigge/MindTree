@@ -392,6 +392,10 @@ class NodeItem(QGraphicsSvgItem):
     def boundingRect(self):
         return QRectF(0, 0, self.width, self.height)
 
+    def mouseDoubleClickEvent(self, event):
+        if self.data.type == "CONTAINER":
+            self.scene().changeSpace(self.data.graph)
+
     def mouseMoveEvent(self, event):
         snap = False
         QGraphicsSvgItem.mouseMoveEvent(self, event)
