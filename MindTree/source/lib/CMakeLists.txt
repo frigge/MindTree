@@ -10,7 +10,6 @@ set(LIB_SRC
     data/mtobject.cpp
     data/nodes/data_node_socket.cpp
     data/nodes/node_db.cpp
-    data/nodes/buildin_nodes.cpp
     data/project.cpp
     data/properties.cpp
     data/python/console.cpp

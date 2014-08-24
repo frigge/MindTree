@@ -1,1 +1,1 @@
-import basics
+from . import basics
