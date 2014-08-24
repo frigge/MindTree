@@ -1,11 +1,11 @@
 import MT
-import node
+from . import node
 
 from PySide.QtGui import *
 from PySide.QtOpenGL import *
 from PySide.QtCore import *
 
-from nodebrowser import NodeBrowser
+from .nodebrowser import NodeBrowser
 
 MT.__dict__["customNodeVisualizations"] = {}
 class NodeSpace(QGraphicsScene):

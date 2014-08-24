@@ -1,9 +1,10 @@
-from floatcachetest import *
-from stringcachetest import *
-from connectsockets import *
-from properties import *
-from cpp_tests import *
-from timelinetests import *
+from .floatcachetest import *
+from .stringcachetest import *
+from .connectsockets import *
+from .properties import *
+from .cpp_tests import *
+from .timelinetests import *
+from .project_tests import *
 
 def testAll():
     print("testing all tests ...")

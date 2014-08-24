@@ -1,7 +1,7 @@
 import MT
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
-from spinbox import *
+from .spinbox import *
 
 class StringEditor(QWidget):
     def __init__(self, socket):

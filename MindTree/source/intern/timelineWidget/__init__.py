@@ -1,6 +1,7 @@
-import MT, mttimeline
+import MT
+from . import mttimeline
 MT.__dict__["timeline"] = mttimeline
-from timelinewidget import *
+from .timelinewidget import *
 
 import PySide
 from PySide.QtCore import *

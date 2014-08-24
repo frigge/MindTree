@@ -1,4 +1,5 @@
-import PyQt4, MT, math, mttimeline
+import PyQt4, MT, math
+from . import mttimeline
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from functools import partial
@@ -86,7 +87,7 @@ class TimelineWidget(QWidget):
         visibleend = QSpinBox()
         visibleend.setRange(0, 99999999)
         self.frameBox = QSpinBox()
-        self.frameBox.valueChanged.connect(self.setFrame_)
+        self.frameBox.valueChanged.connect(self.setFrame)
         self.frameBox.setRange(self.start, self.end)
         self.playbutton = QPushButton("Play")
         self.playbutton.clicked.connect(self.play)
@@ -127,12 +128,7 @@ class TimelineWidget(QWidget):
         self.isPlaying = False
         self.playbutton.setText("Play")
 
-
-    def setFrame_(self, frame):
-        print("spinbox changed to %d" % frame)
-
     def setFrame(self, frame):
-        print("setting frame ... to %d" % frame)
         self.frame = frame
         mttimeline.setFrame(int(frame))
         self.scrubwidget.setValue(frame)

@@ -1,1 +1,1 @@
-import mathnodes
+from . import mathnodes

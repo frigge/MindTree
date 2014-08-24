@@ -2,14 +2,15 @@ project(mindtree_core)
 cmake_minimum_required(VERSION 2.8)
 set(LIB_SRC
     data/cache_main.cpp
-    data/datatypes.cpp
+    #    data/datatypes.cpp
     data/dnspace.cpp
+    data/io.cpp
     data/nodes/data_node.cpp
     data/nodes/containernode.cpp
     data/mtobject.cpp
     data/nodes/data_node_socket.cpp
     data/nodes/node_db.cpp
-    data/nodes/nodetype.cpp
+    data/nodes/buildin_nodes.cpp
     data/project.cpp
     data/properties.cpp
     data/python/console.cpp
@@ -17,6 +18,7 @@ set(LIB_SRC
     data/python/pyexposable.cpp
     data/python/wrapper.cpp
     data/python/pyutils.cpp
+    data/python/system.cpp
     data/signal.cpp
     data/windowfactory.cpp
     data/raytracing/ray.cpp
@@ -36,22 +38,28 @@ set(LIB_HEAD
 
 set(QT_USE_QTOPENGL TRUE)
 set(QT_USE_QTSVG TRUE)
+ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
 
 find_package(Qt4 COMPONENTS QtCore QtGui QtOpenGL REQUIRED)
-find_package(Boost COMPONENTS python REQUIRED)
-find_package(PythonLibs 2.7 REQUIRED)
+#find_package(PythonLibs 3.4 REQUIRED)
+set(PYTHON_LIBRARIES /usr/lib/python3.4/config-3.4m-x86_64-linux-gnu/libpython3.4.so)
+set(PYTHON_INCLUDE_DIRS /usr/include/python3.4)
+#find_package(Boost COMPONENTS python REQUIRED)
+set(Boost_LIBRARIES /usr/lib/x86_64-linux-gnu/libboost_python-py34.so)
 find_package(OpenGL REQUIRED)
 QT4_WRAP_CPP(LIB_MOC_SRC ${LIB_HEAD} OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
 include(${QT_USE_FILE})
 include_directories(
             ${PROJECT_SOURCE_DIR}
-            ${Boost_INCLUDE_DIRS}
+            /usr/include
             ${PYTHON_INCLUDE_DIRS}
             ${OPENGL_ICNLUDE_DIRS}
 )
 
 message("core lib src directory: " ${PROJECT_SOURCE_DIR})
 message("core lib bin directory: " ${MINDTREE_CORE_LIB_DIR})
+message("boost python lib: " ${Boost_LIBRARIES})
+
 link_directories(
             ${PROJECT_SOURCE_DIR}
             ${Boost_LIBRARY_DIRS}

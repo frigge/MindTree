@@ -1,2 +1,2 @@
-import utilities
-import addproperties
+from . import utilities
+from . import addproperties

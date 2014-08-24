@@ -1,4 +1,4 @@
-import prim3d
+from . import prim3d
 
 import MT
 

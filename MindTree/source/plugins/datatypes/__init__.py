@@ -1,7 +1,7 @@
-import Object
-import valuenodes
-import generic_processor
-import converternodes
+from . import Object
+from . import valuenodes
+from . import generic_processor
+from . import converternodes
 import MT
 
 class SinNodeDecorator(MT.pytypes.NodeDecorator):

@@ -6,13 +6,8 @@ SET(HEADER
 #            source/data/code_generator/glslwriter.h
 #            source/data/code_generator/inputs.h
 #            source/data/code_generator/outputs.h
-            source/data/base/init.h
-            source/data/gl/init.h
-            source/data/python/init.h
             source/graphics/python/consolewindow.h
-            source/data/undo/frg_generic_undo.h
             source/graphics/base/mindtree_mainwindow.h
-            source/graphics/base/consoledialog.h
 )
 
 SET(SOURCE
@@ -46,9 +41,12 @@ endif()
 set(QT_USE_QTOPENGL TRUE)
 set(QT_USE_QTSVG TRUE)
 
+ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
 find_package(Qt4 4.8 COMPONENTS QtCore QtGui QtOpenGL REQUIRED)
-find_package(Boost COMPONENTS python REQUIRED)
-find_package(PythonLibs 2.7 REQUIRED)
+#find_package(PythonLibs 3.4 REQUIRED)
+set(Boost_LIBRARIES /usr/lib/x86_64-linux-gnu/libboost_python-py34.so)
+set(PYTHON_LIBRARIES /usr/lib/python3.4/config-3.4m-x86_64-linux-gnu/libpython3.4.so)
+set(PYTHON_INCLUDE_DIRS /usr/include/python3.4)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 

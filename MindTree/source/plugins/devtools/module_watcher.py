@@ -1,4 +1,6 @@
-import MT, os, PySide, sys, methodupdater
+import MT, os, PySide, sys
+
+from . import methodupdater
 
 from PySide import QtCore
 from PySide import QtGui

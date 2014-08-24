@@ -1,1 +1,1 @@
-import module_watcher
+from . import module_watcher
