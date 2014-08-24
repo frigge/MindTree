@@ -49,42 +49,6 @@ double Vec3d::len()
     return sqrt(dot(*this));
 }
 
-Vec3d operator+(Vec3d &a, Vec3d &b)    
-{
-    return Vec3d(a.x + b.x, a.y + b.y, a.z + b.z); 
-}
-
-Vec3d operator-(Vec3d &a, Vec3d &b)
-{
-    return Vec3d(a.x - b.x, a.y - b.y, a.z - b.z);
-}
-
-Vec3d operator*(Vec3d &vec, double d)
-{
-    return Vec3d(vec.x*d, vec.y*d, vec.z*d);
-}
-
-Vec3d operator*(double d, Vec3d &vec)
-{
-    return Vec3d(vec.x*d, vec.y*d, vec.z*d);
-}
-
-Vec3d& Vec3d::operator+=(const Vec3d &other)
-{
-    x += other.x;
-    y += other.y;
-    z += other.z;
-    return *this;
-}
-
-Vec3d& Vec3d::operator*=(double d)    
-{
-    x *= d;
-    y *= d;
-    z *= d;
-    return *this;
-}
-
 Vec3d Vec3d::normalized()    
 {
     return Vec3d(x/len(), y/len(), z/len());

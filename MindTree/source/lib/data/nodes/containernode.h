@@ -10,7 +10,7 @@ class SocketNode;
 class ContainerNode : public DNode
 {
 public:
-    ContainerNode(std::string name="", bool raw=false);
+    ContainerNode(std::string name="Container", bool raw=false);
     ContainerNode(const ContainerNode &node);
     ~ContainerNode();
 
@@ -46,6 +46,7 @@ public:
     void killSocket(DSocket *socket);
     void addtolib();
 
+    void setSpace(DNSpace *space);
 private:
     SocketNode *inSocketNode, *outSocketNode;
     ContainerSpace *containerData;

@@ -21,6 +21,7 @@
 #include "data/project.h"
 #include "data/signal.h"
 #include "data/nodes/containernode.h"
+#include "data/io.h"
 #include "dnspace.h"
 
 using namespace MindTree;
@@ -57,14 +58,12 @@ DNode* DNSpace::Iterator::operator*()    const
 }
 
 DNSpace::DNSpace()
-    : isCSpace(false)
 {
-    Project::instance()->registerSpace(this);
     Signal::mergeSignals<DNode*>("addNode", "graphChanged");
 }
 
 DNSpace::DNSpace(const DNSpace &space)
-    : name(space.getName()), isCSpace(false)
+    : name(space.getName())
 {
     for(auto *node : space.getNodes())
     {
@@ -75,14 +74,13 @@ DNSpace::DNSpace(const DNSpace &space)
 
 DNSpace::~DNSpace()
 {
-    Project::instance()->unregisterSpace(this);
     //try to clear all links before deleting nodes
     for(auto *node : getNodes())
         for(auto *socket : node->getInSockets())
             socket->clearLink();
 
     for(auto *node : getNodes())
-        delete node;
+        removeNode(node);
 }
 
 // QDataStream & MindTree::operator<<(QDataStream &stream, DNSpace *space)
@@ -117,10 +115,10 @@ bool DNSpace::operator==(DNSpace &space)
             ||getNodeCnt() != space.getNodeCnt())
         return false;
 
-    foreach(DNode* node1, getNodes())
+    for(DNode* node1 : getNodes())
     {
         bool hasASimilar = false;
-        foreach(DNode *node2, space.getNodes())
+        for(DNode *node2 : space.getNodes())
         {
             if(*node1 == *node2)
                 hasASimilar = true;
@@ -182,12 +180,7 @@ void DNSpace::setName(std::string value)
 
 bool DNSpace::isContainerSpace() const
 {
-    return isCSpace;
-}
-
-void DNSpace::setContainerSpace(bool value)
-{
-    isCSpace = value;
+    return false;
 }
 
 ContainerSpace* DNSpace::toContainer()    
@@ -196,15 +189,13 @@ ContainerSpace* DNSpace::toContainer()
 }
 
 ContainerSpace::ContainerSpace()
-    : node(0), parentSpace(0)
+    : node(nullptr), parentSpace(nullptr)
 {
-    setContainerSpace(true);
 }
 
 ContainerSpace::ContainerSpace(const ContainerSpace &space)
     : DNSpace(space)
 {
-    setContainerSpace(true);
 }
 
 ContainerSpace::~ContainerSpace()
@@ -214,6 +205,16 @@ ContainerSpace::~ContainerSpace()
 DNSpace* ContainerSpace::getParent()    
 {
     return parentSpace;
+}
+
+void ContainerSpace::setParentSpace(DNSpace *space)
+{
+    parentSpace = space;
+}
+
+bool ContainerSpace::isContainerSpace() const
+{
+    return true;
 }
 
 //QDataStream & MindTree::operator>>(QDataStream &stream, ContainerSpace **space)
@@ -245,10 +246,37 @@ void ContainerSpace::setContainer(ContainerNode* value)
     parentSpace = node->getSpace();
 }
 
-void IO::write(std::ostream &stream, const DNSpace *space)
+IO::OutStream& MindTree::operator<<(IO::OutStream &stream, const DNSpace &space)
 {
-    stream.write(reinterpret_cast<char*>(space->nodes.size()), sizeof(size_t));
-    for (const DNode* node : space->nodes) {
-        IO::write(stream, node);
+    stream.beginBlock("Space");
+    stream << space.getName();
+    stream << space.getNodes().size();
+    for (const DNode* node : space.getNodes()) {
+        stream << *node;
     }
+    stream.endBlock("Space");
+    return stream;
+}
+
+IO::InStream& MindTree::operator>>(IO::InStream &stream, DNSpace &space)
+{
+    stream.beginBlock("Space");
+    int nodecnt = 0;
+    std::string name;
+    stream >> name;
+    space.setName(name);
+    stream >> nodecnt;
+
+    for(int i = 0; i < nodecnt; i++) {
+        stream.beginBlock("DNode");
+        NodeType type;
+        stream >> type;
+
+        DNode *node = NodeDataBase::createNodeByType(type);
+        if(node) stream >> *node;
+        stream.endBlock("DNode");
+
+        space.addNode(node);
+    }
+    return stream;
 }

@@ -19,7 +19,6 @@
 #ifndef DATA_NODE_SOCKET_H
 #define DATA_NODE_SOCKET_H
 
-#include "data/datatypes.h"
 #include "data/python/pyexposable.h"
 #include "data/properties.h"
 #include "data/type.h"
@@ -64,10 +63,10 @@ class DNode;
 class DinSocket;
 class DoutSocket;
 
-namespace IO {
-void write(std::ostream &stream, const DSocket *socket);
-void write(std::ostream &stream, const DinSocket *socket);
-}
+IO::OutStream& operator<<(IO::OutStream &stream, const DinSocket &socket);
+IO::OutStream& operator<<(IO::OutStream &stream, const DSocket &socket);
+IO::InStream& operator>>(IO::InStream& stream, DinSocket &socket);
+IO::InStream& operator>>(IO::InStream& stream, DSocket &socket);
 
 namespace Signal {
     class LiveTimeTracker;
@@ -94,7 +93,7 @@ public:
     bool operator==(DSocket &socket)const;
     bool operator!=(DSocket &socket)const;
     std::string getName() const;
-	SocketType getType() const;
+	const SocketType& getType() const;
     SocketDir getDir() const;
 	void setDir(SocketDir value);
 	DNode* getNode() const;
@@ -119,8 +118,7 @@ protected:
     Signal::LiveTimeTracker* _signalLiveTime;
 
 private:
-    friend void MindTree::IO::write(std::ostream& stream, const MindTree::DSocket *socket);
-    friend void MindTree::IO::write(std::ostream& stream, const MindTree::DinSocket *socket);
+    friend IO::InStream& operator>>(IO::InStream& stream, DSocket &socket);
 
     std::string idName;
     std::string name;
@@ -163,7 +161,6 @@ public:
     void clearLink();
 
 private:
-    friend void MindTree::IO::write(std::ostream &stream, const DinSocket *socket);
 	unsigned short tempCntdID;
     DoutSocket* cntdSocket;
 

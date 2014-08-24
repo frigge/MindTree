@@ -231,10 +231,12 @@ void Python::Timeline::registerAPI()
     BPy::def("stop", Python::Timeline::stop);
 }
 
-TimelineNode::TimelineNode()
+TimelineNode::TimelineNode(bool raw)
     : MindTree::DNode("Timeline")
 {
-    new MindTree::DoutSocket("Frame", "INTEGER", this);
+    if(!raw)
+        new MindTree::DoutSocket("Frame", "INTEGER", this);
+
     setNodeType("TIMELINE");
     auto cbhandler = MindTree::Signal::SignalHandler<int>
         ::handler.connect("frameChanged",
@@ -259,7 +261,7 @@ BOOST_PYTHON_MODULE(mttimeline) {
     auto *timelineNodeDecorator = 
         new MindTree::BuildInDecorator("TIMELINE", 
                                      "Values.Frame", 
-                                     []()->MindTree::DNode*{ return new TimelineNode(); });
+                                     [](bool raw)->MindTree::DNode*{ return new TimelineNode(raw); });
 
     MindTree::NodeDataBase::registerNodeType(timelineNodeDecorator);
 

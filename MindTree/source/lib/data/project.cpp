@@ -1,5 +1,6 @@
 #include "fstream"
 #include "data/signal.h"
+#include "data/io.h"
 #include "project.h"
 
 using namespace MindTree;
@@ -9,11 +10,10 @@ Project* Project::_project=nullptr;
 Project::Project(std::string filename)
     : filename(filename)
 {
-    _project = this;
     DNSpace *space = nullptr;
     if(filename != "")
     {
-        fromFile(filename);
+        space = fromFile(filename);
     }
     else
     {
@@ -23,8 +23,11 @@ Project::Project(std::string filename)
     root_scene->setName("Root");
 }
 
-void Project::fromFile(std::string filename)
+DNSpace* Project::fromFile(std::string filename)
 {
+    IO::InStream stream(filename);
+    auto space = new DNSpace();
+    stream >> *space;
     //QFile file(filename);
     //file.open(QIODevice::ReadOnly);
     //QDataStream stream(&file);
@@ -38,25 +41,25 @@ void Project::fromFile(std::string filename)
     //}
     //else
     //    space = new DNSpace;
+    return space;
 }
 
 Project::~Project()
 {
-    spaces.clear();
     delete root_scene;
 }
 
 Project* Project::create()    
 {
     if(_project) delete _project;
-    new Project();
+    _project = new Project();
     return _project;
 }
 
 Project* Project::load(std::string filename)    
 {
     if(_project) delete _project;
-    new Project(filename);
+    _project = new Project(filename);
     return _project;
 }
 
@@ -118,18 +121,8 @@ void Project::unregisterItem(std::string idname)
 
 void Project::save()
 {
-    std::ofstream stream(filename, std::ios::out);
-    IO::write(stream, root_scene);
-}
-
-void Project::registerSpace(DNSpace *space)    
-{
-    spaces.push_back(space);
-}
-
-void Project::unregisterSpace(DNSpace *space)    
-{
-    spaces.erase(std::find(spaces.begin(), spaces.end(), space));
+    IO::OutStream stream(filename);
+    stream << *root_scene;
 }
 
 std::string Project::getFilename()const

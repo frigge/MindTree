@@ -36,11 +36,11 @@ std::string AbstractNodeDecorator::getType()
     return type;
 }
 
-DNode* AbstractNodeDecorator::operator()()    
+DNode* AbstractNodeDecorator::operator()(bool)    
 {
 }
 
-BuildInDecorator::BuildInDecorator(std::string type, std::string label, std::function<DNode*()> func)
+BuildInDecorator::BuildInDecorator(std::string type, std::string label, std::function<DNode*(bool)> func)
     : AbstractNodeDecorator(type, label), func(func)
 {
 }
@@ -49,9 +49,9 @@ BuildInDecorator::~BuildInDecorator()
 {
 }
 
-DNode* BuildInDecorator::operator()()    
+DNode* BuildInDecorator::operator()(bool raw)    
 {
-    return func();
+    return func(raw);
 }
 
 void NodeDataBase::scanFolders()    
@@ -73,8 +73,20 @@ DNode* NodeDataBase::createNode(std::string name)
 {
     for(auto fac : nodeFactories)
         if(fac->getLabel() == name)
-            return (*fac)();
-    return 0;
+            return (*fac)(false);
+
+    std::cout << "node label \"" << name << "\" not found" << std::endl;
+    return nullptr;
+}
+
+DNode* NodeDataBase::createNodeByType(const NodeType &t)
+{
+    for(auto fac : nodeFactories)
+        if(t == fac->getType())
+            return (*fac)(true);
+
+    std::cout << "node type \"" << t.toStr() << "\" not found" << std::endl;
+    return nullptr;
 }
 
 void NodeDataBase::unregisterNodeType()    

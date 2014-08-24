@@ -54,7 +54,7 @@ private:
 class TimelineNode : public MindTree::DNode
 {
 public:
-    TimelineNode();
+    TimelineNode(bool raw = false);
     TimelineNode(const TimelineNode &other);
     ~TimelineNode();
 

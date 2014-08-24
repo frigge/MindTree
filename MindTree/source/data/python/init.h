@@ -76,7 +76,7 @@ struct PythonToQString
 
 void init(int argc, char* argv[]);
 void finalize();
-void load(QString plugin);
+void load(QString path, QString plugin);
 
 void loadPlugins();
 void loadIntern();

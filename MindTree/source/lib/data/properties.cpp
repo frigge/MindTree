@@ -64,6 +64,7 @@ Property::Property()
      //by default reset property value as this property is empty as well
      cloneData([](Property &prop){prop.deleteFunc();}),
      deleteFunc([]{}),
+     writeData([](IO::OutStream& stream, const Property &) { }),
      pyconverter([]{return BPy::object();})
 {
 }
@@ -147,7 +148,7 @@ Property Property::clone()const
     return Property(*this);
 }
 
-DataType Property::getType() const
+const MindTree::DataType& Property::getType() const
 {
     return type;
 }
@@ -161,31 +162,34 @@ BPy::object Property::toPython() const
 }
 
 
-std::vector<std::function<Property(std::istream&)>> IO::Input::_readers;
+IO::Input::ReaderList IO::Input::_readers;
 
-void IO::Input::registerReader(std::function<Property(std::istream&)> reader, std::string t)
+Property IO::Input::read(IO::InStream& stream)
 {
-    int id = SocketType::getID(t);
-    if (id >= _readers.size()) {
-        _readers.resize(id + 1);
-        _readers[id] = reader;
-    }
-}
+    DataType t;
+    stream >> t;
 
-Property IO::Input::read(std::istream &stream)
-{
-    std::string type;
-    stream >> type;
-
-    Property prop = _readers[SocketType::getID(type)](stream);
+    auto reader = _readers[t];
+    Property prop;
+    if(reader) prop = reader(stream);
 
     return prop;
 }
 
-std::ostream& MindTree::IO::writeProperty(std::ostream &stream, const Property &prop)
+IO::OutStream& MindTree::operator<<(IO::OutStream &stream, const Property &prop)
 {
-    const char *raw = prop.type.toStr().c_str();
-    stream.write(raw, prop.type.toStr().size());
-    stream.write(reinterpret_cast<char*>(prop.datasize), sizeof(prop.datasize));
-    return prop.writeData(stream, prop);
+    stream.beginBlock("Property");
+    stream << static_cast<const TypeBase&>(prop.getType());
+    prop.writeData(stream, prop);
+    stream.endBlock("Property");
+    return stream;
+}
+
+IO::InStream& MindTree::operator>>(IO::InStream &stream, Property &prop)
+{
+    stream.beginBlock("Property");
+    prop = IO::Input::read(stream);
+    stream.endBlock("Property");
+
+    return stream;
 }

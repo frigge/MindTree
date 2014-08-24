@@ -21,6 +21,9 @@
 #include "QApplication"
 #include "QDir"
 #include "iostream"
+#include "string"
+
+#include "boost/locale.hpp"
 
 #include "data/signal.h"
 #include "graphics/viewer.h"
@@ -29,6 +32,7 @@
 #include "graphics/viewer.h"
 #include "graphics/pywindowlist.h"
 #include "data/python/pyutils.h"
+#include "data/python/system.h"
 
 #include "init.h"
 
@@ -52,29 +56,14 @@ BOOST_PYTHON_MODULE(MT){
     BPy::object main = BPy::import("__main__");
     BPy::object global = main.attr("__dict__");
 
-    //BPy::def("registerNodeType", NodeType::registerType);
     BPy::def("unregisterNodeType", NodeType::unregisterType);
-    //BPy::def("nodeCnt", &getGraphicsCount);
-    BPy::def("registerNode", PyWrapper::regNode);
-    BPy::def("createNode", PyWrapper::createNode, BPy::return_value_policy<BPy::manage_new_object>());
-    BPy::def("getRegisteredNodes", PyWrapper::getRegisteredNodes);
 
     MindTree::Python::wrapViewerFunctions();
 #ifdef QT_DEBUG
     BPy::def("getStylePath", PyWrapper::getStylePath);
     BPy::def("setStylePath", PyWrapper::setStylePath);
 #endif
-    //BPy::def("togglePickWidget", &frg_Shader_Author::togglePickWidget);
-    //BPy::def("toggleMouseNodeGraph", &frg_Shader_Author::toggleMouseNodeGraphPos);
-
-    BPy::class_<std::vector<std::string>>("StringList")
-        .def(BPy::vector_indexing_suite<std::vector<std::string>>())
-        .def("__str__", PyWrapper::__str__StringVector)
-        .def("__repr__", PyWrapper::__repr__StringVector);
-    BPy::def("attachToSignal", PyWrapper::attachToSignal);
-    BPy::def("attachToBoundSignal", PyWrapper::attachToBoundSignal);
-    BPy::def("getNodeTypes", PyWrapper::getNodeTypes);
-    BPy::def("getSocketTypes", PyWrapper::getSocketTypes);
+    sys::wrap();
 
     wrap_all();
 }
@@ -99,6 +88,8 @@ void MindTree::Python::wrap_all()
         DinSocketPyWrapper::wrap();
         DoutSocketPyWrapper::wrap();
         PyViewerBase::wrap();
+        ContainerNodePyWrapper::wrap();
+        ContainerSpacePyWrapper::wrap();
         PropertyPyWrapper::wrap();
         MindTree::Signal::SignalHandler<>::handler("registerPyDataTypes");
     }
@@ -132,7 +123,7 @@ PythonToQString::PythonToQString()
 
 void* PythonToQString::convertible(PyObject* obj)
 {
-    if(!PyString_Check(obj)) return 0;
+    if(!PyUnicode_Check(obj)) return 0;
     return obj;
 }
 
@@ -148,7 +139,8 @@ void PythonToQString::construct(PyObject *obj, BPy::converter::rvalue_from_pytho
 void MindTree::Python::loadPlugins()
 {
     MindTree::Python::GILLocker locker;
-    QDir plugDir("../plugins");
+    QString dir("../plugins");
+    QDir plugDir(dir);
     if(!plugDir.exists()) {
         std::cout << "Plugin Directory not found: " << plugDir.absolutePath().toStdString() << std::endl;
         return;
@@ -156,16 +148,17 @@ void MindTree::Python::loadPlugins()
 
     BPy::import("sys").attr("path").attr("append")(plugDir.absolutePath().toStdString());
 
-    foreach(QString plugin, plugDir.entryList()){
+    for(QString plugin : plugDir.entryList()){
         if(plugin == "." || plugin == "..") continue;
-        load(plugin);
+        load(dir, plugin);
     }
 }
 
 void MindTree::Python::loadIntern()
 {
     MindTree::Python::GILLocker locker;
-    QDir plugDir("../intern");
+    QString dir("../intern");
+    QDir plugDir(dir);
     if(!plugDir.exists()) {
         std::cout << "Internal Directory not found: " << plugDir.absolutePath().toStdString() << std::endl;
         return;
@@ -173,16 +166,17 @@ void MindTree::Python::loadIntern()
 
     BPy::import("sys").attr("path").attr("append")(plugDir.absolutePath().toStdString());
 
-    foreach(QString plugin, plugDir.entryList()){
+    for(QString plugin : plugDir.entryList()){
         if(plugin == "." || plugin == "..") continue;
-        load(plugin);
+        load(dir, plugin);
     }
 }
 
 void MindTree::Python::loadSettings()
 {
     MindTree::Python::GILLocker locker;
-    QDir plugDir("../settings");
+    QString dir("../settings");
+    QDir plugDir(dir);
     if(!plugDir.exists()) {
         std::cout << "Settings Directory not found: " << plugDir.absolutePath().toStdString() << std::endl;
         return;
@@ -190,17 +184,18 @@ void MindTree::Python::loadSettings()
 
     BPy::import("sys").attr("path").attr("append")(plugDir.absolutePath().toStdString());
 
-    foreach(QString plugin, plugDir.entryList()){
+    for(QString plugin : plugDir.entryList()){
         if(plugin == "." || plugin == "..") continue;
-        load(plugin);
+        load(dir, plugin);
     }
 }
 
-void MindTree::Python::load(QString plugin)
+void MindTree::Python::load(QString path, QString plugin)
 {
-    if(!plugin.endsWith(".py") && !plugin.endsWith(".pyc")
-            && QFileInfo(plugin).isFile())
+    bool is_python_module = QFileInfo(path + "/" + plugin).isDir() || plugin.endsWith(".py") || plugin.endsWith(".pyc");
+    if(!is_python_module) {
         return;
+    }
             
     if(plugin.endsWith(".py")){
         plugin = plugin.replace(".py", "");
@@ -218,10 +213,16 @@ void MindTree::Python::load(QString plugin)
 
 void MindTree::Python::init(int argc, char *argv[])
 {
-    PyImport_AppendInittab("MT", &initMT);
+    PyImport_AppendInittab("MT", &PyInit_MT);
     Py_Initialize();
     PyEval_InitThreads();
-    PySys_SetArgv(argc, argv);
+
+    //wchar_t** dest;
+    //for (int i = 0; i < argc; i++) {
+    //    dest[i] = new wchar_t[strlen(argv[i]) + 1];
+    //    mbtowc(dest[i], argv[i], strlen(argv[i]));
+    //}
+    //PySys_SetArgv(argc, dest);
     //BPy::to_python_converter<DNSpace*, PointerToPython<DNSpace*> >();
     try{
         BPy::to_python_converter<QString, QStringToPython>();

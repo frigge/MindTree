@@ -1,2 +1,2 @@
-import graph
-import node
+from . import graph
+from . import node

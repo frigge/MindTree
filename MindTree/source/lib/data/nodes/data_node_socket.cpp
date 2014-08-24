@@ -99,15 +99,25 @@ void CopySocketMapper::remap()
     socketMap.clear();
 }
 
-void IO::write(std::ostream& stream, const DSocket *socket)
+IO::OutStream& MindTree::operator<<(IO::OutStream& stream, const DSocket &socket)
 {
-    stream.write(socket->name.c_str(), socket->name.size());
-    stream.write(reinterpret_cast<char*>(socket->ID), sizeof(short));
-    stream.write(socket->type.toStr().c_str(), socket->type.toStr().size());
-    stream.write(reinterpret_cast<char*>(socket->variable), sizeof(bool));
+    stream << socket.getName()
+        << socket.getID()
+        << static_cast<const TypeBase&>(socket.getType())
+        << socket.getVariable();
+    return stream;
+}
 
-    if(socket->getDir() == DSocket::IN)
-        IO::write(stream, socket->toIn());
+IO::InStream& MindTree::operator>>(IO::InStream& stream, DSocket &socket)
+{
+    std::string name, type;
+    int id;
+    bool variable;
+    stream >> name >> id >> type >> variable;
+    socket.name = name;
+    socket.type = type;
+    LoadSocketIDMapper::setID(&socket, id);
+    return stream;
 }
 
 DSocket::DSocket(std::string name, SocketType type, DNode *node)
@@ -135,7 +145,6 @@ DSocket::DSocket(const DSocket& socket, DNode *node)
 
 DSocket::~DSocket()
 {
-    std::cout << "delete DinSocket" << std::endl;
     socketIDHash.erase(ID);
 }
 
@@ -217,15 +226,33 @@ DSocket* DSocket::getSocket(unsigned short ID)
     return socketIDHash[ID];
 }
 
-void IO::write(std::ostream &stream, const DinSocket *socket)
+IO::OutStream& MindTree::operator<<(IO::OutStream &stream, const DinSocket &socket)
 {
-    if(socket->cntdSocket)
-        stream.write(reinterpret_cast<char*>(socket->cntdSocket->ID),
-                     sizeof(short));
+    stream << static_cast<const DSocket&>(socket);
+    int cntdID = -1;
+    if(socket.getCntdSocket())
+        cntdID = socket.getCntdSocket()->getID();
     else
-        stream.write(reinterpret_cast<char*>((short)-1), sizeof(short));
+        cntdID = -1;
 
-    IO::writeProperty(stream, socket->prop);
+    stream << cntdID;
+    auto prop = socket.getProperty();
+    stream << prop;
+    return stream;
+}
+
+IO::InStream& MindTree::operator>>(IO::InStream& stream, DinSocket &socket)
+{
+    stream >> static_cast<DSocket&>(socket);
+
+    int cntdID = -1;
+    Property prop;
+    stream >> cntdID >> prop;
+    socket.setProperty(prop);
+
+    socket.setTempCntdID(cntdID);
+
+    return stream;
 }
 
 DinSocket::DinSocket(std::string name, SocketType type, DNode *node)
@@ -249,7 +276,6 @@ DinSocket::DinSocket(const DinSocket& socket, DNode *node)
 
 DinSocket::~DinSocket()
 {
-    std::cout << "delete DinSocket" << std::endl;
     if(cntdSocket)
         cntdSocket->unregisterSocket(this);
 }
@@ -328,7 +354,7 @@ void DSocket::setName(std::string value)
     MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "nameChanged", value);
 }
 
-SocketType DSocket::getType() const
+const SocketType& DSocket::getType() const
 {
 	return type;
 }
@@ -371,7 +397,6 @@ DoutSocket::DoutSocket(const DoutSocket& socket, DNode *node)
 
 DoutSocket::~DoutSocket()
 {
-    std::cout << "delete DinSocket" << std::endl;
     for(DinSocket *socket : cntdSockets)
         socket->clearLink();
 }

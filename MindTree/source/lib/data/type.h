@@ -7,16 +7,80 @@
 
 namespace MindTree {
 
+class TypeBase
+{
+public:
+    TypeBase (const std::string &typeStr="undefined", int id=-1)
+        : typeString(typeStr), _id(id)
+    {
+    }
+
+    TypeBase (const char *typeStr="undefined", int id=-1)
+        : typeString(typeStr), _id(id)
+    {
+    }
+
+    std::string toStr()const
+    {
+        return typeString;
+    }
+
+    int id()const
+    {
+        return _id;
+    }
+
+    bool operator==(const TypeBase &other)const
+    {
+        return other._id == _id;
+    }
+
+    bool operator!=(const TypeBase &other)const
+    {
+        return !((*this)==other);
+    }
+
+    bool operator==(const char *str)const
+    {
+        return typeString == std::string(str);
+    }
+
+    bool operator!=(const char *str)const
+    {
+        return !((*this)==str);
+    }
+
+    bool operator==(const std::string &str)const
+    {
+        return typeString == str;
+    }
+
+    bool operator!=(const std::string &str)const
+    {
+        return !((*this)==str);
+    }
+
+protected:
+    std::string typeString;
+    int _id;
+};
+
 template<typename T>
-class Type
+class Type : public TypeBase
 {
 public:
     Type(const std::string &typeStr="undefined")
-        : typeString(typeStr), _id(getID(typeStr))
+        : TypeBase(typeStr, getID(typeStr))
     { }
 
     Type(const char *typeStr)
-        : typeString(typeStr), _id(getID(typeStr)) {}
+        : TypeBase(typeStr, getID(typeStr)) {}
+
+    void operator=(const Type<T> &t)
+    {
+        typeString = t.typeString;
+        _id = getID(typeString);
+    }
 
     static Type byID(int id)
     {
@@ -25,16 +89,6 @@ public:
             return Type();
         }
         return Type(id_map[id]);
-    }
-
-    int id()const
-    {
-        return _id;
-    }
-
-    std::string toStr()const
-    {
-        return typeString;
     }
 
     static std::vector<std::string> getTypes()
@@ -62,20 +116,7 @@ public:
         return registerType(name);
     }
 
-    bool operator==(const Type &other)const
-    {
-        return other._id == _id;
-    }
-
-    bool operator!=(const Type &other)const
-    {
-        return !((*this)==other);
-    }
-
-
 private:
-    std::string typeString;
-    int _id;
     static int id_cnt;
     static std::vector<std::string> id_map;
 };
@@ -90,7 +131,6 @@ public:
     DataType(const char *typeStr)
         : Type<DataType>(typeStr)
     {}
-
 };
 
 template<typename T>

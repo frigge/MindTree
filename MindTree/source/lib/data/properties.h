@@ -23,6 +23,7 @@
 #include "data/python/wrapper.h"
 #include "unordered_map"
 #include "data/type.h"
+#include "data/io.h"
 
 namespace BPy=boost::python;
 
@@ -90,9 +91,10 @@ void defaultPropertyConverter(void* from, void* to)
 
 namespace IO {
 template<class T> struct Writer;
-std::ostream& writeProperty(std::ostream& stream, const Property &prop);
 }
 
+IO::OutStream& operator<<(IO::OutStream &stream, const Property &prop);
+IO::InStream& operator>>(IO::InStream &stream, Property &prop);
 
 class Property
 {
@@ -152,13 +154,13 @@ public:
     }
 
     BPy::object toPython() const;
-    DataType getType() const;
+    const MindTree::DataType& getType() const;
 
 private:
-    friend std::ostream& MindTree::IO::writeProperty(std::ostream& stream, const Property &prop);
+    friend IO::OutStream& MindTree::operator<<(IO::OutStream& stream, const Property &prop);
 
     std::function<void(Property&)> cloneData;
-    std::function<std::ostream&(std::ostream&, const Property&)> writeData;
+    std::function<void(IO::OutStream&, const Property&)> writeData;
     std::function<void()> deleteFunc;
     std::function<BPy::object()> pyconverter;
     size_t datasize;
@@ -169,39 +171,60 @@ private:
 
 
 typedef std::unordered_map<std::string, Property> PropertyMap;
-    
+
 namespace IO {
 template <typename T>
 struct Writer {
-    static std::ostream& write(std::ostream &stream, const Property &prop)
+    static void write(IO::OutStream &stream, const Property &prop)
     {
         T data = prop.getData<T>();
-        const char *raw = reinterpret_cast<const char*>(&data);
-        stream.write(raw, sizeof(data));
-        return stream;
+        stream << data;
     }
 };
 
-template <>
-struct Writer<std::string> {
-    static std::ostream& write(std::ostream &stream, const Property &prop)
+template <typename T>
+struct Writer<std::shared_ptr<T>> {
+    static void write(IO::OutStream &stream, const Property &prop)
     {
-        std::string data = prop.getData<std::string>();
-        const char *raw = data.c_str();
-        stream.write(raw, data.size());
-        return stream;
+        std::shared_ptr<T> data = prop.getData<std::shared_ptr<T>>();
+        stream << *data;
     }
 };
+
+template<class T>
+Property defaultReader(IO::InStream &stream)
+{
+    T data;
+    stream >> data;
+    Property prop{data};
+    return prop;
+}
 
 class Input
 {
 public:
-    static void registerReader(std::function<Property(std::istream&)> reader,  std::string t);
-    static Property read(std::istream &stream);
+    typedef std::function<Property(IO::InStream&)> ReaderFunction;
+    typedef TypeDispatcher<DataType, ReaderFunction> ReaderList;
+
+    template<class T>
+    static void registerReader()
+    {
+        auto reader = [](IO::InStream &stream) {
+            T data;
+            stream >> data;
+            Property prop(data);
+            return prop;
+        };
+
+        _readers.add(PropertyTypeInfo<T>::_type, reader);
+    }
+    static Property read(IO::InStream &stream);
         
 private:
-    static std::vector<std::function<Property(std::istream&)>> _readers;
+    static ReaderList _readers;
+
 };
+
 }
 } /* MindTree */
 

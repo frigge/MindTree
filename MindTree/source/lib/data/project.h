@@ -24,15 +24,12 @@ public:
 
     void save(); 
     void saveAs(); 
-    void fromFile(std::string filename);
+    DNSpace* fromFile(std::string filename);
 
     std::string getFilename()const;
 	void setFilename(std::string value);
 	void setRootSpace(DNSpace* value);
 	DNSpace* getRootSpace();
-
-    void registerSpace(DNSpace *space);
-    void unregisterSpace(DNSpace *space);
 
     std::string registerNode(DNode *node);
     std::string registerSocket(DSocket *socket);
@@ -50,7 +47,6 @@ private:
     DNSpace *root_scene;
     static Project *_project;
 
-    std::vector<DNSpace*>spaces;
     std::unordered_map<std::string, void*> idNames;
 };
 } /* MindTree */

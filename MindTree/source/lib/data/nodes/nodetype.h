@@ -24,10 +24,6 @@
 namespace MindTree{
 
 class NodeType;
-namespace IO {
-    void write(std::ostream &, const NodeType&);
-}
-
 class NodeType : public Type<NodeType> 
 {
 public:

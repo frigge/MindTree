@@ -9,12 +9,13 @@
 namespace MindTree
 {
 class DNode;
+class NodeType;
 class AbstractNodeDecorator
 {
 public:
     AbstractNodeDecorator(std::string type="", std::string label="");
     virtual ~AbstractNodeDecorator();
-    virtual DNode* operator()();
+    virtual DNode* operator()(bool);
     void setLabel(std::string l);
     std::string getLabel();
     void setType(std::string t);
@@ -27,12 +28,12 @@ private:
 class BuildInDecorator : public AbstractNodeDecorator
 {
 public:
-    BuildInDecorator(std::string type, std::string label, std::function<DNode*()> func);
+    BuildInDecorator(std::string type, std::string label, std::function<DNode*(bool)> func);
     virtual ~BuildInDecorator();
-    virtual DNode* operator()();
+    virtual DNode* operator()(bool);
 
 private:
-    std::function<DNode*()> func;
+    std::function<DNode*(bool)> func;
 };
 
 class NodeDataBase
@@ -44,6 +45,7 @@ public:
     static std::vector<AbstractNodeDecorator*> getFactories();
     static void regCB(std::function<void()> fun);
     static DNode* createNode(std::string name);
+    static DNode* createNodeByType(const NodeType &t);
 
 private:
     static std::vector<AbstractNodeDecorator*> nodeFactories;

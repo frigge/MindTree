@@ -67,24 +67,6 @@ DNode * CopyNodeMapper::getCopy(DNode *original)
     return nodeMap[original];
 }
 
-void IO::write(std::ostream &stream, const DNode *node)
-{
-    stream.write(node->nodeName.c_str(), node->nodeName.size());
-    IO::write(stream, node->type);
-
-    stream.write(reinterpret_cast<char*>(node->inSockets.size()), sizeof(size_t));
-    for(const DSocket *socket : node->inSockets) {
-        IO::write(stream, socket);
-    }
-
-    stream.write(reinterpret_cast<char*>(node->outSockets.size()), sizeof(size_t));
-    for(const DSocket *socket : node->inSockets) {
-        IO::write(stream, socket);
-    }
-
-    //TODO: write container data stuff
-}
-
 DNode::DNode(std::string name)
     : selected(false),
       space(nullptr),
@@ -182,7 +164,7 @@ DSocket* DNode::getSocketByIDName(std::string idname)
 //    blockCBregister = false;
 //}
 //
-NodeType DNode::getType()const
+const NodeType& DNode::getType()const
 {
     return type;
 }

@@ -2,6 +2,7 @@
 #include "../datatypes/Object/object.h"
 #include "data/cache_main.h"
 #include "data/raytracing/ray.h"
+#include "data/io.h"
 
 namespace BPy = boost::python;
 
@@ -123,6 +124,27 @@ bool testRaycasting()
     return hit && (start + dir * uvdist.z) == hitpoint;
 }
 
+bool testSaveLoadProperties()
+{
+    MindTree::Property prop{5};
+    {
+        MindTree::IO::OutStream str("testSaveLoadProperties.mt");
+        str.beginBlock("Property");
+        str << prop;
+        str.endBlock("Property");
+    }
+
+    MindTree::Property newProp;
+    {
+        MindTree::IO::InStream str("testSaveLoadProperties.mt");
+        str.beginBlock("Property");
+        str >> newProp;
+        str.endBlock("Property");
+    }
+
+    return newProp.getData<int>() == prop.getData<int>();
+}
+
 BOOST_PYTHON_MODULE(cpp_tests)
 {
     BPy::def("testSocketPropertiesCPP", testSocketProperties);    
@@ -131,4 +153,5 @@ BOOST_PYTHON_MODULE(cpp_tests)
     BPy::def("testObjectInPropertyCPP", testObjectInProperty);
     BPy::def("testPropertyConversionCPP", testPropertyConversion);
     BPy::def("testRaycastingCPP", testRaycasting);
+    BPy::def("testSaveLoadPropertiesCPP", testSaveLoadProperties);
 }

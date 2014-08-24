@@ -35,6 +35,12 @@ ContainerNode::~ContainerNode()
     if(containerData) delete containerData;
 }
 
+void ContainerNode::setSpace(DNSpace *space)
+{
+    DNode::setSpace(space);
+    if(containerData) containerData->setParentSpace(space);
+}
+
 NodeList ContainerNode::getAllInNodes()
 {
     NodeList nodes = DNode::getAllInNodes();

@@ -27,9 +27,8 @@
 namespace MindTree
 {
 
-namespace IO {
-    void write(std::ostream &stream, const DNSpace *space);
-}
+IO::OutStream& operator<<(IO::OutStream &stream, const DNSpace &space);
+IO::InStream& operator>>(IO::InStream &stream, DNSpace &space);
 
 class ContainerSpace;
 class DNSpace : public FRGUndoBase, public PyExposable
@@ -62,15 +61,12 @@ public:
     uint getNodeCnt();
     NodeList getNodes()const;
 
-    bool isContainerSpace() const;
-    void setContainerSpace(bool value);
+    virtual bool isContainerSpace() const;
     ContainerSpace* toContainer();
 
 private:
-    friend void MindTree::IO::write(std::ostream &, const DNSpace*);
     std::string name;
     NodeList nodes;
-    bool isCSpace;
 };
 
 
@@ -81,9 +77,12 @@ public:
     ContainerSpace(const ContainerSpace &space);
     ~ContainerSpace();
 
+    bool isContainerSpace() const;
+
     ContainerNode *getContainer();
     void setContainer(ContainerNode *node);
     DNSpace* getParent();
+    void setParentSpace(DNSpace *space);
 
 private:
     DNSpace *parentSpace;

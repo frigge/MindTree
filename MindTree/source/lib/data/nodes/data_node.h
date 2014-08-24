@@ -19,10 +19,10 @@
 #ifndef DATA_NODE_H
 #define DATA_NODE_H
 
+#include "data/datatypes.h"
 #include "data/nodes/data_node_socket.h"
 #include "data/python/pyexposable.h"
 #include "data/nodes/nodetype.h"
-#include "data/datatypes.h"
 
 #include "data/signal.h"
 #include "data/mtobject.h"
@@ -63,9 +63,6 @@ class ContainerNode;
 typedef std::vector<DNode*> NodeList;
 typedef std::vector<const DNode*> ConstNodeList;
 
-namespace IO {
-    void write(std::ostream&, const DNode*);
-}
 
 class DNode : public Object, public PyExposable
 {
@@ -79,7 +76,7 @@ public:
     bool getSelected();
     void setSelected(bool value);
 
-    NodeType getType()const;
+    const NodeType& getType()const;
     void setType(NodeType value);
     virtual DNode* clone();
 
@@ -140,8 +137,6 @@ public:
 
 private:
     static std::vector<std::function<DNode_ptr()>> newNodeDecorator;
-
-    friend void MindTree::IO::write(std::ostream&, const DNode*);
 
     bool selected;
     DNSpace *space;
