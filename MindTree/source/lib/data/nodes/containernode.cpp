@@ -180,6 +180,7 @@ DSocket *ContainerNode::getSocketOnContainer(DSocket *socket)
     for(auto p : socket_map)
         if (p.second == socket)
             return const_cast<DSocket*>(p.first);
+    return nullptr;
 }
 
 const DSocket *ContainerNode::getSocketOnContainer(const DSocket *socket) const
