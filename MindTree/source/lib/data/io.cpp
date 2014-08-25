@@ -153,18 +153,23 @@ OutStream& OutStream::operator<<(const DNode &node)
     return *this;
 }
 
-OutStream& OutStream::operator<<(ContainerNode &node)
+OutStream& OutStream::operator<<(const ContainerNode &node)
 {
-    auto *space = new ContainerSpace();
-    space->setName(node.getNodeName());
-
-    node.setContainerData(space);
+    auto *space = node.getContainerData();
     *this << space;
+    return *this;
 }
+
+MindTree::TypeDispatcher<MindTree::NodeType, std::function<void(InStream&, const void*)>> 
+    InStream::_nodeStreamDispatcher;
 
 InStream::InStream(std::string filename)
     : _stream(filename, std::ios::binary)
 {
+    auto container = _nodeStreamDispatcher["CONTAINER"];
+    if(!container) {
+        _nodeStreamDispatcher.add("CONTAINER", dispatchedInStreamer<ContainerNode>);
+    }
 }
 
 void InStream::beginBlock(std::string blockName)
@@ -337,6 +342,19 @@ InStream& InStream::operator>>(DNode &node)
         *this >> *socket;
         endBlock("DoutSocket");
     }
+
+    auto type = node.getType();
+    auto derived = _nodeStreamDispatcher[type];
+    if (derived) _nodeStreamDispatcher[type](*this, &node);
     return *this;
+}
+
+InStream& InStream::operator>>(ContainerNode &node)
+{
+    auto *space = new ContainerSpace();
+    space->setName(node.getNodeName());
+
+    node.setContainerData(space);
+    *this >> space;
 }
 

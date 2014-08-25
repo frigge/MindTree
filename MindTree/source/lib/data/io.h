@@ -30,7 +30,7 @@ public:
 
     OutStream& operator<<(const TypeBase &t);
     OutStream& operator<<(const DNode &node);
-    OutStream& operator<<(ContainerNode &node);
+    OutStream& operator<<(const ContainerNode &node);
 
     void beginBlock(std::string blockName="");
     void endBlock(std::string blockName="");
@@ -48,7 +48,7 @@ private:
 template<typename T>
 void dispatchedOutStreamer(OutStream &stream, const void* data)
 {
-    stream << *reinterpret_cast<const T*>(data);
+    stream << (reinterpret_cast<const T&>(*data));
 }
 
 
@@ -80,6 +80,7 @@ public:
     InStream& operator>>(DataType &t);
     InStream& operator>>(NodeType &t);
     InStream& operator>>(DNode &node);
+    InStream& operator>>(ContainerNode &node);
 
     void beginBlock(std::string blockName="");
     void endBlock(std::string blockName="");
@@ -90,19 +91,29 @@ private:
 
     std::ifstream _stream;
     std::stack<BlockInfo> _blocks;
+
+    static TypeDispatcher<NodeType, std::function<void(InStream&, const void*)>> 
+        _nodeStreamDispatcher;
 };
+
+template<typename T>
+void dispatchedInStreamer(InStream &stream, const void* data)
+{
+    stream >> *reinterpret_cast<const T*>(data);
+}
+
 }
 template<typename T>
 IO::OutStream& operator<<(IO::OutStream& stream, const T &data) 
 {
-    std::cout << "Type does not support serialization" << std::endl;
+    std::cout << "Type " << typeid(data).name() << " does not support serialization" << std::endl;
     return stream;
 }
 
 template<typename T>
 IO::InStream& operator>>(IO::InStream& stream, T &data) 
 {
-    std::cout << "Type does not support serialization" << std::endl;
+    std::cout << "Type " << typeid(data).name() << " does not support serialization" << std::endl;
     return stream;
 }
 }
