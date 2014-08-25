@@ -30,11 +30,18 @@ class Vector3DNodeDecorator(MT.pytypes.NodeDecorator):
     insockets = [("Value", "VECTOR3D")]
     outsockets = [("Value", "VECTOR3D")]
 
+class Vector2DNodeDecorator(MT.pytypes.NodeDecorator):
+    type="VECTOR3DVALUE"
+    label="Values.Vector2D"
+    insockets = [("Value", "VECTOR2D")]
+    outsockets = [("Value", "VECTOR2D")]
+
 def registerNodes():
     MT.registerNode(FloatNodeDecorator)
     MT.registerNode(IntNodeDecorator)
     MT.registerNode(StringNodeDecorator)
     MT.registerNode(ColorNodeDecorator)
     MT.registerNode(Vector3DNodeDecorator)
+    MT.registerNode(Vector2DNodeDecorator)
 
 registerNodes()
