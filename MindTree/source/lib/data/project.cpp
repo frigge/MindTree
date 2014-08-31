@@ -41,6 +41,7 @@ DNSpace* Project::fromFile(std::string filename)
     //}
     //else
     //    space = new DNSpace;
+    LoadSocketIDMapper::remap();
     return space;
 }
 

@@ -4,6 +4,7 @@
 #include "cassert"
 
 #include "data/dnspace.h"
+#include "data/datatypes.h"
 #include "data/nodes/containernode.h"
 #include "data/nodes/data_node.h"
 
@@ -32,7 +33,7 @@ OutStream::~OutStream()
 void OutStream::beginBlock(std::string blockName)
 {
     _blockStack.push(std::vector<char>());
-    *this << blockName;
+    *this << std::string("BLOCK:") + blockName;
 }
 
 void OutStream::endBlock(std::string blockName)
@@ -124,12 +125,19 @@ OutStream& OutStream::operator<<(const TypeBase &t)
     return *this;
 }
 
+OutStream& OutStream::operator<<(const Vec2i &point)
+{
+    *this << point.x() << point.y();
+    return *this;
+}
+
 OutStream& OutStream::operator<<(const DNode &node)
 {
     beginBlock("DNode");
     NodeType type = node.getType();
     *this << static_cast<const TypeBase&>(type);
     *this << node.getNodeName();
+    *this << node.getPos();
 
     int incnt = node.getInSockets().size();
     *this << incnt;
@@ -156,11 +164,11 @@ OutStream& OutStream::operator<<(const DNode &node)
 OutStream& OutStream::operator<<(const ContainerNode &node)
 {
     auto *space = node.getContainerData();
-    *this << space;
+    *this << static_cast<const DNSpace&>(*space);
     return *this;
 }
 
-MindTree::TypeDispatcher<MindTree::NodeType, std::function<void(InStream&, const void*)>> 
+MindTree::TypeDispatcher<MindTree::NodeType, std::function<void(InStream&, void*)>> 
     InStream::_nodeStreamDispatcher;
 
 InStream::InStream(std::string filename)
@@ -174,15 +182,16 @@ InStream::InStream(std::string filename)
 
 void InStream::beginBlock(std::string blockName)
 {
-    std::cout << "beginning block: " << blockName << std::endl;
     _blocks.push(BlockInfo());
     auto &info = _blocks.top();
     _stream.read(reinterpret_cast<char*>(&info.size), sizeof(info.size));
     info.pos += 4;
 
-    std::string name;
-    *this >> name;
-    assert(blockName == name);
+    *this >> info.name;
+
+    if("BLOCK:" + blockName != info.name)
+        std::cout << blockName << " and " << info.name << " don't match" << std::endl;
+    assert("BLOCK:" + blockName == info.name);
 }
 
 void InStream::endBlock(std::string blockName)
@@ -192,6 +201,11 @@ void InStream::endBlock(std::string blockName)
 
     auto block = std::vector<char>(remaining_bytes);
     
+    if(remaining_bytes) {
+        std::cout << "corrupted block: " << currentBlock.name 
+            << "; " << remaining_bytes 
+            << " bytes were not read from this block" << std::endl;
+    }
     read(block.data(), remaining_bytes);
     finishBlock();
 }
@@ -207,14 +221,17 @@ void InStream::finishBlock()
 
 void InStream::read(char* val, size_t size)
 {
-    _stream.read(val, size);
-
     if(!_blocks.empty()) {
         auto &currentBlock = _blocks.top();
+        if(currentBlock.pos + size > currentBlock.size) {
+            std::cout << "corrupted block; trying to read "
+                << size << " bytes from a block where only "
+                << currentBlock.size - currentBlock.pos << " bytes are left" << std::endl;
+            endBlock();
+        }
         currentBlock.pos += size;
-
-        assert(!(currentBlock.pos > currentBlock.size));
     }
+    _stream.read(val, size);
 }
 
 InStream& InStream::operator>>(int8_t &number)
@@ -304,6 +321,14 @@ InStream& InStream::operator>>(double &value)
     return *this;
 }
 
+InStream& InStream::operator>>(Vec2i &point)
+{
+    int x, y;
+    *this >> x >> y;
+    point = Vec2i(x, y);
+    return *this;
+}
+
 InStream& InStream::operator>>(NodeType &t)
 {
     std::string str;
@@ -325,6 +350,9 @@ InStream& InStream::operator>>(DNode &node)
     std::string name;
     *this >> name;
     node.setNodeName(name);
+    Vec2i vec;
+    *this >> vec;
+    node.setPos(vec);
     int insockets = 0;
     *this >> insockets;
     for(int i = 0; i < insockets; ++i) {
@@ -351,10 +379,9 @@ InStream& InStream::operator>>(DNode &node)
 
 InStream& InStream::operator>>(ContainerNode &node)
 {
-    auto *space = new ContainerSpace();
+    auto *space = node.getContainerData();
     space->setName(node.getNodeName());
-
-    node.setContainerData(space);
-    *this >> space;
+    *this >> static_cast<DNSpace&>(*space);
+    return *this;
 }
 

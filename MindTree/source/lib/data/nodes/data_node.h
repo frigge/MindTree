@@ -80,7 +80,7 @@ public:
     void setType(NodeType value);
     virtual DNode* clone();
 
-    Vec2i getPos()const;
+    const Vec2i& getPos()const;
     void setPos(Vec2i value);
 
     template<class C>

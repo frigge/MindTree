@@ -267,12 +267,30 @@ IO::InStream& MindTree::operator>>(IO::InStream &stream, DNSpace &space)
     space.setName(name);
     stream >> nodecnt;
 
-    for(int i = 0; i < nodecnt; i++) {
+    bool isCont = space.isContainerSpace();
+
+    if(isCont) {
+        auto nodes = space.getNodes();
+        auto* inNode = nodes[0];
+        auto* outNode = nodes[1];
+
+        NodeType t;
+        stream.beginBlock("DNode");
+        stream >> t;
+        stream >> *inNode;
+        stream.endBlock("DNode");
+        stream.beginBlock("DNode");
+        stream >> t;
+        stream >> *outNode;
+        stream.endBlock("DNode");
+    }
+
+    for(int i = isCont ? 2 : 0; i < nodecnt; i++) {
         stream.beginBlock("DNode");
         NodeType type;
         stream >> type;
 
-        DNode *node = NodeDataBase::createNodeByType(type);
+        auto* node = NodeDataBase::createNodeByType(type);
         if(node) stream >> *node;
         stream.endBlock("DNode");
 
@@ -280,3 +298,4 @@ IO::InStream& MindTree::operator>>(IO::InStream &stream, DNSpace &space)
     }
     return stream;
 }
+

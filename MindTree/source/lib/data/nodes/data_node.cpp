@@ -122,7 +122,7 @@ void DNode::setSelected(bool value)
     selected = value;
 }
 
-Vec2i DNode::getPos()const
+const Vec2i& DNode::getPos()const
 {
     return pos;
 }

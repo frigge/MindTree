@@ -55,6 +55,7 @@ void LoadSocketIDMapper::remap()
 {
     for(auto p : loadIDMapper) {
         const DSocket *socket = p.second;
+        if(!socket) continue;
         if(socket->getDir() == DSocket::IN)
             if(socket->toIn()->getTempCntdID() > 0)
                 const_cast<DSocket*>(socket)->toIn()->cntdSocketFromID();

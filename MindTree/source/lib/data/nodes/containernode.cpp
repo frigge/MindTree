@@ -7,13 +7,11 @@ ContainerNode::ContainerNode(std::string name, bool raw)
     : DNode(name), containerData(0)
 {
     setType("CONTAINER");
-    if(!raw)
-    {
-        setContainerData(new ContainerSpace);
-        containerData->setName(name);
-        new SocketNode(DSocket::IN, this);
-        new SocketNode(DSocket::OUT, this);
-    }
+
+    setContainerData(new ContainerSpace);
+    containerData->setName(name);
+    new SocketNode(DSocket::IN, this, raw);
+    new SocketNode(DSocket::OUT, this, raw);
 }
 
 ContainerNode::ContainerNode(const ContainerNode &node)
@@ -105,9 +103,7 @@ void ContainerNode::addItems(NodeList nodes)
 void ContainerNode::setInputs(SocketNode *inputNode)
 {
     inSocketNode = inputNode;
-    auto nodes = containerData->getNodes();
-    if(std::find(nodes.begin(), nodes.end(), inputNode) == nodes.end())
-        containerData->addNode(inputNode);
+    containerData->addNode(inputNode);
     inputNode->connectToContainer(this);
 }
 
@@ -239,11 +235,13 @@ SocketNode::SocketNode(DSocket::SocketDir dir, ContainerNode *contnode, bool raw
     {
         setType("INSOCKETS");
         if(!raw && contnode)setInSocketNode(contnode);
+        contnode->setInputs(this);
     }
     else
     {
         setType("OUTSOCKETS");
         if(!raw && contnode)setOutSocketNode(contnode);
+        contnode->setOutputs(this);
     }
 }
 
@@ -258,14 +256,12 @@ void SocketNode::setInSocketNode(ContainerNode *contnode)
 {
     setDynamicSocketsNode(DSocket::OUT);
     setNodeName("Input");
-    contnode->setInputs(this);
 }
 
 void SocketNode::setOutSocketNode(ContainerNode *contnode)
 {
     setDynamicSocketsNode(DSocket::IN);
     setNodeName("Output");
-    contnode->setOutputs(this);
 }
 
 void SocketNode::connectToContainer(ContainerNode *contnode)

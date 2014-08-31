@@ -8,6 +8,7 @@
 #include "data/type.h"
 #include "functional"
 #include "data/nodes/nodetype.h"
+#include "data/datatypes.h"
 
 namespace MindTree {
 class DNode;
@@ -27,6 +28,8 @@ public:
     OutStream& operator<<(unsigned short number);
     OutStream& operator<<(bool value);
     OutStream& operator<<(double value);
+
+    OutStream& operator<<(const Vec2i &point);
 
     OutStream& operator<<(const TypeBase &t);
     OutStream& operator<<(const DNode &node);
@@ -48,7 +51,7 @@ private:
 template<typename T>
 void dispatchedOutStreamer(OutStream &stream, const void* data)
 {
-    stream << (reinterpret_cast<const T&>(*data));
+    stream << reinterpret_cast<const T&>(*data);
 }
 
 
@@ -58,6 +61,7 @@ public:
     struct BlockInfo {
         BlockInfo() : size(0), pos(0) {}
         int32_t size, pos;
+        std::string name;
     };
 
     InStream(std::string filename);
@@ -77,6 +81,8 @@ public:
     InStream& operator>>(bool &val);
     InStream& operator>>(double &value);
 
+    InStream& operator>>(Vec2i &point);
+
     InStream& operator>>(DataType &t);
     InStream& operator>>(NodeType &t);
     InStream& operator>>(DNode &node);
@@ -92,14 +98,14 @@ private:
     std::ifstream _stream;
     std::stack<BlockInfo> _blocks;
 
-    static TypeDispatcher<NodeType, std::function<void(InStream&, const void*)>> 
+    static TypeDispatcher<NodeType, std::function<void(InStream&, void*)>> 
         _nodeStreamDispatcher;
 };
 
 template<typename T>
-void dispatchedInStreamer(InStream &stream, const void* data)
+void dispatchedInStreamer(InStream &stream, void* data)
 {
-    stream >> *reinterpret_cast<const T*>(data);
+    stream >> reinterpret_cast<T&>(*data);
 }
 
 }

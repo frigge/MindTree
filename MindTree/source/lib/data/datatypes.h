@@ -28,8 +28,8 @@ class Vec2
 
         Vec2(T x, T y) : _x(x), _y(y) {}
 
-        const T& x() { return _x; }
-        const T& y() { return _y; }
+        const T& x() const { return _x; }
+        const T& y() const { return _y; }
 
         Vec2& operator+= (const Vec2 other) { _x += other._x; _y += other._y; return *this; }
         Vec2& operator-= (const Vec2 other) { _x -= other._x; _y -= other._y; return *this; }
