@@ -101,9 +101,10 @@ public:
     DataCache();
     DataCache(const MindTree::DoutSocket *start);
     DataCache(const DataCache &other);
+    DataCache(const DNode *node, DataType t);
     virtual ~DataCache();
 
-    void start(const DoutSocket *socket);
+    void start(const DoutSocket *socket=nullptr);
 
     int getTypeID() const;
     DataType getType() const;
@@ -111,6 +112,9 @@ public:
     void pushData(Property prop);
     Property getData(int index);
     Property getOutput(DoutSocket* socket = nullptr);
+    Property getOutput(int index);
+    void setNode(const DNode *n);
+    void setType(DataType t);
 
     const DNode* getNode()const;
 
@@ -118,6 +122,7 @@ public:
     void setStart(const DoutSocket *socket);
 
     static void addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc);
+    static void addGenericProcessor(NodeType nt, AbstractCacheProcessor *proc);
     static const std::vector<AbstractCacheProcessor::CacheList>& getProcessors();
     static std::vector<Property>& getCachedOutputs(const DNode *node);
     static void invalidate(const DNode *node);
@@ -132,6 +137,7 @@ private:
 
     const DNode *node;
     static TypeDispatcher<SocketType, AbstractCacheProcessor::CacheList> processors;
+    static AbstractCacheProcessor::CacheList _genericProcessors;
     std::vector<Property> cachedInputs;
     SocketType type;
     const DoutSocket *startsocket;

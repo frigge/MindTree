@@ -26,6 +26,7 @@ std::unordered_map<DataCache*, const DoutSocket*>CacheControl::caches;
 std::unordered_map<const LoopNode*, LoopCache*> LoopCacheControl::loops;
 ConstNodeList CacheControl::updateNodes;
 TypeDispatcher<SocketType, AbstractCacheProcessor::CacheList> DataCache::processors;
+AbstractCacheProcessor::CacheList DataCache::_genericProcessors;
 
 bool CacheControl::isCached(const DoutSocket *socket)    
 {
@@ -197,6 +198,12 @@ DataCache::DataCache()
 {
 }
 
+DataCache::DataCache(const DNode *node, DataType t)
+    : node(node), type(t)
+{
+    cacheInputs();
+}
+
 DataCache::DataCache(const DoutSocket *socket)
     : node(socket->getNode()),
     type(socket->getType()),
@@ -242,8 +249,10 @@ void DataCache::start(const DoutSocket *socket)
 {
     startsocket = socket;
     cachedInputs.clear();
-    node = socket->getNode();
-    type = socket->getType();
+    if(socket) {
+        node = socket->getNode();
+        type = socket->getType();
+    }
     cacheInputs();
 }
 
@@ -272,6 +281,11 @@ DataType DataCache::getType() const
 void DataCache::addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc)
 {
     processors[st][nt] = proc;
+}
+
+void DataCache::addGenericProcessor(NodeType nt, AbstractCacheProcessor *proc)
+{
+    _genericProcessors.add(nt, proc);
 }
 
 const std::vector<AbstractCacheProcessor::CacheList>& DataCache::getProcessors()
@@ -315,6 +329,14 @@ Property DataCache::getData(int index)
     return cachedInputs[index];
 }
 
+Property DataCache::getOutput(int index)
+{
+    if(index >= _getCachedOutputs().size())
+        return Property();
+
+    return _getCachedOutputs()[index];
+}
+
 Property DataCache::getOutput(DoutSocket* socket)
 {
     std::lock_guard<std::mutex> lock(_cachedOutputsMutex);
@@ -335,10 +357,17 @@ Property DataCache::getOutput(DoutSocket* socket)
     else {
         index = 0;
     }
-    if(index >= _getCachedOutputs().size())
-        return Property();
+    return getOutput(index);
+}
 
-    return _getCachedOutputs()[index];
+void DataCache::setNode(const DNode *n)
+{
+    node = n;
+}
+
+void DataCache::setType(DataType t)
+{
+    type = t;
 }
 
 const DNode* DataCache::getNode() const
@@ -358,9 +387,16 @@ void DataCache::setStart(const DoutSocket *socket)
 
 void DataCache::cacheInputs()    
 {
-    unsigned long nodeTypeID = node->getType().id();
+    auto ntype = node->getType();
+    unsigned long nodeTypeID = ntype.id();
 
-    if(type.id() >= processors.size()){
+    AbstractCacheProcessor* genericProcessor = _genericProcessors[ntype];
+    if(genericProcessor) {
+        (*genericProcessor)(this);
+        return;
+    }
+
+    if(type.id() >= static_cast<int>(processors.size())){
         std::cout<< "no processors defined for this data type ("
                  << type.toStr()
                  << " id:" 
@@ -386,9 +422,4 @@ void DataCache::cacheInputs()
         return;
     }
     (*datacache)(this);
-    //Property prop(cachedData.front());
-    //cachedData.pop_front();
-    //for(size_t i = 0; i<node->getInSockets().size(); i++)
-    //    cachedData.pop_front();
-    //cachedData.push_front(prop);
 }

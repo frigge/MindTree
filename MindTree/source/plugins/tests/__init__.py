@@ -5,6 +5,7 @@ from .properties import *
 from .cpp_tests import *
 from .timelinetests import *
 from .project_tests import *
+from .datacachetests import *
 
 def all():
     print("testing all tests ...")

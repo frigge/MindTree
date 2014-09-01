@@ -278,14 +278,11 @@ void SocketNode::incVarSocket()
 {
     DNode::incVarSocket();
 	DSocket *newsocket;
-//    unsigned short arrID = container->getSocketOnContainer(getLastSocket())->getArrayID();
 	if(getLastSocket()->getDir() == DSocket::IN)
 		newsocket = new DoutSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
 	else
 		newsocket = new DinSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
     container->mapOnToIn(newsocket, getLastSocket());
- //   if(arrID > 0)
- //       newsocket->setArray(arrID);
 }
 
 void SocketNode::decVarSocket(DSocket *socket)
