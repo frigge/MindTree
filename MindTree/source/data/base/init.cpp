@@ -55,29 +55,40 @@ void MindTree::parseArguments(int argc, char* argv[])
 void MindTree::runTests(std::vector<std::string> testlist)    
 {
     MindTree::Python::GILLocker locker;
-    int failed = 0;
+    std::vector<std::string> failedTests;
     std::cout << std::endl;
     for(auto test : testlist) {
+        bool success = false;
+        std::cout << std::endl;
+        std::cout<<"_____________________________________\n";
+        std::cout<<"running test: "<<test<<"\n"<<std::endl;
         try{
-            std::cout << std::endl;
-            std::cout<<"_____________________________________"<<std::endl;
-            std::cout<<"running test: "<<test<<std::endl;
             auto testmodule = BPy::import("tests");
-            if(testmodule.attr(test.c_str())())
+            if(testmodule.attr(test.c_str())()) {
                 std::cout<<test<< " passed" << std::endl;
-            else {
-                std::cout<<test<< " failed" << std::endl;
-                failed++;
+                success = true;
             }
-            std::cout<<"_____________________________________"<<std::endl;
-            std::cout << std::endl;
         } catch(BPy::error_already_set&){
             PyErr_Print();
         }
+        if(!success) {
+            failedTests.push_back(test);
+            std::cout<<test<< " failed" << std::endl;
+        }
+        std::cout<<"_____________________________________\n";
+        std::cout << std::endl;
+
     }
     std::cout<<"finished"<<std::endl;
     if(testlist.size() > 1)
-        std::cout<< failed << " out of " << testlist.size() << " tests failed" << std::endl;
+        std::cout<< failedTests.size() << " out of " << testlist.size() << " tests failed" << std::endl;
+
+    if(!failedTests.empty()) {
+        std::cout << "failed Tests:\n";
+        for(auto test : failedTests)
+            std::cout << "\t" << test << "\n";
+    }
+    std::cout << std::endl;
 }
 
 bool MindTree::noGui()

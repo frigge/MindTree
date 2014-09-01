@@ -6,34 +6,32 @@ from .cpp_tests import *
 from .timelinetests import *
 from .project_tests import *
 
-def testAll():
+def all():
     print("testing all tests ...")
 
-    tests = [t for t in dir(__import__(__name__)) if t.startswith("test") and not t == "testAll"]
+    tests = [t for t in dir(__import__(__name__)) if t.startswith("test")]
     numberOfTests = len(tests)
-    successfulTests = 0
     failedTests = []
 
     for t in tests:
-        print("\n-------------------------------------\n")
-        print("testing %s\n" % t)
-        print("___")
-        success = eval(t).__call__()
-        print("___")
+        print("\n_____________________________________")
+        print("running test: %s\n" % t)
+        success = False
+        try:
+            success = eval(t).__call__()
+        except:
+            pass
         if success:
-            successfulTests += 1
             print("%s passed" % t)
         else:
             failedTests.append(t)
             print("%s failed" % t)
-        print("\n-------------------------------------\n")
+        print("_____________________________________\n")
 
-    print("%d out of %d tests were successful" % (successfulTests, numberOfTests))
+    print("%d out of %d tests failed" % (len(failedTests), numberOfTests))
 
     print("\nfailed Tests:\n")
     for t in failedTests:
-        print(t)
-
-    print("___")
+        print("\t" + t)
 
     return successfulTests == numberOfTests
