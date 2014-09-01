@@ -118,6 +118,34 @@ class ColorEditor(QWidget):
                              float(color.greenF()), 
                              float(color.blueF()),
                              float(color.alphaF()));
+class Vector2DEditor(QWidget):
+    def __init__(self, socket):
+        QWidget.__init__(self)
+        self.socket = socket
+
+        lay = QHBoxLayout()
+        self.setLayout(lay)
+        self.xspin = SpinBox(0.0)
+        self.yspin = SpinBox(0.0)
+
+        lay.addWidget(self.xspin)
+        lay.addWidget(self.yspin)
+        lay.setMargin(0)
+        lay.setSpacing(0)
+
+        if socket.value != None:
+            value = socket.value
+            self.xspin.setValue(value[0])
+            self.yspin.setValue(value[1])
+            
+        self.xspin.valueChanged.connect(self.setVector)
+        self.yspin.valueChanged.connect(self.setVector)
+
+    def setVector(self):
+        x = self.xspin.value()
+        y = self.yspin.value()
+        self.socket.value = (x, y)
+
 
 class Vector3DEditor(QWidget):
     def __init__(self, socket):
@@ -192,6 +220,8 @@ class Editor(QWidget):
                     self.widget.layout().addRow(s.name, BoolEditor(s))
                 elif s.type == "COLOR":
                     self.widget.layout().addRow(s.name, ColorEditor(s))
+                elif s.type == "VECTOR2D":
+                    self.widget.layout().addRow(s.name, Vector2DEditor(s))
                 elif s.type == "VECTOR3D":
                     self.widget.layout().addRow(s.name, Vector3DEditor(s))
 

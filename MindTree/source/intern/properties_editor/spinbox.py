@@ -113,7 +113,7 @@ class ScrollTrigger(QWidget):
         path.lineTo(MARGIN, middle.y() - MARGIN)
         path.lineTo(right - MARGIN, middle.y() - MARGIN)
 
-        painter.drawPath(path)
+       # painter.drawPath(path)
 
 class SpinBox(QWidget):
     valueChanged = pyqtSignal(float)
