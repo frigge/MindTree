@@ -41,15 +41,12 @@ class NodeDataBase
 public:
     static void scanFolders();
     static void registerNodeType(AbstractNodeDecorator *factory);
-    static void unregisterNodeType();
     static std::vector<AbstractNodeDecorator*> getFactories();
-    static void regCB(std::function<void()> fun);
     static DNode* createNode(std::string name);
     static DNode* createNodeByType(const NodeType &t);
 
 private:
     static std::vector<AbstractNodeDecorator*> nodeFactories;
-    static std::vector<std::function<void()>> registerCallbackStack;
 
 };
 } /* MindTree */

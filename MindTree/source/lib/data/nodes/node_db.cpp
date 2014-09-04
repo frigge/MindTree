@@ -4,7 +4,6 @@
 using namespace MindTree;
 
 std::vector<AbstractNodeDecorator*> NodeDataBase::nodeFactories;
-std::vector<std::function<void()>> NodeDataBase::registerCallbackStack;
 
 AbstractNodeDecorator::AbstractNodeDecorator(std::string type, std::string label)
     : type(type), label(label)
@@ -54,19 +53,9 @@ DNode* BuildInDecorator::operator()(bool raw)
     return func(raw);
 }
 
-void NodeDataBase::scanFolders()    
-{
-}
-
-void NodeDataBase::regCB(std::function<void()> fun)    
-{
-    registerCallbackStack.push_back(fun);
-}
-
 void NodeDataBase::registerNodeType(AbstractNodeDecorator *factory)    
 {
     nodeFactories.push_back(factory);
-    for(auto f : registerCallbackStack) f();
 }
 
 DNode* NodeDataBase::createNode(std::string name)    
@@ -87,10 +76,6 @@ DNode* NodeDataBase::createNodeByType(const NodeType &t)
 
     std::cout << "node type \"" << t.toStr() << "\" not found" << std::endl;
     return nullptr;
-}
-
-void NodeDataBase::unregisterNodeType()    
-{
 }
 
 std::vector<AbstractNodeDecorator*> NodeDataBase::getFactories()    
