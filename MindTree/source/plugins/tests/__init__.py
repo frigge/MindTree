@@ -6,6 +6,7 @@ from .cpp_tests import *
 from .timelinetests import *
 from .project_tests import *
 from .datacachetests import *
+from .simulationtests import *
 
 import sys, traceback
 
