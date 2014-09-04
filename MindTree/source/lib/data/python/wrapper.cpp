@@ -243,7 +243,7 @@ BPy::object getPyObject(DNSpace *space)
 
 void DNSpacePyWrapper::addNode(DNodePyWrapper *node)    
 {
-    if(!(alive() && node->alive())) return;
+    if(!node || !(alive() && node->alive())) return;
     getWrapped<DNSpace>()->addNode(node->getWrapped<DNode>());
 }
 
