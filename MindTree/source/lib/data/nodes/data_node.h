@@ -67,12 +67,18 @@ typedef std::vector<const DNode*> ConstNodeList;
 class DNode : public Object, public PyExposable
 {
 public:
+    enum BuildInType {
+        NODE = 1,
+        CONTAINER = 2
+    };
+
     DNode(std::string name="");
     DNode(const DNode& node);
 
     static NodeList copy(NodeList nodes);
     virtual ~DNode();
 
+    DNode::BuildInType getBuildInType();
     bool getSelected();
     void setSelected(bool value);
 
@@ -134,6 +140,9 @@ public:
 
     DNode *createFuncNode(std::string filepath);
     static DNode *dropNode(std::string filepath);
+
+protected:
+    BuildInType _buildInType;
 
 private:
     static std::vector<std::function<DNode_ptr()>> newNodeDecorator;

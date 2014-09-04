@@ -369,13 +369,17 @@ BPy::object MindTree::getPyObject(DNode* node)
 {
     if(!node) return BPy::object();
 
-    if(node->getType() == "CONTAINER") {
-        BPy::object obj(new ContainerNodePyWrapper(node->getDerived<ContainerNode>()));
-        return obj;
-    }
-    else {
-        BPy::object obj(new DNodePyWrapper(node));
-        return obj;
+    switch(node->getBuildInType()) {
+        case DNode::NODE:
+            {
+                BPy::object obj(new ContainerNodePyWrapper(node->getDerived<ContainerNode>()));
+                return obj;
+            }
+        case DNode::CONTAINER:
+            {
+                BPy::object obj(new DNodePyWrapper(node));
+                return obj;
+            }
     }
 }
 

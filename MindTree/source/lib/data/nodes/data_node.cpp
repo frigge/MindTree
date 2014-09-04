@@ -75,7 +75,8 @@ DNode::DNode(std::string name)
       varcnt(0),
       ID(count++),
       nodeName(name),
-      _signalLiveTime(new Signal::LiveTimeTracker(this))
+      _signalLiveTime(new Signal::LiveTimeTracker(this)),
+      _buildInType(NODE)
 {
 };
 
@@ -86,7 +87,8 @@ DNode::DNode(const DNode& node)
       ID(count++),
       nodeName(node.nodeName),
       type(node.getType()),
-      _signalLiveTime(new Signal::LiveTimeTracker(this))
+      _signalLiveTime(new Signal::LiveTimeTracker(this)),
+      _buildInType(node._buildInType)
 {
     for(DinSocket *socket : node.getInSockets())
         new DinSocket(*socket, this);
@@ -107,6 +109,11 @@ DNode::~DNode()
         delete socket;
 
     if(space)space->unregisterNode(this);
+}
+
+DNode::BuildInType DNode::getBuildInType()
+{
+    return _buildInType;
 }
 
 bool DNode::getSelected()

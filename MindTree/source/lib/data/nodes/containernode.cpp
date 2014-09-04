@@ -17,6 +17,7 @@ ContainerNode::ContainerNode(std::string name, bool raw)
 ContainerNode::ContainerNode(const ContainerNode &node)
     : DNode(node)
 {
+    _buildInType = CONTAINER;
     setNodeType("CONTAINER");
     setContainerData(new ContainerSpace(*node.getContainerData()));
 
