@@ -433,7 +433,9 @@ std::vector<DinSocket*> DoutSocket::getCntdSockets() const
 void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
 {
     auto it = std::find(cntdSockets.begin(), cntdSockets.end(), socket);
-    cntdSockets.erase(it); 
+    if(it != end(cntdSockets)) {
+        cntdSockets.erase(it);
+    }
     if(cntdSockets.size() == 0 && getVariable() && decr) 
         getNode()->decVarSocket(this);
 }

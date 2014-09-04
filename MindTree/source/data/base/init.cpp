@@ -39,7 +39,7 @@ void MindTree::parseArguments(int argc, char* argv[])
     if(argc > 1) {
         bool testmode=false;
         for(auto it = arguments.begin(); it != arguments.end(); it++){
-            if (*it == "--test"){
+            if (*it == "--test" || *it == "-t"){
                 std::cout << std::endl;
                 std::cout << std::endl;
                 std::cout<<"running unit tests" << std::endl;
@@ -59,27 +59,29 @@ void MindTree::runTests(std::vector<std::string> testlist)
     std::cout << std::endl;
     for(auto test : testlist) {
         bool success = false;
-        std::cout << std::endl;
-        std::cout<<"_____________________________________\n";
-        std::cout<<"running test: "<<test<<"\n"<<std::endl;
+        if(test != "all") {
+            std::cout << std::endl;
+            std::cout<<"_____________________________________\n";
+            std::cout<<"running test: "<<test<<"\n"<<std::endl;
+        }
         try{
             auto testmodule = BPy::import("tests");
             if(testmodule.attr(test.c_str())()) {
-                std::cout<<test<< " passed" << std::endl;
+                if(test != "all") std::cout<<test<< " passed" << std::endl;
                 success = true;
             }
         } catch(BPy::error_already_set&){
             PyErr_Print();
         }
-        if(!success) {
+        if(!success &&  test != "all") {
             failedTests.push_back(test);
             std::cout<<test<< " failed" << std::endl;
+            std::cout<<"_____________________________________\n";
+            std::cout << std::endl;
         }
-        std::cout<<"_____________________________________\n";
-        std::cout << std::endl;
 
     }
-    std::cout<<"finished"<<std::endl;
+    if(testlist[0] != "all") std::cout<<"finished"<<std::endl;
     if(testlist.size() > 1)
         std::cout<< failedTests.size() << " out of " << testlist.size() << " tests failed" << std::endl;
 

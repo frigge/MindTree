@@ -74,7 +74,7 @@ DNode::DNode(std::string name)
       lastsocket(nullptr),
       varcnt(0),
       ID(count++),
-      nodeName(Project::instance()->registerItem(this, name.c_str())),
+      nodeName(name),
       _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
 };
@@ -84,7 +84,7 @@ DNode::DNode(const DNode& node)
       space(nullptr),
       varcnt(0),
       ID(count++),
-      nodeName(Project::instance()->registerItem(this, node.getNodeName())),
+      nodeName(node.nodeName),
       type(node.getType()),
       _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
@@ -107,8 +107,6 @@ DNode::~DNode()
         delete socket;
 
     if(space)space->unregisterNode(this);
-
-    Project::instance()->unregisterItem(this);
 }
 
 bool DNode::getSelected()
@@ -419,8 +417,7 @@ void DNode::setNodeType(NodeType t)
 
 void DNode::setNodeName(std::string name)
 {
-    Project::instance()->unregisterItem(this);
-    nodeName = Project::instance()->registerItem(this, name);
+    nodeName = name;
 }
 
 void DNode::addSocket(DSocket *socket)

@@ -125,8 +125,6 @@ public:
         
         writeData = &IO::Writer<T>::write;
 
-        datasize = sizeof(d);
-
         if(data)deleteFunc();
         pyconverter = [this]{ return PyConverter<T>::pywrap(this->getData<T>()); };
         data = new PropertyData<T>(d);
@@ -163,7 +161,6 @@ private:
     std::function<void(IO::OutStream&, const Property&)> writeData;
     std::function<void()> deleteFunc;
     std::function<BPy::object()> pyconverter;
-    size_t datasize;
     mutable void *data;
     ConverterList *_converterList;
     DataType type;

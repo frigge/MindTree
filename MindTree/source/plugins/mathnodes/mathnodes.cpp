@@ -89,7 +89,7 @@ MathNode::MathNode(NodeType t, bool raw)
         else {
             setDynamicSocketsNode(DSocket::IN);
             auto *varsocket = getVarSocket();
-            Signal::getBoundHandler<DoutSocket*>(varsocket)
+            auto cb = Signal::getBoundHandler<DoutSocket*>(varsocket)
                 .connect("linkChanged", [varsocket, out](DoutSocket *newConnection){
                              if(newConnection) {
                                  varsocket->setName(newConnection->getName());
@@ -98,12 +98,15 @@ MathNode::MathNode(NodeType t, bool raw)
                                  if(!newConnection && out->getNode()->getVarcnt() == 1)
                                      out->setType("VARIABLE");
                              }
-                         }).detach();
+                         });
 
-            Signal::getBoundHandler<SocketType>(varsocket)
+            auto cb2 = Signal::getBoundHandler<SocketType>(varsocket)
                 .connect("typeChanged", [out](SocketType newtype){
                              out->setType(newtype);
-                         }).detach();
+                         });
+
+            _callbacks.push_back(cb);
+            _callbacks.push_back(cb2);
         }
 
     }
@@ -120,7 +123,7 @@ void MathNode::incVarSocket()
     auto *varsocket = getVarSocket();
     auto *out = getOutSockets().at(0);
 
-    Signal::getBoundHandler<DoutSocket*>(varsocket)
+    auto cb = Signal::getBoundHandler<DoutSocket*>(varsocket)
         .connect("linkChanged", [varsocket, out](DoutSocket *newConnection){
                     if(newConnection) {
                         varsocket->setName(newConnection->getName());
@@ -131,12 +134,15 @@ void MathNode::incVarSocket()
                         if(!newConnection && out->getNode()->getVarcnt() == 1)
                             out->setType("VARIABLE");
                     }
-                 }).detach();
+                 });
 
-    Signal::getBoundHandler<SocketType>(varsocket)
+    auto cb2 = Signal::getBoundHandler<SocketType>(varsocket)
         .connect("typeChanged", [out](SocketType newtype){
                      out->setType(newtype);
-                 }).detach();
+                 });
+    
+    _callbacks.push_back(cb);
+    _callbacks.push_back(cb2);
 }
 
 void MathNode::decVarSocket(DSocket *socket)

@@ -58,7 +58,7 @@ ConverterFunctor PropertyConverter::get(DataType from, DataType to)
 }
 
 Property::Property()
-    : data(0), datasize(0),
+    : data(0),
      type("undefined"),
      /* default fn objects to avoid std::bad_function_call*/
      //by default reset property value as this property is empty as well

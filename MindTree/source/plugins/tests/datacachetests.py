@@ -26,9 +26,9 @@ def testContainerCache():
 
     MT.project.root.addNode(container)
     MT.project.root.addNode(valuenode3)
-    MT.project.root[0].graph.addNode(add)
-    MT.project.root[0].graph.addNode(valuenode)
-    MT.project.root[0].graph.addNode(valuenode2)
+    container.graph.addNode(add)
+    container.graph.addNode(valuenode)
+    container.graph.addNode(valuenode2)
     pos = valuenode.pos
     valuenode.pos = (pos[0] - 150, pos[1] - 50)
     valuenode2.pos = (pos[0] - 150, pos[1] + 50)

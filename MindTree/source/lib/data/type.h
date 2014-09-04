@@ -15,11 +15,6 @@ public:
     {
     }
 
-    TypeBase (const char *typeStr="undefined", int id=-1)
-        : typeString(typeStr), _id(id)
-    {
-    }
-
     std::string toStr()const
     {
         return typeString;
@@ -72,9 +67,6 @@ public:
     Type(const std::string &typeStr="undefined")
         : TypeBase(typeStr, getID(typeStr))
     { }
-
-    Type(const char *typeStr)
-        : TypeBase(typeStr, getID(typeStr)) {}
 
     void operator=(const Type<T> &t)
     {

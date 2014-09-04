@@ -21,6 +21,7 @@
 #define MATH_AHZJP9OE
 
 #include "data/nodes/data_node.h"
+#include "data/signal.h"
 
 
 class MathNode : public MindTree::DNode
@@ -40,6 +41,9 @@ public:
 
     virtual void decVarSocket(MindTree::DSocket *socket);
     virtual void incVarSocket();
+
+private:
+    MindTree::Signal::CallbackVector _callbacks;
 };
 
 #endif /* end of include guard: MATH_AHZJP9OE */
