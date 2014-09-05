@@ -1,5 +1,5 @@
 import MT
-import utils
+from .utils import *
 
 def testSimulation():
     simNode = MT.createNode("General.Simulation")
@@ -19,25 +19,32 @@ def testSimulation():
 
     outnode.insockets[0].connected = add.outsockets[0]
 
-    success = False
+    test = TestCase()
+
+    test.equal(simNode.insockets[1].type, "INTEGER")
+    test.equal(innode.outsockets[0].type, "INTEGER")
+    test.equal(add.insockets[0].type, "INTEGER")
+    test.equal(add.outsockets[0].type, "INTEGER")
+    test.equal(outnode.insockets[0].type, "INTEGER", "outnode")
+    test.equal(simNode.outsockets[0].type, "INTEGER", "simnode output")
     simNode.insockets[0].value = 1
-    cache = DataCache(simNode.outsockets[0])
-    success = success and equal(cache.getOutput(0), 1)
+    cache = MT.cache.DataCache(simNode.outsockets[0])
+    test.equal(cache.getOutput(), 1, "Simulation Step: 1")
 
     simNode.insockets[0].value = 2
-    cache = DataCache(simNode.outsockets[0])
-    success = success and equal(cache.getOutput(0), 2)
+    cache = MT.cache.DataCache(simNode.outsockets[0])
+    test.equal(cache.getOutput(), 2, "Simulation Step: 2")
 
     simNode.insockets[0].value = 3
-    cache = DataCache(simNode.outsockets[0])
-    success = success and equal(cache.getOutput(0), 3)
+    cache = MT.cache.DataCache(simNode.outsockets[0])
+    test.equal(cache.getOutput(), 3, "Simulation Step: 3")
 
     simNode.insockets[0].value = 4
-    cache = DataCache(simNode.outsockets[0])
-    success = success and equal(cache.getOutput(0), 4)
+    cache = MT.cache.DataCache(simNode.outsockets[0])
+    test.equal(cache.getOutput(), 4, "Simulation Step: 4")
 
     simNode.insockets[0].value = 5
-    cache = DataCache(simNode.outsockets[0])
-    success = success and equal(cache.getOutput(0), 5)
-    return success
+    cache = MT.cache.DataCache(simNode.outsockets[0])
+    test.equal(cache.getOutput(), 5, "Simulation Step: 5")
+    return test.exit()
 
