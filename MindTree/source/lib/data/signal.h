@@ -36,9 +36,11 @@ extern std::vector<std::string> emitterIDs;
 class CallbackHandler
 {
 public:
+    CallbackHandler();
     CallbackHandler(std::function<void()> destructor);
     CallbackHandler(const CallbackHandler &other);
     virtual ~CallbackHandler();
+    CallbackHandler& operator=(const CallbackHandler& other);
     void detach();
     void destruct();
 

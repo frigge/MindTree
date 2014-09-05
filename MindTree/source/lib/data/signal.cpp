@@ -1,43 +1,61 @@
 #include "signal.h"
 
-std::vector<std::string> MindTree::Signal::emitterIDs;
-int MindTree::Signal::CallbackHandler::sigCounter = 0;
+using namespace MindTree;
 
-MindTree::Signal::CallbackHandler::CallbackHandler(std::function<void()> destructor) 
+std::vector<std::string> Signal::emitterIDs;
+int Signal::CallbackHandler::sigCounter = 0;
+
+Signal::CallbackHandler::CallbackHandler()
+    : detached(false), destructor([]() {})
+{
+}
+
+Signal::CallbackHandler::CallbackHandler(std::function<void()> destructor) 
     : detached(false), destructor(destructor)
 {
 }
 
-MindTree::Signal::CallbackHandler::CallbackHandler(const CallbackHandler &other) 
+Signal::CallbackHandler::CallbackHandler(const CallbackHandler &other) 
 :    detached(other.detached),
      destructor(other.destructor)
 {
     other.detached = true;
 }
 
-MindTree::Signal::CallbackHandler::~CallbackHandler()
+Signal::CallbackHandler::~CallbackHandler()
 {
-    if(!detached)destructor();
+    if(!detached && destructor)destructor();
 }
 
-void MindTree::Signal::CallbackHandler::detach() 
+Signal::CallbackHandler& Signal::CallbackHandler::operator=(const CallbackHandler& other)
+{
+    if(destructor) destructor();
+
+    destructor = other.destructor;
+    detached = other.detached;
+    other.detached = true;
+
+    return *this;
+}
+
+void Signal::CallbackHandler::detach() 
 { 
     detached = true; 
 }
 
-void MindTree::Signal::CallbackHandler::destruct()    
+void Signal::CallbackHandler::destruct()    
 {
     destructor();
 }
 
-MindTree::Signal::LiveTimeTracker::LiveTimeTracker(void* boundObject)
+Signal::LiveTimeTracker::LiveTimeTracker(void* boundObject)
 :   registered(false),
     boundObject(boundObject),
     destructor([]{})
 {
 }
 
-MindTree::Signal::LiveTimeTracker::~LiveTimeTracker()
+Signal::LiveTimeTracker::~LiveTimeTracker()
 {
     destructor();
 }
