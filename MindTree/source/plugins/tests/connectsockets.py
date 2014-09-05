@@ -1,7 +1,8 @@
 import MT
+from .utils import *
 
-success = False
 def testConnectSockets():
+    success = False
     add = MT.createNode("Math.Add")
     add2 = MT.createNode("Math.Add")
 
@@ -21,3 +22,15 @@ def testConnectSockets():
     add.insockets[0].connected = add2.outsockets[0]
 
     return success;
+
+def testInheritSocketType():
+    add = MT.createNode("Math.Add")
+    flnode = MT.createNode("Values.Float Value")
+
+    add.insockets[0].connected = flnode.outsockets[0]
+
+    test = TestCase()
+    test.equal(add.insockets[0].type, flnode.outsockets[0].type, "connected")
+    test.equal(add.insockets[0].type, add.outsockets[0].type, "in to out")
+
+    return test.exit()

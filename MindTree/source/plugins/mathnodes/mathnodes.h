@@ -41,9 +41,6 @@ public:
 
     virtual void decVarSocket(MindTree::DSocket *socket);
     virtual void incVarSocket();
-
-private:
-    MindTree::Signal::CallbackVector _callbacks;
 };
 
 #endif /* end of include guard: MATH_AHZJP9OE */

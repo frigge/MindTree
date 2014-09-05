@@ -227,6 +227,101 @@ DSocket* DSocket::getSocket(unsigned short ID)
     return socketIDHash[ID];
 }
 
+bool DSocket::getVariable() const
+{
+	return variable;
+}
+
+void DSocket::setVariable(bool value)
+{
+	variable = value;
+    if(getNode()&&variable)getNode()->setVarSocket(this);
+}
+
+unsigned short DSocket::getID() const
+{
+	return ID;
+}
+
+std::string DSocket::getIDName()
+{
+    return idName;
+}
+
+void DSocket::setIDName(std::string value)
+{
+    idName = value;
+}
+
+void DSocket::setNode(DNode *node)
+{
+    this->node = node;
+    if(getVariable())node->setVarSocket(this);
+}
+
+std::string DSocket::getName() const
+{
+	return name;
+}
+
+void DSocket::setName(std::string value)
+{
+    if(value == name) return;
+	name = value;
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "nameChanged", value);
+}
+
+const SocketType& DSocket::getType() const
+{
+	return type;
+}
+
+void DSocket::setType(SocketType value)
+{
+    if(value == type) return;
+	type = value;
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "typeChanged", value);
+}
+
+void DSocket::listenToNameChange(DSocket *other)
+{
+    auto cb = Signal::getBoundHandler<std::string>(other)
+        .connect("nameChanged", [this] (std::string newName) {
+                   this->setName(newName); 
+                 });
+    _nameChangeCallback = cb;
+}
+
+void DSocket::listenToTypeChange(DSocket *other)
+{
+    auto cb = Signal::getBoundHandler<SocketType>(other)
+        .connect("typeChanged", [this] (SocketType newType) {
+                   this->setType(newType); 
+                 });
+    _typeChangeCallback = cb;
+}
+
+void DSocket::listenToChange(DSocket *other)
+{
+    listenToNameChange(other);
+    listenToTypeChange(other);
+}
+
+DSocket::SocketDir DSocket::getDir() const
+{
+	return dir;
+}
+
+void DSocket::setDir(DSocket::SocketDir value)
+{
+	dir = value;
+}
+
+DNode* DSocket::getNode() const
+{
+	return node;
+}
+
 IO::OutStream& MindTree::operator<<(IO::OutStream &stream, const DinSocket &socket)
 {
     stream << static_cast<const DSocket&>(socket);
@@ -337,49 +432,73 @@ bool DinSocket::operator !=(DinSocket &socket)const
     return(!(*this == socket));
 }
 
-void DSocket::setNode(DNode *node)
+void DinSocket::listenToLinkedName()
 {
-    this->node = node;
-    if(getVariable())node->setVarSocket(this);
+    auto cb = Signal::getBoundHandler<DoutSocket*>(this)
+        .connect("linkChanged", [this] (DoutSocket *socket) {
+                    this->listenToNameChange(socket); 
+                    this->setName(socket->getName());
+                 });
+    _linkedNameChangeCallback = cb;
 }
 
-std::string DSocket::getName() const
+void DinSocket::listenToLinkedType()
 {
-	return name;
+    auto cb = Signal::getBoundHandler<DoutSocket*>(this)
+        .connect("linkChanged", [this] (DoutSocket *socket) {
+                    this->listenToTypeChange(socket); 
+                    this->setType(socket->getType());
+                 });
+    _linkedTypeChangeCallback = cb;
 }
 
-void DSocket::setName(std::string value)
+void DinSocket::listenToLinked()
 {
-    if(value == name) return;
-	name = value;
-    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "nameChanged", value);
+    auto cb = Signal::getBoundHandler<DoutSocket*>(this)
+        .connect("linkChanged", [this] (DoutSocket *socket) {
+                    this->listenToChange(socket); 
+                    this->setType(socket->getType());
+                    this->setName(socket->getName());
+                 });
+    _linkedChangeCallback = cb;
 }
 
-const SocketType& DSocket::getType() const
+void DinSocket::setCntdSocket(DoutSocket *socket)
 {
-	return type;
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "linkChanged", socket);
+    if(!socket) {
+        clearLink();
+        return;
+    }
+    if(cntdSocket == socket)
+        return;
+
+    //unregister the old one
+    if(cntdSocket) cntdSocket->unregisterSocket(this, false);
+
+    //here we set the actual link
+	cntdSocket = socket;
+    cntdSocket->registerSocket(this);
+    if (getVariable())
+        getNode()->incVarSocket();
+
+    MT_CUSTOM_SIGNAL_EMITTER("createLink", this);
 }
 
-void DSocket::setType(SocketType value)
+void DinSocket::cntdSocketFromID()
 {
-    if(value == type) return;
-	type = value;
-    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "typeChanged", value);
+    cntdSocket = const_cast<DSocket*>(LoadSocketIDMapper::getSocket(getTempCntdID()))->toOut();
+    setTempCntdID(0);
 }
 
-DSocket::SocketDir DSocket::getDir() const
+const DoutSocket* DinSocket::getCntdSocketConst() const
 {
-	return dir;
+	return cntdSocket;
 }
 
-void DSocket::setDir(DSocket::SocketDir value)
+DoutSocket* DinSocket::getCntdSocket() const
 {
-	dir = value;
-}
-
-DNode* DSocket::getNode() const
-{
-	return node;
+	return cntdSocket;
 }
 
 DoutSocket::DoutSocket(std::string name, SocketType type, DNode *node)
@@ -439,68 +558,3 @@ void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
     if(cntdSockets.size() == 0 && getVariable() && decr) 
         getNode()->decVarSocket(this);
 }
-
-void DinSocket::setCntdSocket(DoutSocket *socket)
-{
-    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "linkChanged", socket);
-    if(!socket) {
-        clearLink();
-        return;
-    }
-    if(cntdSocket == socket)
-        return;
-
-    //unregister the old one
-    if(cntdSocket) cntdSocket->unregisterSocket(this, false);
-
-    //here we set the actual link
-	cntdSocket = socket;
-    cntdSocket->registerSocket(this);
-    if (getVariable())
-        getNode()->incVarSocket();
-
-    MT_CUSTOM_SIGNAL_EMITTER("createLink", this);
-}
-
-void DinSocket::cntdSocketFromID()
-{
-    cntdSocket = const_cast<DSocket*>(LoadSocketIDMapper::getSocket(getTempCntdID()))->toOut();
-    setTempCntdID(0);
-}
-
-const DoutSocket* DinSocket::getCntdSocketConst() const
-{
-	return cntdSocket;
-}
-
-DoutSocket* DinSocket::getCntdSocket() const
-{
-	return cntdSocket;
-}
-
-bool DSocket::getVariable() const
-{
-	return variable;
-}
-
-void DSocket::setVariable(bool value)
-{
-	variable = value;
-    if(getNode()&&variable)getNode()->setVarSocket(this);
-}
-
-unsigned short DSocket::getID() const
-{
-	return ID;
-}
-
-std::string DSocket::getIDName()
-{
-    return idName;
-}
-
-void DSocket::setIDName(std::string value)
-{
-    idName = value;
-}
-

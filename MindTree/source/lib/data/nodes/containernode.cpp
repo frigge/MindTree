@@ -262,6 +262,7 @@ void SocketNode::setInSocketNode(ContainerNode *contnode)
 void SocketNode::setOutSocketNode(ContainerNode *contnode)
 {
     setDynamicSocketsNode(DSocket::IN);
+    getVarSocket()->toIn()->listenToLinkedType();
     setNodeName("Output");
 }
 
@@ -279,11 +280,18 @@ void SocketNode::incVarSocket()
 {
     DNode::incVarSocket();
 	DSocket *newsocket;
-	if(getLastSocket()->getDir() == DSocket::IN)
+	if(getLastSocket()->getDir() == DSocket::IN) {
+        getVarSocket()->toIn()->listenToLinkedType();
 		newsocket = new DoutSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
-	else
+    }
+	else {
 		newsocket = new DinSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
+        newsocket->toIn()->listenToLinkedType();
+    }
     container->mapOnToIn(newsocket, getLastSocket());
+
+    newsocket->listenToChange(getLastSocket());
+    getLastSocket()->listenToChange(newsocket);
 }
 
 void SocketNode::decVarSocket(DSocket *socket)

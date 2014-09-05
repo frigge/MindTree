@@ -36,20 +36,25 @@ def testContainerCache():
     add.insockets[0].connected = valuenode.outsockets[0]
     add.insockets[1].connected = valuenode2.outsockets[0]
     add.insockets[2].connected = inputnode.outsockets[0]
-    add.insockets[2].type = "FLOAT"
-    inputnode.outsockets[0].type = "FLOAT"
 
     output.insockets[0].connected = add.outsockets[0]
     container.insockets[0].connected = valuenode3.outsockets[0]
-    container.insockets[0].type = "FLOAT"
     add.insockets[3].value = value3
 
     cache = MT.cache.DataCache(container.outsockets[0])
 
     expected_result = value1 + value2 + value3 + value4
-    print("input node: {}, {}".format(inputnode, inputnode.type))
-    print("container input: {}, {}".format(container.insockets[0], container.insockets[0].type))
-    print("resulting value: %d" % cache.getOutput())
-    print("expected value: %d" % (expected_result))
 
-    return equal(cache.getOutput(), expected_result)
+    test = TestCase()
+    test.equal(cache.getOutput(), expected_result)
+    test.equal(container.insockets[0].type, valuenode3.outsockets[0].type)
+    test.equal(add.insockets[0].type, valuenode.outsockets[0].type)
+    test.equal(add.insockets[1].type, valuenode2.outsockets[0].type)
+    test.equal(add.insockets[2].type, inputnode.outsockets[0].type)
+    test.equal(inputnode.outsockets[0].type, container.insockets[0].type)
+    test.equal(container.insockets[0].type, "FLOAT")
+    test.equal(add.insockets[0].type, "FLOAT")
+    test.equal(add.insockets[1].type, "FLOAT")
+    test.equal(add.insockets[2].type, "FLOAT")
+    test.equal(inputnode.outsockets[0].type, "FLOAT")
+    return test.exit()

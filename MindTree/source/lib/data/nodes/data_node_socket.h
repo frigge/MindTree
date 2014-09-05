@@ -21,6 +21,7 @@
 
 #include "data/python/pyexposable.h"
 #include "data/properties.h"
+#include "data/signal.h"
 #include "data/type.h"
 
 namespace MindTree
@@ -84,6 +85,10 @@ public:
     DSocket(const DSocket& socket, DNode *node=0);
     virtual ~DSocket();
 
+    void listenToNameChange(DSocket *other);
+    void listenToTypeChange(DSocket *other);
+    void listenToChange(DSocket *other);
+
     DinSocket* toIn();
     DoutSocket* toOut();
     const DinSocket* toIn()const;
@@ -118,6 +123,9 @@ protected:
     Signal::LiveTimeTracker* _signalLiveTime;
 
 private:
+    Signal::CallbackHandler _typeChangeCallback;
+    Signal::CallbackHandler _nameChangeCallback;
+
     friend IO::InStream& operator>>(IO::InStream& stream, DSocket &socket);
 
     std::string idName;
@@ -143,6 +151,10 @@ public:
     void setNode(DNode*);
     void addLink(DoutSocket*);
 
+    void listenToLinkedName();
+    void listenToLinkedType();
+    void listenToLinked();
+
     static void createLink(DinSocket *in, DinSocket *out);
 	const DoutSocket* getCntdSocketConst() const;
     DoutSocket* getCntdSocket() const;
@@ -161,6 +173,10 @@ public:
     void clearLink();
 
 private:
+    Signal::CallbackHandler _linkedNameChangeCallback;
+    Signal::CallbackHandler _linkedTypeChangeCallback;
+    Signal::CallbackHandler _linkedChangeCallback;
+
 	unsigned short tempCntdID;
     DoutSocket* cntdSocket;
 
