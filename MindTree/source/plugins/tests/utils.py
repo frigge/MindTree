@@ -28,6 +28,7 @@ class TestCase:
         else:
             print("{}: comparison of {} and {} failed".format(msg, a, b))
             self.success = False
+        return succ
 
     def contains(self, a, b, msg="test"):
         succ = self._check(self._contains, a, b)
@@ -36,6 +37,7 @@ class TestCase:
         else:
             print("{}: {} not found in {}".format(msg, a, b))
             self.success = False
+        return succ
 
     def floatEqual(self, a, b, tol, msg="test"):
         succ = self._check(self.floatEqual, a, b, tol)
@@ -44,6 +46,7 @@ class TestCase:
         else:
             print("{}: comparison of {} and {} failed".format(msg, a, b))
             self.success = False
+        return succ
 
 
     def _equal(self, a, b):
