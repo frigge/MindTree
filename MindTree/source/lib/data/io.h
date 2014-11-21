@@ -51,7 +51,8 @@ private:
 template<typename T>
 void dispatchedOutStreamer(OutStream &stream, const void* data)
 {
-    stream << reinterpret_cast<const T&>(*data);
+    const T* d = reinterpret_cast<const T*>(data);
+    stream << *d;
 }
 
 
@@ -105,7 +106,8 @@ private:
 template<typename T>
 void dispatchedInStreamer(InStream &stream, void* data)
 {
-    stream >> reinterpret_cast<T&>(*data);
+    T* d = reinterpret_cast<T*>(data);
+    stream >> *d;
 }
 
 }
