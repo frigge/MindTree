@@ -31,27 +31,27 @@ using namespace MindTree;
 
 std::unordered_map<unsigned short, const DSocket*>LoadSocketIDMapper::loadIDMapper;
 unsigned short DSocket::count = 0;
-std::unordered_map<const DSocket*, const DSocket*> CopySocketMapper::socketMap;
+std::unordered_map<DSocket*, DSocket*> CopySocketMapper::socketMap;
 std::unordered_map<unsigned short, DSocket*> DSocket::socketIDHash;
 
-unsigned short LoadSocketIDMapper::getID(const DSocket *socket)    
+unsigned short LoadSocketIDMapper::getID(const DSocket *socket)
 {
     for(auto p : loadIDMapper)
         if (p.second == socket) return p.first;
     return -1;
 }
 
-void LoadSocketIDMapper::setID(const DSocket *socket, unsigned short ID)    
+void LoadSocketIDMapper::setID(const DSocket *socket, unsigned short ID)
 {
     loadIDMapper.insert({ID, socket});
 }
 
-const DSocket * LoadSocketIDMapper::getSocket(unsigned short ID)    
+const DSocket * LoadSocketIDMapper::getSocket(unsigned short ID)
 {
     return loadIDMapper[ID];
 }
 
-void LoadSocketIDMapper::remap()    
+void LoadSocketIDMapper::remap()
 {
     for(auto p : loadIDMapper) {
         const DSocket *socket = p.second;
@@ -63,27 +63,28 @@ void LoadSocketIDMapper::remap()
     loadIDMapper.clear();
 }
 
-void CopySocketMapper::setSocketPair(const DSocket *original, const DSocket *copy)    
+void CopySocketMapper::setSocketPair(DSocket *original, DSocket *copy)
 {
-   socketMap.insert({original, copy}); 
+   socketMap.insert({original, copy});
 }
 
-const DSocket * CopySocketMapper::getCopy(const DSocket *original)    
+DSocket * CopySocketMapper::getCopy(const DSocket *original)
 {
-    if(socketMap.find(original) == socketMap.end()) return 0;
-    return socketMap[original];
+    auto* orig = const_cast<DSocket*>(original);
+    if(socketMap.find(orig) == socketMap.end()) return nullptr;
+    return socketMap[orig];
 }
 
 /** Loops through the socketmap and resets the connections.
  * If a connected socket is in the socketMap it means it is copied as well
  * so we link to  the copy. Otherwise we link to the original*/
-void CopySocketMapper::remap()    
+void CopySocketMapper::remap()
 {
     for(const auto p : socketMap) {
         //look in the socket map for all the insockets
-        const DSocket *socket = p.first;
+        DSocket *socket = p.first;
         if(socket->getDir() == DSocket::IN) {
-            const DoutSocket *cntd = nullptr;
+            DoutSocket *cntd = nullptr;
             //if this socket is connected and the connected was copied as well
             if((cntd = socket->toIn()->getCntdSocket())) {
                 DinSocket *inCopy = const_cast<DSocket*>(socketMap[socket])->toIn();
@@ -122,25 +123,27 @@ IO::InStream& MindTree::operator>>(IO::InStream& stream, DSocket &socket)
 }
 
 DSocket::DSocket(std::string name, SocketType type, DNode *node)
-:   name(name),
+:   _signalLiveTime(new Signal::LiveTimeTracker(this)),
+    name(name),
     type(type),
     node(node),
     variable(false),
     ID(++count),
-    _signalLiveTime(new Signal::LiveTimeTracker(this))
+    _propagateType([](SocketType t) { return t; })
 {
     socketIDHash.insert({ID, this});
 }
 
 DSocket::DSocket(const DSocket& socket, DNode *node)
-:   name(socket.getName()), 
-    type(socket.getType()), 
+:   _signalLiveTime(new Signal::LiveTimeTracker(this)),
+    name(socket.getName()),
+    type(socket.getType()),
     node(node),
     variable(socket.getVariable()),
     ID(++count),
-    _signalLiveTime(new Signal::LiveTimeTracker(this))
+    _propagateType(socket._propagateType)
 {
-    CopySocketMapper::setSocketPair(&socket, this);
+    CopySocketMapper::setSocketPair(const_cast<DSocket*>(&socket), this);
     socketIDHash.insert({ID, this});
 }
 
@@ -183,7 +186,7 @@ const DoutSocket* DSocket::toOut()const
     return static_cast<const DoutSocket*>(this);
 }
 
-bool DSocket::isCompatible(DSocket *s1, DSocket *s2)    
+bool DSocket::isCompatible(DSocket *s1, DSocket *s2)
 {
     if(s1 == s2)
         return false;
@@ -192,12 +195,12 @@ bool DSocket::isCompatible(DSocket *s1, DSocket *s2)
     return isCompatible(s1->getType(), s2->getType());
 }
 
-bool DSocket::isCompatible(SocketType s1, SocketType s2)    
+bool DSocket::isCompatible(SocketType s1, SocketType s2)
 {
     return true;
 }
 
-void DSocket::createLink(DSocket *socket1, DSocket *socket2)    
+void DSocket::createLink(DSocket *socket1, DSocket *socket2)
 {
     DinSocket *in = 0;
     DoutSocket *out = 0;
@@ -205,11 +208,11 @@ void DSocket::createLink(DSocket *socket1, DSocket *socket2)
     if(socket1->getDir() == IN)
     {
         in = socket1->toIn();
-        out = socket2->toOut(); 
+        out = socket2->toOut();
     }
     else
     {
-        out = socket1->toOut(); 
+        out = socket1->toOut();
         in = socket2->toIn();
     }
     if(in) {
@@ -217,12 +220,12 @@ void DSocket::createLink(DSocket *socket1, DSocket *socket2)
     }
 }
 
-void DSocket::removeLink(DinSocket *in, DoutSocket *out)    
+void DSocket::removeLink(DinSocket *in, DoutSocket *out)
 {
     in->clearLink();
 }
 
-DSocket* DSocket::getSocket(unsigned short ID)    
+DSocket* DSocket::getSocket(unsigned short ID)
 {
     return socketIDHash[ID];
 }
@@ -283,22 +286,27 @@ void DSocket::setType(SocketType value)
     MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "typeChanged", value);
 }
 
+void DSocket::setTypePropagationFunction(std::function<SocketType(SocketType)> fn)
+{
+    _propagateType = fn;
+}
+
 void DSocket::listenToNameChange(DSocket *other)
 {
     auto cb = Signal::getBoundHandler<std::string>(other)
         .connect("nameChanged", [this] (std::string newName) {
-                   this->setName(newName); 
+                   this->setName(newName);
                  });
-    _nameChangeCallback = cb;
+    _callbacks.push_back(cb);
 }
 
 void DSocket::listenToTypeChange(DSocket *other)
 {
     auto cb = Signal::getBoundHandler<SocketType>(other)
         .connect("typeChanged", [this] (SocketType newType) {
-                   this->setType(newType); 
+                   this->setType(this->_propagateType(newType));
                  });
-    _typeChangeCallback = cb;
+    _callbacks.push_back(cb);
 }
 
 void DSocket::listenToChange(DSocket *other)
@@ -352,7 +360,7 @@ IO::InStream& MindTree::operator>>(IO::InStream& stream, DinSocket &socket)
 }
 
 DinSocket::DinSocket(std::string name, SocketType type, DNode *node)
-:   DSocket(name, type, node), 
+:   DSocket(name, type, node),
     tempCntdID(0),
     cntdSocket(nullptr)
 {
@@ -381,9 +389,10 @@ Property DinSocket::getProperty()const
     return prop;
 }
 
-void DinSocket::setProperty(Property property)    
+void DinSocket::setProperty(Property property)
 {
     prop = property;
+    setType(prop.getType());
     MT_CUSTOM_SIGNAL_EMITTER("socketChanged", this);
 }
 
@@ -436,7 +445,7 @@ void DinSocket::listenToLinkedName()
 {
     auto cb = Signal::getBoundHandler<DoutSocket*>(this)
         .connect("linkChanged", [this] (DoutSocket *socket) {
-                    this->listenToNameChange(socket); 
+                    this->listenToNameChange(socket);
                     this->setName(socket->getName());
                  });
     _linkedNameChangeCallback = cb;
@@ -446,7 +455,7 @@ void DinSocket::listenToLinkedType()
 {
     auto cb = Signal::getBoundHandler<DoutSocket*>(this)
         .connect("linkChanged", [this] (DoutSocket *socket) {
-                    this->listenToTypeChange(socket); 
+                    this->listenToTypeChange(socket);
                     this->setType(socket->getType());
                  });
     _linkedTypeChangeCallback = cb;
@@ -456,7 +465,7 @@ void DinSocket::listenToLinked()
 {
     auto cb = Signal::getBoundHandler<DoutSocket*>(this)
         .connect("linkChanged", [this] (DoutSocket *socket) {
-                    this->listenToChange(socket); 
+                    this->listenToChange(socket);
                     this->setType(socket->getType());
                     this->setName(socket->getName());
                  });
@@ -533,15 +542,16 @@ bool DoutSocket::operator !=(DoutSocket &socket)const
     return(!(*this == socket));
 }
 
-void DoutSocket::registerSocket(DSocket *socket)    
+void DoutSocket::registerSocket(DinSocket *socket)
 {
-    if(this == getNode()->getVarSocket()) 
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "outLinkChanged", socket);
+    if(this == getNode()->getVarSocket())
         getNode()->incVarSocket();
 
-    if(std::find(cntdSockets.begin(), 
-                 cntdSockets.end(), 
+    if(std::find(cntdSockets.begin(),
+                 cntdSockets.end(),
                  socket->toIn()) == cntdSockets.end())
-        cntdSockets.push_back(socket->toIn()); 
+        cntdSockets.push_back(socket->toIn());
 }
 
 std::vector<DinSocket*> DoutSocket::getCntdSockets() const
@@ -551,10 +561,43 @@ std::vector<DinSocket*> DoutSocket::getCntdSockets() const
 
 void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
 {
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "outLinkChanged", socket);
     auto it = std::find(cntdSockets.begin(), cntdSockets.end(), socket);
     if(it != end(cntdSockets)) {
         cntdSockets.erase(it);
     }
-    if(cntdSockets.size() == 0 && getVariable() && decr) 
+    if(cntdSockets.size() == 0 && getVariable() && decr)
         getNode()->decVarSocket(this);
 }
+
+void DoutSocket::listenToLinkedName()
+{
+    auto cb = Signal::getBoundHandler<DoutSocket*>(this)
+        .connect("outLinkChanged", [this] (DoutSocket *socket) {
+                    this->listenToNameChange(socket);
+                    this->setName(socket->getName());
+                 });
+    _linkedNameChangeCallback = cb;
+}
+
+void DoutSocket::listenToLinkedType()
+{
+    auto cb = Signal::getBoundHandler<DinSocket*>(this)
+        .connect("outLinkChanged", [this] (DinSocket *socket) {
+                    this->listenToTypeChange(socket);
+                    this->setType(socket->getType());
+                 });
+    _linkedTypeChangeCallback = cb;
+}
+
+void DoutSocket::listenToLinked()
+{
+    auto cb = Signal::getBoundHandler<DinSocket*>(this)
+        .connect("outLinkChanged", [this] (DinSocket *socket) {
+                    this->listenToChange(socket);
+                    this->setType(socket->getType());
+                    this->setName(socket->getName());
+                 });
+    _linkedChangeCallback = cb;
+}
+

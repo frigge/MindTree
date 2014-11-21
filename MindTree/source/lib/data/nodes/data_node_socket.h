@@ -49,12 +49,12 @@ private:
 class CopySocketMapper
 {
 public:
-    static void setSocketPair(const DSocket *original, const DSocket *copy);
-    static const DSocket * getCopy(const DSocket *original);
+    static void setSocketPair(DSocket *original, DSocket *copy);
+    static DSocket * getCopy(const DSocket *original);
     static void remap();
 
 private:
-    static std::unordered_map<const DSocket*, const DSocket*> socketMap;
+    static std::unordered_map<DSocket*, DSocket*> socketMap;
 };
 
 
@@ -77,8 +77,8 @@ class DSocket : public PyExposable
 {
 public:
     enum SocketDir {
-        IN,
-        OUT
+        IN = 0,
+        OUT = 1
     };
 
 	DSocket(std::string, SocketType, DNode *node);
@@ -88,6 +88,11 @@ public:
     void listenToNameChange(DSocket *other);
     void listenToTypeChange(DSocket *other);
     void listenToChange(DSocket *other);
+    void setTypePropagationFunction(std::function<SocketType(SocketType)> fn);
+
+    virtual void listenToLinkedName() = 0;
+    virtual void listenToLinkedType() = 0;
+    virtual void listenToLinked() = 0;
 
     DinSocket* toIn();
     DoutSocket* toOut();
@@ -123,10 +128,10 @@ protected:
     Signal::LiveTimeTracker* _signalLiveTime;
 
 private:
-    Signal::CallbackHandler _typeChangeCallback;
-    Signal::CallbackHandler _nameChangeCallback;
+    Signal::CallbackVector _callbacks;
 
     friend IO::InStream& operator>>(IO::InStream& stream, DSocket &socket);
+    std::function<SocketType(SocketType)> _propagateType;
 
     std::string idName;
     std::string name;
@@ -146,7 +151,7 @@ class DinSocket : public DSocket
 public:
     DinSocket(std::string, SocketType, DNode *node);
     DinSocket(const DinSocket& socket, DNode *node=0);
-    ~DinSocket();
+    virtual ~DinSocket();
 
     void setNode(DNode*);
     void addLink(DoutSocket*);
@@ -189,15 +194,22 @@ class DoutSocket: public DSocket
 public:
 	DoutSocket(std::string, SocketType, DNode *node);
     DoutSocket(const DoutSocket& socket, DNode *node=0);
-    ~DoutSocket();
+    virtual ~DoutSocket();
     bool operator==(DoutSocket &socket)const;
     bool operator!=(DoutSocket &socket)const;
     std::vector<DinSocket*> getCntdSockets() const;
-    void registerSocket(DSocket *socket);
+    void registerSocket(DinSocket *socket);
     void unregisterSocket(DinSocket *socket, bool decr=true);
+    void listenToLinkedName();
+    void listenToLinkedType();
+    void listenToLinked();
 
 private:
     std::vector<DinSocket*> cntdSockets;
+
+    Signal::CallbackHandler _linkedNameChangeCallback;
+    Signal::CallbackHandler _linkedTypeChangeCallback;
+    Signal::CallbackHandler _linkedChangeCallback;
 };
 
 } /* MindTree */
