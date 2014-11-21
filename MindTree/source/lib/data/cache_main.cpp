@@ -18,154 +18,83 @@
 
 #include "iostream"
 
+#include "data/dnspace.h"
+#include "data/nodes/containernode.h"
+#include "data/signal.h"
+
 #include "cache_main.h"
 
 using namespace MindTree;
 
-std::unordered_map<DataCache*, const DoutSocket*>CacheControl::caches;
-std::unordered_map<const LoopNode*, LoopCache*> LoopCacheControl::loops;
-ConstNodeList CacheControl::updateNodes;
 TypeDispatcher<SocketType, AbstractCacheProcessor::CacheList> DataCache::processors;
 AbstractCacheProcessor::CacheList DataCache::_genericProcessors;
 
-bool CacheControl::isCached(const DoutSocket *socket)    
-{
-    return getCache(socket) ? true : false;
-}
-
-void CacheControl::addCache(const DoutSocket *socket, DataCache *cache)    
-{
-    if(isCached(socket)) {
-        DataCache *c = getCache(socket);
-        caches.erase(c);
-        delete c;
-    }
-    caches.insert({cache, socket}); 
-}
-
-void CacheControl::removeCache(DataCache *cache)    
-{
-    caches.erase(cache);
-}
-
-DataCache* CacheControl::getCache(const DoutSocket *socket)    
-{
-    for (auto p : caches)
-        if (p.second == socket) return p.first;
-    return nullptr;
-}
-
-void CacheControl::analyse(DNode *viewnode, const DNode *changedNode)    
-{
-    updateNodes.clear();
-    ConstNodeList active_network = viewnode->getAllInNodesConst(); 
-    if(!changedNode){
-        updateNodes = active_network;
-        return;
-    }
-    ConstNodeList before_changed = changedNode->getAllInNodesConst();
-    updateNodes.push_back(changedNode);
-
-    for(const DNode *node : active_network) 
-    {
-        auto b = before_changed.begin();
-        auto e = before_changed.end();
-        if(std::find(b, e, node) == e)
-            updateNodes.push_back(node);
-    }
-}
-
-bool CacheControl::isOutDated(const DNode *node)    
-{
-    return std::find(updateNodes.begin(), 
-                     updateNodes.end(), 
-                     node) != updateNodes.end();
-}
-
-LoopCache::LoopCache()
-    : loopentry(0), stepValue(0), startValue(0), endValue(0)
+CacheContext::CacheContext(const LoopNode* node)
+    : _node(node)
 {
 }
 
-LoopCache::~LoopCache()
+CacheContext::~CacheContext()
 {
-    free();
 }
-
-void LoopCache::free()    
-{
-    for (auto p : cachedData)
-        delete p.first;
-    cachedData.clear();
-}
-
-void LoopCache::setStep(int step)    
-{
-    stepValue = step;
-}
-
-int LoopCache::getStep()const
-{
-    return stepValue;
-}
-
 
 /*
  * the cached data is preserved for every loop iteration
  *
  */
-void LoopCache::addData(DataCache *cache)    
+void CacheContext::addData(size_t index, Property prop)
 {
-    if(cachedData.size() > 0)
-        loopentry = cache->getStart();
-    auto p = cachedData.find(cache->getStart());
-    if(p != cachedData.end())
-    {
-        delete p->second;
-        cachedData.erase(p);
-    }
+    if (_data.size() <= index)
+        _data.resize(index + 1);
 
-    cachedData.insert({cache->getStart(), cache});
+    _data[index] = prop;
 }
 
-DataCache* LoopCache::getCache(const DoutSocket *socket)    
+Property CacheContext::getData(size_t i)
 {
-    const DoutSocket *s;
-    if(!socket)
-        s = loopentry;
-    else
-        s = socket;
-
-    if(cachedData.find(s) == cachedData.end())
-        return 0;
-    return cachedData[s];
+    //find index
+    if(i < _data.size())
+        return _data[i];
+    return Property();
 }
 
-const LoopNode* LoopCache::getNode()
+Property CacheContext::getData(const DoutSocket *socket)
 {
-    return loopentry->getNode()->getDerivedConst<LoopSocketNode>()->getContainer()->getDerivedConst<LoopNode>();
+    //find index
+    auto outsockets = getNode()->getLoopedInputs()->getOutSockets();
+    auto outiter = std::find(begin(outsockets), end(outsockets), socket);
+    if (outiter == end(outsockets))
+        return Property();
+
+    size_t i = std::distance(outiter, begin(outsockets));
+    return getData(i);
 }
 
-LoopCache* LoopCacheControl::loop(const LoopNode *node)
+const LoopNode* CacheContext::getNode()
 {
-    //QMutex mutex;
-    //QMutexLocker lock(&mutex);
-    LoopCache *lc;
-    if(loops.find(node) != loops.end())
-        lc = loops[node];
-    else {
-        lc = new LoopCache();
-        loops.insert({node, lc});
-    }
-    return lc;
+    return _node;
 }
 
-void LoopCacheControl::del(const LoopNode *node)    
+LoopCache::LoopCache(const MindTree::LoopNode *node)
+    : CacheContext(node), stepValue(0), startValue(0), endValue(0)
 {
-    auto p = loops.find(node);
-    loops.erase(p);
+}
 
-    delete p->second;
+LoopCache::~LoopCache()
+{
+}
+
+void LoopCache::setStep(int step)
+{
+    stepValue = step;
+    auto nodes = getNode()->getContainerData()->getNodes();
+    DataCache::invalidate(nodes[0]); //static inputs
+    DataCache::invalidate(nodes[1]); //looped inputs
+}
+
+int LoopCache::getStep()const
+{
+    return stepValue;
 }
 
 AbstractCacheProcessor::AbstractCacheProcessor()
@@ -185,29 +114,31 @@ CacheProcessor::~CacheProcessor()
 {
 }
 
-void CacheProcessor::operator()(DataCache* cache)    
+void CacheProcessor::operator()(DataCache* cache)
 {
     processor(cache); 
 }
 
 std::unordered_map<const DNode*, std::vector<Property>> DataCache::_cachedOutputs;
 std::mutex DataCache::_cachedOutputsMutex;
-DataCache::DataCache()
+DataCache::DataCache(CacheContext *context)
     : node(nullptr),
-    startsocket(nullptr)
+    startsocket(nullptr),
+    _context(context)
 {
 }
 
-DataCache::DataCache(const DNode *node, DataType t)
-    : node(node), type(t)
+DataCache::DataCache(const DNode *node, DataType t, CacheContext *context)
+    : node(node), type(t), _context(context)
 {
     cacheInputs();
 }
 
-DataCache::DataCache(const DoutSocket *socket)
+DataCache::DataCache(const DoutSocket *socket, CacheContext *context)
     : node(socket->getNode()),
     type(socket->getType()),
-    startsocket(socket)
+    startsocket(socket),
+    _context(context)
 {
     cacheInputs();
 }
@@ -217,7 +148,8 @@ DataCache::DataCache(const DataCache &other)
     node(other.node), 
     cachedInputs(other.cachedInputs),
     type(other.type),
-    startsocket(other.startsocket)
+    startsocket(other.startsocket),
+    _context(other._context)
 {
 }
 
@@ -225,8 +157,28 @@ DataCache::~DataCache()
 {
 }
 
+void DataCache::init()
+{
+    Signal::getHandler<DNode*>().connect("nodeDeleted", [] (DNode* node) {
+        DataCache::invalidate(node);
+    }).detach();
+}
+
+CacheContext* DataCache::getContext()
+{
+    return _context;
+}
+
+void DataCache::setContext(CacheContext *context)
+{
+    _context = context;
+}
+
+
 void DataCache::invalidate(const DNode *node)
 {
+    if(!node) return;
+
     auto cacheIter = _cachedOutputs.find(node);
     if(cacheIter != end(_cachedOutputs))
         _cachedOutputs.erase(cacheIter);
@@ -237,12 +189,22 @@ void DataCache::invalidate(const DNode *node)
             invalidate(ins->getNode());
         }
     }
+
+    if(node->getBuildInType() == DNode::CONTAINER) {
+        const auto *contnode = node->getDerivedConst<ContainerNode>();
+        auto *contData = contnode->getContainerData();
+        if(contData)
+            for (const auto *n : contnode->getContainerData()->getNodes())
+                invalidate(n);
+    }
 }
 
 bool DataCache::isCached(const DNode *node)
 {
-    return _cachedOutputs.find(node) != end(_cachedOutputs)
-        && !_cachedOutputs[node].empty();
+    std::lock_guard<std::mutex> lock(_cachedOutputsMutex);
+    bool cached = (_cachedOutputs.find(node) != end(_cachedOutputs))
+        && (!_cachedOutputs[node].empty());
+    return cached;
 }
 
 void DataCache::start(const DoutSocket *socket)
@@ -296,34 +258,66 @@ const std::vector<AbstractCacheProcessor::CacheList>& DataCache::getProcessors()
 //computes the value of the given input socket
 //either by evaluating the connected network or if nothing
 //is connected by just taking the property of the input socket
-void DataCache::cache(const DinSocket *socket)    
+void DataCache::cache(const DinSocket *socket)
 {
+    auto insockets = node->getInSockets();
+
+    int index = std::distance(begin(insockets),
+                              std::find(begin(insockets),
+                                        end(insockets),
+                                        socket));
    if(socket->getCntdSocket()){
        DoutSocket *out = socket->getCntdSocket();
-       DataCache cache(out);
-       cachedInputs.push_back(cache.getOutput(out));
+       DataCache cache(out, _context);
+       _pushInputData(cache.getOutput(out), index);
    } 
    else
-       cachedInputs.push_back(socket->getProperty());
+       _pushInputData(socket->getProperty(), index);
 }
 
-void DataCache::pushData(Property prop)
+void DataCache::_pushInputData(Property prop, int index)
+{
+    size_t i = index;
+    if(index < 0 || i == cachedInputs.size()) {
+        cachedInputs.push_back(prop);
+        return;
+    }
+
+    if(static_cast<size_t>(index) >= cachedInputs.size())
+        cachedInputs.resize(index + 1);
+    cachedInputs[index] = prop;
+}
+
+void DataCache::pushData(Property prop, int index)
 {
     std::lock_guard<std::mutex> lock(_cachedOutputsMutex);
-    _getCachedOutputs().push_back(prop);
+    auto &outputs = _getCachedOutputs();
+
+    size_t i = index;
+    if (index < 0 || i == outputs.size()) {
+        outputs.push_back(prop);
+        return;
+    }
+
+    if(static_cast<size_t>(index) < outputs.size()) {
+       outputs.resize(index + 1); 
+    }
+
+    outputs[index] = prop;
 }
 
 //returns the value of the input socket at index i
 Property DataCache::getData(int index)
 {
-    auto insockets = getNode()->getInSockets();
+    size_t i = index;
+    auto insockets = node->getInSockets();
 
-    if (index >= insockets.size()) 
+    if (i >= insockets.size()) 
         return Property();
 
     cache(insockets.at(index));
 
-    if (index >= cachedInputs.size()) 
+    if (i >= cachedInputs.size()) 
         return Property();
 
     return cachedInputs[index];
@@ -331,7 +325,8 @@ Property DataCache::getData(int index)
 
 Property DataCache::getOutput(int index)
 {
-    if(index >= _getCachedOutputs().size())
+    size_t i = index;
+    if(i >= _getCachedOutputs().size())
         return Property();
 
     return _getCachedOutputs()[index];
@@ -375,19 +370,23 @@ const DNode* DataCache::getNode() const
     return node;
 }
 
-const DoutSocket* DataCache::getStart()    const
+const DoutSocket* DataCache::getStart() const
 {
     return startsocket;
 }
 
-void DataCache::setStart(const DoutSocket *socket)    
+void DataCache::setStart(const DoutSocket *socket)
 {
     startsocket = socket; 
 }
 
-void DataCache::cacheInputs()    
+void DataCache::cacheInputs()
 {
+    if(isCached(node)) 
+        return;
+
     auto ntype = node->getType();
+    std::cout << ntype.toStr() << std::endl;
     unsigned long nodeTypeID = ntype.id();
 
     AbstractCacheProcessor* genericProcessor = _genericProcessors[ntype];
@@ -407,8 +406,8 @@ void DataCache::cacheInputs()
     }
     auto list = processors[type];
     if(nodeTypeID >= list.size()){
-        std::cout<< "no processors defined for this node type (" 
-                 << node->getType().toStr() 
+        std::cout<< "no processors defined for this node type ("
+                 << node->getType().toStr()
                  << " id:" 
                  <<nodeTypeID
                  <<")"

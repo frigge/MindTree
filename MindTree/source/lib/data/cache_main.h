@@ -20,58 +20,45 @@
 
 #define CACHE_MAIN_PD1QWTW9
 
-#include "data/nodes/data_node.h"
-#include "data/nodes/containernode.h"
 #include "mutex"
 #include "data/type.h"
+#include "data/nodes/data_node_socket.h"
+#include "data/nodes/containernode.h"
 
 namespace MindTree
 {
+class Property;
     
 class DataCache;
 
-class CacheControl
+class CacheContext
 {
 public:
-    static DataCache *cache(const MindTree::DoutSocket *socket);
-    static bool isCached(const MindTree::DoutSocket *socket);
-    static void addCache(const MindTree::DoutSocket *socket, DataCache *cache);
-    static DataCache* getCache(const MindTree::DoutSocket *socket);
-    static void removeCache(DataCache *cache);
-    static void analyse(MindTree::DNode *viewnode, const MindTree::DNode *changedNode);
-    static bool isOutDated(const MindTree::DNode *node);
+    CacheContext(const LoopNode *node);
+    virtual ~CacheContext();
+
+    void addData(size_t index, Property prop);
+    virtual Property getData(const MindTree::DoutSocket *socket=0);
+    Property getData(size_t i);
+    virtual const LoopNode* getNode();
 
 private:
-    static std::unordered_map<DataCache*, const MindTree::DoutSocket*>caches;
-    static ConstNodeList updateNodes;
+    const LoopNode *_node;
+    std::vector<Property> _data;
+
 };
 
-class LoopCache
+class LoopCache : public CacheContext
 {
 public:
-    LoopCache();
+    LoopCache(const LoopNode *node);
     ~LoopCache();
+
     void setStep(int step);
     int getStep()const;
-    void addData(DataCache *cache);
-    DataCache* getCache(const MindTree::DoutSocket *socket=0);
-    const MindTree::LoopNode* getNode();
-    void free();
 
 private:
-    const MindTree::DoutSocket *loopentry;
-    std::unordered_map<const MindTree::DoutSocket*, DataCache*> cachedData;
     int stepValue, startValue, endValue;
-};
-
-class LoopCacheControl
-{
-public:
-    static LoopCache* loop(const MindTree::LoopNode *node);
-    static void del(const MindTree::LoopNode *node);
-
-private:
-    static std::unordered_map<const MindTree::LoopNode*, LoopCache*> loops;
 };
 
 class AbstractCacheProcessor
@@ -94,22 +81,24 @@ private:
     std::function<void(DataCache*)> processor;
 };
 
-class DoutSocket;
 class DataCache
 {
 public:
-    DataCache();
-    DataCache(const MindTree::DoutSocket *start);
+    DataCache(CacheContext *context = nullptr);
+    DataCache(const MindTree::DoutSocket *start, CacheContext *context = nullptr);
+    DataCache(const DNode *node, DataType t, CacheContext *context = nullptr);
+
     DataCache(const DataCache &other);
-    DataCache(const DNode *node, DataType t);
     virtual ~DataCache();
+
+    static void init();
 
     void start(const DoutSocket *socket=nullptr);
 
     int getTypeID() const;
     DataType getType() const;
 
-    void pushData(Property prop);
+    void pushData(Property prop, int index = -1);
     Property getData(int index);
     Property getOutput(DoutSocket* socket = nullptr);
     Property getOutput(int index);
@@ -128,9 +117,12 @@ public:
     static void invalidate(const DNode *node);
     static bool isCached(const DNode *node);
 
+    CacheContext* getContext();
+    void setContext(CacheContext *context);
 
 private:
     std::vector<Property>& _getCachedOutputs();
+    void _pushInputData(Property prop, int index = -1);
 
     void cacheInputs();
     void cache(const DinSocket *socket);
@@ -143,6 +135,8 @@ private:
     const DoutSocket *startsocket;
     static std::unordered_map<const DNode*, std::vector<Property>> _cachedOutputs;
     static std::mutex _cachedOutputsMutex;
+
+    CacheContext *_context;
 };
 
 
