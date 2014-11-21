@@ -6,51 +6,59 @@ std::vector<std::string> Signal::emitterIDs;
 int Signal::CallbackHandler::sigCounter = 0;
 
 Signal::CallbackHandler::CallbackHandler()
-    : detached(false), destructor([]() {})
+    : detached(false)
 {
 }
 
-Signal::CallbackHandler::CallbackHandler(std::function<void()> destructor) 
-    : detached(false), destructor(destructor)
-{
-}
-
-Signal::CallbackHandler::CallbackHandler(const CallbackHandler &other) 
+Signal::CallbackHandler::CallbackHandler(const CallbackHandler &other) noexcept 
 :    detached(other.detached),
-     destructor(other.destructor)
+     destructor(other.destructor),
+     detacher(other.detacher),
+     copyNotifier(other.copyNotifier)
 {
-    other.detached = true;
+    if (detacher != nullptr) detacher(const_cast<CallbackHandler*>(&other));
+    if (copyNotifier != nullptr) copyNotifier(this);
 }
 
-Signal::CallbackHandler::~CallbackHandler()
+Signal::CallbackHandler::~CallbackHandler() noexcept
 {
-    if(!detached && destructor)destructor();
+    if(!detached && destructor != nullptr) destructor();
+    if(!detached && detacher != nullptr) detacher(this);
 }
 
-Signal::CallbackHandler& Signal::CallbackHandler::operator=(const CallbackHandler& other)
+Signal::CallbackHandler& Signal::CallbackHandler::operator=(const CallbackHandler& other) noexcept
 {
-    if(destructor) destructor();
+    if(destructor != nullptr) destructor();
 
     destructor = other.destructor;
     detached = other.detached;
-    other.detached = true;
+    copyNotifier = other.copyNotifier;
+    detacher = other.detacher;
+    if(detacher != nullptr) detacher(const_cast<CallbackHandler*>(&other));
+
+    if(copyNotifier != nullptr) copyNotifier(this);
 
     return *this;
 }
 
-void Signal::CallbackHandler::detach() 
-{ 
-    detached = true; 
+Signal::CallbackHandler::operator bool()
+{
+    return destructor != nullptr;
 }
 
-void Signal::CallbackHandler::destruct()    
+void Signal::CallbackHandler::detach() noexcept
+{ 
+    if(detacher != nullptr) detacher(this);
+}
+
+void Signal::CallbackHandler::destruct() noexcept
 {
-    destructor();
+    if(destructor != nullptr) destructor();
 }
 
 Signal::LiveTimeTracker::LiveTimeTracker(void* boundObject)
-:   registered(false),
-    boundObject(boundObject),
+:   boundObject(boundObject),
+    registered(false),
     destructor([]{})
 {
 }

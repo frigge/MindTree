@@ -3,14 +3,17 @@
 #define SIGNAL_WQM6LFMC
 
 
-#include "functional"
-#include "list"
-#include "string"
-#include "map"
-#include "vector"
-#include "iostream"
 #include "algorithm"
+#include "functional"
+#include "iostream"
+#include "list"
+#include "map"
+#include "memory"
+#include "string"
+#include "vector"
+
 #include "boost/python.hpp"
+
 #include "data/python/wrapper.h"
 #include "data/properties.h"
 #include "data/python/pyutils.h"
@@ -37,18 +40,22 @@ class CallbackHandler
 {
 public:
     CallbackHandler();
-    CallbackHandler(std::function<void()> destructor);
-    CallbackHandler(const CallbackHandler &other);
-    virtual ~CallbackHandler();
-    CallbackHandler& operator=(const CallbackHandler& other);
-    void detach();
-    void destruct();
+
+    CallbackHandler(const CallbackHandler &other) noexcept;
+    virtual ~CallbackHandler() noexcept;
+    CallbackHandler& operator=(const CallbackHandler& other) noexcept;
+    operator bool();
+    void detach() noexcept;
+    void destruct() noexcept;
 
 private:
-    mutable bool detached;
-    std::function<void()>destructor;
+    bool detached;
+    std::function<void()> destructor;
+    std::function<void(CallbackHandler*)> detacher;
+    std::function<void(CallbackHandler*)> copyNotifier;
     static int sigCounter;
     template<typename... Args> friend class Callback;
+    template<typename... Args> friend class Signal;
 };
 
 typedef std::vector<CallbackHandler> CallbackVector;
@@ -78,7 +85,7 @@ public:
     Callback(const Callback &other) : fn(other.fn), sigID(other.sigID) {}
     bool operator==(const Callback& other) {return other.sigID == sigID;}
     bool operator!=(const Callback& other) {return other.sigID != sigID;}
-    void operator()(Args... args) {fn(args...);}
+    void operator()(Args... args) noexcept {fn(args...);}
 
 private:
     std::function<void(Args...)> fn;
@@ -94,7 +101,7 @@ public:
     Callback(const Callback &other) : fn(other.fn), sigID(other.sigID) {}
     bool operator==(const Callback& other) {return other.sigID == sigID;}
     bool operator!=(const Callback& other) {return other.sigID != sigID;}
-    void operator()() {fn();}
+    void operator()() noexcept {fn();}
 
 private:
     std::function<void()> fn;
@@ -128,17 +135,53 @@ template<typename ... Args>
 class Signal
 {
 public:
+    ~Signal()
+    {
+        for (auto *cbh : handlers) {
+            cbh->detach();
+        }
+    }
+
     CallbackHandler connect(std::function<void(Args ...)> fn) {
         Callback<Args...> sigObj(fn);
         callbacks.push_back(sigObj); 
-        return CallbackHandler([this, sigObj] {
-                    this->disconnect(sigObj);
-                });
+        auto cb = CallbackHandler();
+
+        cb.destructor = [this, sigObj] {
+            this->disconnect(sigObj);
+        };
+
+        cb.detacher = [this] (CallbackHandler* handler) {
+            auto it = std::find(begin(this->handlers), end(this->handlers), handler);
+            if (it != end(this->handlers)) {
+                this->handlers.erase(it);
+                handler->detached = true;
+            //std::cout << "handler: " << handler << " released" << std::endl;
+            }
+            //else
+                //std::cout << "huh? (<Args...>)" << std::endl;
+        };
+
+        cb.copyNotifier = [this] (CallbackHandler* handler) {
+            //std::cout << "handler: " << handler << " registered" << std::endl;
+            for (auto *h : this->handlers)
+                if (h == handler) {
+                    //std::cout << "handler already registered o.O" << std::endl;
+                    return;
+                }
+            this->handlers.push_back(handler);
+        };
+
+        handlers.push_back(&cb);
+
+        return cb;
     }
 
     void disconnect(Callback<Args...> cb)
     {
-        callbacks.erase(std::find(callbacks.begin(), callbacks.end(), cb));
+        auto it = std::find(callbacks.begin(), callbacks.end(), cb);
+        if (it != end(callbacks))
+            callbacks.erase(it);
     }
 
     void operator()(Args ...args) {
@@ -146,6 +189,8 @@ public:
     }
 
 private:
+    friend class CallbackHandler;
+    std::vector<CallbackHandler*> handlers;
     std::vector<Callback<Args...>> callbacks;
 };
 
@@ -153,18 +198,47 @@ template<>
 class Signal<>
 {
 public:
+    ~Signal()
+    {
+        for (auto *cbh : handlers) {
+            cbh->detach();
+        }
+    }
+
     CallbackHandler connect(std::function<void()> fn) {
         Callback<> sigObj(fn);
         callbacks.push_back(sigObj); 
-        return CallbackHandler([this, sigObj]
-                {
-                    this->disconnect(sigObj);
-                });
+        auto cb = CallbackHandler();
+
+        cb.destructor = [this, sigObj] {
+            this->disconnect(sigObj);
+        };
+
+        cb.detacher = [this] (CallbackHandler *handler) {
+            auto it = std::find(begin(this->handlers), 
+                                end(this->handlers), 
+                                handler);
+            if (it != end(this->handlers))
+                this->handlers.erase(it);
+            else
+                std::cout << "huh? (<>)" << std::endl;
+            handler->detached = true;
+        };
+
+        cb.copyNotifier = [this] (CallbackHandler* handler) {
+            this->handlers.push_back(handler);
+        };
+
+        handlers.push_back(&cb);
+
+        return cb;
     }
 
     void disconnect(Callback<> cb)
     {
-        callbacks.erase(std::find(callbacks.begin(), callbacks.end(), cb));
+        auto it = std::find(callbacks.begin(), callbacks.end(), cb);
+        if (it != end(callbacks))
+            callbacks.erase(it);
     }
 
     void operator()() {
@@ -172,25 +246,53 @@ public:
     }
 
 private:
+    friend class CallbackHandler;
     std::vector<Callback<>> callbacks;
+    std::vector<CallbackHandler*> handlers;
 };
 
 template<>
 class Signal<BPy::object>
 {
 public:
+    ~Signal()
+    {
+        for (auto *cbh : handlers) {
+            cbh->detach();
+        }
+    }
+
     CallbackHandler connect(BPy::object fn) {
         Callback<BPy::object> sigObj(fn);
         callbacks.push_back(sigObj); 
-        return CallbackHandler([this, sigObj]
-                {
-                    this->disconnect(sigObj);
-                });
+        auto cb = CallbackHandler();
+
+        cb.destructor = [this, sigObj] {
+            this->disconnect(sigObj);
+        };
+
+        cb.detacher = [this] (CallbackHandler *handler) {
+            auto it = std::find(begin(this->handlers), end(this->handlers), handler);
+            if (it != end(this->handlers))
+                this->handlers.erase(it);
+            else
+                std::cout << "huh?? (<BPy::object>)" << std::endl;
+            handler->detached = true;
+        };
+
+        cb.copyNotifier = [this] (CallbackHandler* handler) {
+            this->handlers.push_back(handler);
+        };
+
+        handlers.push_back(&cb);
+        return cb;
     }
 
     void disconnect(Callback<BPy::object> cb)
     {
-        callbacks.erase(std::find(callbacks.begin(), callbacks.end(), cb));
+        auto it = std::find(callbacks.begin(), callbacks.end(), cb);
+        if (it != end(callbacks))
+            callbacks.erase(it);
     }
 
 
@@ -200,15 +302,20 @@ public:
     }
 
 private:
+    friend class CallbackHandler;
     std::vector<Callback<BPy::object>> callbacks;
+    std::vector<CallbackHandler*> handlers;
 };
 
 template<typename ...Args>
 class SignalCollector
 {
+    typedef Signal<Args...> Signal_t;
+    typedef std::shared_ptr<Signal_t> SignalPtr_t;
 public:
     CallbackHandler connect(std::string sigEmitter, std::function<void(Args...)> fun) {
-        if(!sigs.count(sigEmitter)) sigs[sigEmitter] = new Signal<Args...>();
+        if(!sigs.count(sigEmitter)) 
+            sigs[sigEmitter] = std::make_shared<Signal_t>();
         auto handler = sigs[sigEmitter]->connect(fun); 
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
@@ -225,15 +332,18 @@ public:
     }
 
 private:
-    std::map<std::string, Signal<Args...>*> sigs;
+    std::map<std::string, SignalPtr_t> sigs;
 };
 
 template<>
 class SignalCollector<>
 {
+    typedef Signal<> Signal_t;
+    typedef std::shared_ptr<Signal_t> SignalPtr_t;
 public:
     CallbackHandler connect(std::string sigEmitter, std::function<void()> fun) {
-        if(!sigs.count(sigEmitter)) sigs[sigEmitter] = new Signal<>();
+        if(!sigs.count(sigEmitter)) 
+            sigs[sigEmitter] = std::make_shared<Signal_t>();
         auto handler = sigs[sigEmitter]->connect(fun); 
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
@@ -242,23 +352,27 @@ public:
 
     void operator()(std::string sigEmitter)
     {
-        if(sigs.count(sigEmitter))(*sigs[sigEmitter])();
+        if(sigs.count(sigEmitter))
+            (*sigs[sigEmitter])();
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
     }
 
 private:
-    std::map<std::string, Signal<>*> sigs;
+    std::unordered_map<std::string, SignalPtr_t> sigs;
 };
 
 template<>
 class SignalCollector<BPy::object>
 {
+    typedef Signal<BPy::object> Signal_t;
+    typedef std::shared_ptr<Signal_t> SignalPtr_t;
 public:
     CallbackHandler connect(std::string sigEmitter, BPy::object fun) 
     {
-        if(sigs.find(sigEmitter) == sigs.end()) 
-            sigs.insert({sigEmitter, new Signal<BPy::object>()});
+        if(sigs.find(sigEmitter) == sigs.end()) {
+            sigs.insert({sigEmitter, std::make_shared<Signal_t>()});
+        }
 
         auto handler = sigs[sigEmitter]->connect(fun); 
 
@@ -278,7 +392,7 @@ public:
     }
 
 private:
-    std::map<std::string, Signal<BPy::object>*> sigs;
+    std::unordered_map<std::string, SignalPtr_t> sigs;
 };
 
 template<typename...Args>
@@ -298,7 +412,7 @@ template<typename...Args>
 std::map<void*, SignalCollector<Args...>> BoundSignalHandler<Args...>::handlers;
 
 template<typename ...Args>
-void callHandler(std::string sig, Args... args)
+void callHandler(std::string sig, Args... args) noexcept
 {
     SignalHandler<Args...>::handler(sig, args ...);
     
