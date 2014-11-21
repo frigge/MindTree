@@ -95,7 +95,7 @@ private:
 class FullscreenQuadRenderer : public Renderer
 {
 public:
-    FullscreenQuadRenderer(RenderPass *pass);
+    FullscreenQuadRenderer();
     virtual ~FullscreenQuadRenderer();
 
     std::shared_ptr<ShaderProgram> getProgram();
@@ -106,7 +106,6 @@ protected:
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
 private:
-    RenderPass *_pass;
     static std::shared_ptr<ShaderProgram> _defaultProgram;
     std::shared_ptr<VBO> _vbo;
     std::shared_ptr<VBO> _coord_vbo;

@@ -91,8 +91,8 @@ Viewport::Viewport()
 
     Widget3D::insertWidgetsIntoRenderPass(overlaypass);
 
-    auto pixelpass = rendermanager->addPass();
-    pixelpass->addRenderer(new GL::FullscreenQuadRenderer(pass.get()));
+    _pixelPass = _rendermanager->addPass().get();
+    _pixelPass->addRenderer(new GL::FullscreenQuadRenderer());
 
     setMouseTracking(true);
 }

@@ -247,8 +247,7 @@ void QuadRenderer::init()
 
 std::shared_ptr<ShaderProgram> FullscreenQuadRenderer::_defaultProgram;
 
-FullscreenQuadRenderer::FullscreenQuadRenderer(RenderPass *pass)
-    : _pass(pass)
+FullscreenQuadRenderer::FullscreenQuadRenderer()
 {
     if(!_defaultProgram) {
         _defaultProgram = std::make_shared<ShaderProgram>();

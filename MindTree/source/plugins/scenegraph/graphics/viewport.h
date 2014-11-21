@@ -85,6 +85,7 @@ private:
     std::unique_ptr<MindTree::GL::RenderManager> rendermanager;
 
     MindTree::GL::GridRenderer *grid;
+    MindTree::GL::RenderPass *_pixelPass;
 
     QPointF lastpos;
     QPointF winClickPos;
