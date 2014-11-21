@@ -58,3 +58,96 @@ def testContainerCache():
     test.equal(add.insockets[2].type, "FLOAT")
     test.equal(inputnode.outsockets[0].type, "FLOAT")
     return test.exit()
+
+def testForLoopCache():
+    test = TestCase()
+
+    loop = MT.createNode("General.For")
+    MT.project.root.addNode(loop)
+
+    loop.insockets[0].value = 0
+    loop.insockets[1].value = 10
+    loop.insockets[2].value = 1
+
+    add = MT.createNode("Math.Add")
+    loop.graph.addNode(add)
+    test.equal(len(loop.graph[2].insockets), 0, "outsockets of loop container before (direct) connection")
+    loopsocket = loop.graph[1].outsockets[0]
+    add.insockets[0].connected = loopsocket
+    test.equal(len(loop.graph[2].insockets), 1, "outsockets of loop container before (indirect) connection")
+    add.insockets[1].value = 1
+
+    loop.graph[2].insockets[0].connected = add.outsockets[0]
+
+    loop.insockets[3].value = 1
+
+    test.equal(add.outsockets[0].type, "INTEGER", "output of Add")
+    test.equal(add.insockets[0].type, "INTEGER", "1st input of Add")
+    test.equal(add.insockets[1].type, "INTEGER", "2nd input of Add")
+    test.equal(loop.outsockets[0].type, "INTEGER", "output of ForNode")
+    test.equal(loop.insockets[3].type, "INTEGER", "input of startvalue into ForLoop")
+    test.equal(loop.graph[1].outsockets[0].type, "INTEGER", "input of ForLoop Container")
+    test.equal(loop.graph[2].insockets[0].type, "INTEGER", "output of ForLoop Container")
+    test.equal(len(loop.graph), 4, "nodes inside loop container")
+    test.equal(len(loop.graph[0].outsockets), 4, "static loop inputs")
+    test.equal(len(loop.graph[1].outsockets), 2, "looped inputs")
+    if not test.equal(len(loop.graph[2].insockets), 1, "loop outputs"):
+        print("the sockets on this node: {}".format([s.name for s in loop.graph[2].insockets]))
+    test.equal(len(loop.outsockets), 1, "number of outsockes on forloop node")
+    test.equal(len(loop.insockets), 4, "number of insockets on forloop node")
+
+    cache = MT.cache.DataCache(loop.outsockets[0])
+
+    expected_result = 11
+
+    test.equal(cache.getOutput(), expected_result, "Loop Result")
+    return test.exit()
+
+def testWhileLoopCache():
+    loop = MT.createNode("General.While")
+    MT.project.root.addNode(loop)
+
+    test = TestCase()
+    return test.exit()
+
+def testForeachLoopCache():
+    loop = MT.createNode("General.Foreach")
+    listNode = MT.createNode("General.Create List")
+    add = MT.createNode("Math.Add")
+    value = MT.createNode("Values.Int Value")
+
+    listNode.insockets[0].value = 12.5
+    listNode.insockets[1].value = 10
+
+    value.insockets[0].value = 2
+
+    loop.insockets[0].connected = listNode.outsockets[0]
+
+    test = TestCase()
+    
+    loopInputNode = loop.graph[1]
+
+    test.equal(listNode.insockets[0].type, "FLOAT")
+    test.equal(listNode.outsockets[0].type, "LIST:FLOAT")
+    test.equal(len(loopInputNode.outsockets), 1, "inputs to the foreach node")
+
+    add.insockets[0].connected = loopInputNode.outsockets[0]
+    add.insockets[1].connected = value.outsockets[0]
+
+    loop.graph[2].insockets[0].connected = add.outsockets[0]
+
+    MT.project.root.addNode(loop)
+    MT.project.root.addNode(listNode)
+
+    loop.graph.addNode(add)
+    loop.graph.addNode(value)
+
+    cache = MT.cache.DataCache(loop.outsockets[0])
+
+    output = cache.getOutput()
+    test.equal(add.insockets[0].type, "FLOAT")
+    test.equal(add.insockets[1].type, "INTEGER")
+    test.equal(loop.graph[1].outsockets[0].type, "FLOAT")
+    test.equal(len(output), 10)
+    test.equal(cache.getOutput(), [14.5] * 10) 
+    return test.exit()

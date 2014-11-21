@@ -1,3 +1,4 @@
+import MT
 from .floatcachetest import *
 from .stringcachetest import *
 from .connectsockets import *
@@ -7,6 +8,7 @@ from .timelinetests import *
 from .project_tests import *
 from .datacachetests import *
 from .simulationtests import *
+from .list_tests import *
 
 import sys, traceback
 

@@ -145,6 +145,44 @@ bool testSaveLoadProperties()
     return newProp.getData<int>() == prop.getData<int>();
 }
 
+bool testCreateList()
+{
+    auto *createListNode = MindTree::NodeDataBase::createNode("General.Create List");
+    auto *floatValueNode = MindTree::NodeDataBase::createNode("Values.Float Value");
+    auto *intValueNode = MindTree::NodeDataBase::createNode("Values.Int Value");
+
+    MindTree::Project::instance()->getRootSpace()->addNode(createListNode);
+    MindTree::Project::instance()->getRootSpace()->addNode(floatValueNode);
+    MindTree::Project::instance()->getRootSpace()->addNode(intValueNode);
+
+    floatValueNode->getInSockets()[0]->setProperty(5.0);
+    intValueNode->getInSockets()[0]->setProperty(10);
+    createListNode->getInSockets()[0]->setCntdSocket(floatValueNode->getOutSockets()[0]);
+    createListNode->getInSockets()[1]->setCntdSocket(intValueNode->getOutSockets()[0]);
+
+    MindTree::DataCache cache(createListNode->getOutSockets()[0]);
+
+    auto output = cache.getOutput();
+
+    if(output.getType() != "LIST:FLOAT") {
+        std::cout << output.getType().toStr() << " is supposed to be LIST:FLOAT" << std::endl;
+        return false;
+    }
+
+    auto data = output.getData<std::vector<double>>();
+    if(data.size() != 10) {
+        std::cout << data.size() << " is supposed to be 10" << std::endl;
+        return false;
+    }
+
+    if(data[0] != 5.0) {
+        std::cout << "wrong value" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 BOOST_PYTHON_MODULE(cpp_tests)
 {
     BPy::def("testSocketPropertiesCPP", testSocketProperties);    
@@ -154,4 +192,5 @@ BOOST_PYTHON_MODULE(cpp_tests)
     BPy::def("testPropertyConversionCPP", testPropertyConversion);
     BPy::def("testRaycastingCPP", testRaycasting);
     BPy::def("testSaveLoadPropertiesCPP", testSaveLoadProperties);
+    BPy::def("testCreateListCPP", testCreateList);
 }

@@ -17,7 +17,12 @@ link_directories(
             ${PYTHON_LIBRARIES}
 )
 
-add_library(basics SHARED basics.cpp)
+set(basics_src
+    basics.cpp
+    create_list_node.cpp
+    )
+
+add_library(basics SHARED ${basics_src})
 set_target_properties(basics PROPERTIES PREFIX "")
 
 target_link_libraries(basics
