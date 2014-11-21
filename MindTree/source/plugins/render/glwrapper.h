@@ -213,7 +213,7 @@ public:
     void setUniform(std::string name, int value);
     void setUniform(std::string name, const glm::mat4 &value);
 
-    void setTexture(std::shared_ptr<Texture2D> texture);
+    void setTexture(std::shared_ptr<Texture2D> texture, std::string name="");
 
     void bindAttributeLocation(unsigned int index, std::string name);
     void bindFragmentLocation(unsigned int index, std::string name);
@@ -269,6 +269,7 @@ public:
 
     Texture(std::string name, Texture::Format format, Target target);
     std::string getName();
+    void setName(std::string name);
     virtual ~Texture();
     virtual void bind();
     virtual void release();

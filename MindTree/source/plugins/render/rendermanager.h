@@ -6,6 +6,7 @@
 #include "thread"
 #include "memory"
 #include "list"
+#include "unordered_map"
 #include "../datatypes/Object/object.h"
 
 namespace MindTree {
@@ -38,6 +39,10 @@ public:
     RenderManager();
     virtual ~RenderManager();
 
+    void setCustomTextureNameMapping(std::string realname, std::string newname);
+    void clearCustomTextureNameMapping();
+    std::vector<std::string> getAllOutputs() const;
+
     void start();
     void stop();
     bool isRendering();
@@ -47,6 +52,7 @@ public:
     RenderPass* getPass(uint index);
     void setConfig(RenderConfig cfg);
     RenderConfig getConfig();
+    void setDirty();
 
     void setSize(int width, int height);
 
@@ -57,6 +63,8 @@ private:
     std::thread _renderThread;
     std::mutex _managerLock;
     std::mutex _renderingLock;
+    std::unordered_map<std::string, std::string> _textureNameMappings;
+
     glm::vec4 backgroundColor;
     std::vector<std::shared_ptr<RenderPass>> passes;
     RenderConfig config;

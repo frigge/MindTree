@@ -18,6 +18,9 @@ RenderPass::~RenderPass()
 
 void RenderPass::init()
 {
+    if(_initialized)
+        return;
+
     _initialized = true;
     //make sure shaderprograms are clean
     for(auto shadernode : _shadernodes) {

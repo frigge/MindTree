@@ -47,6 +47,10 @@ public:
     void setStartSocket(MindTree::DoutSocket *socket);
     MindTree::DoutSocket* getStartSocket();
 
+    MindTree::GL::RenderManager* getRenderManager();
+    MindTree::GL::RenderPass* getPixelPass();
+
+//SLOTS:
     Q_SLOT void setShowPoints(bool b);
     Q_SLOT void setShowEdges(bool b);
     Q_SLOT void setShowPolygons(bool b);
@@ -55,11 +59,13 @@ public:
     Q_SLOT void changeCamera(QString cam);
     Q_SLOT AbstractTransformableNode* getSelectedNode();
     Q_SLOT glm::vec3 getCamPivot();
-
     Q_SLOT void setData(std::shared_ptr<Group> value);
+//---------------
 
+//SIGNALS:
     Q_SIGNAL void sceneUpdated();
     Q_SIGNAL void nodeChanged(MindTree::DNode*);
+//---------------
 
 protected:
     void resizeEvent(QResizeEvent *event);
@@ -82,7 +88,7 @@ protected:
 private:
     AbstractTransformableNode *selectedNode;
     std::shared_ptr<Camera> activeCamera, defaultCamera;
-    std::unique_ptr<MindTree::GL::RenderManager> rendermanager;
+    std::unique_ptr<MindTree::GL::RenderManager> _rendermanager;
 
     MindTree::GL::GridRenderer *grid;
     MindTree::GL::RenderPass *_pixelPass;

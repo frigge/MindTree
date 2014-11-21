@@ -57,16 +57,17 @@ public:
     Q_SLOT void toggleFlatShading(bool b);
     Q_SLOT void toggleGrid(bool b);
     Q_SLOT void refillCamBox();
+    Q_SLOT void setOutput(QString out);
 
 private:
     void createToolbar();
     void createMainLayout();
 
-    ViewportViewer *viewer;
-    Viewport *viewport;
-    QComboBox *camBox;
-    QVBoxLayout *mainlayout;
-    QToolBar *tools;
+    ViewportViewer *_viewer;
+    Viewport *_viewport;
+    QComboBox *_camBox;
+    QComboBox *_outputBox;
+    QToolBar *_tools;
 };
 
 #endif /* end of include guard: VIEWPORT_WIDGET_F680V6U0 */

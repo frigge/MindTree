@@ -23,6 +23,9 @@
 #include "iostream"
 #include "viewport.h"
 #include "data/nodes/data_node.h"
+#include "../../render/rendermanager.h"
+#include "../../render/renderpass.h"
+#include "../../render/render.h"
 
 using namespace MindTree;
 ViewportViewer::ViewportViewer(DoutSocket *socket)
@@ -52,7 +55,7 @@ void ViewportViewer::update()
 }
 
 ViewportWidget::ViewportWidget(ViewportViewer *viewer)
-    : viewport(new Viewport()), viewer(viewer)
+    : _viewport(new Viewport()), _viewer(viewer)
 {
     createMainLayout();
     createToolbar();
@@ -60,12 +63,12 @@ ViewportWidget::ViewportWidget(ViewportViewer *viewer)
 
 ViewportWidget::~ViewportWidget()
 {
-    delete viewer;
+    delete _viewer;
 }
 
 Viewport* ViewportWidget::getViewport()    
 {
-    return viewport;
+    return _viewport;
 }
 
 QSize ViewportWidget::sizeHint()    const
@@ -77,41 +80,59 @@ void ViewportWidget::createMainLayout()
 {
     auto mainlayout = new QVBoxLayout();
     setLayout(mainlayout);
-    tools = new QToolBar;
-    mainlayout->addWidget(tools);
-    mainlayout->addWidget(viewport);
+    _tools = new QToolBar;
+    mainlayout->addWidget(_tools);
+    mainlayout->addWidget(_viewport);
 }
 
 void ViewportWidget::createToolbar()    
 {
-    QAction *showPointsAction = tools->addAction("P");
+    QAction *showPointsAction = _tools->addAction("P");
     showPointsAction->setCheckable(true);
     showPointsAction->setChecked(true);
 
-    QAction *showEdgesAction = tools->addAction("E");
+    QAction *showEdgesAction = _tools->addAction("E");
     showEdgesAction->setCheckable(true);
     showEdgesAction->setChecked(true);
 
-    QAction *showPolygonsAction = tools->addAction("F");
+    QAction *showPolygonsAction = _tools->addAction("F");
     showPolygonsAction->setCheckable(true);
     showPolygonsAction->setChecked(true);
 
-    QAction *showFlatShadedAction = tools->addAction("Flat Shaded");
+    QAction *showFlatShadedAction = _tools->addAction("Flat Shaded");
     showFlatShadedAction->setCheckable(true);
     showFlatShadedAction->setChecked(false);
 
-    QAction *showGridAction = tools->addAction("Grid");
+    QAction *showGridAction = _tools->addAction("Grid");
     showGridAction->setCheckable(true);
     showGridAction->setChecked(true);
 
-    camBox = new QComboBox();
-    tools->addWidget(camBox);
+    auto outputs = _viewport->getRenderManager()->getAllOutputs();
+    auto *outputBox = new QComboBox();
+
+    QStringList l;
+    for(auto out : outputs)
+        l.append(out.c_str());
+
+    outputBox->addItems(l);
+
+    _camBox = new QComboBox();
+    _tools->addWidget(_camBox);
+    _tools->addWidget(outputBox);
+
+    connect(outputBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(setOutput(QString)));
 
     connect(showPointsAction, SIGNAL(toggled(bool)), this, SLOT(togglePoints(bool)));
     connect(showEdgesAction, SIGNAL(toggled(bool)), this, SLOT(toggleEdges(bool)));
     connect(showPolygonsAction, SIGNAL(toggled(bool)), this, SLOT(togglePolygons(bool)));
     connect(showFlatShadedAction, SIGNAL(toggled(bool)), this, SLOT(toggleFlatShading(bool)));
     connect(showGridAction, SIGNAL(toggled(bool)), this, SLOT(toggleGrid(bool)));
+}
+
+void ViewportWidget::setOutput(QString out)
+{
+    _viewport->getRenderManager()->clearCustomTextureNameMapping();
+    _viewport->getRenderManager()->setCustomTextureNameMapping(out.toStdString(), "outcolor");
 }
 
 void ViewportWidget::refillCamBox()    
@@ -130,25 +151,25 @@ void ViewportWidget::refillCamBox()
 
 void ViewportWidget::togglePoints(bool b)    
 {
-    viewport->setShowPoints(b);
+    _viewport->setShowPoints(b);
 }
 
 void ViewportWidget::toggleEdges(bool b)    
 {
-    viewport->setShowEdges(b);
+    _viewport->setShowEdges(b);
 }
 
 void ViewportWidget::togglePolygons(bool b)    
 {
-    viewport->setShowPolygons(b);
+    _viewport->setShowPolygons(b);
 }
 
 void ViewportWidget::toggleFlatShading(bool b)
 {
-    viewport->setShowFlatShading(b);
+    _viewport->setShowFlatShading(b);
 }
 
 void ViewportWidget::toggleGrid(bool b)
 {
-    viewport->setShowGrid(b);
+    _viewport->setShowGrid(b);
 }

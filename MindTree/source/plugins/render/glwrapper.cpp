@@ -651,11 +651,11 @@ void ShaderProgram::setUniform(std::string name, int value)
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     if(location > -1) {
         glUniform1i(location, value);
     }
-    if(getGLError(__PRETTY_FUNCTION__))
+    if(MTGLERROR)
        std::cout << "unifrom name: " << name << std::endl;
 }
 
@@ -670,12 +670,19 @@ void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)
        std::cout << "unifrom name: " << name << std::endl;
 }
 
-void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture)
+void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string name)
 {
     if(!_initialized) init();
 
-    if(std::find(begin(_textures), end(_textures), texture) != end(_textures))
-        return;
+    int textureSlot;
+    auto it = std::find(begin(_textures), end(_textures), texture);
+    if(it != end(_textures)) {
+        textureSlot = std::distance(begin(_textures), it);
+    }
+    else {
+        textureSlot = _textures.size();
+        _textures.push_back(texture);
+    }
 
     bool wasntbound = false;
     if(!_isBound) {
@@ -683,15 +690,17 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture)
         bind();
     }
 
-    int textureSlot = _textures.size();
-    _textures.push_back(texture);
-
     glActiveTexture(GL_TEXTURE0 + textureSlot);
 
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 
     texture->bind();
-    setUniform(texture->getName(), textureSlot);
+    std::string n;
+    if(name == "")
+        n = texture->getName();
+    else
+        n = name;
+    setUniform(n, textureSlot);
 
     if(wasntbound) release();
 }
@@ -824,6 +833,11 @@ Texture::~Texture()
 std::string Texture::getName()
 {
     return _name;
+}
+
+void Texture::setName(std::string name)
+{
+    _name = name;
 }
 
 void Texture::bind()

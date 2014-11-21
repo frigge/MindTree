@@ -35,8 +35,6 @@ public:
     void setTarget(std::shared_ptr<FBO> target);
     std::shared_ptr<FBO> getTarget();
 
-    std::vector<std::string> getRenderbufferOutNames();
-
     enum DepthOutput {
         TEXTURE,
         RENDERBUFFER,

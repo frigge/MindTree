@@ -61,9 +61,9 @@ Viewport::Viewport()
     activeCamera = defaultCamera;
     setAutoBufferSwap(false);
 
-    rendermanager = std::unique_ptr<GL::RenderManager>(new GL::RenderManager());
+    _rendermanager = std::unique_ptr<GL::RenderManager>(new GL::RenderManager());
 
-    auto pass = rendermanager->addPass();
+    auto pass = _rendermanager->addPass();
     pass->setCamera(activeCamera);
 
     grid = new GL::GridRenderer(100, 100, 100, 100);
@@ -80,7 +80,7 @@ Viewport::Viewport()
     pass->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
     pass->addOutput(std::make_shared<GL::Texture2D>("outposition"));
 
-    auto overlaypass = rendermanager->addPass();
+    auto overlaypass = _rendermanager->addPass();
     overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
     overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
     overlaypass->addOutput(std::make_shared<GL::Renderbuffer>("id"));
@@ -99,14 +99,24 @@ Viewport::Viewport()
 
 Viewport::~Viewport()
 {
-    rendermanager->stop();
+    _rendermanager->stop();
+}
+
+GL::RenderManager* Viewport::getRenderManager()
+{
+    return _rendermanager.get();
+}
+
+GL::RenderPass* Viewport::getPixelPass()
+{
+    return _pixelPass;
 }
 
 void Viewport::setData(std::shared_ptr<Group> value)
 {
     if(!value) return;
 
-    rendermanager->getPass(0)->setRenderersFromGroup(value);
+    _rendermanager->getPass(0)->setRenderersFromGroup(value);
 }
 
 void Viewport::changeCamera(QString cam)    
@@ -122,7 +132,7 @@ void Viewport::changeCamera(QString cam)
 void Viewport::resizeEvent(QResizeEvent *)
 {
     activeCamera->setProjection((GLdouble)width()/(GLdouble)height());
-    rendermanager->setSize(width(), height());
+    _rendermanager->setSize(width(), height());
 }
 
 void Viewport::paintEvent(QPaintEvent *)
@@ -132,40 +142,40 @@ void Viewport::paintEvent(QPaintEvent *)
 
 void Viewport::showEvent(QShowEvent *)
 {
-    rendermanager->start();
+    _rendermanager->start();
 }
 
 void Viewport::hideEvent(QHideEvent *)
 {
-    rendermanager->stop();
+    _rendermanager->stop();
 }
 
 void Viewport::setShowPoints(bool b)    
 {
-    auto config = rendermanager->getConfig();
+    auto config = _rendermanager->getConfig();
     config.setDrawPoints(b);
-    rendermanager->setConfig(config);
+    _rendermanager->setConfig(config);
 }
 
 void Viewport::setShowEdges(bool b)    
 {
-    auto config = rendermanager->getConfig();
+    auto config = _rendermanager->getConfig();
     config.setDrawEdges(b);
-    rendermanager->setConfig(config);
+    _rendermanager->setConfig(config);
 }
 
 void Viewport::setShowPolygons(bool b)    
 {
-    auto config = rendermanager->getConfig();
+    auto config = _rendermanager->getConfig();
     config.setDrawPolygons(b);
-    rendermanager->setConfig(config);
+    _rendermanager->setConfig(config);
 }
 
 void Viewport::setShowFlatShading(bool b)
 {
-    auto config = rendermanager->getConfig();
+    auto config = _rendermanager->getConfig();
     config.setShowFlatShaded(b);
-    rendermanager->setConfig(config);
+    _rendermanager->setConfig(config);
 }
 
 void Viewport::setShowGrid(bool b)

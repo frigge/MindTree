@@ -88,6 +88,30 @@ void RenderManager::stop()
     _renderThread.join();
 }
 
+void RenderManager::setDirty()
+{
+    std::lock_guard<std::mutex> lock(_managerLock);
+    _initialized = false;
+}
+
+void RenderManager::setCustomTextureNameMapping(std::string realname, std::string newname)
+{
+    {
+        std::lock_guard<std::mutex> lock(_managerLock);
+        _textureNameMappings[realname] = newname;
+    }
+    setDirty();
+}
+
+void RenderManager::clearCustomTextureNameMapping()
+{
+    {
+        std::lock_guard<std::mutex> lock(_managerLock);
+        _textureNameMappings.clear();
+    }
+    setDirty();
+}
+
 void RenderManager::init()
 {
     if(_initialized) return;
@@ -113,7 +137,7 @@ void RenderManager::init()
                 auto shadernodes = pass->getShaderNodes();
                 for (auto shadernode : shadernodes) {
                     for(auto texture : textures) {
-                        shadernode->program()->setTexture(texture);
+                        shadernode->program()->setTexture(texture, _textureNameMappings[texture->getName()]);
                     }
                     if(lastPass->_depthOutput == RenderPass::TEXTURE)
                         shadernode->program()->setTexture(lastPass->getOutDepthTexture());
@@ -122,6 +146,18 @@ void RenderManager::init()
         }
         ++i;
     }
+}
+
+std::vector<std::string> RenderManager::getAllOutputs() const
+{
+    std::vector<std::string> outputs;
+    for(const auto &pass : passes) {
+        auto textures = pass->getOutputTextures();
+        for(const auto &tex : textures) {
+            outputs.push_back(tex->getName());
+        }
+    }
+    return outputs;
 }
 
 void RenderManager::setSize(int width, int height)
