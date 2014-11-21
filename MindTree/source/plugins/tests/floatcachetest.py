@@ -1,4 +1,5 @@
 import MT
+from .utils import *
 
 def testFloatCache():
     '''Creating two add nodes, connecting them and trying to get a value from it'''
@@ -26,9 +27,19 @@ def testFloatCache():
 
     cache = MT.cache.DataCache(add.outsockets[0])
 
+    test = TestCase()
+    test.equal(len(MT.project.root), 3, "root space size")
+    test.equal(len(MT.project.root[0].outsockets), 1, "add outsockets")
+    test.equal(len(MT.project.root[0].insockets), 3, "add insockets")
+    test.equal(len(MT.project.root[1].outsockets), 1, "float value 1 outsockets")
+    test.equal(len(MT.project.root[1].insockets), 1, "float value 1 insockets")
+    test.equal(len(MT.project.root[2].outsockets), 1, "float value 2 outsockets")
+    test.equal(len(MT.project.root[2].insockets), 1, "float value 2 insockets")
+    test.equal(MT.project.root[1].insockets[0].value, 5., "float value 1")
+    test.equal(MT.project.root[2].insockets[0].value, 8., "float value 2")
+    test.equal(MT.project.root[0].insockets[2].value, 12., "add input value")
+
     print("resulting value: %d" % cache.getOutput())
     print("expected value: %d" % (12+5+8))
-    return (12+5+8) == cache.getOutput()
-
-def testfloatvalue():
-    return True
+    test.equal((12+5+8), cache.getOutput(), "cache output")
+    return test.exit()

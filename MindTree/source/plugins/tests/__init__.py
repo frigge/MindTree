@@ -19,6 +19,7 @@ def all():
     exceptions = []
 
     for t in tests:
+        MT.newProject()
         print("\n_____________________________________")
         print("running test: %s\n" % t)
         success = False
@@ -46,3 +47,13 @@ def all():
             print("All tests passed")
 
     return not len(failedTests)
+
+def listTests():
+    tests = sorted([t for t in dir(__import__(__name__)) if t.startswith("test")])
+    numberOfTests = len(tests)
+
+    print("There are {} number of tests:\n".format(numberOfTests))
+    for t in tests:
+        print("\t" + t)
+    print("\n______________________\n")
+    return True

@@ -7,7 +7,7 @@ def testTimeline():
    floatnode.insockets[0].connected = timelinenode.outsockets[0]
 
    cache = MT.cache.DataCache(floatnode.outsockets[0])
-   print("initial frame value as %s: %d" % (cache.type, cache.getOutput()))
+   print("initial frame value as {}: {}".format(cache.type, cache.getOutput()))
    
    MT.timeline.setFrame(44)
    MT.cache.DataCache.invalidate(timelinenode)
