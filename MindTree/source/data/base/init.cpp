@@ -1,8 +1,10 @@
 #include "source/data/python/init.h"
 #include "source/data/gl/init.h"
+#include "data/cache_main.h"
 #include "data/python/pyutils.h"
 #include "data/project.h"
 #include "data/properties.h"
+
 #include "init.h"
 
 namespace {
@@ -11,6 +13,7 @@ namespace {
 
 void MindTree::initApp(int argc, char *argv[])
 {
+    MindTree::DataCache::init();
     MindTree::Project::create();
     MindTree::Python::init(argc, argv);
     MindTree::Python::loadIntern();
@@ -59,6 +62,7 @@ void MindTree::runTests(std::vector<std::string> testlist)
     std::cout << std::endl;
     for(auto test : testlist) {
         bool success = false;
+        MindTree::Project::create();
         if(test != "all") {
             std::cout << std::endl;
             std::cout<<"_____________________________________\n";
