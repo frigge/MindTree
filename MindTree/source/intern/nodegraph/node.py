@@ -329,6 +329,9 @@ class NodeItem(QGraphicsSvgItem):
         
         self.viewed = False
 
+        self._viewSockets = False
+        self._visibleSockets = []
+
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemIsFocusable, True)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -393,7 +396,7 @@ class NodeItem(QGraphicsSvgItem):
         return QRectF(0, 0, self.width, self.height)
 
     def mouseDoubleClickEvent(self, event):
-        if self.data.type == "CONTAINER":
+        if type(self.data) == MT.pytypes.ContainerNode:
             self.scene().changeSpace(self.data.graph)
 
     def mouseMoveEvent(self, event):
@@ -426,10 +429,36 @@ class NodeItem(QGraphicsSvgItem):
         if snap:
             self.setPos(ownpos)
 
+    def toggleViewSockets(self):
+        self._viewSockets = not self._viewSockets
+        if self._viewSockets:
+            self.height += 50
+            for i, insocket in enumerate(self.data.insockets):
+                socket = QGraphicsEllipseItem(0, 0, 10, 10, self)
+                socket.setBrush(QBrush(QColor(80, 80, 255)))
+                socket.setPen(Qt.NoPen)
+                socket.setPos(0, i * 10 + 5)
+                self._visibleSockets.append(socket)
+
+            for i, outsocket in enumerate(self.data.outsockets):
+                socket = QGraphicsEllipseItem(0, 0, 10, 10, self)
+                socket.setPos(self.width - 10, i * 10 + 5)
+                socket.setBrush(QBrush(QColor(80, 80, 255)))
+                socket.setPen(Qt.NoPen)
+                self._visibleSockets.append(socket)
+
+        else:
+            self.height -= 50
+            for socket in self._visibleSockets:
+                socket.setParentItem(None)
+                self.scene().removeItem(socket)
+
     def contextMenuEvent(self, event):
         menu = QMenu()
         action = menu.addAction("delete")
         action.triggered.connect(self.delete)
+        action = menu.addAction("toggle View Sockets")
+        action.triggered.connect(self.toggleViewSockets)
         menu.exec_(event.screenPos())
 
     def dragEnterEvent(self, event):

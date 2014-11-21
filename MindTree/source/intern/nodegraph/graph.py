@@ -185,6 +185,9 @@ class NodeGraph(QGraphicsView):
             _node.pos = (scenePos.x() - nw/2, scenePos.y() - nh/2)
 
     def addNode(self, n):
+        if n.space != self.scene().space:
+            return
+
         item = self.scene().addNode(n)
         item.setSelected(True)
 
