@@ -43,6 +43,19 @@ struct PyConverter{
     typedef T t;
 };
 
+template<typename T>
+struct PyConverter<std::vector<T>>{
+    static BPy::object pywrap(std::vector<T> data)
+    {
+        BPy::list l;
+        for (auto d : data)
+            l.append(d);
+
+        return l;
+    }
+    typedef std::vector<T> t;
+};
+
 #ifndef PYWRAP_map_types
 #define PYWRAP_map_types(oldtype, newtype)\
 template<>\
@@ -130,13 +143,14 @@ public:
 
     static void wrap();
 
+    int ptr();
     bool equal(PyWrapper *other);
     bool notequal(PyWrapper *other);
     void elementDestroyed();
     template<class T>
     T* getWrapped() const
     {
-        return static_cast<T*>(element);
+        return dynamic_cast<T*>(element);
     }
 
     bool alive();

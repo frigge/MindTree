@@ -78,7 +78,7 @@ public:
     static NodeList copy(NodeList nodes);
     virtual ~DNode();
 
-    DNode::BuildInType getBuildInType();
+    DNode::BuildInType getBuildInType() const;
     bool getSelected();
     void setSelected(bool value);
 
@@ -98,9 +98,8 @@ public:
     virtual NodeList getAllInNodes();
     virtual ConstNodeList getAllInNodesConst() const;
 
-    virtual void setNodeName(std::string name);
+    virtual void setName(std::string name);
     std::string getNodeName() const;
-    void setNodeType(NodeType t);
     virtual void addSocket(DSocket *socket);
     std::vector<std::string> getSocketNames();
     void setSocketIDName(DSocket *socket);
@@ -142,9 +141,13 @@ public:
     static DNode *dropNode(std::string filepath);
 
 protected:
-    BuildInType _buildInType;
+    inline void setBuildInType(BuildInType t)
+    {
+        _buildInType = t;
+    }
 
 private:
+    BuildInType _buildInType;
     static std::vector<std::function<DNode_ptr()>> newNodeDecorator;
 
     bool selected;

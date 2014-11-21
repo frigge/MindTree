@@ -1,6 +1,6 @@
-#ifndef CONSOLEDIALOG_/BIN/BASH: /USR/BIN/RUBY: NO SUCH FILE OR DIRECTORY
+#ifndef CONSOLEDIALOG_H
 
-#define CONSOLEDIALOG_/BIN/BASH: /USR/BIN/RUBY: NO SUCH FILE OR DIRECTORY
+#define CONSOLEDIALOG_H
 
 #include "QDialog"
 
@@ -14,4 +14,4 @@ private:
     /* data */
 };
 
-#endif /* end of include guard: CONSOLEDIALOG_/BIN/BASH: /USR/BIN/RUBY: NO SUCH FILE OR DIRECTORY */
+#endif

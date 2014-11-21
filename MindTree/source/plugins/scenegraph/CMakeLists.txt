@@ -6,7 +6,6 @@ set(SCE_SRC
 )
 
 set(SCE_HEADER
-    pluginentry.h
     graphics/viewport.h
     graphics/viewport_widget.h
 )

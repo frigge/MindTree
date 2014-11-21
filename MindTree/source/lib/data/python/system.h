@@ -1,5 +1,5 @@
 #ifndef MT_PYTHON_SYSTEM_WRAPS_H
-#define MT_PYTHON_SYSTEM_WRAPS
+#define MT_PYTHON_SYSTEM_WRAPS_H
 
 #include "boost/python.hpp"
 

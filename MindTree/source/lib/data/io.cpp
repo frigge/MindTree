@@ -349,7 +349,7 @@ InStream& InStream::operator>>(DNode &node)
 {
     std::string name;
     *this >> name;
-    node.setNodeName(name);
+    node.setName(name);
     Vec2i vec;
     *this >> vec;
     node.setPos(vec);
@@ -381,6 +381,10 @@ InStream& InStream::operator>>(ContainerNode &node)
 {
     auto *space = node.getContainerData();
     space->setName(node.getNodeName());
+
+    node.setInSockets(new SocketNode(DSocket::IN, &node, true));
+    node.setOutSockets(new SocketNode(DSocket::OUT, &node, true));
+
     *this >> static_cast<DNSpace&>(*space);
     return *this;
 }

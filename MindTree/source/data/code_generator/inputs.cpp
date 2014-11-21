@@ -32,7 +32,7 @@ InputNode::InputNode(const InputNode* node)
 SurfaceInputNode::SurfaceInputNode(bool raw)
     : InputNode("Surace Input")
 {
-    setNodeType(SURFACEINPUT);
+    setType(SURFACEINPUT);
     if(!raw){
         new DoutSocket("P", POINT, this);
         new DoutSocket("N", NORMAL, this);
@@ -56,7 +56,7 @@ SurfaceInputNode::SurfaceInputNode(const SurfaceInputNode *node)
 DisplacementInputNode::DisplacementInputNode(bool raw)
     : InputNode("Displacement Input")
 {
-    setNodeType(DISPLACEMENTINPUT);
+    setType(DISPLACEMENTINPUT);
     if (!raw) {
         new DoutSocket("P", POINT, this);
         new DoutSocket("N", NORMAL, this);
@@ -77,7 +77,7 @@ DisplacementInputNode::DisplacementInputNode(const DisplacementInputNode *node)
 VolumeInputNode::VolumeInputNode(bool raw)
     : InputNode("Volume Input")
 {
-    setNodeType(VOLUMEINPUT);
+    setType(VOLUMEINPUT);
     if(!raw){
         new DoutSocket("P", POINT, this);
         new DoutSocket("I", VECTOR, this);
@@ -98,7 +98,7 @@ VolumeInputNode::VolumeInputNode(const VolumeInputNode *node)
 LightInputNode::LightInputNode(bool raw)
     : InputNode("Light Input")
 {
-    setNodeType(LIGHTINPUT);
+    setType(LIGHTINPUT);
     if(!raw){
         new DoutSocket("P", POINT, this);
         new DoutSocket("Ps", POINT, this);
@@ -134,7 +134,7 @@ IlluminateInputNode::IlluminateInputNode(const IlluminateInputNode *node)
 GLFragmentInputNode::GLFragmentInputNode(bool raw)
     : InputNode("Fragment Shader Input")
 {
-    setNodeType(GLFRAGMENTINPUT);
+    setType(GLFRAGMENTINPUT);
     if(!raw){
         new DoutSocket("gl_Color", COLOR, this);
         new DoutSocket("gl_SecondaryColor", COLOR, this);
@@ -153,7 +153,7 @@ GLFragmentInputNode::GLFragmentInputNode(const GLFragmentInputNode *node)
 GLVertexInputNode::GLVertexInputNode(bool raw)
     : InputNode("Vertex Shader Input")
 {
-    setNodeType(GLVERTEXINPUT);
+    setType(GLVERTEXINPUT);
     if(!raw){
         new DoutSocket("gl_Vertex", VECTOR, this);
         new DoutSocket("gl_Normal", NORMAL, this);
@@ -179,7 +179,7 @@ GLVertexInputNode::GLVertexInputNode(const GLVertexInputNode *node)
 GLGeometryInputNode::GLGeometryInputNode(bool raw)
     : InputNode("Geometry Shader Input")
 {
-    setNodeType(GLGEOMETRYINPUT);
+    setType(GLGEOMETRYINPUT);
     if(!raw){
         new DoutSocket("gl_VerticesIn", INTEGER, this);
         new DoutSocket("gl_FrontColorIn", COLOR, this);

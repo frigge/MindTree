@@ -107,7 +107,7 @@ int RSLOutputNode::compile()    const
 SurfaceOutputNode::SurfaceOutputNode(bool raw)
     : RSLOutputNode("Surface Output", raw)
 {
-    setNodeType(SURFACEOUTPUT);
+    setType(SURFACEOUTPUT);
     if(!raw){
         //new DinSocket("Name", STRING, this);
         //DinSocket *dirsocket = new DinSocket("Directory", STRING, this);
@@ -126,7 +126,7 @@ SurfaceOutputNode::SurfaceOutputNode(const SurfaceOutputNode *node)
 DisplacementOutputNode::DisplacementOutputNode(bool raw)
     : RSLOutputNode("Displacement Output", raw)
 {
-    setNodeType(DISPLACEMENTOUTPUT);
+    setType(DISPLACEMENTOUTPUT);
     if(!raw){
         new DinSocket("P", POINT, this);
         new DinSocket("N", NORMAL, this);
@@ -142,7 +142,7 @@ DisplacementOutputNode::DisplacementOutputNode(const DisplacementOutputNode *nod
 VolumeOutputNode::VolumeOutputNode(bool raw)
     : RSLOutputNode("Volume Output", raw)
 {
-    setNodeType(VOLUMEOUTPUT);
+    setType(VOLUMEOUTPUT);
     if(!raw){
         new DinSocket("Ci", COLOR, this);
         new DinSocket("Oi", COLOR, this);
@@ -158,7 +158,7 @@ VolumeOutputNode::VolumeOutputNode(const VolumeOutputNode *node)
 LightOutputNode::LightOutputNode(bool raw)
     : RSLOutputNode("Light Output", raw)
 {
-    setNodeType(LIGHTOUTPUT);
+    setType(LIGHTOUTPUT);
     if(!raw){
         new DinSocket("Cl", COLOR, this);
         setDynamicSocketsNode(IN);
@@ -201,7 +201,7 @@ QString GLSLOutputNode::writeCode()
 FragmentOutputNode::FragmentOutputNode(bool raw)
     : GLSLOutputNode("fragment output", raw)
 {
-    setNodeType(FRAGMENTOUTPUT);
+    setType(FRAGMENTOUTPUT);
     if(!raw){
         //new DinSocket("Name", STRING, this);
         //DinSocket *dirsocket = new DinSocket("Directory", STRING, this);
@@ -228,7 +228,7 @@ int FragmentOutputNode::compile()    const
 VertexOutputNode::VertexOutputNode(bool raw)
     : GLSLOutputNode("vertex output", raw)
 {
-    setNodeType(VERTEXOUTPUT);
+    setType(VERTEXOUTPUT);
     if(!raw){
         //new DinSocket("Name", STRING, this);
         //DinSocket *dirsocket = new DinSocket("Directory", STRING, this);
@@ -252,7 +252,7 @@ int VertexOutputNode::compile()    const
 GeometryOutputNode::GeometryOutputNode(bool raw)
     : GLSLOutputNode("geometry output", raw)
 {
-    setNodeType(GEOMETRYOUTPUT);
+    setType(GEOMETRYOUTPUT);
     if(!raw){
         //new DinSocket("Name", STRING, this);
         //DinSocket *dirsocket = new DinSocket("Directory", STRING, this);

@@ -17,6 +17,7 @@
 */
 
 #include "data/properties.h"
+#include "data/nodes/data_node.h"
 #include "pycache_main.h"
 
 MindTree::PyCacheProcessor::PyCacheProcessor(BPy::object obj)

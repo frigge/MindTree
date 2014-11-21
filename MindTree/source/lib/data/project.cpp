@@ -7,7 +7,7 @@ using namespace MindTree;
 
 Project* Project::_project=nullptr;
 
-Project::Project(std::string filename)
+Project::Project(std::string filename) noexcept
     : filename(filename)
 {
     DNSpace *space = nullptr;
@@ -21,6 +21,7 @@ Project::Project(std::string filename)
     }
     setRootSpace(space);
     root_scene->setName("Root");
+    MT_CUSTOM_SIGNAL_EMITTER("newProject", this);
 }
 
 DNSpace* Project::fromFile(std::string filename)
@@ -52,7 +53,8 @@ Project::~Project()
 
 Project* Project::create()    
 {
-    if(_project) delete _project;
+    if(_project) 
+        delete _project;
     _project = new Project();
     return _project;
 }
@@ -101,6 +103,7 @@ std::string Project::getIDName(void *ptr)
 {
     for (auto p : idNames)
         if (ptr == p.second) return p.first;
+    return "";
 }
 
 void* Project::getItem(std::string idname)    

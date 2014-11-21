@@ -24,6 +24,7 @@
 class FRGUndoRedoObjectBase
 {
 public:
+    virtual ~FRGUndoRedoObjectBase() {}
     virtual void undo() = 0;
     virtual void redo() = 0;
 };

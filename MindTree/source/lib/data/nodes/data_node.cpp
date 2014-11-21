@@ -103,15 +103,23 @@ DNode::DNode(const DNode& node)
 
 DNode::~DNode()
 {
+    for (auto *in : getInSockets())
+        in->clearLink();
+
+    for (auto *out : getOutSockets())
+        for (auto *in : out->getCntdSockets())
+            in->clearLink();
+
     for(DinSocket *socket : getInSockets())
         delete socket;
     for(DoutSocket *socket : getOutSockets())
         delete socket;
 
     if(space)space->unregisterNode(this);
+    MT_CUSTOM_SIGNAL_EMITTER("nodeDeleted", this);
 }
 
-DNode::BuildInType DNode::getBuildInType()
+DNode::BuildInType DNode::getBuildInType() const
 {
     return _buildInType;
 }
@@ -176,7 +184,7 @@ const NodeType& DNode::getType()const
 
 void DNode::setType(NodeType value)
 {
-    type = NodeType(value);
+    type = value;
 }
 
 DNode* DNode::clone()
@@ -223,16 +231,6 @@ ConstNodeList DNode::getAllInNodesConst() const
 
 bool DNode::isContainer() const
 {
-    //if(type == CONTAINER
-    //        ||type == CONDITIONCONTAINER
-    //        ||type == FOR
-    //        ||type == WHILE
-    //        ||type == GATHER
-    //        ||type == ILLUMINANCE
-    //        ||type == ILLUMINATE
-    //        ||type == SOLAR)
-    //    return true;
-    //else return false;
     return true;
 }
 
@@ -278,7 +276,7 @@ bool DNode::isContainer() const
 DNode_ptr DNode::newNode(std::string name, NodeType t, int insize, int outsize)
 {
     DNode_ptr node = newNodeDecorator[t.id()](); 
-    node->setNodeName(name);
+    node->setName(name);
     return node;
 }
 
@@ -417,12 +415,7 @@ bool DNode::operator!=(const DNode &node)const
     return (!(*this == node));
 }
 
-void DNode::setNodeType(NodeType t)    
-{
-    type = t;
-}
-
-void DNode::setNodeName(std::string name)
+void DNode::setName(std::string name)
 {
     nodeName = name;
 }
@@ -476,6 +469,11 @@ void DNode::removeSocket(DSocket *socket)
         outSockets.erase(it);
         delete socket;
     }
+    if (varsocket == socket)
+        varsocket = nullptr;
+
+    if (socket == lastsocket)
+        lastsocket = nullptr;
 }
 
 void DNode::decVarSocket(DSocket *socket)
@@ -492,6 +490,7 @@ void DNode::incVarSocket()
     else
         varsocket = new DoutSocket("+", "VARIABLE", this);
     varsocket->setVariable(true);
+    varsocket->listenToLinked();
     varcnt++;
 }
 
@@ -597,5 +596,6 @@ void DNode::setDynamicSocketsNode(DSocket::SocketDir dir)
     else
         varsocket = new DoutSocket("+", "VARIABLE", this);
     varsocket->setVariable(true);
+    varsocket->listenToLinked();
 }
 

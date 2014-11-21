@@ -512,7 +512,7 @@ ComposeMeshNode::ComposeMeshNode(bool raw)
     : ObjectDataNodeBase("Mesh")
 {
     setObjectData(std::make_shared<MeshData>());
-    setNodeType("COMPOSEMESHNODE");
+    setType("COMPOSEMESHNODE");
     if(!raw){
         new DoutSocket("Data", "OBJDATA", this);
     }
@@ -641,9 +641,9 @@ void AbstractTransformableNode::setObject(std::shared_ptr<AbstractTransformable>
 //    return nodes;
 //}
 //
-void AbstractTransformableNode::setNodeName(std::string name)    
+void AbstractTransformableNode::setName(std::string name)    
 {
-    DNode::setNodeName(name);
+    DNode::setName(name);
     transformable->setName(name);
 }
 
@@ -651,7 +651,7 @@ ObjectNode::ObjectNode(bool raw)
     : AbstractTransformableNode("Object", raw)
 {
     setObject(std::make_shared<GeoObject>());
-    setNodeType(NodeType("OBJECT"));
+    setType(NodeType("OBJECT"));
     if(!raw){
         setDynamicSocketsNode(DSocket::IN);
         objDataSocket = new DinSocket("Data", "OBJDATA", this);
@@ -696,7 +696,7 @@ DinSocket* ObjectNode::getObjDataSocket()
 CreateGroupNode::CreateGroupNode(std::string name, bool raw)
     : DNode(name), group(new Group())
 {
-    setNodeType("GROUP");
+    setType("GROUP");
     if(!raw){
         new DoutSocket("Group", "GROUPDATA", this);
     }
@@ -720,7 +720,7 @@ CameraNode::CameraNode(bool raw)
     : AbstractTransformableNode("Camera", raw)
 {
     setObject(std::make_shared<Camera>());
-    setNodeType("CAMERA");
+    setType("CAMERA");
     if(!raw){
         new DinSocket("Perspective", "CONDITION", this);
         new DinSocket("FOV", "FLOAT", this);
@@ -741,7 +741,7 @@ LightNode::LightNode(std::string name, bool raw)
     : AbstractTransformableNode(name, raw)
 {
     setObject(std::make_shared<Light>());
-    setNodeType("LIGHT");
+    setType("LIGHT");
     if(!raw){
         new DinSocket("Intensity", "FLOAT", this);
         new DinSocket("Color", "COLOR", this);

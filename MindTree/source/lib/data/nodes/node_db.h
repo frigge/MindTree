@@ -15,7 +15,7 @@ class AbstractNodeDecorator
 public:
     AbstractNodeDecorator(std::string type="", std::string label="");
     virtual ~AbstractNodeDecorator();
-    virtual DNode* operator()(bool);
+    virtual DNode* operator()(bool) = 0;
     void setLabel(std::string l);
     std::string getLabel();
     void setType(std::string t);

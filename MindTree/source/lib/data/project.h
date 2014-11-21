@@ -11,7 +11,7 @@ class DNode;
 
 class Project : public PyExposable
 {
-	Project(std::string filename="");
+	Project(std::string filename="") noexcept;
 
 public:
 	~Project();

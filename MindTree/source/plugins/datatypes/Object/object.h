@@ -272,7 +272,7 @@ public:
     virtual std::shared_ptr<AbstractTransformable> getObject();
     void setObject(std::shared_ptr<AbstractTransformable> obj);
 
-    void setNodeName(std::string name);
+    void setName(std::string name);
     
     static bool isTransformable(MindTree::DNode *node);
 

@@ -237,7 +237,7 @@ TimelineNode::TimelineNode(bool raw)
     if(!raw)
         new MindTree::DoutSocket("Frame", "INTEGER", this);
 
-    setNodeType("TIMELINE");
+    setType("TIMELINE");
     auto cbhandler = MindTree::Signal::SignalHandler<int>
         ::handler.connect("frameChanged",
                           [this](int) { 

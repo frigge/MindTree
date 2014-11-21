@@ -1,4 +1,5 @@
 #include "boost/python.hpp"
+#include "data/nodes/data_node.h"
 #include "data/cache_main.h"
 #include "iostream"
 #include "fstream"

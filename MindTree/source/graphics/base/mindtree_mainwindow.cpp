@@ -102,7 +102,6 @@ MainWindow::MainWindow(QWidget *parent)
     QTimer *t = new QTimer;
     connect(t, SIGNAL(timeout()), this, SLOT(lookupStyle()));
     t->start(2000);
-    std::cout<<"I'm in debug mode so i'm gonna read the styles in realtime"<<std::endl;
 #endif
 
     MindTree::Signal::getHandler<QString>().connect("filename_changed",[this](QString title){
@@ -145,6 +144,7 @@ void MainWindow::registerWindow(WindowFactory *factory)
     menus.value("&Window")->addAction(factory->action());
 }
 
+#ifdef QT_DEBUG
 void MainWindow::lookupStyle()    
 {
     if(style_age == -1){
@@ -159,6 +159,7 @@ void MainWindow::lookupStyle()
         setupStyle();
     }
 }
+#endif
 
 void MainWindow::setupStyle()    
 {

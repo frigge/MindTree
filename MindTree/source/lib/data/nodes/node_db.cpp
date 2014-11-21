@@ -35,10 +35,6 @@ std::string AbstractNodeDecorator::getType()
     return type;
 }
 
-DNode* AbstractNodeDecorator::operator()(bool)    
-{
-}
-
 BuildInDecorator::BuildInDecorator(std::string type, std::string label, std::function<DNode*(bool)> func)
     : AbstractNodeDecorator(type, label), func(func)
 {

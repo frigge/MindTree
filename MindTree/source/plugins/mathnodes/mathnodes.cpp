@@ -59,24 +59,24 @@ BOOST_PYTHON_MODULE(mathnodes){
 
 MathNode::MathNode(NodeType t, bool raw)
 {
-    setNodeType(t);
+    setType(t);
     if(t == "ADD") {
-        setNodeName("Add");
+        setName("Add");
     }
     else if(t == "SUBTRACT") {
-        setNodeName("Subtract");
+        setName("Subtract");
     }
     else if(t == "MULTIPLY") {
-        setNodeName("Multiply");
+        setName("Multiply");
     }
     else if(t == "DIVIDE") {
-        setNodeName("Divide");
+        setName("Divide");
     }
     else if(t == "DOTPRODUCT") {
-        setNodeName("Dot Product");
+        setName("Dot Product");
     }
     else if(t == "MODULO") {
-        setNodeName("Modulo");
+        setName("Modulo");
     }
 
     if(!raw) {

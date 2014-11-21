@@ -205,6 +205,7 @@ void MindTree::Python::load(QString path, QString plugin)
     }
     try{
         BPy::import(BPy::str(plugin.toStdString()));
+        std::cout << "Loaded Module: " << plugin.toStdString() << std::endl;
     }catch(BPy::error_already_set const &){
         std::cout << "could not load " << plugin.toStdString() << std::endl;
         PyErr_Print();

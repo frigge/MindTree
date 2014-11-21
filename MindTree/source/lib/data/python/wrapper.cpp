@@ -43,19 +43,19 @@ DNodeListIteratorPyWrapper::~DNodeListIteratorPyWrapper()
 {
 }
 
-void DNodeListIteratorPyWrapper::wrap()    
+void DNodeListIteratorPyWrapper::wrap()
 {
-    BPy::class_<DNodeListIteratorPyWrapper, BPy::bases<PyWrapper>>("NodeIter", BPy::no_init) 
+    BPy::class_<DNodeListIteratorPyWrapper, BPy::bases<PyWrapper>>("NodeIter", BPy::no_init)
             .def("__iter__", &DNodeListIteratorPyWrapper::iter, BPy::return_value_policy<BPy::manage_new_object>())
             .def("__next__", &DNodeListIteratorPyWrapper::next);
 }
 
-DNodeListIteratorPyWrapper* DNodeListIteratorPyWrapper::iter()    
+DNodeListIteratorPyWrapper* DNodeListIteratorPyWrapper::iter()
 {
     return new DNodeListIteratorPyWrapper(nodelist);
 }
 
-BPy::object DNodeListIteratorPyWrapper::next()    
+BPy::object DNodeListIteratorPyWrapper::next()
 {
     if(_index >= nodelist.size()) {
         PyErr_SetNone(PyExc_StopIteration);
@@ -69,7 +69,7 @@ BPy::object DNodeListIteratorPyWrapper::next()
 }
 
 PythonNodeDecorator::PythonNodeDecorator(BPy::object cls)
-    : cls(cls) 
+    : cls(cls)
 {
     setType(BPy::extract<std::string>(cls.attr("type")));
     setLabel(BPy::extract<std::string>(cls.attr("label")));
@@ -79,11 +79,11 @@ PythonNodeDecorator::~PythonNodeDecorator()
 {
 }
 
-DNode* PythonNodeDecorator::operator()(bool raw)    
+DNode* PythonNodeDecorator::operator()(bool raw)
 {
     GILLocker releaser;
     DNode *node = new DNode();
-    node->setNodeType(getType());
+    node->setType(getType());
     try{
         cls(getPyObject(node), raw);
     } catch (BPy::error_already_set){
@@ -117,8 +117,15 @@ PyWrapper::~PyWrapper()
 void PyWrapper::wrap()
 {
     BPy::class_<PyWrapper>("PyWrapper", BPy::no_init)
+        .add_property("ptr", &PyWrapper::ptr)
         .def("__eq__", &PyWrapper::equal)
         .def("__ne__", &PyWrapper::notequal);
+}
+
+int PyWrapper::ptr()
+{
+    if(!alive()) return 0;
+    return reinterpret_cast<long>(getWrapped<PyExposable>());
 }
 
 bool PyWrapper::equal(PyWrapper *other)
@@ -134,18 +141,18 @@ bool PyWrapper::notequal(PyWrapper *other)
 }
 
 #ifdef QT_DEBUG
-void PyWrapper::setStylePath(QString path)    
+void PyWrapper::setStylePath(QString path)
 {
     stylePath = path;
 }
 
-QString PyWrapper::getStylePath()    
+QString PyWrapper::getStylePath()
 {
     return stylePath;
 }
 #endif
 
-void PyWrapper::elementDestroyed()    
+void PyWrapper::elementDestroyed()
 {
     element = nullptr;
 }
@@ -168,18 +175,18 @@ ProjectPyWrapper::~ProjectPyWrapper()
 {
 }
 
-void ProjectPyWrapper::wrap()    
+void ProjectPyWrapper::wrap()
 {
    BPy::class_<ProjectPyWrapper, BPy::bases<PyWrapper>>("Project", BPy::no_init)
-            .add_property("filename", &ProjectPyWrapper::getFilename, 
+            .add_property("filename", &ProjectPyWrapper::getFilename,
                     &ProjectPyWrapper::setFilename)
             .def("save", &ProjectPyWrapper::save)
-            .add_property("root", 
-                    BPy::make_function(&ProjectPyWrapper::getRoot, 
+            .add_property("root",
+                    BPy::make_function(&ProjectPyWrapper::getRoot,
                         BPy::return_value_policy<BPy::manage_new_object>()));
 }
 
-std::string ProjectPyWrapper::getFilename()    
+std::string ProjectPyWrapper::getFilename()
 {
     if(!alive()) return std::string();
     return getWrapped<Project>()->getFilename();
@@ -192,13 +199,13 @@ void ProjectPyWrapper::save()
     getWrapped<Project>()->save();
 }
 
-void ProjectPyWrapper::setFilename(std::string name)    
+void ProjectPyWrapper::setFilename(std::string name)
 {
     if(!alive()) return;
     getWrapped<Project>()->setFilename(name);
 }
 
-DNSpacePyWrapper* ProjectPyWrapper::getRoot()    
+DNSpacePyWrapper* ProjectPyWrapper::getRoot()
 {
     if(!alive()) return 0;
     return new DNSpacePyWrapper(getWrapped<Project>()->getRootSpace());
@@ -213,7 +220,7 @@ DNSpacePyWrapper::~DNSpacePyWrapper()
 {
 }
 
-void DNSpacePyWrapper::wrap()    
+void DNSpacePyWrapper::wrap()
 {
     BPy::object(DNSpacePyWrapper::*getItemString)(std::string) = &DNSpacePyWrapper::__getitem__;
     BPy::object(DNSpacePyWrapper::*getItemInt)(int) = &DNSpacePyWrapper::__getitem__;
@@ -241,31 +248,31 @@ BPy::object getPyObject(DNSpace *space)
         return BPy::object(new DNSpacePyWrapper(space));
 }
 
-void DNSpacePyWrapper::addNode(DNodePyWrapper *node)    
+void DNSpacePyWrapper::addNode(DNodePyWrapper *node)
 {
     if(!node || !(alive() && node->alive())) return;
     getWrapped<DNSpace>()->addNode(node->getWrapped<DNode>());
 }
 
-void DNSpacePyWrapper::removeNode(DNodePyWrapper *node)    
+void DNSpacePyWrapper::removeNode(DNodePyWrapper *node)
 {
     if(!(alive() && node->alive())) return;
     getWrapped<DNSpace>()->removeNode(node->getWrapped<DNode>());
 }
 
-bool DNSpacePyWrapper::isContainer()    
+bool DNSpacePyWrapper::isContainer()
 {
     if(!alive()) return false;
     return getWrapped<DNSpace>()->isContainerSpace();
 }
 
-void DNSpacePyWrapper::setName(std::string name)    
+void DNSpacePyWrapper::setName(std::string name)
 {
     if(!alive()) return;
     getWrapped<DNSpace>()->setName(name);
 }
 
-std::string DNSpacePyWrapper::getName()    
+std::string DNSpacePyWrapper::getName()
 {
     if(!alive()) return std::string();
     return getWrapped<DNSpace>()->getName();
@@ -277,7 +284,7 @@ int DNSpacePyWrapper::len()
     return getWrapped<DNSpace>()->getNodeCnt();
 }
 
-std::string DNSpacePyWrapper::__str__()    
+std::string DNSpacePyWrapper::__str__()
 {
     if(!alive()) return std::string();
     std::string str("[");
@@ -290,13 +297,13 @@ std::string DNSpacePyWrapper::__str__()
     return str;
 }
 
-std::string DNSpacePyWrapper::__repr__()    
+std::string DNSpacePyWrapper::__repr__()
 {
     if(!alive()) return "";
     return "<"+getName()+__str__()+">";
 }
 
-BPy::object DNSpacePyWrapper::__getitem__(std::string name)    
+BPy::object DNSpacePyWrapper::__getitem__(std::string name)
 {
     if(!alive()) return BPy::object();
     for(DNode *node : getWrapped<DNSpace>()->getNodes()){
@@ -308,18 +315,20 @@ BPy::object DNSpacePyWrapper::__getitem__(std::string name)
     return BPy::object();
 }
 
-BPy::object DNSpacePyWrapper::__getitem__(int index)    
+BPy::object DNSpacePyWrapper::__getitem__(int index)
 {
     if(!alive()) return BPy::object();
-    if(getWrapped<DNSpace>()->getNodes().size() <= index) {
-        PyErr_SetString(PyExc_IndexError, "list index out of range");
+    if(getWrapped<DNSpace>()->getNodes().size() <= (size_t)index) {
+        std::stringstream ss;
+        ss << "list index: " << index << " out of range";
+        PyErr_SetString(PyExc_IndexError, ss.str().c_str());
         PyErr_Print();
         return BPy::object();
     }
     return getPyObject(getWrapped<DNSpace>()->getNodes().at(index));
 }
 
-DNodeListIteratorPyWrapper* DNSpacePyWrapper::iter()    
+DNodeListIteratorPyWrapper* DNSpacePyWrapper::iter()
 {
     if(!alive()) return nullptr;
     return new DNodeListIteratorPyWrapper(getWrapped<DNSpace>()->getNodes());
@@ -372,18 +381,18 @@ BPy::object MindTree::getPyObject(DNode* node)
     switch(node->getBuildInType()) {
         case DNode::NODE:
             {
-                BPy::object obj(new ContainerNodePyWrapper(node->getDerived<ContainerNode>()));
+                BPy::object obj(new DNodePyWrapper(node));
                 return obj;
             }
         case DNode::CONTAINER:
             {
-                BPy::object obj(new DNodePyWrapper(node));
+                BPy::object obj(new ContainerNodePyWrapper(node->getDerived<ContainerNode>()));
                 return obj;
             }
     }
 }
 
-void DNodePyWrapper::wrap()    
+void DNodePyWrapper::wrap()
 {
     BPy::class_<DNodePyWrapper, BPy::bases<PyWrapper>>("DNode", BPy::no_init)
                 .add_property("name", &DNodePyWrapper::getName, &DNodePyWrapper::setName)
@@ -417,33 +426,33 @@ void DNodePyWrapper::setDynamicInSockets()
     getWrapped<DNode>()->setDynamicSocketsNode(DSocket::IN);
 }
 
-DinSocketPyWrapper* DNodePyWrapper::addInSocket(std::string name, std::string type)    
+DinSocketPyWrapper* DNodePyWrapper::addInSocket(std::string name, std::string type)
 {
-    if(!alive()) return 0; 
+    if(!alive()) return 0;
     return new DinSocketPyWrapper(new DinSocket(name, SocketType(type), getWrapped<DNode>()));
 }
 
-DoutSocketPyWrapper* DNodePyWrapper::addOutSocket(std::string name, std::string type)    
+DoutSocketPyWrapper* DNodePyWrapper::addOutSocket(std::string name, std::string type)
 {
     if(!alive()) return 0;
     return new DoutSocketPyWrapper(new DoutSocket(name, SocketType(type), getWrapped<DNode>()));
 }
 
-BPy::object DNodePyWrapper::getSpace()    
+BPy::object DNodePyWrapper::getSpace()
 {
     if(!alive())return BPy::object();
     auto *space = getWrapped<DNode>()->getSpace();
     return getPyObject(space);
 }
 
-void DNodePyWrapper::setName(std::string name)    
+void DNodePyWrapper::setName(std::string name)
 {
     GILReleaser releaser;
     if(!alive())return;
-    getWrapped<DNode>()->setNodeName(name);
+    getWrapped<DNode>()->setName(name);
 }
 
-std::string DNodePyWrapper::getName()    
+std::string DNodePyWrapper::getName()
 {
     if(!alive())return std::string();
     return getWrapped<DNode>()->getNodeName();
@@ -463,7 +472,7 @@ void DNodePyWrapper::setType(std::string value)
     getWrapped<DNode>()->setType(value);
 }
 
-BPy::tuple DNodePyWrapper::getPos()    
+BPy::tuple DNodePyWrapper::getPos()
 {
     if(!alive())return BPy::make_tuple(0, 0);
     Vec2i pos = getWrapped<DNode>()->getPos();
@@ -480,14 +489,14 @@ void DNodePyWrapper::setPos(BPy::tuple pos)
     getWrapped<DNode>()->setPos(Vec2i(x, y));
 }
 
-BPy::object DNodePyWrapper::getProperty(std::string name)    
+BPy::object DNodePyWrapper::getProperty(std::string name)
 {
     if(!alive())return BPy::object();
     auto prop = getWrapped<DNode>()->getProperty(name);
     return prop.toPython();
 }
 
-BPy::list DNodePyWrapper::in()    
+BPy::list DNodePyWrapper::in()
 {
     if(!alive()) return BPy::list();
     BPy::list l;
@@ -497,7 +506,7 @@ BPy::list DNodePyWrapper::in()
     return l;
 }
 
-BPy::list DNodePyWrapper::out()    
+BPy::list DNodePyWrapper::out()
 {
     if(!alive())return BPy::list();
     BPy::list l;
@@ -539,23 +548,23 @@ DSocketPyWrapper::~DSocketPyWrapper()
 {
 }
 
-void DSocketPyWrapper::wrap()    
+void DSocketPyWrapper::wrap()
 {
     BPy::class_<DSocketPyWrapper, BPy::bases<PyWrapper>>("DSocket", BPy::no_init)
         //.def("getName", &DSocketPyWrapper::getName)
         .add_property("name", &DSocketPyWrapper::getName, &DSocketPyWrapper::setName)
         .add_property("type", &DSocketPyWrapper::getType, &DSocketPyWrapper::setType)
         .add_property("node", &DSocketPyWrapper::getNode);
-        //.def("getNode", &DSocketPyWrapper::getNode, BPy::return_value_policy<BPy::manage_new_object>()); 
+        //.def("getNode", &DSocketPyWrapper::getNode, BPy::return_value_policy<BPy::manage_new_object>());
 }
 
-std::string DSocketPyWrapper::getName()    
+std::string DSocketPyWrapper::getName()
 {
     if(!alive()) return "";
     return getWrapped<DSocket>()->getName();
 }
 
-void DSocketPyWrapper::setName(std::string name)    
+void DSocketPyWrapper::setName(std::string name)
 {
     GILReleaser releaser;
     if(!alive()) return;
@@ -576,7 +585,7 @@ void DSocketPyWrapper::setType(std::string value)
     getWrapped<DSocket>()->setType(value);
 }
 
-BPy::object DSocketPyWrapper::getNode()    
+BPy::object DSocketPyWrapper::getNode()
 {
     if(!alive()) return BPy::object();
     return getPyObject(getWrapped<DSocket>()->getNode());
@@ -591,14 +600,14 @@ DinSocketPyWrapper::~DinSocketPyWrapper()
 {
 }
 
-void DinSocketPyWrapper::wrap()    
+void DinSocketPyWrapper::wrap()
 {
     BPy::class_<DinSocketPyWrapper, BPy::bases<DSocketPyWrapper> >("DinSocket", BPy::no_init)
-            .add_property("connected", 
-                    BPy::make_function(&DinSocketPyWrapper::getCntd, 
+            .add_property("connected",
+                    BPy::make_function(&DinSocketPyWrapper::getCntd,
                         BPy::return_value_policy<BPy::manage_new_object>()),
                     &DinSocketPyWrapper::setCntd)
-            .add_property("value", 
+            .add_property("value",
                     &DinSocketPyWrapper::getProp,
                     &DinSocketPyWrapper::setProp);
 }
@@ -621,7 +630,7 @@ void DinSocketPyWrapper::setProp(BPy::object value)
     }
 }
 
-DoutSocketPyWrapper* DinSocketPyWrapper::getCntd()    
+DoutSocketPyWrapper* DinSocketPyWrapper::getCntd()
 {
     if(!alive()) return 0;
     auto s = getWrapped<DinSocket>()->getCntdSocket();
@@ -629,11 +638,11 @@ DoutSocketPyWrapper* DinSocketPyWrapper::getCntd()
     return new DoutSocketPyWrapper(s);
 }
 
-void DinSocketPyWrapper::setCntd(DoutSocketPyWrapper *socket)    
+void DinSocketPyWrapper::setCntd(DoutSocketPyWrapper *socket)
 {
     GILReleaser releaser;
     if(!alive())return;
-    getWrapped<DinSocket>()->setCntdSocket(socket->getWrapped<DoutSocket>());  
+    getWrapped<DinSocket>()->setCntdSocket(socket->getWrapped<DoutSocket>());
 }
 
 DoutSocketPyWrapper::DoutSocketPyWrapper(DoutSocket *socket)
@@ -645,7 +654,7 @@ DoutSocketPyWrapper::~DoutSocketPyWrapper()
 {
 }
 
-void DoutSocketPyWrapper::wrap()    
+void DoutSocketPyWrapper::wrap()
 {
     BPy::class_<DoutSocketPyWrapper, BPy::bases<DSocketPyWrapper> >("DoutSocket", BPy::no_init)
         .add_property("cntdSockets", &DoutSocketPyWrapper::getCntdSockets);
@@ -664,20 +673,20 @@ BPy::object DoutSocketPyWrapper::getCntdSockets()
     return l;
 }
 
-void PropertyPyWrapper::wrap()    
+void PropertyPyWrapper::wrap()
 {
     BPy::class_<Property, BPy::bases<PyWrapper>>("Property", BPy::no_init)
         .def("__repr__", &PropertyPyWrapper::__repr__)
-        .def("__str__", &PropertyPyWrapper::__str__);    
+        .def("__str__", &PropertyPyWrapper::__str__);
 }
 
-std::string PropertyPyWrapper::__str__(BPy::object self)    
+std::string PropertyPyWrapper::__str__(BPy::object self)
 {
     Property prop = BPy::extract<Property>(self);
     return BPy::extract<std::string>(BPy::str(prop.toPython()));
 }
 
-std::string PropertyPyWrapper::__repr__(BPy::object self)    
+std::string PropertyPyWrapper::__repr__(BPy::object self)
 {
-   return "<"+__str__(self)+">"; 
+   return "<"+__str__(self)+">";
 }
