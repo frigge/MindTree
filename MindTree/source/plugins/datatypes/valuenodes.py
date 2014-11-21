@@ -1,5 +1,11 @@
 import MT
 
+class BoolNodeDecorator(MT.pytypes.NodeDecorator):
+    type="BOOLVALUE"
+    label="Values.Bool Value"
+    insockets = [("Value", "BOOLEAN")]
+    outsockets = [("Value", "BOOLEAN")]
+
 class FloatNodeDecorator(MT.pytypes.NodeDecorator):
     type="FLOATVALUE"
     label="Values.Float Value"
@@ -37,6 +43,7 @@ class Vector2DNodeDecorator(MT.pytypes.NodeDecorator):
     outsockets = [("Value", "VECTOR2D")]
 
 def registerNodes():
+    MT.registerNode(BoolNodeDecorator)
     MT.registerNode(FloatNodeDecorator)
     MT.registerNode(IntNodeDecorator)
     MT.registerNode(StringNodeDecorator)
