@@ -16,9 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "source/data/python/init.h"
-#include "data/nodes/data_node_socket.h"
 #include "exception"
 #include "glm/glm.hpp"
 #include "iostream"
@@ -58,31 +56,39 @@ ConverterFunctor PropertyConverter::get(DataType from, DataType to)
 }
 
 Property::Property()
-    : data(0),
-     type("undefined"),
+    : data(nullptr),
+     type("undefined")
      /* default fn objects to avoid std::bad_function_call*/
      //by default reset property value as this property is empty as well
-     cloneData([](Property &prop){prop.deleteFunc();}),
-     deleteFunc([]{}),
-     writeData([](IO::OutStream& stream, const Property &) { }),
-     pyconverter([]{return BPy::object();})
 {
 }
 
-Property::Property(const Property &other)
-    : Property()
+Property::Property(const Property &other) noexcept
+    : data(nullptr),
+    type("undefined")
 {
-    other.cloneData(*this);
+    other._meta.cloneData(*this);
 }
 
-Property::~Property()
+Property::Property(const Property &&other) noexcept
 {
-    deleteFunc(); 
+    other._meta.moveData(*this);
 }
 
-Property& Property::operator=(const Property &other)    
+Property::~Property() noexcept
 {
-    other.cloneData(*this);
+    _meta.deleteFunc(); 
+}
+
+Property& Property::operator=(const Property &other)     noexcept
+{
+    other._meta.cloneData(*this);
+    return *this;
+}
+
+Property& Property::operator=(const Property &&other) noexcept
+{
+    other._meta.moveData(*this);
     return *this;
 }
 
@@ -130,16 +136,6 @@ Property Property::createPropertyFromPython(const BPy::object &pyobj)
 
         }
     }
-    else if(t == "dict") {
-        std::vector<Property> prop_vec;
-        auto items = BPy::dict(pyobj).items();
-        for(auto i = 0; i<BPy::len(items); i++) {
-            std::string n = BPy::extract<std::string>(items[i][0]);
-            prop_vec.push_back(createPropertyFromPython(BPy::object(items[i][1])));
-        }
-        return Property(prop_vec);
-    }
-    else
     return Property();
 }
 
@@ -153,18 +149,17 @@ const MindTree::DataType& Property::getType() const
     return type;
 }
 
-BPy::object Property::toPython() const
+BPy::object Property::toPython() const noexcept
 {
     if(!data) {
         return BPy::object();
     }
-    return pyconverter(); 
+    return _meta.pyconverter(); 
 }
-
 
 IO::Input::ReaderList IO::Input::_readers;
 
-Property IO::Input::read(IO::InStream& stream)
+Property IO::Input::read(IO::InStream& stream) noexcept
 {
     DataType t;
     stream >> t;
@@ -180,7 +175,7 @@ IO::OutStream& MindTree::operator<<(IO::OutStream &stream, const Property &prop)
 {
     stream.beginBlock("Property");
     stream << static_cast<const TypeBase&>(prop.getType());
-    prop.writeData(stream, prop);
+    prop._meta.writeData(stream, prop);
     stream.endBlock("Property");
     return stream;
 }
