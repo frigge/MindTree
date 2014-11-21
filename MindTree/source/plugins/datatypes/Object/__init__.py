@@ -7,8 +7,8 @@ class GroupObjectsNodeDecorator(MT.pytypes.NodeDecorator):
     insockets = [("+", "VARIABLE")]
     outsockets = [("Group", "GROUPDATA")]
 
-    def __init__(self, node):
-        MT.pytypes.NodeDecorator.__init__(self, node)
+    def __init__(self, node, raw=False):
+        super().__init__(node, raw)
         node.setDynamicInSockets()
 
 class TransformObjectNodeDecorator(MT.pytypes.NodeDecorator):

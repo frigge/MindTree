@@ -17,7 +17,7 @@ class NodeDecorator:
     outsockets=[]
     customwidget = None
 
-    def __init__(self, node, raw):
+    def __init__(self, node, raw=False):
         node.name = self.label.split(".")[-1]
 
         if not raw:

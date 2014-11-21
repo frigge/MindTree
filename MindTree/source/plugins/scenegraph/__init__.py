@@ -1,1 +1,1 @@
-import scenegraph
+from . import scenegraph
