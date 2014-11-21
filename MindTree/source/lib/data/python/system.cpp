@@ -27,22 +27,22 @@ void MindTree::Python::sys::wrap()
     BPy::def("getSocketTypes", MindTree::Python::sys::getSocketTypes);
     BPy::def("openProject", MindTree::Python::sys::open);
     BPy::def("newProject", MindTree::Python::sys::newProject);
+
+    MindTree::Signal::getHandler<MindTree::Project*>().connect("newProject", [](MindTree::Project* prj) {
+        BPy::object mtmodule = BPy::import("MT");
+        ProjectPyWrapper *project = new ProjectPyWrapper(prj);
+        BPy::scope(mtmodule).attr("project") = BPy::ptr(project);
+    }).detach();
 }
 
 void MindTree::Python::sys::open(std::string filename)
 {
     MindTree::Project::load(filename);
-    BPy::object mtmodule = BPy::import("MT");
-    ProjectPyWrapper *project = new ProjectPyWrapper(Project::instance());
-    BPy::scope(mtmodule).attr("project") = BPy::ptr(project);
 }
 
 void MindTree::Python::sys::newProject()
 {
     MindTree::Project::create();
-    BPy::object mtmodule = BPy::import("MT");
-    ProjectPyWrapper *project = new ProjectPyWrapper(Project::instance());
-    BPy::scope(mtmodule).attr("project") = BPy::ptr(project);
 }
 
 void MindTree::Python::sys::regNode(PyObject *nodeClass)    
@@ -81,7 +81,7 @@ MindTree::Signal::CallbackHandler MindTree::Python::sys::attachToSignal(std::str
     } catch(BPy::error_already_set const &){
         PyErr_Print();
     }
-    return MindTree::Signal::CallbackHandler([]{});
+    return MindTree::Signal::CallbackHandler();
 }
 
 MindTree::Signal::CallbackHandler MindTree::Python::sys::attachToBoundSignal(BPy::object livetime, std::string id, BPy::object fn)
@@ -97,7 +97,7 @@ MindTree::Signal::CallbackHandler MindTree::Python::sys::attachToBoundSignal(BPy
     } catch(BPy::error_already_set const &) {
         PyErr_Print();
     }
-    return MindTree::Signal::CallbackHandler([]{});
+    return MindTree::Signal::CallbackHandler();
 }
 
 std::vector<std::string> MindTree::Python::sys::getNodeTypes()    
