@@ -1,12 +1,15 @@
 project(render)
 set(RENDER_SRC
-    render.cpp
-    renderpass.cpp
-    polygon_renderer.cpp
     geoobject_renderer.cpp
-    primitive_renderer.cpp
-    rendermanager.cpp
     glwrapper.cpp
+    camera_renderer.cpp
+    empty_renderer.cpp
+    light_renderer.cpp
+    polygon_renderer.cpp
+    primitive_renderer.cpp
+    render.cpp
+    rendermanager.cpp
+    renderpass.cpp
 )
 
 find_package(OpenGL REQUIRED)
@@ -31,7 +34,6 @@ add_library(render SHARED ${RENDER_SRC})
 target_link_libraries(render 
             objectlib
             mindtree_core
-            ${MINDTREE_CORE_LIB}
             ${OPENGL_LIBRARIES}
 )
 

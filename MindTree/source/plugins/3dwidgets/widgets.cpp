@@ -9,17 +9,17 @@
 
 using namespace MindTree;
 
-std::vector<Widget3DPtr> Widget3D::_widgets;
+std::vector<Widget3D::Factory_t> Widget3D::_widget_factories;
 
-Widget3D::Widget3D(NodeType type)
-    : _renderer(nullptr),
+Widget3D::Widget3D(NodeType type) :
     _node(nullptr),
+    _renderer(nullptr),
+    _screenOriented(false),
+    _screenSize(true),
     _type(type),
     _visible(false),
     _hover(false),
     _pressed(false),
-    _screenOriented(false),
-    _screenSize(true),
     _size(.1)
 {
     auto cb = Signal
@@ -57,7 +57,6 @@ bool Widget3D::intersectShapes(const std::shared_ptr<Camera> cam,
     auto view = cam->getViewMatrix();
     auto projection = cam->getProjection();
     auto viewProj = projection * view;
-    auto mvp = viewProj * model;
     auto camPos = cam->getPosition();
 
     //extract translation from model
@@ -255,7 +254,7 @@ void Widget3D::setVisible(bool visible)
     if(_renderer) _renderer->setVisible(_visible);
 }
 
-GL::Widget3dRenderer* Widget3D::renderer()
+GL::ShapeRendererGroup* Widget3D::renderer()
 {
     if(!_renderer) createRenderer();
     _renderer->setVisible(_visible);
@@ -265,9 +264,9 @@ GL::Widget3dRenderer* Widget3D::renderer()
     return _renderer;
 }
 
-GL::Widget3dRenderer* Widget3D::createRenderer()
+GL::ShapeRendererGroup* Widget3D::createRenderer()
 {
-    return new GL::Widget3dRenderer();
+    return new GL::ShapeRendererGroup();
 }
 
 void Widget3D::setNode(DNode *node)
@@ -325,19 +324,25 @@ void Widget3D::forceMouseReleased()
     _pressed = false;
 }
 
-void Widget3D::registerWidget(Widget3DPtr widget)
+void Widget3D::registerWidget(Factory_t factory)
 {
-    _widgets.push_back(widget);
+    _widget_factories.push_back(factory);
 }
 
-void Widget3D::insertWidgetsIntoRenderPass(std::shared_ptr<MindTree::GL::RenderPass> pass)
+Widget3DManager::Widget3DManager()
+{
+    for(const auto &factory : Widget3D::_widget_factories)
+        _widgets.push_back(factory());
+}
+
+void Widget3DManager::insertWidgetsIntoRenderPass(std::shared_ptr<MindTree::GL::RenderPass> pass)
 {
     for(auto &widget : _widgets) {
         pass->addRenderer(widget->renderer());
     }
 }
 
-bool Widget3D::mousePressEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewportSize)
+bool Widget3DManager::mousePressEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewportSize)
 {
     float lastDepth = -1;
     for(auto widget : _widgets) {
@@ -351,7 +356,7 @@ bool Widget3D::mousePressEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewpor
     return lastDepth > 0;
 }
 
-bool Widget3D::mouseMoveEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewportSize)
+bool Widget3DManager::mouseMoveEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewportSize)
 {
     Widget3DPtr clicked_widget;
     float lastDepth = -1;
@@ -376,7 +381,7 @@ bool Widget3D::mouseMoveEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewport
     return false;
 }
 
-void Widget3D::mouseReleaseEvent()
+void Widget3DManager::mouseReleaseEvent()
 {
     for(auto widget : _widgets) {
         widget->forceMouseReleased();
@@ -427,24 +432,22 @@ void TranslateWidget::mouseDraged(glm::vec3 point)
     if (!_node) return;
     auto transsocket = _node->getInSockets()[1];
     auto startVal = transsocket->getProperty().getData<glm::vec3>();
-    auto distance = point - startPoint;
 
+    glm::vec3 distance;
     switch(_axis) {
         case X:
-            distance.y = 0;
-            distance.z = 0;
+            distance.x = point.x - startPoint.x;
             break;
         case Y:
-            distance.x = 0;
-            distance.z = 0;
+            distance.y = point.y - startPoint.y;
             break;
         case Z:
-            distance.x = 0;
-            distance.y = 0;
+            distance.z = point.z - startPoint.z;
             break;
         case XY:
         case XZ:
         case YZ:
+            distance = point - startPoint;
             break;
     }
 

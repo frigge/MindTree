@@ -1,6 +1,8 @@
 #define GLM_SWIZZLE
+#include "glm/gtc/matrix_transform.hpp"
 #include "GL/glew.h"
 #include "renderpass.h"
+#include "rendermanager.h"
 #include "primitive_renderer.h"
 
 #define PI 3.14159265359
@@ -8,9 +10,9 @@
 using namespace MindTree;
 using namespace MindTree::GL;
 
-std::shared_ptr<ShaderProgram> PrimitiveRenderer::_defaultProgram;
+std::shared_ptr<ShaderProgram> ShapeRendererGroup::_defaultProgram;
 
-PrimitiveRenderer::PrimitiveRenderer()
+ShapeRendererGroup::ShapeRendererGroup(ShapeRendererGroup *parent)
     : _fillColor(glm::vec4(1)),
     _borderColor(glm::vec4(1)),
     _borderWidth(1.),
@@ -27,108 +29,123 @@ PrimitiveRenderer::PrimitiveRenderer()
             ->addShaderFromFile("../plugins/render/defaultShaders/primitive.frag", 
                                 ShaderProgram::FRAGMENT);
     }
+
+    if(parent) setParentPrimitive(parent);
 }
 
-PrimitiveRenderer::~PrimitiveRenderer()
-{
-    auto manager = Context::getSharedContext()->getManager();
-    manager->scheduleCleanUp(_vbo);
-}
-
-void PrimitiveRenderer::setParentPrimitive(PrimitiveRenderer *renderer)
+void ShapeRendererGroup::setParentPrimitive(ShapeRendererGroup *renderer)
 {
     setParent(renderer);
     renderer->setChildPrimitive(this);
 }
 
-void PrimitiveRenderer::setChildPrimitive(PrimitiveRenderer *renderer)
+void ShapeRendererGroup::setChildPrimitive(ShapeRendererGroup *renderer)
 {
     addChild(renderer);
     _childPrimitives.push_back(renderer);
 }
 
-void PrimitiveRenderer::setStaticTransformation(glm::mat4 trans)
+void ShapeRendererGroup::setStaticTransformation(glm::mat4 trans)
 {
     _staticTransformation = trans;
 }
 
-glm::mat4 PrimitiveRenderer::getStaticWorldTransformation()
+void ShapeRendererGroup::staticTransform(glm::mat4 trans)
 {
-    auto parent = dynamic_cast<PrimitiveRenderer*>(getParent());
+    _staticTransformation = trans * _staticTransformation;
+}
+
+glm::mat4 ShapeRendererGroup::getStaticWorldTransformation() const
+{
+    auto parent = dynamic_cast<const ShapeRendererGroup*>(getParent());
     if (parent) {
         return parent->getStaticWorldTransformation() * _staticTransformation;
     }
     return _staticTransformation;
 }
 
-void PrimitiveRenderer::init()
+void ShapeRendererGroup::init()
 {
-    _vbo = std::make_shared<VBO>("P", 0);
-    _defaultProgram->bindAttributeLocation(0, "P");
+    /* nothing to do here */
 }
 
-void PrimitiveRenderer::initVAO()
+void ShapeRendererGroup::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
 {
-    _vao = std::make_shared<VAO>();
 }
 
-void PrimitiveRenderer::setFillColor(glm::vec4 color)
+void ShapeRendererGroup::setFillColor(glm::vec4 color)
 {
     _fillColor = color;
     for(auto child : _childPrimitives)
         child->setFillColor(color);
 }
 
-void PrimitiveRenderer::setBorderColor(glm::vec4 color)
+void ShapeRendererGroup::setBorderColor(glm::vec4 color)
 {
     _borderColor = color;
     for(auto child : _childPrimitives)
         child->setBorderColor(color);
 }
 
-void PrimitiveRenderer::setBorderWidth(float border)
+glm::vec4 ShapeRendererGroup::getBorderColor() const
+{
+    return _borderColor;
+}
+
+glm::vec4 ShapeRendererGroup::getFillColor() const
+{
+    return _fillColor;
+}
+
+void ShapeRendererGroup::setBorderWidth(float border)
 {
     _borderWidth = border;
     for(auto child : _childPrimitives)
         child->setBorderWidth(border);
 }
 
-float PrimitiveRenderer::getBorderWidth()
+float ShapeRendererGroup::getBorderWidth() const
 {
     return _borderWidth;
 }
 
-void PrimitiveRenderer::setFixedScreenSize(bool fixed)
+void ShapeRendererGroup::setFixedScreenSize(bool fixed)
 {
     _fixedScreenSize = fixed;
     for(auto child : _childPrimitives)
         child->setFixedScreenSize(fixed);
 }
 
-bool PrimitiveRenderer::getFixedScreenSize()
+bool ShapeRendererGroup::getFixedScreenSize() const
 {
     return _fixedScreenSize;
 }
 
-void PrimitiveRenderer::setScreenOriented(bool orient)
+void ShapeRendererGroup::setScreenOriented(bool orient)
 {
     _screenOriented = orient;
     for(auto child : _childPrimitives)
         child->setScreenOriented(orient);
 }
 
-bool PrimitiveRenderer::getScreenOriented()
+bool ShapeRendererGroup::getScreenOriented() const
 {
     return _screenOriented;
 }
 
-std::shared_ptr<ShaderProgram> PrimitiveRenderer::getProgram()
+std::shared_ptr<ShaderProgram> ShapeRendererGroup::getProgram()
 {
     return _defaultProgram;
 }
 
-void PrimitiveRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+ShapeRenderer::~ShapeRenderer()
 {
+}
+
+void ShapeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+{
+    program->setUniform("staticTransformation", getStaticWorldTransformation());
+
     program->setUniform("fixed_screensize", _fixedScreenSize);
     program->setUniform("screen_oriented", _screenOriented);
     if(_fillColor.a > 0) {
@@ -146,20 +163,16 @@ void PrimitiveRenderer::draw(const CameraPtr camera, const RenderConfig &config,
     }
 }
 
-void PrimitiveRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void ShapeRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
 {
     glDrawArrays(GL_QUADS, 0, 4);
 }
 
-void PrimitiveRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void ShapeRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
 {
     glEnable(GL_LINE_SMOOTH);
     glDrawArrays(GL_LINE_LOOP, 0, 4);
     glDisable(GL_LINE_SMOOTH);
-}
-
-LineRenderer::LineRenderer()
-{
 }
 
 LineRenderer::LineRenderer(std::initializer_list<glm::vec3> points)
@@ -180,15 +193,16 @@ void LineRenderer::setPoints(std::initializer_list<glm::vec3> points)
 
 void LineRenderer::init()
 {
-    PrimitiveRenderer::init();
+    _vbo = std::make_shared<VBO>("P", 0);
+    _defaultProgram->bindAttributeLocation(0, "P");
     _vbo->bind();
 
-    auto staticWorldTrans = getStaticWorldTransformation();
     VertexList points;
     for(auto p : _points) {
-        points.push_back((staticWorldTrans * glm::vec4(p, 1)).xyz());
+        points.push_back(p);
     }
     _vbo->data(points);
+    _vbo->setPointer();
 }
 
 void LineRenderer::drawBorder(const CameraPtr, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
@@ -198,51 +212,29 @@ void LineRenderer::drawBorder(const CameraPtr, const RenderConfig &config, std::
     glDisable(GL_LINE_SMOOTH);
 }
 
-Widget3dRenderer::Widget3dRenderer()
-    : PrimitiveRenderer()
-{
-}
-
-Widget3dRenderer::~Widget3dRenderer()
-{
-}
-
-void Widget3dRenderer::initVAO()
-{
-    /* nothing to do here */
-}
-
-void Widget3dRenderer::init()
-{
-    /* nothing to do here */
-}
-
-void Widget3dRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
-{
-}
-
-QuadRenderer::QuadRenderer(float width, float height)
-    : _width(width), 
+QuadRenderer::QuadRenderer(float width, float height, ShapeRendererGroup *parent) : 
+    ShapeRenderer(parent),
+    _width(width),
     _height(height)
 {
 }
 
 void QuadRenderer::init()
 {
-    PrimitiveRenderer::init();
-
+    _vbo = std::make_shared<VBO>("P", 0);
+    _defaultProgram->bindAttributeLocation(0, "P");
     _vbo->bind();
 
-    auto trans = getStaticWorldTransformation();
     VertexList verts;
     verts.insert(begin(verts), {
-                    (trans * glm::vec4(0, 0, 0, 1)).xyz(),
-                    (trans * glm::vec4(_width, 0, 0, 1)).xyz(),
-                    (trans * glm::vec4(_width, _height, 0, 1)).xyz(),
-                    (trans * glm::vec4(0, _height, 0, 1)).xyz()
+                    glm::vec3(0, 0, 0),
+                    glm::vec3(_width, 0, 0),
+                    glm::vec3(_width, _height, 0),
+                    glm::vec3(0, _height, 0)
                  });
 
     _vbo->data(verts);
+    _vbo->setPointer();
 }
 
 std::shared_ptr<ShaderProgram> FullscreenQuadRenderer::_defaultProgram;
@@ -263,7 +255,7 @@ FullscreenQuadRenderer::FullscreenQuadRenderer()
 
 FullscreenQuadRenderer::~FullscreenQuadRenderer()
 {
-    auto manager = Context::getSharedContext()->getManager();
+    auto manager = RenderManager::getResourceManager();
     manager->scheduleCleanUp(_vbo);
     manager->scheduleCleanUp(_coord_vbo);
 }
@@ -271,11 +263,6 @@ FullscreenQuadRenderer::~FullscreenQuadRenderer()
 std::shared_ptr<ShaderProgram> FullscreenQuadRenderer::getProgram()
 {
     return _defaultProgram;
-}
-
-void FullscreenQuadRenderer::initVAO()
-{
-    _vao = std::make_shared<VAO>();
 }
 
 void FullscreenQuadRenderer::init()
@@ -303,10 +290,12 @@ void FullscreenQuadRenderer::init()
                  });
 
     _vbo->data(verts);
+    _vbo->setPointer();
 
     _coord_vbo->bind();
     _defaultProgram->bindAttributeLocation(1, "_st");
     _coord_vbo->data(coords);
+    _coord_vbo->setPointer();
 }
 
 void FullscreenQuadRenderer::draw(const CameraPtr /* camera */, 
@@ -315,15 +304,16 @@ void FullscreenQuadRenderer::draw(const CameraPtr /* camera */,
 {
     program->setUniform("bgcolor", glm::vec4(.275, .275, .275, 1.));
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 std::shared_ptr<ShaderProgram> GridRenderer::_defaultProgram;
 
-GridRenderer::GridRenderer(int width, int height, int xres, int yres)
-    : _width(width), 
-    _height(height), 
-    _xres(xres), 
+GridRenderer::GridRenderer(int width, int height, int xres, int yres, ShapeRendererGroup *parent) : 
+    ShapeRenderer(parent),
+    _width(width),
+    _height(height),
+    _xres(xres),
     _yres(yres),
     _alternatingColor(glm::vec4(1))
 {
@@ -347,7 +337,8 @@ GridRenderer::~GridRenderer()
 
 void GridRenderer::init()
 {
-    PrimitiveRenderer::init();
+    _vbo = std::make_shared<VBO>("P", 0);
+    _defaultProgram->bindAttributeLocation(0, "P");
     _vbo->bind();
 
     VertexList verts;
@@ -371,6 +362,7 @@ void GridRenderer::init()
     }
 
     _vbo->data(verts);
+    _vbo->setPointer();
 }
 
 void GridRenderer::drawBorder(const CameraPtr camera, const RenderConfig &/*config*/, std::shared_ptr<ShaderProgram> program)
@@ -380,7 +372,7 @@ void GridRenderer::drawBorder(const CameraPtr camera, const RenderConfig &/*conf
     glEnable(GL_LINE_SMOOTH);
     glDrawArrays(GL_LINES, 0, _xres * 2 + _yres * 2 + 4);
     glDisable(GL_LINE_SMOOTH);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 std::shared_ptr<ShaderProgram> GridRenderer::getProgram()
@@ -393,45 +385,142 @@ void GridRenderer::setAlternatingColor(glm::vec4 col)
     _alternatingColor = col;
 }
 
-ConeRenderer::ConeRenderer(float height,  float radius, int segments)
-    : _height(height), _radius(radius), _segments(segments)
-{
+std::shared_ptr<VBO> DiscRenderer::_vbo;
 
-}
-
-ConeRenderer::~ConeRenderer()
+DiscRenderer::DiscRenderer(ShapeRendererGroup *parent)
+    : ShapeRenderer(parent), _segments(8)
 {
 }
 
-void ConeRenderer::init()
+void DiscRenderer::init()
 {
-    PrimitiveRenderer::init();
+    if(_vbo) {
+        _vbo->bind();
+        _vbo->setPointer();
+        return;
+    }
+    _vbo = std::make_shared<VBO>("P", 0);
+    _defaultProgram->bindAttributeLocation(0, "P");
     _vbo->bind();
 
     VertexList verts;
 
-    auto staticWorldTrans = getStaticWorldTransformation();
-    verts.push_back((staticWorldTrans * glm::vec4(0, _height, 0, 1)).xyz());
+    //disc
+    verts.push_back(glm::vec3());
     for(int i=0; i <= _segments; i++) {
         float pni = 2 * PI * float(i) / _segments;
-        verts.push_back((staticWorldTrans * glm::vec4(sin(pni) * _radius, 0, cos(pni) * _radius, 1)).xyz());
-    }
-
-    verts.push_back((staticWorldTrans * glm::vec4(0, 0, 0, 1)).xyz());
-    for(int i=0; i <= _segments; i++) {
-        float pni = 2 * PI * float(i) / _segments;
-        verts.push_back((staticWorldTrans * glm::vec4(sin(pni) * _radius, 0, cos(pni) * _radius, 1)).xyz());
+        verts.push_back(glm::vec3(sin(pni), 0, cos(pni)));
     }
 
     _vbo->data(verts);
+    _vbo->setPointer();
+}
+
+void DiscRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+{
+    glDrawArrays(GL_TRIANGLE_FAN, 0, _segments + 2);
+}
+
+void DiscRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+{
+}
+
+std::shared_ptr<VBO> CircleRenderer::_vbo;
+CircleRenderer::CircleRenderer(ShapeRendererGroup *parent)
+    : ShapeRenderer(parent), _segments(8)
+{
+}
+
+void CircleRenderer::init()
+{
+    if(_vbo) {
+        _vbo->bind();
+        _vbo->setPointer();
+        return;
+    }
+    _vbo = std::make_shared<VBO>("P", 0);
+    _defaultProgram->bindAttributeLocation(0, "P");
+    _vbo->bind();
+
+    VertexList verts;
+
+    for(int i=0; i < _segments; i++) {
+        float pni = 2 * PI * float(i) / _segments;
+        verts.push_back(glm::vec3(sin(pni), 0, cos(pni)));
+    }
+
+    _vbo->data(verts);
+    _vbo->setPointer();
+}
+
+void CircleRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+{
+}
+
+void CircleRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+{
+    glDrawArrays(GL_LINE_LOOP, 0, _segments);
+}
+
+std::shared_ptr<VBO> ConeRenderer::_vbo;
+ConeRenderer::ConeRenderer(ShapeRendererGroup *parent)
+    : ShapeRenderer(parent), _segments(8)
+{
+    new CircleRenderer(this);
+}
+
+void ConeRenderer::init()
+{
+    if(_vbo) {
+        _vbo->bind();
+        _vbo->setPointer();
+        return;
+    }
+    _vbo = std::make_shared<VBO>("P", 0);
+    _defaultProgram->bindAttributeLocation(0, "P");
+    _vbo->bind();
+
+    VertexList verts;
+
+    //cone
+    verts.push_back(glm::vec3(0, 1, 0));
+    for(int i=0; i <= _segments; i++) {
+        float pni = 2 * PI * float(i) / _segments;
+        verts.push_back(glm::vec3(sin(pni), 0, cos(pni)));
+    }
+
+    _vbo->data(verts);
+    _vbo->setPointer();
 }
 
 void ConeRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
 {
-
+    glDrawArrays(GL_TRIANGLE_FAN, 0, _segments + 2);
 }
 
 void ConeRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
 {
-    glDrawArrays(GL_TRIANGLE_FAN, 0, _segments * 2 + 4);
+}
+
+ArrowRenderer::ArrowRenderer(ShapeRendererGroup *parent)
+    : ShapeRendererGroup(parent)
+{
+    auto line = new GL::LineRenderer{glm::vec3(0, 0, 0), 
+        glm::vec3(0, 2, 0)};
+    setChildPrimitive(line);
+    auto *cone = new GL::ConeRenderer(this);
+
+    cone->staticTransform(glm::translate(glm::mat4(), glm::vec3(0, 2, 0))
+                                  * glm::scale(glm::mat4(), glm::vec3(.2)));
+    setBorderWidth(3);
+};
+
+void ArrowRenderer::setFillColor(glm::vec4 color)
+{
+}
+
+void ArrowRenderer::setBorderColor(glm::vec4 color)
+{
+    ShapeRendererGroup::setFillColor(color);
+    ShapeRendererGroup::setBorderColor(color);
 }

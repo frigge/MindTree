@@ -4,58 +4,72 @@
 #include "glwrapper.h"
 #include "render.h"
 
-namespace MindTree {
-
+namespace MindTree { 
 namespace GL {
 
 class RenderPass;
 
-class PrimitiveRenderer : public Renderer
+class ShapeRendererGroup : public Renderer
 {
 public:
-    PrimitiveRenderer();
-    virtual ~PrimitiveRenderer();
+    ShapeRendererGroup(ShapeRendererGroup *parent=nullptr);
+
+    virtual ~ShapeRendererGroup() {}
 
     std::shared_ptr<ShaderProgram> getProgram();
 
-    void setFillColor(glm::vec4 color);
-    void setBorderColor(glm::vec4 color);
-    void setBorderWidth(float border);
-    float getBorderWidth();
-    void setFixedScreenSize(bool fixed);
-    bool getFixedScreenSize();
-    void setScreenOriented(bool orient);
-    bool getScreenOriented();
+    virtual void setFillColor(glm::vec4 color);
+    virtual void setBorderColor(glm::vec4 color);
+    glm::vec4 getFillColor()const;
+    glm::vec4 getBorderColor()const;
 
-    void setParentPrimitive(PrimitiveRenderer *renderer);
-    void setChildPrimitive(PrimitiveRenderer *renderer);
+    void setBorderWidth(float border);
+
+    float getBorderWidth()const;
+    void setFixedScreenSize(bool fixed);
+    bool getFixedScreenSize()const;
+    void setScreenOriented(bool orient);
+    bool getScreenOriented()const;
+
+    void setParentPrimitive(ShapeRendererGroup *renderer);
+    void setChildPrimitive(ShapeRendererGroup *renderer);
 
     void setStaticTransformation(glm::mat4 trans);
-    glm::mat4 getStaticWorldTransformation();
+    void staticTransform(glm::mat4 trans);
+    glm::mat4 getStaticWorldTransformation()const;
 
 protected:
     virtual void init();
-    virtual void initVAO();
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    virtual void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    virtual void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-
-    std::shared_ptr<VBO> _vbo;
 
     glm::mat4 _staticTransformation;
-
-private:
-    static std::shared_ptr<ShaderProgram> _defaultProgram;
     glm::vec4 _fillColor, _borderColor;
     bool _fixedScreenSize, _screenOriented;
     float _borderWidth;
-    std::vector<PrimitiveRenderer*> _childPrimitives;
+
+    static std::shared_ptr<ShaderProgram> _defaultProgram;
+
+private:
+    std::vector<ShapeRendererGroup*> _childPrimitives;
 };
 
-class LineRenderer : public PrimitiveRenderer
+class ShapeRenderer : public ShapeRendererGroup
 {
 public:
-    LineRenderer();
+    virtual ~ShapeRenderer();
+
+protected:
+    ShapeRenderer(ShapeRendererGroup *parent=nullptr) : ShapeRendererGroup(parent) {}
+
+    virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    virtual void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    virtual void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+};
+
+class LineRenderer : public ShapeRenderer
+{
+public:
+    LineRenderer(ShapeRendererGroup *parent=nullptr) : ShapeRenderer(parent) {}
     LineRenderer(std::initializer_list<glm::vec3> points);
     ~LineRenderer();
 
@@ -67,29 +81,20 @@ protected:
 
 private:
     VertexList _points;
+    std::shared_ptr<VBO> _vbo;
 };
 
-class Widget3dRenderer : public PrimitiveRenderer
+class QuadRenderer : public ShapeRenderer
 {
 public:
-    Widget3dRenderer(); virtual ~Widget3dRenderer();
-
-protected:
-    virtual void init();
-    virtual void initVAO();
-    virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-};
-
-class QuadRenderer : public PrimitiveRenderer
-{
-public:
-    QuadRenderer(float width, float height);
+    QuadRenderer(float width, float height, ShapeRendererGroup *parent=nullptr);
 
 protected:
     void init();
 
 private:
     float _width, _height;
+    std::shared_ptr<VBO> _vbo;
 };
 
 class FullscreenQuadRenderer : public Renderer
@@ -101,7 +106,6 @@ public:
     std::shared_ptr<ShaderProgram> getProgram();
 
 protected:
-    virtual void initVAO();
     virtual void init();
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
@@ -111,10 +115,10 @@ private:
     std::shared_ptr<VBO> _coord_vbo;
 };
 
-class GridRenderer : public PrimitiveRenderer
+class GridRenderer : public ShapeRenderer
 {
 public:
-    GridRenderer(int width, int height, int xres, int yres);
+    GridRenderer(int width, int height, int xres, int yres, ShapeRendererGroup *parent=nullptr);
     virtual ~GridRenderer();
 
     void setAlternatingColor(glm::vec4 col);
@@ -128,13 +132,13 @@ private:
     int _width, _height, _xres, _yres;
     glm::vec4 _alternatingColor;
     static std::shared_ptr<ShaderProgram> _defaultProgram;
+    std::shared_ptr<VBO> _vbo;
 };
 
-class ConeRenderer : public PrimitiveRenderer
+class DiscRenderer : public ShapeRenderer
 {
 public:
-    ConeRenderer(float height, float radius, int segments);
-    ~ConeRenderer();
+    DiscRenderer(ShapeRendererGroup *parent=nullptr);
 
 protected:
     void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
@@ -142,8 +146,46 @@ protected:
     virtual void init();
 
 private:
-    float _height, _radius;
     int _segments;
+    static std::shared_ptr<VBO> _vbo;
+};
+
+class CircleRenderer : public ShapeRenderer
+{
+public:
+    CircleRenderer(ShapeRendererGroup *parent=nullptr);
+
+protected:
+    void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    virtual void init();
+
+private:
+    int _segments;
+    static std::shared_ptr<VBO> _vbo;
+};
+
+class ConeRenderer : public ShapeRenderer
+{
+public:
+    ConeRenderer(ShapeRendererGroup *parent=nullptr);
+
+protected:
+    void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    virtual void init();
+
+private:
+    int _segments;
+    static std::shared_ptr<VBO> _vbo;
+};
+
+class ArrowRenderer : public ShapeRendererGroup
+{
+public:
+    ArrowRenderer(ShapeRendererGroup *parent=nullptr);
+    void setFillColor(glm::vec4 color);
+    void setBorderColor(glm::vec4 color);
 };
 
 }

@@ -5,6 +5,7 @@ uniform mat4 projection;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 mvp;
+uniform mat4 staticTransformation;
 uniform bool fixed_screensize = true;
 uniform bool screen_oriented = false;
 
@@ -48,6 +49,8 @@ mat4 computeScaleMatrix() {
 void main(){
     mat4 screenTransform;
     mat4 translation = extractTranslation(model);
+
+    vec4 staticTransformedP = staticTransformation * vec4(P, 1);
     if (screen_oriented) {
         screenTransform = projection * view * translation * computeScreenOrientation();
     }
@@ -56,10 +59,10 @@ void main(){
 
     vec4 output;
     if (fixed_screensize)
-        output = screenTransform * computeScaleMatrix() * vec4(P, 1);
+        output = screenTransform * computeScaleMatrix() * staticTransformedP;
     else 
-        output = screenTransform * vec4(P, 1);
+        output = screenTransform * staticTransformedP;
     gl_Position = output;
 
-    pos = (translation * vec4(P, 1)).xyz;
+    pos = (translation * staticTransformedP).xyz;
 };

@@ -36,7 +36,7 @@ std::shared_ptr<ShaderProgram> PolygonRenderer::getProgram()
 void PolygonRenderer::initCustom()
 {
     auto data = obj->getData();
-    auto ibo = Context::getCurrent()->getManager()->getIBO(data);
+    auto ibo = RenderManager::getResourceManager()->getIBO(data);
     ibo->bind();
     ibo->data(data->getProperty("polygon").getData<PolygonListPtr>());
 }
@@ -49,7 +49,7 @@ void PolygonRenderer::draw(const CameraPtr camera, const RenderConfig &config, s
     auto data = obj->getData();
     program->setUniform("flatShading", (int)config.flatShading());
 
-    auto ibo = Context::getCurrent()->getManager()->getIBO(data);
+    auto ibo = RenderManager::getResourceManager()->getIBO(data);
 
     auto polysizes = ibo->getSizes();
     auto indexOffsets = ibo->getOffsets();
@@ -62,7 +62,7 @@ void PolygonRenderer::draw(const CameraPtr camera, const RenderConfig &config, s
                         //(const GLvoid**)&polyindices[0],
                         reinterpret_cast<const GLvoid**>(&indexOffsets[0]),
                         polysizes.size()); //primitive count
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     program->link(); // reset uniforms;
 }
 
@@ -93,6 +93,10 @@ std::shared_ptr<ShaderProgram> EdgeRenderer::getProgram()
 
 void EdgeRenderer::initCustom()
 {
+    auto data = obj->getData();
+    auto ibo = RenderManager::getResourceManager()->getIBO(data);
+    ibo->bind();
+    ibo->data(data->getProperty("polygon").getData<PolygonListPtr>());
 }
 
 void EdgeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
@@ -106,7 +110,7 @@ void EdgeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std:
         lineWidth =  obj->getProperty("display.lineWidth").getData<double>();
 
     auto data = obj->getData();
-    auto ibo = Context::getCurrent()->getManager()->getIBO(data);
+    auto ibo = RenderManager::getResourceManager()->getIBO(data);
 
     auto polysizes = ibo->getSizes();
     auto indexOffsets = ibo->getOffsets();
@@ -118,7 +122,7 @@ void EdgeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std:
                         GL_UNSIGNED_INT, //index datatype
                         (const GLvoid**)&indexOffsets[0],
                         polysizes.size()); //primitive count
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     glLineWidth(1);
     glDisable(GL_LINE_SMOOTH);
     program->link(); // reset uniforms;
@@ -157,7 +161,7 @@ void PointRenderer::draw(const CameraPtr camera, const RenderConfig &config, std
     auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
     auto verts = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
     glDrawArrays(GL_POINTS, 0, verts->size());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 
     program->link(); // reset uniforms;
 }

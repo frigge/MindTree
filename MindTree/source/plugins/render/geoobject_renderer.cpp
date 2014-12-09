@@ -1,4 +1,5 @@
 #include "glwrapper.h"
+#include "rendermanager.h"
 #include "geoobject_renderer.h"
 
 using namespace MindTree;
@@ -14,11 +15,6 @@ GeoObjectRenderer::~GeoObjectRenderer()
 {
 }
 
-void GeoObjectRenderer::initVAO()
-{
-    _vao = Context::getCurrent()->getManager()->getVAO(obj->getData());
-}
-
 void GeoObjectRenderer::init()    
 {
     auto data = obj->getData();
@@ -27,8 +23,8 @@ void GeoObjectRenderer::init()
     for(auto propPair : propmap){
         bool has_attr = prog->hasAttribute(propPair.first);
         if(has_attr) {
-            Context::getSharedContext()->getManager()->uploadData(data, propPair.first);
-            auto vbo = Context::getSharedContext()->getManager()->getVBO(data, propPair.first);
+            RenderManager::getResourceManager()->uploadData(data, propPair.first);
+            auto vbo = RenderManager::getResourceManager()->getVBO(data, propPair.first);
             prog->bindAttributeLocation(vbo->getIndex(), propPair.first);
         }
     }

@@ -21,21 +21,10 @@ TranslateXWidget::~TranslateXWidget()
 {
 }
 
-GL::Widget3dRenderer* TranslateXWidget::createRenderer()
+GL::ShapeRendererGroup* TranslateXWidget::createRenderer()
 {
-    _renderer = new GL::Widget3dRenderer();
-    auto line = new GL::LineRenderer{glm::vec3(0, 0, 0), 
-        glm::vec3(2.0, 0, 0)};
-    auto cone = new GL::ConeRenderer(.2, .1, 8);
-    cone->setParentPrimitive(_renderer);
-    line->setParentPrimitive(_renderer);
-    cone->setStaticTransformation(glm::translate(glm::mat4(), 
-                                                 glm::vec3(2, 0, 0))
-                                  * glm::rotate(glm::mat4(), 
-                                                -90.f, 
-                                                glm::vec3(0, 0, 1)));
-    _renderer->setBorderWidth(3);
-    
+    _renderer = new GL::ArrowRenderer();
+    _renderer->setStaticTransformation(glm::rotate(glm::mat4(), -90.0f, glm::vec3(0, 0, 1)));
     return _renderer;
 }
 
@@ -56,18 +45,9 @@ TranslateYWidget::~TranslateYWidget()
 {
 }
 
-GL::Widget3dRenderer* TranslateYWidget::createRenderer()
+GL::ShapeRendererGroup* TranslateYWidget::createRenderer()
 {
-    _renderer = new GL::Widget3dRenderer();
-    auto line = new GL::LineRenderer{glm::vec3(0, 0, 0), 
-        glm::vec3(0, 2, 0)};
-    auto cone = new GL::ConeRenderer(.2, .1, 8);
-    cone->setParentPrimitive(_renderer);
-    line->setParentPrimitive(_renderer);
-    cone->setStaticTransformation(glm::translate(glm::mat4(), 
-                                                 glm::vec3(0, 2, 0)));
-    _renderer->setBorderWidth(3);
-    
+    _renderer = new GL::ArrowRenderer();
     return _renderer;
 }
 
@@ -88,21 +68,10 @@ TranslateZWidget::~TranslateZWidget()
 {
 }
 
-GL::Widget3dRenderer* TranslateZWidget::createRenderer()
+GL::ShapeRendererGroup* TranslateZWidget::createRenderer()
 {
-    _renderer = new GL::Widget3dRenderer();
-    auto line = new GL::LineRenderer{glm::vec3(0, 0, 0), 
-        glm::vec3(0, 0, 2)};
-    auto cone = new GL::ConeRenderer(.2, .1, 8);
-    cone->setParentPrimitive(_renderer);
-    line->setParentPrimitive(_renderer);
-    cone->setStaticTransformation(glm::translate(glm::mat4(), 
-                                                 glm::vec3(0, 0, 2))
-                                  * glm::rotate(glm::mat4(), 
-                                                90.f, 
-                                                glm::vec3(1, 0, 0)));
-    _renderer->setBorderWidth(3);
-    
+    _renderer = new GL::ArrowRenderer();
+    _renderer->setStaticTransformation(glm::rotate(glm::mat4(), 90.0f, glm::vec3(1, 0, 0)));
     return _renderer;
 }
 
@@ -119,9 +88,9 @@ TranslateXYPlaneWidget::~TranslateXYPlaneWidget()
 {
 }
 
-GL::Widget3dRenderer* TranslateXYPlaneWidget::createRenderer()
+GL::ShapeRendererGroup* TranslateXYPlaneWidget::createRenderer()
 {
-    _renderer = new GL::Widget3dRenderer();
+    _renderer = new GL::ShapeRendererGroup();
     auto quad = new GL::QuadRenderer(1.0, 1.0);
     quad->setParentPrimitive(_renderer);
 
@@ -142,9 +111,9 @@ TranslateXZPlaneWidget::~TranslateXZPlaneWidget()
 {
 }
 
-GL::Widget3dRenderer* TranslateXZPlaneWidget::createRenderer()
+GL::ShapeRendererGroup* TranslateXZPlaneWidget::createRenderer()
 {
-    _renderer = new GL::Widget3dRenderer();
+    _renderer = new GL::ShapeRendererGroup();
 
     auto quad = new GL::QuadRenderer(1.0, 1.0);
     quad->setStaticTransformation(glm::rotate(glm::mat4(), 
@@ -169,9 +138,9 @@ TranslateYZPlaneWidget::~TranslateYZPlaneWidget()
 {
 }
 
-GL::Widget3dRenderer* TranslateYZPlaneWidget::createRenderer()
+GL::ShapeRendererGroup* TranslateYZPlaneWidget::createRenderer()
 {
-    _renderer = new GL::Widget3dRenderer();
+    _renderer = new GL::ShapeRendererGroup();
 
     auto quad = new GL::QuadRenderer(1.0, 1.0);
 
@@ -200,9 +169,9 @@ TranslateScreenPlaneWidget::TranslateScreenPlaneWidget()
     addShape(hitrect);
 }
 
-GL::Widget3dRenderer* TranslateScreenPlaneWidget::createRenderer()
+GL::ShapeRendererGroup* TranslateScreenPlaneWidget::createRenderer()
 {
-    _renderer = new GL::Widget3dRenderer();
+    _renderer = new GL::ShapeRendererGroup();
     auto quad = new GL::QuadRenderer(.25, .25);
     quad->setStaticTransformation(glm::translate(glm::mat4(), glm::vec3(1.75, 1.75, 0)));
     quad->setParentPrimitive(_renderer);
