@@ -133,7 +133,6 @@ void MindTree::ViewerList::showDock(QDockWidget* dock)
 
 QString MindTree::ViewerList::showViewer(DoutSocket *socket, unsigned int index)
 {
-    std::cout<< "show the viewer" << std::endl;
     if(!windowFactories.count(socket->getType().toStr())) {
         std::cout<<"No Viewer registered for this type"<<std::endl;
         return "";

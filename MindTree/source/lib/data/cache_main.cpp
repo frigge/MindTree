@@ -386,7 +386,6 @@ void DataCache::cacheInputs()
         return;
 
     auto ntype = node->getType();
-    std::cout << ntype.toStr() << std::endl;
     unsigned long nodeTypeID = ntype.id();
 
     AbstractCacheProcessor* genericProcessor = _genericProcessors[ntype];
