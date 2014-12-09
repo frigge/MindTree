@@ -23,7 +23,6 @@
 #include "data/nodes/data_node.h"
 #include "data/cache_main.h"
 #include "data/mtobject.h"
-//#include "source/data/code_generator/glslwriter.h"
 #include "glm/glm.hpp"
 #include "QMatrix4x4"
 #include "data/python/pyexposable.h"
@@ -59,21 +58,22 @@ typedef std::vector<Polygon> PolygonList;
 typedef std::shared_ptr<PolygonList> PolygonListPtr;
 
 class MeshData;
-class AbstractTransformableNode;
-class AbstractTransformable : public MindTree::Object, public std::enable_shared_from_this<AbstractTransformable>
+class AbstractTransformable;
+typedef std::shared_ptr<AbstractTransformable> AbstractTransformablePtr;
+class AbstractTransformable : public MindTree::Object
 {
 public:
     enum eObjType {
-        GEO, CAMERA, LIGHT
+        GEO, CAMERA, LIGHT, EMPTY
     };
     AbstractTransformable(eObjType t);
     virtual ~AbstractTransformable();
-    AbstractTransformable(const AbstractTransformable &other);
+
+    virtual AbstractTransformablePtr clone() const;
 
     AbstractTransformable::eObjType getType();
     std::string getName();
     void setName(std::string value);
-    //void setTransformation(QMatrix4x4 value);
 
     glm::mat4 getTransformation();
     glm::mat4 getWorldTransformation();
@@ -90,20 +90,41 @@ public:
     void posAroundCenter(glm::vec3 newPos);
     void moveToCenter(double fac);
 
-    void setParent(std::shared_ptr<AbstractTransformable> p);
-    std::shared_ptr<AbstractTransformable> getParent();
-    void addChild(std::shared_ptr<AbstractTransformable> obj);
-    void addChildren(std::list<std::shared_ptr<AbstractTransformable>>objs);
-    void removeChild(std::shared_ptr<AbstractTransformable> child);
-    std::list<std::shared_ptr<AbstractTransformable>> getChildren();
+    void setParent(AbstractTransformable* p);
+    AbstractTransformable* getParent();
+    const AbstractTransformable* getParent() const;
+    void addChild(AbstractTransformable* child);
+    void addChildren(std::vector<AbstractTransformable*>objs);
+    void removeChild(AbstractTransformable *child);
+    std::vector<std::shared_ptr<AbstractTransformable>> getChildren();
+
+protected:
+    AbstractTransformable(const AbstractTransformable &other);
 
 private:
     eObjType type;
     glm::vec3 center;
     glm::mat4 transformation;
-    std::shared_ptr<AbstractTransformable> parent;
-    std::list<std::shared_ptr<AbstractTransformable>> children;
+    AbstractTransformable *parent;
+    std::vector<std::shared_ptr<AbstractTransformable>> children;
     std::string name;
+};
+
+class Empty;
+typedef std::shared_ptr<Empty> EmptyPtr;
+class Empty : public AbstractTransformable, public MindTree::PyExposable
+{
+public:
+    Empty() : AbstractTransformable(EMPTY) {}
+    virtual ~Empty() {}
+    AbstractTransformablePtr clone() const override
+    {
+        auto *obj = new Empty(*this);
+        return std::shared_ptr<Empty>(obj);
+    }
+
+protected:
+    Empty(const Empty &other) : AbstractTransformable(other) {}
 };
 
 class ObjectData : public MindTree::Object, public MindTree::PyExposable
@@ -145,13 +166,17 @@ class GeoObject : public AbstractTransformable, public MindTree::PyExposable
 {
 public:
     GeoObject();
-    GeoObject(const GeoObject &other);
     ~GeoObject();
+
+    AbstractTransformablePtr clone() const override;
     std::shared_ptr<ObjectData> getData();
     void setData(std::shared_ptr<ObjectData> value);
 
     MaterialInstancePtr getMaterial();
     void setMaterial(MaterialInstancePtr material);
+
+protected:
+    GeoObject(const GeoObject &other);
 
 private:
     std::shared_ptr<ObjectData> data;
@@ -167,193 +192,40 @@ class Group : public MindTree::Object, public MindTree::PyExposable
 {
 public:
     Group();
-    Group(const Group &grp);
+    Group(const Group &other) : members(other.members) {}
     virtual ~Group();
     void addMember(std::shared_ptr<AbstractTransformable> trans);
-    std::list<std::shared_ptr<AbstractTransformable>> getMembers()const;
-    void addMembers(std::list<std::shared_ptr<AbstractTransformable>> list);
-    std::list<std::shared_ptr<Camera>> getCameras();
-    std::list<std::shared_ptr<GeoObject>> getGeometry();
-    std::list<std::shared_ptr<Light>> getLights();
+    std::vector<std::shared_ptr<AbstractTransformable>> getMembers()const;
+    void addMembers(std::vector<std::shared_ptr<AbstractTransformable>> list);
+    std::vector<std::shared_ptr<Camera>> getCameras();
+    std::vector<std::shared_ptr<GeoObject>> getGeometry();
+    std::vector<std::shared_ptr<Light>> getLights();
 
 private:
-    std::list<std::shared_ptr<AbstractTransformable>> members;
+    std::vector<std::shared_ptr<AbstractTransformable>> members;
 };
 
 typedef std::shared_ptr<Group> GroupPtr;
 
+class Camera;
+typedef std::shared_ptr<Camera> CameraPtr;
 class Camera : public AbstractTransformable
 {
 public:
     Camera();
+    virtual ~Camera();
+
+    AbstractTransformablePtr clone() const override;
+
     void setProjection(double aspect);
     glm::mat4 getProjection();
     glm::mat4 getViewMatrix();
-    virtual ~Camera();
 
 private:
     glm::mat4 projection;
     double fov;
     bool perspective;
     double near, far;
-};
-
-typedef std::shared_ptr<Camera> CameraPtr;
-
-class Light : public AbstractTransformable
-{
-public:
-    Light();
-    virtual ~Light();
-
-private:
-    double intensity;
-};
-
-class Scene
-{
-public:
-    Scene();
-    virtual ~Scene();
-    std::string getName();
-    void setName(std::string n);
-    const MindTree::DNode* getNode();
-    std::list<Camera*> getCameras();
-    std::list<Light*> getLights();
-    std::list<GeoObject*> getObjects();
-    void setObjects(std::list<GeoObject*> objs);
-    void setLights(std::list<Light*> lights);
-    void setCameras(std::list<Camera*> cams);
-
-private:
-    std::string name;
-    std::list<GeoObject*> objects;
-    std::list<Light*>lights;
-    std::list<Camera*>cameras;
-};
-
-class PolygonNode : public MindTree::DNode
-{
-public:
-    PolygonNode(bool raw=false);
-    PolygonNode(const PolygonNode &node);
-};
-
-class ObjectDataNodeBase : public MindTree::DNode
-{
-public:
-    ObjectDataNodeBase(std::string name);
-    ObjectDataNodeBase(const ObjectDataNodeBase &node);
-    virtual ~ObjectDataNodeBase();
-    virtual std::shared_ptr<ObjectData> getObjectData();
-
-protected:
-    void setObjectData(std::shared_ptr<ObjectData> d);
-
-private:
-    std::shared_ptr<ObjectData> data;
-};
-
-class ComposeMeshNode : public ObjectDataNodeBase
-{
-public:
-    ComposeMeshNode(bool raw=false);
-    ComposeMeshNode(const ComposeMeshNode &node);
-    //std::shared_ptr<MeshData> getObjectData();
-};
-
-class AbstractTransformableNode : public MindTree::DNode
-{
-public:
-    AbstractTransformableNode(std::string, bool raw=false);
-    AbstractTransformableNode(const AbstractTransformableNode &node);
-    virtual ~AbstractTransformableNode();
-
-    virtual std::shared_ptr<AbstractTransformable> getObject();
-    void setObject(std::shared_ptr<AbstractTransformable> obj);
-
-    void setName(std::string name);
-    
-    static bool isTransformable(MindTree::DNode *node);
-
-    MindTree::DinSocket* getTransformSocket();
-    MindTree::DinSocket* getRotateSocket();
-    MindTree::DinSocket* getScaleSocket();
-
-private:
-    std::shared_ptr<AbstractTransformable> transformable;
-   MindTree::DinSocket *transSocket, *rotSocket, *scaleSocket;
-};
-
-class ObjectNode : public AbstractTransformableNode
-{
-public:
-    ObjectNode(bool raw=false);
-    ObjectNode(const ObjectNode &node);
-    //Object* getObject();
-    MindTree::DinSocket* getObjDataSocket();
-    MindTree::DinSocket* getGeoSocket();
-    MindTree::DinSocket* getVertSocket();
-    MindTree::DinSocket* getFragSocket();
-
-private:
-    MindTree::DinSocket* objDataSocket, *fragSocket, *vertSocket, *geoSocket; 
-};
-
-class CreateGroupNode : public MindTree::DNode
-{
-public:
-    CreateGroupNode(std::string name="Group", bool raw=false);
-    CreateGroupNode(const CreateGroupNode &node);
-    virtual ~CreateGroupNode();
-    Group* getGroup();
-
-private:
-    Group *group;
-};
-
-class CameraNode : public AbstractTransformableNode
-{
-public:
-    CameraNode(bool raw=false);
-    CameraNode(const CameraNode &node);
-    //Camera* getObject();
-};
-
-class LightNode : public AbstractTransformableNode
-{
-public:
-    enum LightType {POINTLIGHT, SPOTLIGHT, DISTANTLIGHT};
-    LightNode(std::string name, bool raw=false);
-    LightNode(const LightNode &node);
-
-    //Light* getObject();
-    LightType getLightType();
-    void setLightType(LightType t);
-
-private:
-    LightType lighttype;
-};
-
-class PointLightNode : public LightNode
-{
-public:
-    PointLightNode(bool raw=false);
-    PointLightNode(const PointLightNode &node);
-};
-
-class SpotLightNode : public LightNode
-{
-public:
-    SpotLightNode(bool raw=false);
-    SpotLightNode(const SpotLightNode &node);
-};
-
-class DistantLightNode : public LightNode
-{
-public:
-    DistantLightNode(bool raw=false);
-    DistantLightNode(const DistantLightNode &node);
 };
 
 #endif /* end of include guard: OBJECT */

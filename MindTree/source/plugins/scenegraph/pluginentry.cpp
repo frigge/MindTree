@@ -39,6 +39,6 @@ BOOST_PYTHON_MODULE(scenegraph){
 
     ViewerList::instance()
         ->addViewer(new MindTree::ViewerFactory("&Viewport", 
-                                                "SCENEOBJECT", 
+                                                "TRANSFORMABLE", 
                                                 addViewport));
 }

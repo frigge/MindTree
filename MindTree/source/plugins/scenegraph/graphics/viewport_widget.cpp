@@ -40,14 +40,16 @@ ViewportViewer::~ViewportViewer()
 
 void ViewportViewer::update()
 {
+    std::cout << "update" << std::endl;
     auto *viewport = static_cast<ViewportWidget*>(getWidget())->getViewport();
     Property data = cache.getOutput(getStart());
 
     if(data.getType() == "GROUPDATA") {
         viewport->setData(data.getData<GroupPtr>());
     }
-    else if(data.getType() == "SCENEOBJECT") {
-        auto obj = data.getData<GeoObjectPtr>();
+    else if(data.getType() == "TRANSFORMABLE") {
+        auto obj = data.getData<AbstractTransformablePtr>();
+        assert(obj);
         auto grp = std::make_shared<Group>();
         grp->addMember(obj);
         viewport->setData(grp);

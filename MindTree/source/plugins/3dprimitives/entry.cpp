@@ -24,6 +24,6 @@ BOOST_PYTHON_MODULE(prim3d)
         cache->pushData(plane);
     };
 
-    DataCache::addProcessor("SCENEOBJECT", "CUBE", new CacheProcessor(cubeproc));
-    DataCache::addProcessor("SCENEOBJECT", "PLANE", new CacheProcessor(planeproc));
+    DataCache::addProcessor("TRANSFORMABLE", "CUBE", new CacheProcessor(cubeproc));
+    DataCache::addProcessor("TRANSFORMABLE", "PLANE", new CacheProcessor(planeproc));
 }

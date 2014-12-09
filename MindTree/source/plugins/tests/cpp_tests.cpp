@@ -78,7 +78,7 @@ bool testObjectInProperty()
     GeoObjectPtr obj = std::make_shared<GeoObject>();
     MindTree::Property objProp{obj};
     std::cout << "original Prop Type: " << objProp.getType().toStr() << std::endl;
-    if(objProp.getType() != "SCENEOBJECT")
+    if(objProp.getType() != "TRANSFORMABLE")
         return false;
 
     return true;

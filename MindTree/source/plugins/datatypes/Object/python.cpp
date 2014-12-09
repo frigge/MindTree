@@ -1,10 +1,13 @@
 #include "data/properties.h"
 #include "object.h"
+#include "lights.h"
 #include "data/cache_main.h"
 #include "glm/gtc/matrix_transform.hpp"
 
 #include "../../3dwidgets/translate_widgets.h"
 #include "python.h"
+
+using namespace MindTree;
 
 ObjectDataPyWrapper::ObjectDataPyWrapper(ObjectData *data)
     : PyWrapper(data)
@@ -57,7 +60,7 @@ void groupProc(MindTree::DataCache *cache)
         auto *socket = node->getInSockets()[i];
         if (socket->getCntdSocket()) {
             auto data = cache->getData(i);
-            if (data.getType() == "SCENEOBJECT")
+            if (data.getType() == "TRANSFORMABLE")
                 grp->addMember(data.getData<GeoObjectPtr>());
             else if (data.getType() == "GROUPDATA")
                 grp->addMembers(data.getData<GroupPtr>()->getMembers());
@@ -70,12 +73,12 @@ void groupProc(MindTree::DataCache *cache)
 
 void transformProc(MindTree::DataCache *cache)
 {
-    auto obj = cache->getData(0).getData<GeoObjectPtr>();
+    auto transformable = cache->getData(0).getData<AbstractTransformablePtr>();
     glm::vec3 translate = cache->getData(1).getData<glm::vec3>();
     glm::vec3 rotation = cache->getData(2).getData<glm::vec3>();
     glm::vec3 scale = cache->getData(3).getData<glm::vec3>();
 
-    auto newobj = std::make_shared<GeoObject>(*obj);
+    auto newtransformable = transformable->clone();
 
     glm::mat4 rotx = glm::rotate(glm::mat4(), rotation.x, glm::vec3(1, 0, 0));
     glm::mat4 roty = glm::rotate(glm::mat4(), rotation.y, glm::vec3(0, 1, 0));
@@ -88,20 +91,20 @@ void transformProc(MindTree::DataCache *cache)
     glm::mat4 newtrans;
     newtrans = trans * scalemat * rot;
 
-    newobj->applyTransform(newtrans);
+    newtransformable->applyTransform(newtrans);
     
-    cache->pushData(newobj);
+    cache->pushData(newtransformable);
 }
 
 void createTranslateWidget()
 {
-    auto translater1 = std::make_shared<TranslateXWidget>();
-    auto translater2 = std::make_shared<TranslateYWidget>();
-    auto translater3 = std::make_shared<TranslateZWidget>();
-    auto translater4 = std::make_shared<TranslateXYPlaneWidget>();
-    auto translater5 = std::make_shared<TranslateXZPlaneWidget>();
-    auto translater6 = std::make_shared<TranslateYZPlaneWidget>();
-    auto screenPlaneTranslater = std::make_shared<TranslateScreenPlaneWidget>();
+    auto translater1 = [] () { return std::make_shared<TranslateXWidget>(); };
+    auto translater2 = [] () { return std::make_shared<TranslateYWidget>(); };
+    auto translater3 = [] () { return std::make_shared<TranslateZWidget>(); };
+    auto translater4 = [] () { return std::make_shared<TranslateXYPlaneWidget>(); };
+    auto translater5 = [] () { return std::make_shared<TranslateXZPlaneWidget>(); };
+    auto translater6 = [] () { return std::make_shared<TranslateYZPlaneWidget>(); };
+    auto screenPlaneTranslater = [] () { return std::make_shared<TranslateScreenPlaneWidget>(); };
 
     Widget3D::registerWidget(translater1);
     Widget3D::registerWidget(translater2);
@@ -112,17 +115,44 @@ void createTranslateWidget()
     Widget3D::registerWidget(screenPlaneTranslater);
 }
 
+void regLightProcs()
+{
+    auto pointLightProc = [](DataCache *cache) {
+        float intensity = cache->getData(0).getData<double>();
+        auto light = std::make_shared<PointLight>(intensity);
+        cache->pushData(light);
+    };
+
+    auto spotLightProc = [](DataCache *cache) {
+        float intensity = cache->getData(0).getData<double>();
+        float coneangle = cache->getData(1).getData<double>();
+        auto light = std::make_shared<SpotLight>(intensity, coneangle);
+        cache->pushData(light);
+    };
+
+    auto distantLightProc = [](DataCache *cache) {
+        float intensity = cache->getData(0).getData<double>();
+        auto light = std::make_shared<DistantLight>(intensity);
+        cache->pushData(light);
+    };
+
+    DataCache::addProcessor("TRANSFORMABLE", "POINTLIGHT", new CacheProcessor(pointLightProc));
+    DataCache::addProcessor("TRANSFORMABLE", "SPOTLIGHT", new CacheProcessor(spotLightProc));
+    DataCache::addProcessor("TRANSFORMABLE", "DISTANTLIGHT", new CacheProcessor(distantLightProc));
+}
+
 BOOST_PYTHON_MODULE(object){
-    using namespace MindTree;
     auto proc = new CacheProcessor(groupProc);
     DataCache::addProcessor("GROUPDATA", "GROUP", proc);
 
     proc = new CacheProcessor(transformProc);
-    DataCache::addProcessor("SCENEOBJECT", "TRANSFORM", proc);
+    DataCache::addProcessor("TRANSFORMABLE", "TRANSFORM", proc);
 
     ObjectDataPyWrapper::wrap();
     ObjectPyWrapper::wrap();
     GroupPyWrapper::wrap();
 
     createTranslateWidget();
+
+    regLightProcs();
 }
