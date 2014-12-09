@@ -78,11 +78,14 @@ public:
     void data(std::shared_ptr<VertexList> l);
     void data(VertexList l);
     void data(std::vector<glm::vec2> l);
+    void setPointer();
     GLint getIndex();
 
 private:
-    GLuint index;
-    std::string name;
+    GLuint _index;
+    GLenum _datatype;
+    uint _size;
+    std::string _name;
 };
 
 class IBO : public Buffer
@@ -218,9 +221,6 @@ public:
     void bindAttributeLocation(unsigned int index, std::string name);
     void bindFragmentLocation(unsigned int index, std::string name);
 
-    void vertexAttribute(std::string name, const std::vector<int> &data);
-    void vertexAttribute(std::string name, const std::vector<glm::vec3> &data);
-
     bool hasAttribute(std::string name);
     bool hasFragmentOutput(std::string name);
 
@@ -328,11 +328,10 @@ public:
     std::shared_ptr<IBO> getIBO(ObjectDataPtr data);
     void uploadData(ObjectDataPtr data, std::string name);
 
-    std::shared_ptr<VAO> getVAO(ObjectDataPtr data);
-
     void scheduleCleanUp(std::shared_ptr<ShaderProgram> prog);
-    void scheduleCleanUp(std::shared_ptr<VAO> vao);
     void scheduleCleanUp(std::shared_ptr<VBO> vbo);
+    void scheduleCleanUp(std::shared_ptr<VAO> vbo);
+    void scheduleCleanUp(std::shared_ptr<IBO> vbo);
 
 private:
     friend class RenderManager;
@@ -342,60 +341,28 @@ private:
     void cleanUp();
 
     std::vector<std::shared_ptr<ShaderProgram>> _scheduledShaders;
-    std::vector<std::shared_ptr<VAO>> _scheduledVAOs;
     std::vector<std::shared_ptr<VBO>> _scheduledVBOs;
+    std::vector<std::shared_ptr<IBO>> _scheduledIBOs;
+    std::vector<std::shared_ptr<VAO>> _scheduledVAOs;
 
     std::unordered_map<ObjectDataPtr, std::vector<std::shared_ptr<VBO>>> _vboMap;
     std::unordered_map<ObjectDataPtr, std::shared_ptr<IBO>> _iboMap;
-    std::unordered_map<ObjectDataPtr, std::shared_ptr<VAO>> vao_map;
 };
 
-class Context
+class ContextBinder
 {
 public:
-    Context();
-
-    virtual void makeCurrent();
-    virtual void doneCurrent();
-    virtual void swapBuffers() = 0;
-
-    std::shared_ptr<ResourceManager> getManager();
-
-    static Context* getCurrent();
-    static Context* getSharedContext();
-
-protected:
-    static Context* _sharedContext;
-    static Context* currentContext;
+    ContextBinder(QGLContext *context);
+    ~ContextBinder();
 
 private:
-    std::shared_ptr<ResourceManager> manager;
+    QGLContext *_context;
 };
 
-class SharedContextRAII
+class QtContext
 {
 public:
-    SharedContextRAII();
-    ~SharedContextRAII();
-};
-
-class QtContext : public Context
-{
-public:
-    QtContext();
-
-    static QtContext* getContext();
-
-    void makeCurrent();
-    void doneCurrent();
-    void swapBuffers();
-
-    QGLContext* getNativeContext();
-    static QtContext* getSharedContext();
-
-private:
-    QGLContext _context;
-    QGLFormat format;
+    static QGLFormat format();
 };
 
 } /* GL */

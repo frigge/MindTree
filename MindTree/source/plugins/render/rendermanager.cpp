@@ -1,4 +1,5 @@
 #include "GL/glew.h"
+#include "QGLContext"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glwrapper.h"
 #include "chrono"
@@ -48,44 +49,75 @@ bool RenderConfig::flatShading() const
     return _flatShading;
 }
 
-RenderManager::RenderManager()
-    : _initialized(false),
-    _rendering(false)
+bool RenderThread::_rendering = false;
+std::mutex RenderThread::_renderingLock;
+std::thread RenderThread::_renderThread;
+std::vector<RenderManager*> RenderThread::_renderQueue;
+
+void RenderThread::addManager(RenderManager* manager)
 {
+    auto it = std::find(begin(_renderQueue), end(_renderQueue), manager);
+    if(it == end(_renderQueue))
+        _renderQueue.push_back(manager);
+
+    if(!isRendering()) start();
 }
 
-RenderManager::~RenderManager()
+void RenderThread::removeManager(RenderManager *manager)
 {
+    auto it = std::find(begin(_renderQueue), end(_renderQueue), manager);
+    if(it != end(_renderQueue))
+        _renderQueue.erase(it);
+    if(_renderQueue.empty()) stop();
 }
 
-bool RenderManager::isRendering()
+bool RenderThread::isRendering()
 {
     std::lock_guard<std::mutex> lock(_renderingLock);
     return _rendering;
 }
 
-void RenderManager::start()
+void RenderThread::start()
 {
     if(isRendering()) stop();
 
     _rendering = true;
 
-    auto renderLoop = [this] {
-        while(this->isRendering()) {
-            this->draw();
+    auto renderLoop = [] {
+        while(RenderThread::isRendering()) {
+            for(auto *manager : _renderQueue) {
+                manager->draw();
+            }
         }
     };
 
     _renderThread = std::thread(renderLoop);
 }
 
-void RenderManager::stop()
+void RenderThread::stop()
 {
     {
         std::lock_guard<std::mutex> lock(_renderingLock);
         _rendering = false;
     }
     _renderThread.join();
+}
+
+std::shared_ptr<ResourceManager> RenderManager::_resourceManager;
+
+RenderManager::RenderManager(QGLContext *context)
+    : _initialized(false), _context(context)
+{
+    if(!_resourceManager) _resourceManager = std::make_shared<ResourceManager>();
+}
+
+RenderManager::~RenderManager()
+{
+}
+
+std::shared_ptr<ResourceManager> RenderManager::getResourceManager()
+{
+    return _resourceManager;
 }
 
 void RenderManager::setDirty()
@@ -116,8 +148,11 @@ void RenderManager::init()
 {
     if(_initialized) return;
 
+    static bool glewInitialized = false;
+
+    if(!glewInitialized) glewInit();
+
     _initialized = true;
-    glewInit();
     glClearColor( 0., 0., 0., 0. );
 
     glEnable(GL_DEPTH_TEST);
@@ -185,14 +220,6 @@ RenderConfig RenderManager::getConfig()
     return config;
 }
 
-std::shared_ptr<RenderPass> RenderManager::addPass()
-{
-    std::lock_guard<std::mutex> lock(_managerLock);
-    auto pass = std::make_shared<RenderPass>();
-    passes.push_back(pass);
-    return pass;
-}
-
 void RenderManager::removePass(uint index)    
 {
     std::lock_guard<std::mutex> lock(_managerLock);
@@ -206,7 +233,8 @@ RenderPass* RenderManager::getPass(uint index)
 
 void RenderManager::draw()
 {
-    SharedContextRAII context;
+    ContextBinder binder(_context);
+
     if(!_initialized) {
         init();
     }
@@ -215,7 +243,6 @@ void RenderManager::draw()
     glEnable(GL_POLYGON_OFFSET_POINT);
 
     auto start = std::chrono::steady_clock::now();
-    Context::getSharedContext()->getManager()->cleanUp();
     {
         std::lock_guard<std::mutex> lock(_managerLock);
         int i = 0;
@@ -227,7 +254,8 @@ void RenderManager::draw()
     glDisable(GL_POINT_SMOOTH);
     glDisable(GL_PROGRAM_POINT_SIZE);
     glDisable(GL_POLYGON_OFFSET_POINT);
-    Context::getSharedContext()->swapBuffers();
+    _context->swapBuffers();
+
     glFinish();
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);

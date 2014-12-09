@@ -47,9 +47,10 @@
 
 using namespace MindTree;
 
+std::vector<Viewport*> Viewport::_viewports;
+
 Viewport::Viewport()
-    : QGLWidget(GL::QtContext::getSharedContext()->getNativeContext()), 
-    selectedNode(0),
+    : QGLWidget(GL::QtContext::format(), nullptr, _viewports.empty() ? nullptr : _viewports[0]),
     defaultCamera(std::make_shared<Camera>()),
     rotate(false), 
     pan(false), 
@@ -58,12 +59,15 @@ Viewport::Viewport()
     _showGrid(true), 
     transformMode(0)
 {
+    _viewports.push_back(this);
+
     activeCamera = defaultCamera;
     setAutoBufferSwap(false);
 
-    _rendermanager = std::unique_ptr<GL::RenderManager>(new GL::RenderManager());
+    QGLContext *ctx = const_cast<QGLContext*>(context());
+    _rendermanager = std::unique_ptr<GL::RenderManager>(new GL::RenderManager(ctx));
 
-    auto pass = _rendermanager->addPass();
+    auto pass = _rendermanager->addPass<GL::RenderPass>();
     pass->setCamera(activeCamera);
 
     grid = new GL::GridRenderer(100, 100, 100, 100);
@@ -80,7 +84,7 @@ Viewport::Viewport()
     pass->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
     pass->addOutput(std::make_shared<GL::Texture2D>("outposition"));
 
-    auto overlaypass = _rendermanager->addPass();
+    auto overlaypass = _rendermanager->addPass<GL::RenderPass>();
     overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
     overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
     overlaypass->addOutput(std::make_shared<GL::Renderbuffer>("id"));
@@ -89,9 +93,10 @@ Viewport::Viewport()
 
     //testing translate widgets
 
-    Widget3D::insertWidgetsIntoRenderPass(overlaypass);
+    _widgetManager = std::make_shared<Widget3DManager>();
+    _widgetManager->insertWidgetsIntoRenderPass(overlaypass);
 
-    _pixelPass = _rendermanager->addPass().get();
+    _pixelPass = _rendermanager->addPass<GL::RenderPass>().get();
     _pixelPass->addRenderer(new GL::FullscreenQuadRenderer());
 
     setMouseTracking(true);
@@ -99,7 +104,9 @@ Viewport::Viewport()
 
 Viewport::~Viewport()
 {
-    _rendermanager->stop();
+    MindTree::GL::RenderThread::removeManager(_rendermanager.get());
+
+    _viewports.erase(std::find(begin(_viewports), end(_viewports), this));
 }
 
 GL::RenderManager* Viewport::getRenderManager()
@@ -121,12 +128,6 @@ void Viewport::setData(std::shared_ptr<Group> value)
 
 void Viewport::changeCamera(QString cam)    
 {
-    CameraNode* cnode = (CameraNode*)Project::instance()->getItem(cam.toStdString());
-    if(cnode) {
-        activeCamera = std::static_pointer_cast<Camera>(cnode->getObject());
-        if(selectedNode == cnode)
-            selectedNode = 0;
-    }
 }
 
 void Viewport::resizeEvent(QResizeEvent *)
@@ -142,12 +143,12 @@ void Viewport::paintEvent(QPaintEvent *)
 
 void Viewport::showEvent(QShowEvent *)
 {
-    _rendermanager->start();
+    MindTree::GL::RenderThread::addManager(_rendermanager.get());
 }
 
 void Viewport::hideEvent(QHideEvent *)
 {
-    _rendermanager->stop();
+    MindTree::GL::RenderThread::removeManager(_rendermanager.get());
 }
 
 void Viewport::setShowPoints(bool b)    
@@ -190,7 +191,7 @@ void Viewport::mousePressEvent(QMouseEvent *event)
     pos.y = height() - event->pos().y();
 
     auto viewportSize = glm::ivec2(width(), height());
-    if (Widget3D::mousePressEvent(activeCamera, pos, viewportSize))
+    if (_widgetManager->mousePressEvent(activeCamera, pos, viewportSize))
         return;
 
     lastpos = event->posF();
@@ -210,7 +211,7 @@ void Viewport::mouseReleaseEvent(QMouseEvent *event)
     selectionMode =false;
     lastpos = QPointF();
     
-    Widget3D::mouseReleaseEvent();
+    _widgetManager->mouseReleaseEvent();
 }
 
 void Viewport::mouseMoveEvent(QMouseEvent *event)    
@@ -221,7 +222,7 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 
     auto viewportSize = glm::ivec2(width(), height());
 
-    if (Widget3D::mouseMoveEvent(activeCamera, pos, viewportSize))
+    if (_widgetManager->mouseMoveEvent(activeCamera, pos, viewportSize))
         return;
 
     float xdist = lastpos.x()  - event->posF().x();
@@ -238,21 +239,6 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 void Viewport::wheelEvent(QWheelEvent *event)    
 {
     zoomView(0, event->delta());
-}
-
-AbstractTransformableNode* Viewport::getSelectedNode()    
-{
-    if(selectedNode && selectedNode->getObject() == activeCamera)
-        return 0;
-    else return selectedNode;
-}
-
-glm::vec3 Viewport::getCamPivot()    
-{
-    if(getSelectedNode())
-        return glm::vec4(getSelectedNode()->getObject()->getTransformation() * glm::vec4()).xyz();
-    else
-        return glm::vec3(0, 0, 0);
 }
 
 void Viewport::rotateView(float xdist, float ydist)

@@ -26,11 +26,12 @@
 #include "QTimer"
 #include "QThread"
 
-#include "source/lib/mindtree_core.h"
 #include "source/plugins/datatypes/Object/object.h"
 #include "data/nodes/nodetype.h"
 #include "../../render/glwrapper.h"
 #include "../../render/rendermanager.h"
+
+class Widget3DManager;
 
 namespace MindTree {
 namespace GL {
@@ -57,14 +58,7 @@ public:
     Q_SLOT void setShowFlatShading(bool b);
     Q_SLOT void setShowGrid(bool b);
     Q_SLOT void changeCamera(QString cam);
-    Q_SLOT AbstractTransformableNode* getSelectedNode();
-    Q_SLOT glm::vec3 getCamPivot();
     Q_SLOT void setData(std::shared_ptr<Group> value);
-//---------------
-
-//SIGNALS:
-    Q_SIGNAL void sceneUpdated();
-    Q_SIGNAL void nodeChanged(MindTree::DNode*);
 //---------------
 
 protected:
@@ -86,12 +80,14 @@ protected:
     void drawFps();
 
 private:
-    AbstractTransformableNode *selectedNode;
     std::shared_ptr<Camera> activeCamera, defaultCamera;
     std::unique_ptr<MindTree::GL::RenderManager> _rendermanager;
 
     MindTree::GL::GridRenderer *grid;
     MindTree::GL::RenderPass *_pixelPass;
+    std::shared_ptr<Widget3DManager> _widgetManager;
+
+    static std::vector<Viewport*> _viewports;
 
     QPointF lastpos;
     QPointF winClickPos;
@@ -99,7 +95,6 @@ private:
     bool rotate, pan, zoom;
     bool selectionMode;
     bool _showGrid;
-    time_t start, end;
     unsigned short transformMode;
 };
 

@@ -7,6 +7,7 @@
 #include "queue"
 #include "utility"
 #include "../datatypes/Object/object.h"
+#include "../datatypes/Object/lights.h"
 
 namespace MindTree {
 namespace GL {
@@ -25,11 +26,18 @@ class RenderPass
 public:
     RenderPass();
     virtual ~RenderPass();
-    void render(const RenderConfig &config);
 
     void setCamera(CameraPtr camera);
-    void setRenderersFromGroup(std::shared_ptr<Group> group);
-    void addRendererFromObject(std::shared_ptr<GeoObject> obj);
+    void setRenderersFromGroup(const std::shared_ptr<Group> group);
+
+    void addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group);
+
+    void addRendererFromObject(const std::shared_ptr<GeoObject> obj);
+    void addRendererFromLight(const LightPtr obj);
+    void addRendererFromCamera(const CameraPtr obj);
+    void addRendererFromEmpty(const EmptyPtr obj);
+
+    void addRendererFromTransformable(const AbstractTransformablePtr transformable);
     void addRenderer(Renderer *renderer);
 
     void setTarget(std::shared_ptr<FBO> target);
@@ -58,6 +66,10 @@ public:
     glm::ivec2 getResolution();
     std::vector<glm::vec4> readPixel(std::vector<std::string> name, glm::ivec2 pos);
 
+protected:
+    virtual void init();
+    virtual void render(const RenderConfig &config);
+
 private:
     void processPixelRequests();
     void addGeometryRenderer(Renderer *renderer);
@@ -67,7 +79,6 @@ private:
     std::mutex _pixelRequestsLock;
 
     friend class RenderManager;
-    void init();
 
     int _width, _height;
     bool _viewportChanged, _initialized;

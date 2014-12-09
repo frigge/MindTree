@@ -5,6 +5,7 @@
 #include "memory"
 #include "mutex"
 #include "vector"
+#include "unordered_set"
 #include "../datatypes/Object/object.h"
 #include "glm/glm.hpp"
 
@@ -21,6 +22,7 @@ class ShaderProgram;
 
 class RenderConfig;
 
+class RenderManager;
 class Renderer
 {
 public:
@@ -34,8 +36,10 @@ public:
     glm::mat4 getGlobalTransformation();
 
     void setParent(Renderer *parent);
+    const Renderer* getParent() const;
     Renderer* getParent();
     void addChild(Renderer *child);
+    void addChild(std::shared_ptr<Renderer>(child));
 
     void setVisible(bool visible);
 
@@ -45,14 +49,13 @@ protected:
     friend class ShaderRenderNode;
 
     virtual void init() = 0;
-    virtual void initVAO() = 0;
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program) = 0;
 
-    std::shared_ptr<VAO> _vao;
-    std::vector<std::unique_ptr<Renderer>> _children;
+    std::vector<std::shared_ptr<Renderer>> _children;
 
 private:
     void _init();
+    std::shared_ptr<VAO> _vao;
 
     bool _initialized, _visible;
     glm::mat4 _transformation;
@@ -69,7 +72,7 @@ public:
     void addRenderer(Renderer *renderer);
     void render(CameraPtr camera, glm::ivec2 resolution, const RenderConfig &config);
     std::shared_ptr<ShaderProgram> program();
-    std::vector<std::shared_ptr<Renderer>> renders();
+    const std::vector<std::shared_ptr<Renderer>>& renders();
     void clear();
 
 private:

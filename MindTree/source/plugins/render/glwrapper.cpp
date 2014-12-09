@@ -79,19 +79,19 @@ VAO::VAO()
     : bound(false)
 {
     glGenVertexArrays(1, &id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 VAO::~VAO()
 {
     glDeleteVertexArrays(1, &id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void VAO::bind()    
 {
     glBindVertexArray(id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     //for(auto &vbo : vbos) vbo->bind();
     bound = true;
 }
@@ -99,7 +99,7 @@ void VAO::bind()
 void VAO::release()    
 {
     glBindVertexArray(0);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     bound = false;
 }
 
@@ -107,30 +107,30 @@ Buffer::Buffer(GLenum bufferType)
     : _bufferType(bufferType)
 {
     glGenBuffers(1, &id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 Buffer::~Buffer()
 {
     glDeleteBuffers(1, &id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void Buffer::bind()
 {
     glBindBuffer(_bufferType, id);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void Buffer::release()    
 {
     glBindBuffer(_bufferType, 0);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 VBO::VBO(std::string name, GLuint index)
     : Buffer(GL_ARRAY_BUFFER),
-        name(name), index(index)
+        _name(name), _index(index), _size(0), _datatype(GL_FLOAT)
 {
 }
 
@@ -140,45 +140,49 @@ VBO::~VBO()
 
 std::string VBO::getName()    
 {
-    return name;
+    return _name;
 }
 
 void VBO::bind()
 {
     Buffer::bind();
-    getGLError(__PRETTY_FUNCTION__);
+    glEnableVertexAttribArray(_index);
+    MTGLERROR;
 }
 
 void VBO::data(std::shared_ptr<VertexList> l)
 {
-    glBufferData(GL_ARRAY_BUFFER, l->size() * 3 * sizeof(float), &(*l)[0], GL_STATIC_DRAW);
-    getGLError(__PRETTY_FUNCTION__);
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    getGLError(__PRETTY_FUNCTION__);
+    _datatype = GL_FLOAT;
+    _size = 3;
+
+    size_t datasize = l->size() * _size * sizeof(float);
+    glBufferData(GL_ARRAY_BUFFER, datasize, &(*l)[0], GL_STATIC_DRAW);
+}
+
+void VBO::setPointer()
+{
+    glVertexAttribPointer(_index, _size, _datatype, GL_FALSE, 0, 0);
 }
 
 void VBO::data(VertexList l)
 {
+    _datatype = GL_FLOAT;
+    _size = 3;
+
     glBufferData(GL_ARRAY_BUFFER, l.size() * 3 * sizeof(float), &l[0], GL_STATIC_DRAW);
-    getGLError(__PRETTY_FUNCTION__);
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    getGLError(__PRETTY_FUNCTION__);
 }
 
 void VBO::data(std::vector<glm::vec2> l)
 {
-    glBufferData(GL_ARRAY_BUFFER, l.size() * 2 * sizeof(float), &l[0], GL_STATIC_DRAW);
-    getGLError(__PRETTY_FUNCTION__);
-    glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    getGLError(__PRETTY_FUNCTION__);
+    _datatype = GL_FLOAT;
+    _size = 2;
+
+    glBufferData(GL_ARRAY_BUFFER, l.size() * _size * sizeof(float), &l[0], GL_STATIC_DRAW);
 }
 
 GLint VBO::getIndex()    
 {
-    return index;
+    return _index;
 }
 
 IBO::IBO()
@@ -196,6 +200,9 @@ void IBO::data(std::shared_ptr<PolygonList> l)
     int size = 0;
     
     //find out size of index buffer by adding together polygon sizes
+
+    _polysizes.clear();
+    _indexOffsets.clear();
     
     std::vector<uint> data;
 
@@ -212,7 +219,7 @@ void IBO::data(std::shared_ptr<PolygonList> l)
     }
     
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, size * sizeof(uint), &data[0], GL_STATIC_DRAW);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 
     //cache indices for glMultiDrawElements
 }
@@ -456,9 +463,9 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::init()
 {
-    _initialized = true;
-    if(_id) glDeleteProgram(_id);
+    if(_initialized) return;
 
+    _initialized = true;
     _id = glCreateProgram();
     MTGLERROR;
 
@@ -481,7 +488,7 @@ void ShaderProgram::release()
     if(!_id) return;
     _isBound = false;
     glUseProgram(0);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void ShaderProgram::link()    
@@ -493,7 +500,7 @@ void ShaderProgram::link()
     glGetProgramiv(_id, GL_LINK_STATUS, &linkStatus);
     if(linkStatus != GL_TRUE)
         std::cout << "program could not be linked" << std::endl;
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void ShaderProgram::addShaderFromSource(std::string src, ShaderProgram::ShaderType type)    
@@ -611,9 +618,9 @@ void ShaderProgram::setUniform(std::string name, const glm::vec2 &value)
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     if(location > -1) glUniform2f(location, value.x, value.y);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)    
@@ -621,9 +628,9 @@ void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     if(location > -1) glUniform3f(location, value.x, value.y, value.z);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)    
@@ -631,9 +638,9 @@ void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     if(location > -1) glUniform4f(location, value.x, value.y, value.z, value.w);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void ShaderProgram::setUniform(std::string name, float value)    
@@ -641,9 +648,9 @@ void ShaderProgram::setUniform(std::string name, float value)
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     if(location > -1) glUniform1f(location, value);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void ShaderProgram::setUniform(std::string name, int value)    
@@ -664,9 +671,9 @@ void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     if(location > -1) glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
-    if(getGLError(__PRETTY_FUNCTION__))
+    if(MTGLERROR)
        std::cout << "unifrom name: " << name << std::endl;
 }
 
@@ -716,7 +723,7 @@ void ShaderProgram::bindAttributeLocation(unsigned int index, std::string name)
         bind();
     }
     glBindAttribLocation(_id, index, name.c_str()); 
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 
     //needs to be relinked so that the binding actually goes into effect
     link();
@@ -734,36 +741,10 @@ void ShaderProgram::bindFragmentLocation(unsigned int index, std::string name)
     }
 
     glBindFragDataLocation(_id, index, name.c_str());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 
     link();
     if(wasntbound) release();
-}
-
-void ShaderProgram::vertexAttribute(std::string name, const std::vector<glm::vec3> &data)    
-{
-    if(!_initialized) init();
-
-    if(!_attributeLocations.count(name))
-        _attributeLocations[name] = _attributes++;
-    uint index = _attributeLocations[name];
-    glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, _offset, &data[0][0]);
-    getGLError(__PRETTY_FUNCTION__);
-    bindAttributeLocation(index, name);
-    _offset += sizeof(glm::vec3) * data.size();
-}
-
-void ShaderProgram::vertexAttribute(std::string name, const std::vector<int> &data)    
-{
-    if(!_initialized) init();
-
-    if(!_attributeLocations.count(name))
-        _attributeLocations[name] = _attributes++;
-    uint index = _attributeLocations[name];
-    glVertexAttribPointer(_id, 1, GL_INT, GL_FALSE, _offset, &data[0]);
-    getGLError(__PRETTY_FUNCTION__);
-    bindAttributeLocation(_attributeLocations[name], name);
-    _offset += sizeof(int) * data.size();
 }
 
 bool ShaderProgram::hasAttribute(std::string name)    
@@ -776,7 +757,7 @@ bool ShaderProgram::hasAttribute(std::string name)
         bind();
     }
     GLint location = glGetAttribLocation(_id, name.c_str());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
     if(wasntbound) release();
 
     return location > -1;
@@ -792,7 +773,7 @@ bool ShaderProgram::hasFragmentOutput(std::string name)
         bind();
     }
     GLint location = glGetFragDataLocation(_id, name.c_str());
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 
     if(wasntbound) release();
 
@@ -804,7 +785,7 @@ void ShaderProgram::enableAttribute(std::string name)
     if(!_initialized) init();
 
     glEnableVertexAttribArray(_attributeLocations[name]);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 void ShaderProgram::disableAttribute(std::string name)    
@@ -812,7 +793,7 @@ void ShaderProgram::disableAttribute(std::string name)
     if(!_initialized) init();
 
     glDisableVertexAttribArray(_attributeLocations[name]);
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 Texture::Texture(std::string name, Texture::Format format, Target target)
@@ -827,7 +808,7 @@ Texture::Texture(std::string name, Texture::Format format, Target target)
 Texture::~Texture()
 {
     glDeleteTextures(1, &_id); 
-    getGLError(__PRETTY_FUNCTION__);
+    MTGLERROR;
 }
 
 std::string Texture::getName()
@@ -1004,12 +985,12 @@ ResourceManager::~ResourceManager()
 
 void ResourceManager::scheduleCleanUp(std::shared_ptr<ShaderProgram> prog)
 {
-    _scheduledShaders.push_back(std::move(prog));
+    _scheduledShaders.push_back(prog);
 }
 
 void ResourceManager::scheduleCleanUp(std::shared_ptr<VAO> vao)
 {
-    _scheduledVAOs.push_back(std::move(vao));
+    _scheduledVAOs.push_back(vao);
 }
 
 void ResourceManager::scheduleCleanUp(std::shared_ptr<VBO> vbo)
@@ -1017,11 +998,17 @@ void ResourceManager::scheduleCleanUp(std::shared_ptr<VBO> vbo)
     _scheduledVBOs.push_back(vbo);
 }
 
+void ResourceManager::scheduleCleanUp(std::shared_ptr<IBO> ibo)
+{
+    _scheduledIBOs.push_back(ibo);
+}
+
 void ResourceManager::cleanUp()
 {
     _scheduledShaders.clear();
     _scheduledVAOs.clear();
     _scheduledVBOs.clear();
+    _scheduledIBOs.clear();
 }
 
 std::shared_ptr<VBO> ResourceManager::createVBO(ObjectDataPtr data, std::string name)    
@@ -1049,13 +1036,17 @@ void ResourceManager::uploadData(ObjectDataPtr data, std::string name)
     auto &vbos = _vboMap[data];
 
     for(auto vbo : vbos) 
-        if(vbo->getName() == name)
+        if(vbo->getName() == name) {
+            vbo->bind();
+            vbo->setPointer();
             return;
+        }
 
     auto vbo = createVBO(data, name);
     
     vbo->bind();
     vbo->data(data->getProperty(name).getData<std::shared_ptr<VertexList>>());
+    vbo->setPointer();
 }
 
 std::shared_ptr<IBO> ResourceManager::createIBO(ObjectDataPtr data)
@@ -1074,61 +1065,18 @@ std::shared_ptr<IBO> ResourceManager::getIBO(ObjectDataPtr data)
     return createIBO(data);
 }
 
-std::shared_ptr<VAO> ResourceManager::getVAO(ObjectDataPtr data)
+ContextBinder::ContextBinder(QGLContext *context)
+    : _context(context)
 {
-    if(vao_map.find(data) == vao_map.end()) {
-        auto vao = std::make_shared<VAO>();
-        vao_map.insert(std::make_pair(data, vao));
-    }
-    auto &vao = vao_map[data];
-    return vao;
+    _context->makeCurrent();
 }
 
-Context* Context::currentContext = nullptr;
-Context* Context::_sharedContext = nullptr;
-
-Context::Context()
-    : manager(std::make_shared<ResourceManager>())
+ContextBinder::~ContextBinder()
 {
+    _context->doneCurrent();
 }
 
-std::shared_ptr<ResourceManager> Context::getManager()    
-{
-    return manager;
-}
-
-Context* Context::getCurrent()    
-{
-    return currentContext;
-}
-
-Context* Context::getSharedContext()
-{
-    return _sharedContext;
-}
-
-void Context::makeCurrent()    
-{
-    currentContext = this;
-}
-
-void Context::doneCurrent()    
-{
-    currentContext = nullptr;
-}
-
-SharedContextRAII::SharedContextRAII()
-{
-    Context::getSharedContext()->makeCurrent();
-}
-
-SharedContextRAII::~SharedContextRAII()
-{
-    Context::getSharedContext()->doneCurrent();
-}
-
-QtContext::QtContext()
-    : Context(), _context(QGLFormat::defaultFormat())
+QGLFormat QtContext::format()
 {
     auto options = QGL::DoubleBuffer
         | QGL::DepthBuffer
@@ -1141,48 +1089,5 @@ QtContext::QtContext()
 
     format.setVersion(4, 3);
     format.setProfile(QGLFormat::CompatibilityProfile);
-
-    _context.setFormat(format);
-}
-
-void QtContext::makeCurrent()    
-{
-    Context::makeCurrent();
-    if (!_context.isValid()) {
-        if (!_context.create()) {
-            std::cout << "couldn't create context" << std::endl;
-            return;
-        }
-    }
-    _context.makeCurrent();
-}
-
-void QtContext::doneCurrent()    
-{
-    Context::doneCurrent();
-    _context.doneCurrent();
-}
-
-void QtContext::swapBuffers()
-{
-    _context.swapBuffers();
-}
-
-QGLContext* QtContext::getNativeContext()
-{
-    return &_context;
-}
-
-QtContext* QtContext::getSharedContext()
-{
-    QtContext* context = nullptr;
-    if(!_sharedContext) {
-        context = new QtContext();
-        _sharedContext = context;
-    }
-    else {
-        context = static_cast<QtContext*>(_sharedContext);
-    }
-
-    return context;
+    return format;
 }

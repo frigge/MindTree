@@ -2,6 +2,9 @@
 #include "glwrapper.h"
 #include "render.h"
 #include "polygon_renderer.h"
+#include "light_renderer.h"
+#include "camera_renderer.h"
+#include "empty_renderer.h"
 #include "renderpass.h"
 
 using namespace MindTree;
@@ -42,7 +45,7 @@ void RenderPass::init()
         GLObjectBinder<std::shared_ptr<FBO>> binder(_target);
         uint i = 0;
         for (auto texture : _outputTextures) {
-            texture->setWidth(_width); 
+            texture->setWidth(_width);
             texture->setHeight(_height);
             {
                 GLObjectBinder<std::shared_ptr<Texture2D>> binder(texture);
@@ -217,7 +220,7 @@ void RenderPass::processPixelRequests()
         MTGLERROR;
         glReadPixels(pos.x, pos.y, 1, 1, format, datasize, data);
         MTGLERROR;
-        
+
         glm::vec4 color;
         if(format == GL_RGB) {
                 GLubyte* raw_color = reinterpret_cast<GLubyte*>(data);
@@ -325,28 +328,53 @@ std::vector<std::shared_ptr<ShaderRenderNode>> RenderPass::getShaderNodes()
 
 void RenderPass::setRenderersFromGroup(std::shared_ptr<Group> group)
 {
-    //empty all the nodes but leave the shaders there!!
+    assert(group);
+    //clear all the nodes but leave the shaders there!!
     for (auto node : _geometryShaderNodes)
         node->clear();
 
-    //add the new objects
-    for(auto obj : group->getGeometry()){
-        addRendererFromObject(obj);
-    }
+    addRenderersFromGroup(group->getMembers());
 
     //find out which shaders are still unused
     std::vector<std::shared_ptr<ShaderRenderNode>> obsolete;
     for (auto node : _geometryShaderNodes) {
-        if(node->renders().size() == 0)
+        if(node->renders().empty())
             obsolete.push_back(node);
     }
 
     //kill all the unused shaders!!
     for (auto node : obsolete)
-        _geometryShaderNodes.erase(std::find(begin(_shadernodes), end(_shadernodes), node));
+        _geometryShaderNodes.erase(std::find(begin(_geometryShaderNodes), end(_geometryShaderNodes), node));
 }
 
-void RenderPass::addRendererFromObject(std::shared_ptr<GeoObject> obj)    
+void RenderPass::addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group)
+{
+    for(const auto &transformable : group) {
+        addRendererFromTransformable(transformable);
+    }
+}
+
+void RenderPass::addRendererFromTransformable(AbstractTransformablePtr transformable)
+{
+    assert(transformable);
+    switch(transformable->getType()) {
+        case AbstractTransformable::GEO:
+            addRendererFromObject(std::dynamic_pointer_cast<GeoObject>(transformable));
+            break;
+        case AbstractTransformable::LIGHT:
+            addRendererFromLight(std::dynamic_pointer_cast<Light>(transformable));
+            break;
+        case AbstractTransformable::CAMERA:
+            addRendererFromCamera(std::dynamic_pointer_cast<Camera>(transformable));
+            break;
+        case AbstractTransformable::EMPTY:
+            addRendererFromEmpty(std::dynamic_pointer_cast<Empty>(transformable));
+            break;
+    }
+    addRenderersFromGroup(transformable->getChildren());
+}
+
+void RenderPass::addRendererFromObject(GeoObjectPtr obj)
 {
         auto data = obj->getData();
         switch(data->getType()){
@@ -354,13 +382,35 @@ void RenderPass::addRendererFromObject(std::shared_ptr<GeoObject> obj)
                 addGeometryRenderer(new PolygonRenderer(obj));
                 addGeometryRenderer(new EdgeRenderer(obj));
                 addGeometryRenderer(new PointRenderer(obj));
-
-                for(auto child : obj->getChildren()){
-                    if(child->getType() == AbstractTransformable::GEO)
-                        addRendererFromObject(std::static_pointer_cast<GeoObject>(child));
-                }
                 break;
         }
+}
+
+void RenderPass::addRendererFromLight(LightPtr obj)
+{
+    assert(obj);
+    switch(obj->getLightType()) {
+        case Light::POINT:
+            addGeometryRenderer(new PointLightRenderer(std::dynamic_pointer_cast<PointLight>(obj)));
+            break;
+        case Light::SPOT:
+            addGeometryRenderer(new SpotLightRenderer(std::dynamic_pointer_cast<SpotLight>(obj)));
+            break;
+        case Light::DISTANT:
+            addGeometryRenderer(new DistantLightRenderer(std::dynamic_pointer_cast<DistantLight>(obj)));
+            break;
+    }
+
+}
+
+void RenderPass::addRendererFromCamera(CameraPtr obj)
+{
+    addGeometryRenderer(new CameraRenderer(obj));
+}
+
+void RenderPass::addRendererFromEmpty(EmptyPtr obj)
+{
+    addGeometryRenderer(new EmptyRenderer(obj));
 }
 
 void RenderPass::setSize(int width, int height)
@@ -400,7 +450,7 @@ void RenderPass::render(const RenderConfig &config)
         MTGLERROR;
 
         GLObjectBinder<std::shared_ptr<FBO>> fbobinder(_target);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         MTGLERROR;
         getGLFramebufferError(__PRETTY_FUNCTION__);
         MTGLERROR;
@@ -408,7 +458,7 @@ void RenderPass::render(const RenderConfig &config)
 
         for(size_t i = 0; i < _outputTextures.size(); i++)
             buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
-        
+
         for(size_t i = 0; i < _outputRenderbuffers.size(); i++)
             buffers.push_back(GL_COLOR_ATTACHMENT0 + _outputTextures.size() + i);
 
@@ -442,7 +492,7 @@ void RenderPass::render(const RenderConfig &config)
         {
             std::lock_guard<std::mutex> lock(_geometryLock);
 
-            //render nodes that to not have a corresponding objectdata element (grid, 3d widgets, etc.)
+            //render nodes that do not have a corresponding objectdata element (grid, 3d widgets, etc.)
             for(auto node : _shadernodes)
                 node->render(_camera, glm::ivec2(_width, _height), config);
 

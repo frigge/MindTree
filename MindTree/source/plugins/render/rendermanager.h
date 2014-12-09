@@ -5,9 +5,11 @@
 #include "mutex"
 #include "thread"
 #include "memory"
-#include "list"
+#include "queue"
 #include "unordered_map"
 #include "../datatypes/Object/object.h"
+
+class QGLContext;
 
 namespace MindTree {
 namespace GL {
@@ -33,21 +35,35 @@ private:
     bool _flatShading = false;
 };
 
+class RenderManager;
+class RenderThread
+{
+public:
+    static void addManager(RenderManager* manager);
+    static void removeManager(RenderManager *manager);
+
+private:
+    static void start();
+    static void stop();
+    static bool isRendering();
+
+    static bool _rendering;
+    static std::mutex _renderingLock;
+    static std::thread _renderThread;
+    static std::vector<RenderManager*> _renderQueue;
+};
+
+class ResourceManager;
 class RenderManager
 {
 public:
-    RenderManager();
+    RenderManager(QGLContext *context);
     virtual ~RenderManager();
 
     void setCustomTextureNameMapping(std::string realname, std::string newname);
     void clearCustomTextureNameMapping();
     std::vector<std::string> getAllOutputs() const;
 
-    void start();
-    void stop();
-    bool isRendering();
-
-    std::shared_ptr<RenderPass> addPass();
     void removePass(uint index);
     RenderPass* getPass(uint index);
     void setConfig(RenderConfig cfg);
@@ -56,20 +72,32 @@ public:
 
     void setSize(int width, int height);
 
+    template<typename T>
+    std::shared_ptr<T> addPass()
+    {
+        std::lock_guard<std::mutex> lock(_managerLock);
+        auto pass = std::make_shared<T>();
+        passes.push_back(pass);
+        return pass;
+    }
+
+    static std::shared_ptr<ResourceManager> getResourceManager();
+
+
 private:
     void init();
     void draw();
+    friend class RenderThread;
 
-    std::thread _renderThread;
     std::mutex _managerLock;
-    std::mutex _renderingLock;
     std::unordered_map<std::string, std::string> _textureNameMappings;
 
     glm::vec4 backgroundColor;
     std::vector<std::shared_ptr<RenderPass>> passes;
+    static std::shared_ptr<ResourceManager> _resourceManager;
     RenderConfig config;
+    QGLContext *_context;
     bool _initialized;
-    bool _rendering;
     double renderTime;
 
     int _width, _height;

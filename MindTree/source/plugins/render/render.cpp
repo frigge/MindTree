@@ -16,7 +16,7 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
-    auto manager = Context::getSharedContext()->getManager();
+    auto manager = RenderManager::getResourceManager();
     if(_vao && _vao.use_count() == 1) manager->scheduleCleanUp(std::move(_vao));
 }
 
@@ -27,7 +27,7 @@ void Renderer::setVisible(bool visible)
 
 void Renderer::_init()    
 {
-    initVAO();
+    _vao = std::make_shared<VAO>();
 
     {
         GLObjectBinder<std::shared_ptr<VAO>> binder(_vao);
@@ -67,7 +67,28 @@ void Renderer::setParent(Renderer *parent)
 void Renderer::addChild(Renderer *child)
 {
     child->setParent(this);
-    _children.push_back(std::unique_ptr<Renderer>(child));
+
+    for(const auto &ch : _children)
+        if(ch.get() == child)
+            return;
+
+    _children.push_back(std::shared_ptr<Renderer>(child));
+}
+
+void Renderer::addChild(std::shared_ptr<Renderer>(child))
+{
+    child->setParent(this);
+
+    for(const auto &ch : _children)
+        if(ch == child)
+            return;
+
+    _children.push_back(child);
+}
+
+const Renderer* Renderer::getParent() const
+{
+    return _parent;
 }
 
 Renderer* Renderer::getParent()
@@ -108,7 +129,7 @@ ShaderRenderNode::ShaderRenderNode(std::shared_ptr<ShaderProgram> program)
 
 ShaderRenderNode::~ShaderRenderNode()
 {
-    if(_program) Context::getSharedContext()->getManager()
+    if(_program) RenderManager::getResourceManager()
         ->scheduleCleanUp(_program);
 }
 
@@ -147,7 +168,7 @@ void ShaderRenderNode::clear()
     _renders.clear();
 }
 
-std::vector<std::shared_ptr<Renderer>> ShaderRenderNode::renders()
+const std::vector<std::shared_ptr<Renderer>>& ShaderRenderNode::renders()
 {
     return _renders;
 }
