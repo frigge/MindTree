@@ -26,25 +26,36 @@
 #include "windowfactory.h"
 
 using namespace MindTree;
+
+AbstractGuiFactory::AbstractGuiFactory(QString name)
+    : _name(name)
+{
+
+}
+
+AbstractGuiFactory::~AbstractGuiFactory()
+{
+}
+
+QString AbstractGuiFactory::getName() const
+{
+    return _name;
+}
+
 WindowFactory::WindowFactory(QString name, std::function<QWidget*()> func)
-    : m_action(new QAction(name, 0)), name(name), windowFunc(func)
+    : AbstractGuiFactory(name), m_action(new QAction(name, 0)), windowFunc(func)
 {
     connect(m_action, SIGNAL(triggered()), this, SLOT(showWindow())); 
 }
 
 WindowFactory::WindowFactory(QString name)
-    : m_action(new QAction(name, 0)), name(name)
+    : AbstractGuiFactory(name), m_action(new QAction(name, 0))
 {
     connect(m_action, SIGNAL(triggered()), this, SLOT(showWindow())); 
 }
 
 WindowFactory::~WindowFactory()
 {
-}
-
-QString WindowFactory::getName()    
-{
-    return name;
 }
 
 void WindowFactory::setWindowFunc(std::function<QWidget*()> fn)
@@ -62,7 +73,7 @@ QString WindowFactory::showWindow()
 MindTree::ViewerDockBase* WindowFactory::createWindow()    
 {
     auto *widget = windowFunc();
-    auto *viewer = new MindTree::ViewerDockBase(getName());
+    auto *viewer = new MindTree::ViewerDockBase(getName(), this);
     viewer->setWidget(widget);
     return viewer;
 }
@@ -73,22 +84,17 @@ QAction* WindowFactory::action()
 }
 
 ViewerFactory::ViewerFactory(QString name, QString type, std::function<Viewer*(DoutSocket*)> func)
-    : name(name), type(type), windowFunc(func)
+    : AbstractGuiFactory(name), type(type), windowFunc(func), _dock(nullptr)
 {
 }
 
 ViewerFactory::ViewerFactory(QString name, QString type)
-    : name(name), type(type)
+    : AbstractGuiFactory(name), type(type), _dock(nullptr)
 {
 }
 
 ViewerFactory::~ViewerFactory()
 {
-}
-
-QString ViewerFactory::getName()    
-{
-    return name;
 }
 
 QString ViewerFactory::getType()    
@@ -105,7 +111,26 @@ MindTree::ViewerDockBase* ViewerFactory::createViewer(DoutSocket *socket)
 {
     auto *viewer = windowFunc(socket);
     if(!viewer) std::cout<<"could not create the viewer"<<std::endl;
-    auto *dock = new MindTree::ViewerDockBase(getName());
-    dock->setViewer(viewer);
-    return dock;
+    _dock = new MindTree::ViewerDockBase(getName(), this);
+    _dock->setViewer(viewer);
+    return _dock;
+}
+
+void ViewerFactory::setActive(ViewerDockBase *dock)
+{
+    _dock = dock;
+}
+
+ViewerDockBase* ViewerFactory::getActive() const
+{
+    return _dock;
+}
+
+
+MindTree::ViewerDockBase* ViewerFactory::getViewer(DoutSocket *socket)
+{
+    if(!_dock) 
+        return createViewer(socket);
+
+    return _dock;
 }

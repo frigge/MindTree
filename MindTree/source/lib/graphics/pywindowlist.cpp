@@ -26,7 +26,7 @@ QString PythonWindowFactory::showWindow()
 
 MindTree::ViewerDockBase* PythonWindowFactory::createWindow()    
 {
-    ViewerDockBase *viewer = new ViewerDockBase(getName());
+    ViewerDockBase *viewer = new ViewerDockBase(getName(), this);
     viewer->setPythonWidget(cls);
     return viewer;
 }
@@ -43,7 +43,7 @@ PythonViewerFactory::~PythonViewerFactory()
 MindTree::ViewerDockBase* PythonViewerFactory::createViewer(DoutSocket *socket)    
 {
     std::cout<<"creating Python Viewer"<<std::endl;
-    ViewerDockBase *dock = new ViewerDockBase(getName());
+    ViewerDockBase *dock = new ViewerDockBase(getName(), this);
     PyViewerBase *base = nullptr;
     {
         GILLocker locker;

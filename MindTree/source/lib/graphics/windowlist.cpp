@@ -142,7 +142,7 @@ QString MindTree::ViewerList::showViewer(DoutSocket *socket, unsigned int index)
     std::string idstr = typestr + std::to_string(index);
     ViewerDockBase *dock = nullptr;
     if(openViewers.find(idstr) == openViewers.end()) {
-        dock = windowFactories[typestr][index]->createViewer(socket);
+        dock = windowFactories[typestr][index]->getViewer(socket);
         openViewers.insert({typestr + std::to_string(index), dock});
         showDock(dock);
     } else {

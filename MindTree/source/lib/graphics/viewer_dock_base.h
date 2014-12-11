@@ -68,11 +68,13 @@ private:
 
 class DoutSocket;
 class Viewer;
+class AbstractGuiFactory;
+
 class ViewerDockBase : public QDockWidget
 {
     Q_OBJECT
 public:
-    ViewerDockBase(QString name);
+    ViewerDockBase(QString name, AbstractGuiFactory *factory);
     virtual ~ViewerDockBase();
     void setViewer(Viewer *view);
     Viewer* getViewer();
@@ -93,9 +95,13 @@ public:
     Q_SLOT void adjust(bool vis);
     Q_SLOT void setPinned(bool pin);
 
+protected:
+    void focusInEvent(QFocusEvent *event);
+
 private:
     BPy::object pywidget;
     DoutSocket *startSocket;
+    AbstractGuiFactory *_factory;
     DNode *node;
     Viewer *viewer;
     bool pinned;

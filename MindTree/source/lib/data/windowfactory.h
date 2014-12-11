@@ -30,41 +30,62 @@ namespace MindTree
 class Viewer;
 class DoutSocket;
 class ViewerDockBase;
-class WindowFactory : public QObject
+
+class AbstractGuiFactory
+{
+public:
+    AbstractGuiFactory(QString name);
+    virtual ~AbstractGuiFactory();
+
+    virtual void setActive(ViewerDockBase*) {}
+    virtual ViewerDockBase* getActive() const { return nullptr; }
+
+    QString getName() const;
+
+private:
+    QString _name;
+};
+
+class WindowFactory : public QObject, public AbstractGuiFactory
 {
 Q_OBJECT
 public:
     WindowFactory(QString name, std::function<QWidget*()> func);
     WindowFactory(QString name);
     virtual ~WindowFactory();
-    QString getName();
+
     QAction* action();
     void setWindowFunc(std::function<QWidget*()> fn);
     virtual MindTree::ViewerDockBase* createWindow();
     Q_SLOT virtual QString showWindow();
 
 private:
-    QString name;
     QAction *m_action;
     std::function<QWidget*()> windowFunc;
 };
 
 class DoutSocket;
-class ViewerFactory
+class ViewerFactory : public AbstractGuiFactory
 {
 public:
     ViewerFactory(QString name, QString type, std::function<Viewer*(DoutSocket*)> func);
     ViewerFactory(QString name, QString type);
     virtual ~ViewerFactory();
-    QString getName();
+
     QString getType();
-    QAction* action();
     void setWindowFunc(std::function<Viewer*(DoutSocket*)> fn);
+
     virtual ViewerDockBase* createViewer(DoutSocket *socket);
+    MindTree::ViewerDockBase* getViewer(DoutSocket *socket);
+
+    void setActive(ViewerDockBase *dock);
+    ViewerDockBase* getActive() const;
 
 private:
-    QString name, type;
+    QString type;
     std::function<Viewer*(DoutSocket*)> windowFunc;
+
+    ViewerDockBase* _dock;
 };
 
 } /* MindTree */

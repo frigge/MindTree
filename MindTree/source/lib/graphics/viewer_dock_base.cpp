@@ -31,6 +31,7 @@
 #include "data/project.h"
 #include "data/python/pyutils.h"
 #include "viewer.h"
+#include "data/windowfactory.h"
 
 #include "viewer_dock_base.h"
 
@@ -113,29 +114,38 @@ QSize ViewerDockHeaderWidget::sizeHint()    const
     return QSize(20, 20);
 }
 
-ViewerDockBase::ViewerDockBase(QString name)
-    : startSocket(0), pinned(false), viewer(0)
+ViewerDockBase::ViewerDockBase(QString name, AbstractGuiFactory *factory)
+    : startSocket(0), pinned(false), viewer(0), _factory(factory)
 {
-    auto n = Project::instance()->registerItem(this, name.toStdString());
-    setObjectName(n.c_str());
-    setWindowTitle(n.c_str());
+    setObjectName(name);
+    setWindowTitle(name);
     setAttribute(Qt::WA_DeleteOnClose, true);
-    //setTitleBarWidget(new ViewerDockHeaderWidget(this));
-    //FRG::Author->addDockWidget(Qt::RightDockWidgetArea, this);
-    //connect(FRG::Space, SIGNAL(selectionChanged()), this, SLOT(updateFocus()));
-    //connect(this, SIGNAL(visibilityChanged(bool)), this, SLOT(adjust(bool)));
-    //connect(this, SIGNAL(visibilityChanged(bool)), this, SLOT(deleteThis(bool)));
 }
 
 ViewerDockBase::~ViewerDockBase()
 {
-    Project::instance()->unregisterItem(this);
+    if (_factory->getActive() == this)
+        _factory->setActive(nullptr);
+
     MT_CUSTOM_SIGNAL_EMITTER("Viewer_Closed", this);
     auto &openViewers = MindTree::ViewerList::instance()->openViewers;
+    std::cout << "deleting " << this << "\n" << "open viewers:\n";
+    std::string viewerID;
     for(auto &p : openViewers) {
+        std::cout << p.first << ", " << p.second << "\n";
         if (p.second == this)
-            openViewers.erase(p.first);
+            viewerID = p.first;
     }
+
+    openViewers.erase(viewerID);
+
+    std::cout << std::endl;
+}
+
+void ViewerDockBase::focusInEvent(QFocusEvent *event)
+{
+    QDockWidget::focusInEvent(event);
+    _factory->setActive(this);
 }
 
 void ViewerDockBase::setViewer(Viewer *view)    
