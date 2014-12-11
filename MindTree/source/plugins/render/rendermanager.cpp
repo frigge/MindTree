@@ -96,11 +96,12 @@ void RenderThread::start()
 
 void RenderThread::stop()
 {
+    std::cout << "stop rendering" << std::endl;
     {
         std::lock_guard<std::mutex> lock(_renderingLock);
         _rendering = false;
     }
-    _renderThread.join();
+    if (_renderThread.joinable()) _renderThread.join();
 }
 
 std::shared_ptr<ResourceManager> RenderManager::_resourceManager;

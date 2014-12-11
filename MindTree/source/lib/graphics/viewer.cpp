@@ -72,7 +72,7 @@ void WorkerThread::stop()
         _updateQueue.clear();
     }
 
-    _updateThread.join();
+    if (_updateThread.joinable()) _updateThread.join();
 }
 
 Viewer::Viewer(DoutSocket *start)
