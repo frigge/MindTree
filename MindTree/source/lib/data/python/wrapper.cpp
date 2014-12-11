@@ -125,7 +125,7 @@ void PyWrapper::wrap()
 int PyWrapper::ptr()
 {
     if(!alive()) return 0;
-    return reinterpret_cast<long>(getWrapped<PyExposable>());
+    return reinterpret_cast<intptr_t>(getWrapped<PyExposable>());
 }
 
 bool PyWrapper::equal(PyWrapper *other)
