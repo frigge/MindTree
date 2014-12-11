@@ -163,7 +163,7 @@ private:
     NodeType type;
     Vec2i pos;
 
-    Signal::LiveTimeTracker *_signalLiveTime;
+    std::unique_ptr<Signal::LiveTimeTracker> _signalLiveTime;
 };
 
 template<class C>

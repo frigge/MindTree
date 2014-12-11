@@ -143,7 +143,7 @@ const Vec2i& DNode::getPos()const
 void DNode::setPos(Vec2i value)
 {
     pos = value;
-    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "nodePositionChanged");
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime.get(), "nodePositionChanged");
 }
 
 DSocket* DNode::getSocketByIDName(std::string idname)    
