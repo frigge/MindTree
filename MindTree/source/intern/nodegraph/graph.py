@@ -66,7 +66,7 @@ class NodeSpace(QGraphicsScene):
             item = node.NodeItem(n)
         self.addItem(item)
         item.setPos(n.pos[0], n.pos[1])
-        self.nodes[n.name] = item
+        self.nodes[n.ptr] = item
         return item
 
     def setViewedNode(self, node):
@@ -89,8 +89,8 @@ class NodeSpace(QGraphicsScene):
 
     def drawLink(self, insocket):
         link = node.NodeLink()
-        link.start = self.nodes[insocket.node.name]
-        link.end = self.nodes[insocket.connected.node.name]
+        link.start = self.nodes[insocket.node.ptr]
+        link.end = self.nodes[insocket.connected.node.ptr]
 
         self.removeLink(insocket)
 
@@ -176,7 +176,11 @@ class NodeGraph(QGraphicsView):
     def dropEvent(self, event):
         QGraphicsView.dropEvent(self, event)
         nodeLabel = str(event.mimeData().text())
+        if nodeLabel == "":
+            return
+
         _node = MT.createNode(nodeLabel)
+
         if _node is not None:
             self.scene().space.addNode(_node)
             scenePos = self.mapToScene(event.pos())

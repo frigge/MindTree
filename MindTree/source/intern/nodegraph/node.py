@@ -404,10 +404,10 @@ class NodeItem(QGraphicsSvgItem):
         QGraphicsSvgItem.mouseMoveEvent(self, event)
 
         if event.buttons() & Qt.LeftButton:
-            ownpos = self.scene().nodes[self.data.name].pos()
+            ownpos = self.scene().nodes[self.data.ptr].pos()
             for s in self.data.insockets:
                 if s.connected is not None:
-                    otherpos = self.scene().nodes[s.connected.node.name].pos()
+                    otherpos = self.scene().nodes[s.connected.node.ptr].pos()
                     if abs(ownpos.x() - otherpos.x()) < 10:
                         ownpos.setX(otherpos.x())
                         snap = True
@@ -417,7 +417,7 @@ class NodeItem(QGraphicsSvgItem):
 
             for os in self.data.outsockets:
                 for s in os.cntdSockets:
-                    otherpos = self.scene().nodes[s.node.name].pos()
+                    otherpos = self.scene().nodes[s.node.ptr].pos()
                     if abs(ownpos.x() - otherpos.x()) < 10:
                         ownpos.setX(otherpos.x())
                         snap = True
@@ -484,7 +484,7 @@ class NodeItem(QGraphicsSvgItem):
 
                 def action_triggered_cb(s):
                     def action_triggered():
-                        print("connect {0}.{1} to {2}.{3}".format(s.node.name, s.name, out.node.name, out.name))
+                        print("connect {0}.{1} to {2}.{3}".format(s.node.ptr, s, out.node.ptr, out.ptr))
                         s.connected = out
                     return action_triggered
 
@@ -498,7 +498,7 @@ class NodeItem(QGraphicsSvgItem):
                 s = compSockets[0]
                 if MT.isCompatible(s, out):
                     s.connected = out
-                    print("connect {0}.{1} to {2}.{3}".format(s.node.name, s.name, out.node.name, out.name))
+                    print("connect {0}.{1} to {2}.{3}".format(s.node.ptr, s.ptr, out.node.ptr, out.ptr))
 
     def delete(self):
         space = self.data.space
