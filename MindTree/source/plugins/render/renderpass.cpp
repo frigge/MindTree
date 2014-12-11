@@ -11,7 +11,7 @@ using namespace MindTree;
 using namespace MindTree::GL;
 
 RenderPass::RenderPass()
-    : _viewportChanged(true), _initialized(false), _depthOutput(NONE)
+    : _viewportChanged(true), _initialized(false), _depthOutput(NONE), _width(0), _height(0)
 {
 }
 
