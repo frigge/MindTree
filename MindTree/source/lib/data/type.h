@@ -4,6 +4,8 @@
 #include "string"
 #include "vector"
 #include "iostream"
+#include "mutex"
+#include "atomic"
 
 namespace MindTree {
 
@@ -76,7 +78,13 @@ public:
 
     static Type byID(int id)
     {
-        if(id >= id_map.size()) {
+        int size = 0;
+        {
+            std::lock_guard<std::mutex> lock(_id_map_mutex);
+            size = id_map.size();
+        }
+
+        if(id >= size) {
             std::cout<<"Type not registered: "<<id<<std::endl;
             return Type();
         }
@@ -85,11 +93,13 @@ public:
 
     static std::vector<std::string> getTypes()
     {
+        std::lock_guard<std::mutex> lock(_id_map_mutex);
         return id_map;
     }
 
     static int registerType(std::string name)
     {
+        std::lock_guard<std::mutex> lock(_id_map_mutex);
         id_map.push_back(name);
         return ++id_cnt;
     }
@@ -100,17 +110,21 @@ public:
 
     static int getID(std::string name)
     {
-        if(name == "") return -1;
-        int i = 0;
-        for(auto s = id_map.begin(); s != id_map.end(); s++, i++){
-            if(name == *s) return i;
+        {
+            std::lock_guard<std::mutex> lock(_id_map_mutex);
+            if(name == "") return -1;
+            int i = 0;
+            for(auto s = id_map.begin(); s != id_map.end(); s++, i++){
+                if(name == *s) return i;
+            }
         }
         return registerType(name);
     }
 
 private:
-    static int id_cnt;
+    static std::atomic<int> id_cnt;
     static std::vector<std::string> id_map;
+    static std::mutex _id_map_mutex;
 };
 
 class DataType : public Type<DataType> 
@@ -129,7 +143,10 @@ template<typename T>
 std::vector<std::string> Type<T>::id_map;
 
 template<typename T>
-int Type<T>::id_cnt = -1;
+std::mutex Type<T>::_id_map_mutex;
+
+template<typename T>
+std::atomic<int> Type<T>::id_cnt{-1};
 
 template<typename T, typename Content>
 class TypeDispatcher
