@@ -484,7 +484,6 @@ class NodeItem(QGraphicsSvgItem):
 
                 def action_triggered_cb(s):
                     def action_triggered():
-                        print("connect {0}.{1} to {2}.{3}".format(s.node.ptr, s, out.node.ptr, out.ptr))
                         s.connected = out
                     return action_triggered
 
@@ -498,7 +497,6 @@ class NodeItem(QGraphicsSvgItem):
                 s = compSockets[0]
                 if MT.isCompatible(s, out):
                     s.connected = out
-                    print("connect {0}.{1} to {2}.{3}".format(s.node.ptr, s.ptr, out.node.ptr, out.ptr))
 
     def delete(self):
         space = self.data.space
