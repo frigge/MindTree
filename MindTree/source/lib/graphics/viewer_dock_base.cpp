@@ -129,17 +129,13 @@ ViewerDockBase::~ViewerDockBase()
 
     MT_CUSTOM_SIGNAL_EMITTER("Viewer_Closed", this);
     auto &openViewers = MindTree::ViewerList::instance()->openViewers;
-    std::cout << "deleting " << this << "\n" << "open viewers:\n";
     std::string viewerID;
     for(auto &p : openViewers) {
-        std::cout << p.first << ", " << p.second << "\n";
         if (p.second == this)
             viewerID = p.first;
     }
 
     openViewers.erase(viewerID);
-
-    std::cout << std::endl;
 }
 
 void ViewerDockBase::focusInEvent(QFocusEvent *event)
