@@ -75,6 +75,7 @@ void ShapeRendererGroup::draw(const CameraPtr camera, const RenderConfig &config
 
 void ShapeRendererGroup::setFillColor(glm::vec4 color)
 {
+    std::lock_guard<std::mutex> lock(_fillColorLock);
     _fillColor = color;
     for(auto child : _childPrimitives)
         child->setFillColor(color);
@@ -82,6 +83,7 @@ void ShapeRendererGroup::setFillColor(glm::vec4 color)
 
 void ShapeRendererGroup::setBorderColor(glm::vec4 color)
 {
+    std::lock_guard<std::mutex> lock(_borderColorLock);
     _borderColor = color;
     for(auto child : _childPrimitives)
         child->setBorderColor(color);
@@ -89,11 +91,13 @@ void ShapeRendererGroup::setBorderColor(glm::vec4 color)
 
 glm::vec4 ShapeRendererGroup::getBorderColor() const
 {
+    std::lock_guard<std::mutex> lock(_borderColorLock);
     return _borderColor;
 }
 
 glm::vec4 ShapeRendererGroup::getFillColor() const
 {
+    std::lock_guard<std::mutex> lock(_fillColorLock);
     return _fillColor;
 }
 
@@ -146,18 +150,18 @@ void ShapeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std
 {
     program->setUniform("staticTransformation", getStaticWorldTransformation());
 
-    program->setUniform("fixed_screensize", _fixedScreenSize);
-    program->setUniform("screen_oriented", _screenOriented);
-    if(_fillColor.a > 0) {
+    program->setUniform("fixed_screensize", getFixedScreenSize());
+    program->setUniform("screen_oriented", getScreenOriented());
+    if(getFillColor().a > 0) {
         program->setUniform("isBorder", 0);
-        program->setUniform("fillColor", _fillColor);
+        program->setUniform("fillColor", getFillColor());
         drawFill(camera, config, program);
     }
 
-    if(_borderColor.a > 0 && _borderWidth > 0) {
+    if(getBorderColor().a > 0 && getBorderWidth() > 0) {
         program->setUniform("isBorder", 1);
-        program->setUniform("borderColor", _borderColor);
-        glLineWidth(_borderWidth);
+        program->setUniform("borderColor", getBorderColor());
+        glLineWidth(getBorderWidth());
         drawBorder(camera, config, program);
         glLineWidth(1);
     }

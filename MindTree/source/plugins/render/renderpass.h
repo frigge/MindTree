@@ -30,14 +30,6 @@ public:
     void setCamera(CameraPtr camera);
     void setRenderersFromGroup(const std::shared_ptr<Group> group);
 
-    void addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group);
-
-    void addRendererFromObject(const std::shared_ptr<GeoObject> obj);
-    void addRendererFromLight(const LightPtr obj);
-    void addRendererFromCamera(const CameraPtr obj);
-    void addRendererFromEmpty(const EmptyPtr obj);
-
-    void addRendererFromTransformable(const AbstractTransformablePtr transformable);
     void addRenderer(Renderer *renderer);
 
     void setTarget(std::shared_ptr<FBO> target);
@@ -71,6 +63,14 @@ protected:
     virtual void render(const RenderConfig &config);
 
 private:
+    void addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group);
+
+    void addRendererFromObject(const std::shared_ptr<GeoObject> obj);
+    void addRendererFromLight(const LightPtr obj);
+    void addRendererFromCamera(const CameraPtr obj);
+    void addRendererFromEmpty(const EmptyPtr obj);
+
+    void addRendererFromTransformable(const AbstractTransformablePtr transformable);
     void processPixelRequests();
     void addGeometryRenderer(Renderer *renderer);
 
@@ -84,8 +84,11 @@ private:
     bool _viewportChanged, _initialized;
     std::shared_ptr<Camera> _camera;
     std::shared_ptr<FBO> _target;
+
     std::mutex _sizeLock;
     std::mutex _geometryLock;
+    std::mutex _shapesLock;
+    std::mutex _cameraLock;
 
     std::vector<std::shared_ptr<ShaderRenderNode>> _shadernodes;
     std::vector<std::shared_ptr<ShaderRenderNode>> _geometryShaderNodes;

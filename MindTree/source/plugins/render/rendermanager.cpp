@@ -147,6 +147,7 @@ void RenderManager::clearCustomTextureNameMapping()
 
 void RenderManager::init()
 {
+    RenderThread::asrt();
     if(_initialized) return;
 
     static bool glewInitialized = false;
@@ -235,6 +236,7 @@ RenderPass* RenderManager::getPass(uint index)
 void RenderManager::draw()
 {
     ContextBinder binder(_context);
+    RenderThread::asrt();
 
     if(!_initialized) {
         init();

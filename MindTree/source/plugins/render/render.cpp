@@ -27,6 +27,7 @@ void Renderer::setVisible(bool visible)
 
 void Renderer::_init()    
 {
+    RenderThread::asrt();
     _vao = std::make_shared<VAO>();
 
     {
@@ -39,16 +40,19 @@ void Renderer::_init()
 
 void Renderer::setTransformation(glm::mat4 trans)
 {
+    std::lock_guard<std::mutex> lock(_transformationLock);
     _transformation = trans;
 }
 
 glm::mat4 Renderer::getTransformation()
 {
+    std::lock_guard<std::mutex> lock(_transformationLock);
     return _transformation;
 }
 
 glm::mat4 Renderer::getGlobalTransformation()
 {
+    std::lock_guard<std::mutex> lock(_transformationLock);
     if(_parent) {
         return _parent->getGlobalTransformation() * _transformation;
     }
@@ -98,6 +102,7 @@ Renderer* Renderer::getParent()
 
 void Renderer::render(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
 {
+    RenderThread::asrt();
     if(!_visible) return;
     if(!_initialized) _init();
 
@@ -135,6 +140,7 @@ ShaderRenderNode::~ShaderRenderNode()
 
 void ShaderRenderNode::init()
 {
+    RenderThread::asrt();
     for (auto render : _renders)
         render->_init();
     _program->init();
@@ -147,6 +153,7 @@ void ShaderRenderNode::addRenderer(Renderer *renderer)
 
 void ShaderRenderNode::render(CameraPtr camera, glm::ivec2 resolution, const RenderConfig &config)
 {
+    RenderThread::asrt();
     if(!_program) return;
 
     {

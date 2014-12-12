@@ -236,9 +236,10 @@ private:
     void _addShaderFromSource(std::string src, GLenum type);
 
     GLuint _id;
-    bool _isBound, _initialized;
+    std::atomic<bool> _isBound, _initialized;
     int _attributes = 0;
     size_t _offset;
+    std::mutex _srcLock;
     std::unordered_map<std::string, int> _attributeLocations;
     std::string _vertexSource;
     std::string _fragmentSource;

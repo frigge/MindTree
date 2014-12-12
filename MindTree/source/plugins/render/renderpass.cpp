@@ -295,6 +295,8 @@ std::shared_ptr<Texture2D> RenderPass::getOutDepthTexture()
 
 void RenderPass::addRenderer(Renderer *renderer)
 {
+    std::lock_guard<std::mutex> lock(_shapesLock);
+
     for(auto shaderNode : _shadernodes) {
         if(shaderNode->program() == renderer->getProgram()) {
             shaderNode->addRenderer(renderer);
@@ -329,6 +331,7 @@ std::vector<std::shared_ptr<ShaderRenderNode>> RenderPass::getShaderNodes()
 void RenderPass::setRenderersFromGroup(std::shared_ptr<Group> group)
 {
     assert(group);
+    std::lock_guard<std::mutex> lock(_geometryLock);
     //clear all the nodes but leave the shaders there!!
     for (auto node : _geometryShaderNodes)
         node->clear();
@@ -415,7 +418,6 @@ void RenderPass::addRendererFromEmpty(EmptyPtr obj)
 
 void RenderPass::setSize(int width, int height)
 {
-    std::lock_guard<std::mutex> lock(_sizeLock);
     if(_width != width || _height != height) {
         _viewportChanged = true;
         _initialized = false;
@@ -432,6 +434,7 @@ glm::ivec2 RenderPass::getResolution()
 
 void RenderPass::setCamera(CameraPtr camera)
 {
+    std::lock_guard<std::mutex> lock(_cameraLock);
     _camera = camera;
 }
 

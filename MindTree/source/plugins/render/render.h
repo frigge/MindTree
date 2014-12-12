@@ -59,6 +59,7 @@ private:
 
     bool _initialized, _visible;
     glm::mat4 _transformation;
+    std::mutex _transformationLock;
 
     Renderer* _parent;
 };

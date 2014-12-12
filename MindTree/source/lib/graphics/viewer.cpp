@@ -1,6 +1,8 @@
 #include "data/python/wrapper.h"
 #include "data/signal.h"
 #include "data/nodes/data_node.h"
+#include "data/debuglog.h"
+
 #include "QWidget"
 
 #include "viewer.h"
@@ -43,12 +45,9 @@ void WorkerThread::start()
 {
     if(_updateThread.joinable()) _updateThread.join();
 
-    auto &running = _running;
-    auto updateFunc = [&running]{
-        running = true;
-        std::cout << "starting worker thread" << std::endl;
+    auto updateFunc = []{
+        WorkerThread::_running = true;
         while(WorkerThread::needToUpdate()) {
-            std::cout << "updateing" << std::endl;
             {
                 std::lock_guard<std::mutex> lock(_updateMutex);
 
@@ -57,9 +56,8 @@ void WorkerThread::start()
                 _updateQueue.pop_front();
                 viewer->update();
             }
-            running = false;
         }
-        std::cout << "stopping worker thread" << std::endl;
+        WorkerThread::_running = false;
     };
 
     _updateThread = std::thread(updateFunc);

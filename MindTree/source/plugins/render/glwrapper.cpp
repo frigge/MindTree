@@ -3,6 +3,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "iostream"
 #include "fstream"
+#include "rendermanager.h"
+
 #include "glwrapper.h"
 
 using namespace MindTree::GL;
@@ -463,6 +465,8 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::init()
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
+    std::lock_guard<std::mutex> lock(_srcLock);
     if(_initialized) return;
 
     _initialized = true;
@@ -477,6 +481,7 @@ void ShaderProgram::init()
 
 void ShaderProgram::bind()
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
     if(!_id) return;
     glUseProgram(_id);
@@ -485,6 +490,7 @@ void ShaderProgram::bind()
 
 void ShaderProgram::release()    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_id) return;
     _isBound = false;
     glUseProgram(0);
@@ -493,6 +499,7 @@ void ShaderProgram::release()
 
 void ShaderProgram::link()    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     _textures.clear();
 
     glLinkProgram(_id);
@@ -505,6 +512,7 @@ void ShaderProgram::link()
 
 void ShaderProgram::addShaderFromSource(std::string src, ShaderProgram::ShaderType type)    
 {
+    std::lock_guard<std::mutex> lock(_srcLock);
     switch(type) {
         case VERTEX:
             _vertexSource = src;
@@ -528,6 +536,7 @@ void ShaderProgram::addShaderFromSource(std::string src, ShaderProgram::ShaderTy
 
 void ShaderProgram::_addShaderFromSource(std::string src, GLenum type)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
 
     GLuint shader = glCreateShader(type);
     MTGLERROR;
@@ -595,6 +604,7 @@ GLuint ShaderProgram::getID()
 
 void ShaderProgram::setUniform(std::string name, const glm::ivec2 &value)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
@@ -605,6 +615,7 @@ void ShaderProgram::setUniform(std::string name, const glm::ivec2 &value)
 
 void ShaderProgram::setUniform(std::string name, const glm::ivec3 &value)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
@@ -615,6 +626,7 @@ void ShaderProgram::setUniform(std::string name, const glm::ivec3 &value)
 
 void ShaderProgram::setUniform(std::string name, const glm::vec2 &value)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
@@ -625,6 +637,7 @@ void ShaderProgram::setUniform(std::string name, const glm::vec2 &value)
 
 void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
@@ -635,6 +648,7 @@ void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)
 
 void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
@@ -645,6 +659,7 @@ void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)
 
 void ShaderProgram::setUniform(std::string name, float value)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
@@ -655,6 +670,7 @@ void ShaderProgram::setUniform(std::string name, float value)
 
 void ShaderProgram::setUniform(std::string name, int value)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
@@ -668,6 +684,7 @@ void ShaderProgram::setUniform(std::string name, int value)
 
 void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     GLint location = glGetUniformLocation(_id, name.c_str());
@@ -679,6 +696,7 @@ void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)
 
 void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string name)
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     int textureSlot;
@@ -714,6 +732,7 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
 
 void ShaderProgram::bindAttributeLocation(unsigned int index, std::string name)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
     if(!hasAttribute(name)) return;
 
@@ -732,6 +751,7 @@ void ShaderProgram::bindAttributeLocation(unsigned int index, std::string name)
 
 void ShaderProgram::bindFragmentLocation(unsigned int index, std::string name)
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     bool wasntbound = false;
@@ -749,6 +769,7 @@ void ShaderProgram::bindFragmentLocation(unsigned int index, std::string name)
 
 bool ShaderProgram::hasAttribute(std::string name)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     bool wasntbound = false;
@@ -765,6 +786,7 @@ bool ShaderProgram::hasAttribute(std::string name)
 
 bool ShaderProgram::hasFragmentOutput(std::string name)
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     bool wasntbound = false;
@@ -782,6 +804,7 @@ bool ShaderProgram::hasFragmentOutput(std::string name)
 
 void ShaderProgram::enableAttribute(std::string name)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     glEnableVertexAttribArray(_attributeLocations[name]);
@@ -790,6 +813,7 @@ void ShaderProgram::enableAttribute(std::string name)
 
 void ShaderProgram::disableAttribute(std::string name)    
 {
+    assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
     glDisableVertexAttribArray(_attributeLocations[name]);

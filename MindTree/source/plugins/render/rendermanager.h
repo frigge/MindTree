@@ -41,6 +41,8 @@ class RenderThread
 public:
     static void addManager(RenderManager* manager);
     static void removeManager(RenderManager *manager);
+    inline static std::thread::id id() { return _renderThread.get_id(); }
+    inline static void asrt() { assert(_renderThread.get_id() == std::this_thread::get_id()); }
 
 private:
     static void start();
@@ -100,7 +102,7 @@ private:
     bool _initialized;
     double renderTime;
 
-    int _width, _height;
+    std::atomic<int> _width, _height;
 };
 
 }

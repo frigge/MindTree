@@ -29,6 +29,9 @@
 #include "data/properties.h"
 #include "material.h"
 
+#include "mutex"
+#include "atomic"
+
 class Polygon
 {
 public:
@@ -105,6 +108,7 @@ private:
     eObjType type;
     glm::vec3 center;
     glm::mat4 transformation;
+
     AbstractTransformable *parent;
     std::vector<std::shared_ptr<AbstractTransformable>> children;
     std::string name;
@@ -222,10 +226,14 @@ public:
     glm::mat4 getViewMatrix();
 
 private:
+    Camera(const Camera &other);
+
     glm::mat4 projection;
-    double fov;
-    bool perspective;
-    double near, far;
+    std::mutex _projectionLock;
+
+    std::atomic<double> fov;
+    std::atomic<bool> perspective;
+    std::atomic<double> near, far;
 };
 
 #endif /* end of include guard: OBJECT */

@@ -413,6 +413,17 @@ Camera::Camera()
     setCenter(0, 0, 0);
 }
 
+Camera::Camera(const Camera &other) :
+    AbstractTransformable(other),
+    projection(other.projection),
+    fov{other.fov.load()},
+    perspective{other.perspective.load()},
+    near{other.near.load()},
+    far{other.far.load()}
+
+{
+}
+
 Camera::~Camera()
 {
 }
@@ -425,11 +436,13 @@ AbstractTransformablePtr Camera::clone() const
 
 void Camera::setProjection(double aspect)    
 {
-    projection = glm::perspective(fov, aspect, near, far); 
+    std::lock_guard<std::mutex> lock(_projectionLock);
+    projection = glm::perspective(fov.load(), aspect, near.load(), far.load()); 
 }
 
 glm::mat4 Camera::getProjection()
 {
+    std::lock_guard<std::mutex> lock(_projectionLock);
     return projection;
 }
 

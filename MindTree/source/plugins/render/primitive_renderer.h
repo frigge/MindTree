@@ -42,15 +42,21 @@ protected:
     virtual void init();
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
-    glm::mat4 _staticTransformation;
-    glm::vec4 _fillColor, _borderColor;
-    bool _fixedScreenSize, _screenOriented;
-    float _borderWidth;
-
     static std::shared_ptr<ShaderProgram> _defaultProgram;
 
 private:
     std::vector<ShapeRendererGroup*> _childPrimitives;
+
+    glm::mat4 _staticTransformation;
+    glm::vec4 _fillColor, _borderColor;
+
+    mutable std::mutex _fillColorLock;
+    mutable std::mutex _borderColorLock;
+    mutable std::mutex _staticTransformationLock;
+
+    std::atomic<bool> _fixedScreenSize, _screenOriented;
+    std::atomic<float> _borderWidth;
+
 };
 
 class ShapeRenderer : public ShapeRendererGroup
