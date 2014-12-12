@@ -40,7 +40,6 @@ ViewportViewer::~ViewportViewer()
 
 void ViewportViewer::update()
 {
-    std::cout << "update" << std::endl;
     auto *viewport = static_cast<ViewportWidget*>(getWidget())->getViewport();
     Property data = cache.getOutput(getStart());
 
