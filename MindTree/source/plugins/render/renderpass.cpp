@@ -508,4 +508,3 @@ void RenderPass::render(const RenderConfig &config)
         processPixelRequests();
     }
 }
-

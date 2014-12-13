@@ -58,11 +58,10 @@ public:
     glm::ivec2 getResolution();
     std::vector<glm::vec4> readPixel(std::vector<std::string> name, glm::ivec2 pos);
 
-protected:
-    virtual void init();
-    virtual void render(const RenderConfig &config);
-
 private:
+    void init();
+    void render(const RenderConfig &config);
+
     void addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group);
 
     void addRendererFromObject(const std::shared_ptr<GeoObject> obj);
