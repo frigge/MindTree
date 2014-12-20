@@ -119,20 +119,23 @@ void regLightProcs()
 {
     auto pointLightProc = [](DataCache *cache) {
         float intensity = cache->getData(0).getData<double>();
-        auto light = std::make_shared<PointLight>(intensity);
+        glm::vec4 color = cache->getData(1).getData<glm::vec4>();
+        auto light = std::make_shared<PointLight>(intensity, color);
         cache->pushData(light);
     };
 
     auto spotLightProc = [](DataCache *cache) {
         float intensity = cache->getData(0).getData<double>();
-        float coneangle = cache->getData(1).getData<double>();
-        auto light = std::make_shared<SpotLight>(intensity, coneangle);
+        glm::vec4 color = cache->getData(1).getData<glm::vec4>();
+        float coneangle = cache->getData(2).getData<double>();
+        auto light = std::make_shared<SpotLight>(intensity, color, coneangle);
         cache->pushData(light);
     };
 
     auto distantLightProc = [](DataCache *cache) {
         float intensity = cache->getData(0).getData<double>();
-        auto light = std::make_shared<DistantLight>(intensity);
+        glm::vec4 color = cache->getData(1).getData<glm::vec4>();
+        auto light = std::make_shared<DistantLight>(intensity, color);
         cache->pushData(light);
     };
 

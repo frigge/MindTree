@@ -26,17 +26,19 @@ class PointLightNodeDecorator(MT.pytypes.NodeDecorator):
     type = "POINTLIGHT"
 
     insockets = [
-            ("Intensity", "FLOAT", 1.0)
+            ("Intensity", "FLOAT", 1.0),
+            ("Color", "COLOR", (1, 1, 1, 1))
             ]
     outsockets = [
             ("Object", "TRANSFORMABLE")]
 
 class SpotLightNodeDecorator(MT.pytypes.NodeDecorator):
-    label = "Objects.Lights.Point Light"
+    label = "Objects.Lights.Spot Light"
     type = "POINTLIGHT"
 
     insockets = [
             ("Intensity", "FLOAT", 1.0),
+            ("Color", "COLOR", (1, 1, 1, 1)),
             ("Cone Angle", "FLOAT", 45.0),
             ("Square Attenuation", "BOOLEAN", False)
             ]
@@ -44,11 +46,12 @@ class SpotLightNodeDecorator(MT.pytypes.NodeDecorator):
             ("Object", "TRANSFORMABLE")]
 
 class DistantLightNodeDecorator(MT.pytypes.NodeDecorator):
-    label = "Objects.Lights.Point Light"
+    label = "Objects.Lights.Distant Light"
     type = "POINTLIGHT"
 
     insockets = [
-            ("Intensity", "FLOAT", 1.0)
+            ("Intensity", "FLOAT", 1.0),
+            ("Color", "COLOR", (1, 1, 1, 1))
             ]
     outsockets = [
             ("Object", "TRANSFORMABLE")]
