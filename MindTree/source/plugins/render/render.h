@@ -57,7 +57,7 @@ private:
     void _init();
     std::shared_ptr<VAO> _vao;
 
-    bool _initialized, _visible;
+    std::atomic<bool> _initialized, _visible;
     glm::mat4 _transformation;
     std::mutex _transformationLock;
 

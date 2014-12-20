@@ -25,13 +25,20 @@ void RenderPass::init()
         return;
 
     _initialized = true;
+    
     //make sure shaderprograms are clean
-    for(auto shadernode : _shadernodes) {
-        shadernode->init();
+    {
+        std::lock_guard<std::mutex> shapeLock(_shapesLock);
+        for(auto shadernode : _shadernodes) {
+            shadernode->init();
+        }
     }
 
-    for(auto shadernode : _geometryShaderNodes) {
-        shadernode->init();
+    {
+        std::lock_guard<std::mutex> geoLock(_geometryLock);
+        for(auto shadernode : _geometryShaderNodes) {
+            shadernode->init();
+        }
     }
 
     //if there are no outputs, were rendering to the default framebuffer

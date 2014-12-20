@@ -120,7 +120,7 @@ void CacheProcessor::operator()(DataCache* cache)
 }
 
 std::unordered_map<const DNode*, std::vector<Property>> DataCache::_cachedOutputs;
-std::mutex DataCache::_cachedOutputsMutex;
+std::recursive_mutex DataCache::_cachedOutputsMutex;
 DataCache::DataCache(CacheContext *context)
     : node(nullptr),
     startsocket(nullptr),
@@ -179,9 +179,12 @@ void DataCache::invalidate(const DNode *node)
 {
     if(!node) return;
 
-    auto cacheIter = _cachedOutputs.find(node);
-    if(cacheIter != end(_cachedOutputs))
-        _cachedOutputs.erase(cacheIter);
+    {
+        std::lock_guard<std::recursive_mutex> lock(_cachedOutputsMutex);
+        auto cacheIter = _cachedOutputs.find(node);
+        if(cacheIter != end(_cachedOutputs))
+            _cachedOutputs.erase(cacheIter);
+    }
 
     //recursively invalidate everything following this node
     for(const auto *out : node->getOutSockets()) {
@@ -201,7 +204,7 @@ void DataCache::invalidate(const DNode *node)
 
 bool DataCache::isCached(const DNode *node)
 {
-    std::lock_guard<std::mutex> lock(_cachedOutputsMutex);
+    std::lock_guard<std::recursive_mutex> lock(_cachedOutputsMutex);
     bool cached = (_cachedOutputs.find(node) != end(_cachedOutputs))
         && (!_cachedOutputs[node].empty());
     return cached;
@@ -230,6 +233,7 @@ std::vector<Property>& DataCache::_getCachedOutputs()
 
 std::vector<Property>& DataCache::getCachedOutputs(const DNode *node)
 {
+    std::lock_guard<std::recursive_mutex> lock(_cachedOutputsMutex);
     if(_cachedOutputs.find(node) == end(_cachedOutputs))
         _cachedOutputs.insert({node, std::vector<Property>()});
     return _cachedOutputs[node];
@@ -290,7 +294,7 @@ void DataCache::_pushInputData(Property prop, int index)
 
 void DataCache::pushData(Property prop, int index)
 {
-    std::lock_guard<std::mutex> lock(_cachedOutputsMutex);
+    std::lock_guard<std::recursive_mutex> lock(_cachedOutputsMutex);
     auto &outputs = _getCachedOutputs();
 
     size_t i = index;
@@ -300,7 +304,7 @@ void DataCache::pushData(Property prop, int index)
     }
 
     if(static_cast<size_t>(index) < outputs.size()) {
-       outputs.resize(index + 1); 
+        outputs.resize(index + 1); 
     }
 
     outputs[index] = prop;
@@ -325,17 +329,17 @@ Property DataCache::getData(int index)
 
 Property DataCache::getOutput(int index)
 {
+    std::lock_guard<std::recursive_mutex> lock(_cachedOutputsMutex);
+    auto &outputs = _getCachedOutputs();
     size_t i = index;
-    if(i >= _getCachedOutputs().size())
+    if(i >= outputs.size())
         return Property();
 
-    return _getCachedOutputs()[index];
+    return outputs[index];
 }
 
 Property DataCache::getOutput(DoutSocket* socket)
 {
-    std::lock_guard<std::mutex> lock(_cachedOutputsMutex);
-
     int index = -1;
     if(socket) {
         //find out index of start socket

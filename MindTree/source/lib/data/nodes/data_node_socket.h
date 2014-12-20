@@ -23,6 +23,7 @@
 #include "data/properties.h"
 #include "data/signal.h"
 #include "data/type.h"
+#include "mutex"
 
 namespace MindTree
 {
@@ -136,6 +137,7 @@ private:
     std::string idName;
     std::string name;
     SocketType type;
+    mutable std::mutex _typeLock;
     SocketDir dir;
     DNode *node;
     bool variable;
@@ -186,6 +188,7 @@ private:
     DoutSocket* cntdSocket;
 
     mutable Property prop;
+    mutable std::mutex _propLock;
 };
 
 

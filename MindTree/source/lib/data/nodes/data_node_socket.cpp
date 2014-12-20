@@ -276,13 +276,18 @@ void DSocket::setName(std::string value)
 
 const SocketType& DSocket::getType() const
 {
+    std::lock_guard<std::mutex> lock(_typeLock);
 	return type;
 }
 
 void DSocket::setType(SocketType value)
 {
-    if(value == type) return;
-	type = value;
+    {
+        if(value == type) return;
+        std::lock_guard<std::mutex> lock(_typeLock);
+        type = value;
+    }
+
     MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "typeChanged", value);
 }
 
@@ -386,12 +391,16 @@ DinSocket::~DinSocket()
 
 Property DinSocket::getProperty()const
 {
+    std::lock_guard<std::mutex> lock(_propLock);
     return prop;
 }
 
 void DinSocket::setProperty(Property property)
 {
-    prop = property;
+    {
+        std::lock_guard<std::mutex> lock(_propLock);
+        prop = property;
+    }
     setType(prop.getType());
     MT_CUSTOM_SIGNAL_EMITTER("socketChanged", this);
 }

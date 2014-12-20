@@ -123,6 +123,7 @@ void AbstractTransformable::setName(std::string value)
 
 glm::mat4 AbstractTransformable::getTransformation()
 {
+    std::lock_guard<std::mutex> lock(_transformationLock);
     return transformation;
 }
 
@@ -133,15 +134,22 @@ glm::mat4 AbstractTransformable::getTransformation()
 
 glm::vec3 AbstractTransformable::getCenter()    
 {
+    std::lock_guard<std::mutex> lock(_centerLock);
     return center;
 }
 
 void AbstractTransformable::setCenter(glm::vec3 c)    
 {
-    center = c;
+    {
+        std::lock_guard<std::mutex> lock(_centerLock);
+        center = c;
+    }
     glm::mat4 trans;
     trans = glm::lookAt(getPosition(), c, glm::vec3(0, 1, 0));
-    transformation = glm::inverse(trans);
+    {
+        std::lock_guard<std::mutex> lock(_transformationLock);
+        transformation = glm::inverse(trans);
+    }
 }
 
 void AbstractTransformable::setCenter(double x, double y, double z)    
@@ -151,6 +159,7 @@ void AbstractTransformable::setCenter(double x, double y, double z)
 
 glm::vec3 AbstractTransformable::getPosition()    
 {
+    std::lock_guard<std::mutex> lock(_transformationLock);
     glm::vec4 pos = transformation * glm::vec4(0, 0, 0, 1);
     return pos.xyz();
 }
@@ -158,8 +167,14 @@ glm::vec3 AbstractTransformable::getPosition()
 void AbstractTransformable::setPosition(glm::vec3 pos)    
 {
     glm::vec3 dist = pos - getPosition();
-    center += dist;
-    transformation = glm::translate(transformation, dist);
+    {
+        std::lock_guard<std::mutex> lock(_centerLock);
+        center += dist;
+    }
+    {
+        std::lock_guard<std::mutex> lock(_transformationLock);
+        transformation = glm::translate(transformation, dist);
+    }
 }
 
 void AbstractTransformable::setPosition(double x, double y, double z)    
@@ -179,30 +194,53 @@ void AbstractTransformable::translate(double x, double y, double z)
 
 void AbstractTransformable::posAroundCenter(glm::vec3 newPos)    
 {
-    glm::mat4 mat = glm::lookAt(newPos, center, glm::vec3(0, 1, 0)); 
-    transformation = glm::inverse(mat);
+    glm::mat4 mat;
+    {
+        std::lock_guard<std::mutex> lock(_centerLock);
+        mat = glm::lookAt(newPos, center, glm::vec3(0, 1, 0)); 
+    }
+    {
+        std::lock_guard<std::mutex> lock(_transformationLock);
+        transformation = glm::inverse(mat);
+    }
 }
 
 void AbstractTransformable::moveToCenter(double fac)    
 {
-   double dist = glm::vec3(center - getPosition()).length();
-   transformation = glm::translate(transformation, glm::vec3(0, 0, dist*fac));
+    double dist;
+    {
+        std::lock_guard<std::mutex> lock(_centerLock);
+        dist = glm::vec3(center - getPosition()).length();
+    }
+    {
+        std::lock_guard<std::mutex> lock(_transformationLock);
+        transformation = glm::translate(transformation, glm::vec3(0, 0, dist*fac));
+    }
 }
 
 double AbstractTransformable::getRotX()    
 {
-    glm::vec4 x = transformation * glm::vec4(0, 1, 0, 0);
+    glm::vec4 x;
+    {
+        std::lock_guard<std::mutex> lock(_transformationLock);
+        x = transformation * glm::vec4(0, 1, 0, 0);
+    }
     return acos(glm::dot(glm::vec3(0, 1, 0), glm::normalize(glm::vec3(0, x.y, 0))));
 }
 
 void AbstractTransformable::applyTransform(glm::mat4 &transform)    
 {
+    std::lock_guard<std::mutex> lock(_transformationLock);
     transformation = transform * transformation;
 }
 
 glm::mat4 AbstractTransformable::getWorldTransformation()    
 {
-    glm::mat4 trans = transformation;
+    glm::mat4 trans;
+    {
+        std::lock_guard<std::mutex> lock(_transformationLock);
+        trans = transformation;
+    }
     auto p = parent;
     while(p){
         trans = p->getTransformation() * trans;
@@ -407,7 +445,7 @@ std::vector<std::shared_ptr<Light>> Group::getLights()
 
 Camera::Camera()
     : AbstractTransformable(CAMERA), fov(45), perspective(true),
-    near(.1), far(10000)
+    near(.1), far(10000), _width(0), _height(0)
 {
     setPosition(0, 10, -10);
     setCenter(0, 0, 0);

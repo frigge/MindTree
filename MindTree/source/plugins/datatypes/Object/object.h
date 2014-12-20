@@ -108,6 +108,8 @@ private:
     eObjType type;
     glm::vec3 center;
     glm::mat4 transformation;
+    std::mutex _transformationLock;
+    std::mutex _centerLock;
 
     AbstractTransformable *parent;
     std::vector<std::shared_ptr<AbstractTransformable>> children;
