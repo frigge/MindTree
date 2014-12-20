@@ -148,19 +148,20 @@ ShapeRenderer::~ShapeRenderer()
 
 void ShapeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
 {
-    program->setUniform("staticTransformation", getStaticWorldTransformation());
+    UniformStateManager uniformStates(program);
+    uniformStates.addState("staticTransformation", getStaticWorldTransformation());
 
-    program->setUniform("fixed_screensize", getFixedScreenSize());
-    program->setUniform("screen_oriented", getScreenOriented());
+    uniformStates.addState("fixed_screensize", getFixedScreenSize());
+    uniformStates.addState("screen_oriented", getScreenOriented());
     if(getFillColor().a > 0) {
         program->setUniform("isBorder", 0);
-        program->setUniform("fillColor", getFillColor());
+        uniformStates.addState("fillColor", getFillColor());
         drawFill(camera, config, program);
     }
 
     if(getBorderColor().a > 0 && getBorderWidth() > 0) {
         program->setUniform("isBorder", 1);
-        program->setUniform("borderColor", getBorderColor());
+        uniformStates.addState("borderColor", getBorderColor());
         glLineWidth(getBorderWidth());
         drawBorder(camera, config, program);
         glLineWidth(1);
@@ -306,7 +307,7 @@ void FullscreenQuadRenderer::draw(const CameraPtr /* camera */,
                                   const RenderConfig& /* config */, 
                                   std::shared_ptr<ShaderProgram> program)
 {
-    program->setUniform("bgcolor", glm::vec4(.275, .275, .275, 1.));
+    UniformState(program, "bgcolor", glm::vec4(.275, .275, .275, 1.));
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     MTGLERROR;
 }
@@ -371,8 +372,8 @@ void GridRenderer::init()
 
 void GridRenderer::drawBorder(const CameraPtr camera, const RenderConfig &/*config*/, std::shared_ptr<ShaderProgram> program)
 {
-    program->setUniform("alternatingColor", _alternatingColor);
-    program->setUniform("gridRes", glm::ivec2(_xres, _yres));
+    UniformState(program, "alternatingColor", _alternatingColor);
+    UniformState(program, "gridRes", glm::ivec2(_xres, _yres));
     glEnable(GL_LINE_SMOOTH);
     glDrawArrays(GL_LINES, 0, _xres * 2 + _yres * 2 + 4);
     glDisable(GL_LINE_SMOOTH);

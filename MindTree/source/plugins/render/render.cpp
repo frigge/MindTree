@@ -108,16 +108,17 @@ void Renderer::render(const CameraPtr camera, const RenderConfig &config, std::s
 
     {
         GLObjectBinder<std::shared_ptr<VAO>> vaoBinder(_vao);
+        UniformStateManager uniformStates(program);
 
         if(camera) {
             auto model = getGlobalTransformation();
             auto view = camera->getViewMatrix();
             auto projection = camera->getProjection();
-            program->setUniform("model", model);
-            program->setUniform("view", view);
-            program->setUniform("modelView", view * model);
-            program->setUniform("projection", projection);
-            program->setUniform("mvp", projection * view * model);
+            uniformStates.addState("model", model);
+            uniformStates.addState("view", view);
+            uniformStates.addState("modelView", view * model);
+            uniformStates.addState("projection", projection);
+            uniformStates.addState("mvp", projection * view * model);
         }
 
         draw(camera, config, program);
@@ -157,8 +158,7 @@ void ShaderRenderNode::render(CameraPtr camera, glm::ivec2 resolution, const Ren
     if(!_program) return;
 
     {
-        GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(_program);
-        _program->setUniform("resolution", resolution);
+        UniformState us(_program, "resolution", resolution);
         for(const auto &renderer : _renders) {
             renderer->render(camera, config, _program);
         }

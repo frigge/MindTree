@@ -39,34 +39,8 @@ void GeoObjectRenderer::initCustom()
 void GeoObjectRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
 {
     //setting uniforms
-    auto propmap = obj->getProperties();
-    for(const auto &p : propmap) {
-        std::string str = p.first;
-        std::string sub = str.substr(0, str.find("."));
-        if(sub == "display") {
-            if(p.second.getType() == "FLOAT")
-                program->setUniform(str.substr(str.find(".")+1, str.length()), 
-                                 (float)p.second.getData<double>());
-
-            else if(p.second.getType() == "INTEGER")
-                program->setUniform(str.substr(str.find(".")+1, str.length()), 
-                                 p.second.getData<int>());
-
-            else if(p.second.getType() == "BOOLEAN")
-                program->setUniform(str.substr(str.find(".")+1, str.length()), 
-                                 p.second.getData<bool>());
-
-            else if(p.second.getType() == "COLOR") {
-                std::string temp = str.substr(str.find(".")+1, str.length());
-                program->setUniform(temp, 
-                                 p.second.getData<glm::vec4>());
-            }
-
-            else if(p.second.getType() == "VECTOR3D")
-                program->setUniform(str.substr(str.find(".")+1, str.length()), 
-                                 p.second.getData<glm::vec3>());
-        }
-    }
+    UniformStateManager uniformStates(program);
+    uniformStates.setFromPropertyMap(obj->getProperties());
 }
 
 void GeoObjectRenderer::setUniforms()

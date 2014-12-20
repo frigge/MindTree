@@ -207,6 +207,17 @@ public:
 
     GLuint getID();
 
+    int getUniformLocation(std::string name) const;
+
+    glm::ivec2 getUniformi2(std::string name) const;
+    glm::ivec3 getUniformi3(std::string name) const;
+    glm::vec2 getUniformf2(std::string name) const;
+    glm::vec3 getUniformf3(std::string name) const;
+    glm::vec4 getUniformf4(std::string name) const;
+    float getUniformf(std::string name) const;
+    int getUniformi(std::string name) const;
+    glm::mat4 getUniformf4x4(std::string name) const;
+
     void setUniform(std::string name, const glm::ivec2 &value);
     void setUniform(std::string name, const glm::ivec3 &value);
     void setUniform(std::string name, const glm::vec2 &value);
@@ -215,6 +226,10 @@ public:
     void setUniform(std::string name, float value);
     void setUniform(std::string name, int value);
     void setUniform(std::string name, const glm::mat4 &value);
+    void setUniformFromProperty(std::string name, Property prop);
+    Property getUniformAsProperty(std::string name, DataType t) const;
+
+    void setUniforms(PropertyMap map);
 
     void setTexture(std::shared_ptr<Texture2D> texture, std::string name="");
 
@@ -248,6 +263,39 @@ private:
     std::string _tessEvalSource;
     std::string _computeSource;
     std::vector<std::shared_ptr<Texture2D>> _textures;
+};
+
+class UniformState
+{
+public:
+    UniformState(std::shared_ptr<ShaderProgram> prog, std::string name, Property value);
+    UniformState(const UniformState &other) = delete;
+    UniformState(const UniformState &&other);
+    ~UniformState();
+
+    UniformState& operator=(const UniformState &other) = delete;
+    UniformState& operator=(const UniformState &&other);
+
+private:
+    mutable bool _valid;
+    std::string _name;
+    Property _oldValue;
+    std::shared_ptr<ShaderProgram> _program;
+};
+
+class UniformStateManager
+{
+public:
+    UniformStateManager(std::shared_ptr<ShaderProgram> prog);
+    ~UniformStateManager();
+
+    void addState(std::string name, Property value);
+    void setFromPropertyMap(PropertyMap map);
+    void reset();
+
+private:
+    std::shared_ptr<ShaderProgram> _program;
+    std::vector<UniformState> _states;
 };
 
 class Texture

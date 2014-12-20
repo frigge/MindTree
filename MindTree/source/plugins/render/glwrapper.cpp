@@ -602,15 +602,21 @@ GLuint ShaderProgram::getID()
     return _id;
 }
 
+int ShaderProgram::getUniformLocation(std::string name) const
+{
+    int loc = glGetUniformLocation(_id, name.c_str());
+    if(MTGLERROR) dbout(name);
+    return loc;
+}
+
 void ShaderProgram::setUniform(std::string name, const glm::ivec2 &value)    
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
-    GLint location = glGetUniformLocation(_id, name.c_str());
-    MTGLERROR;
+    GLint location = getUniformLocation(name);
     if(location > -1) glUniform2i(location, value.x, value.y);
-    MTGLERROR;
+    if(MTGLERROR) dbout(name);
 }
 
 void ShaderProgram::setUniform(std::string name, const glm::ivec3 &value)    
@@ -618,10 +624,9 @@ void ShaderProgram::setUniform(std::string name, const glm::ivec3 &value)
     assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
-    GLint location = glGetUniformLocation(_id, name.c_str());
-    MTGLERROR;
+    GLint location = getUniformLocation(name);
     if(location > -1) glUniform3i(location, value.x, value.y, value.z);
-    MTGLERROR;
+    if(MTGLERROR) dbout(name);
 }
 
 void ShaderProgram::setUniform(std::string name, const glm::vec2 &value)    
@@ -629,10 +634,9 @@ void ShaderProgram::setUniform(std::string name, const glm::vec2 &value)
     assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
-    GLint location = glGetUniformLocation(_id, name.c_str());
-    MTGLERROR;
+    GLint location = getUniformLocation(name);
     if(location > -1) glUniform2f(location, value.x, value.y);
-    MTGLERROR;
+    if(MTGLERROR) dbout(name);
 }
 
 void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)    
@@ -640,10 +644,9 @@ void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)
     assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
-    GLint location = glGetUniformLocation(_id, name.c_str());
-    MTGLERROR;
+    GLint location = getUniformLocation(name);
     if(location > -1) glUniform3f(location, value.x, value.y, value.z);
-    MTGLERROR;
+    if(MTGLERROR) dbout(name);
 }
 
 void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)    
@@ -651,10 +654,9 @@ void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)
     assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
-    GLint location = glGetUniformLocation(_id, name.c_str());
-    MTGLERROR;
+    GLint location = getUniformLocation(name);
     if(location > -1) glUniform4f(location, value.x, value.y, value.z, value.w);
-    MTGLERROR;
+    if(MTGLERROR) dbout(name);
 }
 
 void ShaderProgram::setUniform(std::string name, float value)    
@@ -662,10 +664,9 @@ void ShaderProgram::setUniform(std::string name, float value)
     assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
-    GLint location = glGetUniformLocation(_id, name.c_str());
-    MTGLERROR;
+    GLint location = getUniformLocation(name);
     if(location > -1) glUniform1f(location, value);
-    MTGLERROR;
+    if(MTGLERROR) dbout(name);
 }
 
 void ShaderProgram::setUniform(std::string name, int value)    
@@ -673,13 +674,11 @@ void ShaderProgram::setUniform(std::string name, int value)
     assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
-    GLint location = glGetUniformLocation(_id, name.c_str());
-    MTGLERROR;
+    GLint location = getUniformLocation(name);
     if(location > -1) {
         glUniform1i(location, value);
     }
-    if(MTGLERROR)
-       std::cout << "unifrom name: " << name << std::endl;
+    if(MTGLERROR) dbout(name);
 }
 
 void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)    
@@ -687,11 +686,140 @@ void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)
     assert(RenderThread::id() == std::this_thread::get_id());
     if(!_initialized) init();
 
-    GLint location = glGetUniformLocation(_id, name.c_str());
-    MTGLERROR;
+    GLint location = getUniformLocation(name);
     if(location > -1) glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
-    if(MTGLERROR)
-       std::cout << "unifrom name: " << name << std::endl;
+    if(MTGLERROR) dbout(name);
+}
+
+glm::ivec2 ShaderProgram::getUniformi2(std::string name) const
+{
+    glm::ivec2 ret;
+    glGetUniformiv(_id, getUniformLocation(name), glm::value_ptr(ret));
+    if(MTGLERROR) dbout(name);
+
+    return ret;
+}
+
+glm::ivec3 ShaderProgram::getUniformi3(std::string name) const
+{
+    glm::ivec3 ret;
+    glGetUniformiv(_id, getUniformLocation(name), glm::value_ptr(ret));
+    if(MTGLERROR) dbout(name);
+
+    return ret;
+}
+
+glm::vec2 ShaderProgram::getUniformf2(std::string name) const
+{
+    glm::vec2 ret;
+    glGetUniformfv(_id, getUniformLocation(name), glm::value_ptr(ret));
+    if(MTGLERROR) dbout(name);
+
+    return ret;
+}
+
+glm::vec3 ShaderProgram::getUniformf3(std::string name) const
+{
+    glm::vec3 ret;
+    glGetUniformfv(_id, getUniformLocation(name), glm::value_ptr(ret));
+    if(MTGLERROR) dbout(name);
+
+    return ret;
+}
+
+glm::vec4 ShaderProgram::getUniformf4(std::string name) const
+{
+    glm::vec4 ret;
+    glGetUniformfv(_id, getUniformLocation(name), glm::value_ptr(ret));
+    if(MTGLERROR) dbout(name);
+
+    return ret;
+}
+
+float ShaderProgram::getUniformf(std::string name) const
+{
+    float ret;
+    glGetUniformfv(_id, getUniformLocation(name), &ret);
+    if(MTGLERROR) dbout(name);
+
+    return ret;
+}
+
+int ShaderProgram::getUniformi(std::string name) const
+{
+    int ret;
+    glGetUniformiv(_id, getUniformLocation(name), &ret);
+    if(MTGLERROR) dbout(name);
+
+    return ret;
+}
+
+glm::mat4 ShaderProgram::getUniformf4x4(std::string name) const
+{
+    glm::mat4 ret;
+    glGetUniformfv(_id, getUniformLocation(name), glm::value_ptr(ret));
+    if(MTGLERROR) dbout(name);
+
+    return ret;
+
+}
+
+void ShaderProgram::setUniformFromProperty(std::string name, Property prop)
+{
+    if(prop.getType() == "FLOAT")
+        setUniform(name, static_cast<float>(prop.getData<double>()));
+
+    else if(prop.getType() == "INTEGER")
+        setUniform(name, prop.getData<int>());
+
+    else if(prop.getType() == "BOOLEAN")
+        setUniform(name, static_cast<int>(prop.getData<bool>()));
+
+    else if(prop.getType() == "COLOR")
+        setUniform(name, prop.getData<glm::vec4>());
+
+    else if(prop.getType() == "VECTOR3D")
+        setUniform(name, prop.getData<glm::vec3>());
+
+    else if(prop.getType() == "INTVECTOR2D")
+        setUniform(name, prop.getData<glm::ivec2>());
+
+    else if(prop.getType() == "MAT4")
+        setUniform(name, prop.getData<glm::mat4>());
+}
+
+MindTree::Property ShaderProgram::getUniformAsProperty(std::string name, DataType t) const
+{
+    Property prop;
+    if(t == "FLOAT")
+        prop = getUniformf(name);
+
+    else if(t == "INTEGER")
+        prop = getUniformi(name);
+
+    else if(t == "BOOLEAN")
+        prop = getUniformi(name);
+
+    else if(t == "COLOR")
+        prop = getUniformf4(name);
+
+    else if(t == "VECTOR3D")
+        prop = getUniformf3(name);
+
+    else if(t == "INTVECTOR2D")
+        prop = getUniformi2(name);
+
+    else if(t == "MAT4")
+        prop = getUniformf4x4(name);
+
+    return prop;
+}
+
+void ShaderProgram::setUniforms(PropertyMap map)
+{
+    for(const auto &p : map) {
+        setUniformFromProperty(p.first, p.second);
+    }
 }
 
 void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string name)
@@ -818,6 +946,66 @@ void ShaderProgram::disableAttribute(std::string name)
 
     glDisableVertexAttribArray(_attributeLocations[name]);
     MTGLERROR;
+}
+
+UniformState::UniformState(std::shared_ptr<ShaderProgram> prog, std::string name, Property value) : 
+    _valid(prog->getUniformLocation(name) > -1),
+    _name(name), 
+    _oldValue(_valid ? prog->getUniformAsProperty(name, value.getType()) : Property()),
+    _program(prog)
+{
+    if(_valid) prog->setUniformFromProperty(name, value);
+}
+
+UniformState::UniformState(const UniformState &&other) :
+    _valid(other._valid),
+    _name(other._name),
+    _oldValue(other._oldValue),
+    _program(other._program)
+{
+    other._valid = false;
+}
+
+UniformState& UniformState::operator=(const UniformState&& other)
+{
+    _name = other._name;
+    _program = other._program;
+    _oldValue = other._oldValue;
+    _valid = other._valid;
+    other._valid = false;
+    return *this;
+}
+
+UniformState::~UniformState()
+{
+    assert(_program->isBound());
+    if(_valid) _program->setUniformFromProperty(_name, _oldValue);
+}
+
+UniformStateManager::UniformStateManager(std::shared_ptr<ShaderProgram> prog) :
+    _program(prog)
+{
+}
+
+UniformStateManager::~UniformStateManager()
+{
+}
+
+void UniformStateManager::addState(std::string name, Property value)
+{
+    _states.emplace_back(_program, name, value);
+}
+
+void UniformStateManager::reset()
+{
+    _states.clear();
+}
+
+void UniformStateManager::setFromPropertyMap(PropertyMap map)
+{
+    for(const auto &p : map) {
+        _states.emplace_back(_program, p.first, p.second);
+    }
 }
 
 Texture::Texture(std::string name, Texture::Format format, Target target)

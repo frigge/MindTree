@@ -47,7 +47,7 @@ void PolygonRenderer::draw(const CameraPtr camera, const RenderConfig &config, s
     GeoObjectRenderer::draw(camera, config, program);
 
     auto data = obj->getData();
-    program->setUniform("flatShading", (int)config.flatShading());
+    UniformState flatState(program, "flatShading", (int)config.flatShading());
 
     auto ibo = RenderManager::getResourceManager()->getIBO(data);
 
@@ -63,7 +63,6 @@ void PolygonRenderer::draw(const CameraPtr camera, const RenderConfig &config, s
                         reinterpret_cast<const GLvoid**>(&indexOffsets[0]),
                         polysizes.size()); //primitive count
     MTGLERROR;
-    program->link(); // reset uniforms;
 }
 
 std::shared_ptr<ShaderProgram> EdgeRenderer::_defaultProgram;
@@ -125,7 +124,6 @@ void EdgeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std:
     MTGLERROR;
     glLineWidth(1);
     glDisable(GL_LINE_SMOOTH);
-    program->link(); // reset uniforms;
 }
 
 std::shared_ptr<ShaderProgram> PointRenderer::_defaultProgram;
@@ -162,7 +160,5 @@ void PointRenderer::draw(const CameraPtr camera, const RenderConfig &config, std
     auto verts = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
     glDrawArrays(GL_POINTS, 0, verts->size());
     MTGLERROR;
-
-    program->link(); // reset uniforms;
 }
 
