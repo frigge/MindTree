@@ -11,12 +11,19 @@ using namespace MindTree;
 using namespace MindTree::GL;
 
 RenderPass::RenderPass()
-    : _viewportChanged(true), _initialized(false), _depthOutput(NONE), _width(0), _height(0)
+    : _initialized(false), _depthOutput(NONE)
 {
 }
 
 RenderPass::~RenderPass()
 {
+}
+
+void RenderPass::setCamera(CameraPtr camera)
+{
+    std::lock_guard<std::mutex> lock(_cameraLock);
+
+    _camera = camera;
 }
 
 void RenderPass::init()
@@ -52,8 +59,8 @@ void RenderPass::init()
         GLObjectBinder<std::shared_ptr<FBO>> binder(_target);
         uint i = 0;
         for (auto texture : _outputTextures) {
-            texture->setWidth(_width);
-            texture->setHeight(_height);
+            texture->setWidth(_camera->getWidth());
+            texture->setHeight(_camera->getHeight());
             {
                 GLObjectBinder<std::shared_ptr<Texture2D>> binder(texture);
                 _target->attachColorTexture(texture);
@@ -70,8 +77,8 @@ void RenderPass::init()
         }
 
         for (auto renderbuffer : _outputRenderbuffers) {
-            renderbuffer->setWidth(_width);
-            renderbuffer->setHeight(_height);
+            renderbuffer->setWidth(_camera->getWidth());
+            renderbuffer->setHeight(_camera->getHeight());
             {
                 GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(renderbuffer);
                 _target->attachColorRenderbuffer(renderbuffer);
@@ -90,8 +97,8 @@ void RenderPass::init()
         switch(_depthOutput) {
             case TEXTURE:
                 {
-                    _depthTexture->setWidth(_width);
-                    _depthTexture->setHeight(_height);
+                    _depthTexture->setWidth(_camera->getWidth());
+                    _depthTexture->setHeight(_camera->getHeight());
                     {
                         GLObjectBinder<std::shared_ptr<Texture2D>> binder(_depthTexture);
                         _target->attachDepthTexture(_depthTexture);
@@ -101,8 +108,8 @@ void RenderPass::init()
 
             case RENDERBUFFER:
                 {
-                    _depthRenderbuffer->setWidth(_width);
-                    _depthRenderbuffer->setHeight(_height);
+                    _depthRenderbuffer->setWidth(_camera->getWidth());
+                    _depthRenderbuffer->setHeight(_camera->getHeight());
                     {
                         GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(_depthRenderbuffer);
                         _target->attachDepthRenderbuffer(_depthRenderbuffer);
@@ -423,28 +430,6 @@ void RenderPass::addRendererFromEmpty(EmptyPtr obj)
     addGeometryRenderer(new EmptyRenderer(obj));
 }
 
-void RenderPass::setSize(int width, int height)
-{
-    if(_width != width || _height != height) {
-        _viewportChanged = true;
-        _initialized = false;
-    }
-
-    _width = width;
-    _height = height;
-}
-
-glm::ivec2 RenderPass::getResolution()
-{
-    return glm::ivec2(_width, _height);
-}
-
-void RenderPass::setCamera(CameraPtr camera)
-{
-    std::lock_guard<std::mutex> lock(_cameraLock);
-    _camera = camera;
-}
-
 CameraPtr RenderPass::getCamera()
 {
     return _camera;
@@ -486,28 +471,36 @@ void RenderPass::render(const RenderConfig &config)
             return;
         }
 
-        {
-            std::lock_guard<std::mutex> lock(_sizeLock);
-            if(!_width || !_height) {
-                std::cout << "No viewport geometry" << std::endl;
-                return;
-            }
+        int width = _camera->getWidth();
+        int height = _camera->getHeight();
+
+        if(!width || !height) {
+            std::cout << "No viewport geometry" << std::endl;
+            return;
         }
 
-        if(_viewportChanged) {
-            glViewport(0, 0, (GLint)_width, (GLint)_height);
-            _viewportChanged = false;
-        }
+        glViewport(0, 0, (GLint)width, (GLint)height);
+        MTGLERROR;
 
         {
             std::lock_guard<std::mutex> lock(_geometryLock);
 
             //render nodes that do not have a corresponding objectdata element (grid, 3d widgets, etc.)
-            for(auto node : _shadernodes)
-                node->render(_camera, glm::ivec2(_width, _height), config);
+            for(auto node : _shadernodes) {
+                GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
+                UniformStateManager uniformStates(node->program());
+                uniformStates.setFromPropertyMap(getProperties());
+                node->render(_camera, glm::ivec2(width, height), config);
+                uniformStates.reset();
+            }
 
-            for(auto node : _geometryShaderNodes)
-                node->render(_camera, glm::ivec2(_width, _height), config);
+            for(auto node : _geometryShaderNodes) {
+                GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
+                UniformStateManager uniformStates(node->program());
+                uniformStates.setFromPropertyMap(getProperties());
+                node->render(_camera, glm::ivec2(width, height), config);
+                uniformStates.reset();
+            }
         }
         if(_depthOutput == NONE)
            glEnable(GL_DEPTH_TEST);

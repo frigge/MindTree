@@ -227,6 +227,10 @@ public:
     glm::mat4 getProjection();
     glm::mat4 getViewMatrix();
 
+    void setResolution(int width, int height);
+    int getWidth() const;
+    int getHeight() const;
+
 private:
     Camera(const Camera &other);
 
@@ -236,6 +240,8 @@ private:
     std::atomic<double> fov;
     std::atomic<bool> perspective;
     std::atomic<double> near, far;
+
+    std::atomic<int> _width, _height;
 };
 
 #endif /* end of include guard: OBJECT */

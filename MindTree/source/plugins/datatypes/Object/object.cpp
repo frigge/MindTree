@@ -197,7 +197,7 @@ void AbstractTransformable::posAroundCenter(glm::vec3 newPos)
     glm::mat4 mat;
     {
         std::lock_guard<std::mutex> lock(_centerLock);
-        mat = glm::lookAt(newPos, center, glm::vec3(0, 1, 0)); 
+        mat4 mat = glm::lookAt(newPos, center, glm::vec3(0, 1, 0)); 
     }
     {
         std::lock_guard<std::mutex> lock(_transformationLock);
@@ -457,13 +457,31 @@ Camera::Camera(const Camera &other) :
     fov{other.fov.load()},
     perspective{other.perspective.load()},
     near{other.near.load()},
-    far{other.far.load()}
+    far{other.far.load()},
+    _width{other._width.load()},
+    _height{other._height.load()}
 
 {
 }
 
 Camera::~Camera()
 {
+}
+
+void Camera::setResolution(int width, int height)
+{
+    _width = width;
+    _height = height;
+}
+
+int Camera::getWidth() const
+{
+    return _width;
+}
+
+int Camera::getHeight() const
+{
+    return _height;
 }
 
 AbstractTransformablePtr Camera::clone() const

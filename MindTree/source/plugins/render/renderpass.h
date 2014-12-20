@@ -8,6 +8,7 @@
 #include "utility"
 #include "../datatypes/Object/object.h"
 #include "../datatypes/Object/lights.h"
+#include "data/mtobject.h"
 
 namespace MindTree {
 namespace GL {
@@ -21,7 +22,7 @@ class FBO;
 class Renderbuffer;
 class RenderConfig;
 
-class RenderPass
+class RenderPass : public Object
 {
 public:
     RenderPass();
@@ -54,8 +55,6 @@ public:
 
     CameraPtr getCamera();
 
-    void setSize(int width, int height);
-    glm::ivec2 getResolution();
     std::vector<glm::vec4> readPixel(std::vector<std::string> name, glm::ivec2 pos);
 
 private:
@@ -79,12 +78,10 @@ private:
 
     friend class RenderManager;
 
-    int _width, _height;
-    bool _viewportChanged, _initialized;
+    bool _initialized;
     std::shared_ptr<Camera> _camera;
     std::shared_ptr<FBO> _target;
 
-    std::mutex _sizeLock;
     std::mutex _geometryLock;
     std::mutex _shapesLock;
     std::mutex _cameraLock;

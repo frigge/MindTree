@@ -197,21 +197,6 @@ std::vector<std::string> RenderManager::getAllOutputs() const
     return outputs;
 }
 
-void RenderManager::setSize(int width, int height)
-{
-    if(_width == width && _height == height) 
-        return;
-
-    _width = width;
-    _height = height;
-
-    for (auto pass : passes)
-        pass->setSize(_width, _height);
-
-    //invalidate renderpass so that FBO and textures are regenerated
-    _initialized = false;
-}
-
 void RenderManager::setConfig(RenderConfig cfg)    
 {
     config = cfg;

@@ -16,7 +16,7 @@ namespace GL {
 
 class RenderPass;
 
-class RenderConfig
+class RenderConfig : public Object
 {
 public:
     void setDrawPoints(bool draw);
@@ -72,8 +72,6 @@ public:
     RenderConfig getConfig();
     void setDirty();
 
-    void setSize(int width, int height);
-
     template<typename T>
     std::shared_ptr<T> addPass()
     {
@@ -101,8 +99,6 @@ private:
     QGLContext *_context;
     bool _initialized;
     double renderTime;
-
-    std::atomic<int> _width, _height;
 };
 
 }
