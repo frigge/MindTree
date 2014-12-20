@@ -10,17 +10,22 @@ class Object {
 public:
     Object();
     Object(const Object &other);
+    Object(const Object &&other);
+    virtual ~Object();
 
-    Property getProperty(std::string name);
-    const Property getProperty(std::string name)const;
+    Object& operator=(const Object &other);
+    Object& operator=(const Object &&other);
+
+    Property getProperty(std::string name)const;
+    Property operator[](std::string name) const;
+
     const PropertyMap& getProperties()const;
     void setProperty(std::string, Property value);
-    Property operator[](std::string name);
     void rmProperty(std::string name);
     bool hasProperty(std::string name) const;
 
 private:
-    mutable PropertyMap properties;
+    PropertyMap _properties;
     mutable std::mutex _propertiesLock;
 };
 }

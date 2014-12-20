@@ -30,10 +30,13 @@ template<class T> const MindTree::DataType MindTree::PropertyTypeInfo<T>::_type;
 PROPERTY_TYPE_INFO(float, "FLOAT");
 PROPERTY_TYPE_INFO(double, "FLOAT");
 PROPERTY_TYPE_INFO(int, "INTEGER");
+PROPERTY_TYPE_INFO(bool, "BOOLEAN");
 PROPERTY_TYPE_INFO(std::string, "STRING");
 PROPERTY_TYPE_INFO(glm::vec2, "VECTOR2D");
+PROPERTY_TYPE_INFO(glm::ivec2, "INTVECTOR2D");
 PROPERTY_TYPE_INFO(glm::vec3, "VECTOR3D");
 PROPERTY_TYPE_INFO(glm::vec4, "COLOR");
+PROPERTY_TYPE_INFO(glm::mat4, "MAT4");
 
 TypeDispatcher<DataType, ConverterList> PropertyConverter::_converters;
 

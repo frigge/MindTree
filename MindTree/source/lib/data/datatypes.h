@@ -95,5 +95,5 @@ typedef Vec2<int> Vec2i;
 //};
 //
 //typedef Vec3d Vector;
-//
+
 #endif /* end of include guard: DATATYPES_EVYG6DVA */

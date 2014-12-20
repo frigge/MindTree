@@ -2,7 +2,7 @@ project(mindtree_core)
 cmake_minimum_required(VERSION 2.8)
 set(LIB_SRC
     data/cache_main.cpp
-    #    data/datatypes.cpp
+    data/datatypes.cpp
     data/dnspace.cpp
     data/io.cpp
     data/nodes/data_node.cpp
