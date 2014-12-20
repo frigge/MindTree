@@ -14,7 +14,42 @@ namespace GL
 {
 
 class FBO;
-bool getGLError(std::string location);
+inline bool getGLError(std::string location)
+{
+    switch(glGetError()) {
+    case GL_NO_ERROR:
+        return false;
+    case GL_INVALID_ENUM:
+        std::cout << "GL_INVALID_ENUM" ;
+        break;
+    case GL_INVALID_VALUE:
+        std::cout << "GL_INVALID_VALUE";
+        break;
+    case GL_INVALID_OPERATION:
+        std::cout << "GL_INVALID_OPERATION";
+        break;
+    case GL_INVALID_FRAMEBUFFER_OPERATION:
+        std::cout << "GL_INVALID_FRAMEBUFFER_OPERATION";
+        break;
+    case GL_OUT_OF_MEMORY:
+        std::cout << "GL_OUT_OF_MEMORY";
+        break;
+    case GL_STACK_UNDERFLOW:
+        std::cout << "GL_STACK_UNDERFLOW";
+        break;
+    case GL_STACK_OVERFLOW:
+        std::cout << "GL_STACK_OVERFLOW";
+        break;
+    }
+
+#ifdef ASSERT_ON_MTGLERROR
+    assert(false);
+#endif
+
+    std::cout << " in " << location << std::endl;
+    return true;
+}
+
 bool getGLFramebufferError(std::string location);
 
 #define MTGLERROR getGLError(std::string(__PRETTY_FUNCTION__) + ":" + std::to_string(__LINE__))
@@ -239,6 +274,8 @@ public:
     bool hasAttribute(std::string name);
     bool hasFragmentOutput(std::string name);
 
+    inline bool isBound() { return _isBound; }
+
     void bufferedAttribute(std::string name);
 
     void enableAttribute(std::string name);
@@ -408,9 +445,13 @@ private:
     QGLContext *_context;
 };
 
-class QtContext
+class QtContext : public QGLContext
 {
 public:
+    QtContext();
+
+    void makeCurrent() override;
+    void doneCurrent() override;
     static QGLFormat format();
 };
 

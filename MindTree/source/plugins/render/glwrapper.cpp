@@ -4,42 +4,11 @@
 #include "iostream"
 #include "fstream"
 #include "rendermanager.h"
+#include "data/debuglog.h"
 
 #include "glwrapper.h"
 
 using namespace MindTree::GL;
-
-bool MindTree::GL::getGLError(std::string location)
-{
-    switch(glGetError()) {
-    case GL_NO_ERROR:
-        return false;
-    case GL_INVALID_ENUM:
-        std::cout << "GL_INVALID_ENUM" ;
-        break;
-    case GL_INVALID_VALUE:
-        std::cout << "GL_INVALID_VALUE";
-        break;
-    case GL_INVALID_OPERATION:
-        std::cout << "GL_INVALID_OPERATION";
-        break;
-    case GL_INVALID_FRAMEBUFFER_OPERATION:
-        std::cout << "GL_INVALID_FRAMEBUFFER_OPERATION";
-        break;
-    case GL_OUT_OF_MEMORY:
-        std::cout << "GL_OUT_OF_MEMORY";
-        break;
-    case GL_STACK_UNDERFLOW:
-        std::cout << "GL_STACK_UNDERFLOW";
-        break;
-    case GL_STACK_OVERFLOW:
-        std::cout << "GL_STACK_OVERFLOW";
-        break;
-    }
-
-    std::cout << " in " << location << std::endl;
-    return true;
-}
 
 bool MindTree::GL::getGLFramebufferError(std::string location)
 {
@@ -1286,6 +1255,21 @@ ContextBinder::ContextBinder(QGLContext *context)
 ContextBinder::~ContextBinder()
 {
     _context->doneCurrent();
+}
+
+QtContext::QtContext()
+    : QGLContext(format())
+{
+}
+
+void QtContext::makeCurrent()
+{
+    QGLContext::makeCurrent();
+}
+
+void QtContext::doneCurrent()
+{
+    QGLContext::doneCurrent();
 }
 
 QGLFormat QtContext::format()

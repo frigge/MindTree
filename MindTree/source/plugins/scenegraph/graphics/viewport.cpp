@@ -49,8 +49,8 @@ using namespace MindTree;
 
 std::vector<Viewport*> Viewport::_viewports;
 
-Viewport::Viewport()
-    : QGLWidget(GL::QtContext::format(), nullptr, _viewports.empty() ? nullptr : _viewports[0]),
+Viewport::Viewport() :
+    QGLWidget(new GL::QtContext(), nullptr, _viewports.empty() ? nullptr : _viewports[0]),
     defaultCamera(std::make_shared<Camera>()),
     rotate(false), 
     pan(false), 
