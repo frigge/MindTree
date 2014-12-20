@@ -10,6 +10,7 @@ set(RENDER_SRC
     render.cpp
     rendermanager.cpp
     renderpass.cpp
+    render_setup.cpp
 )
 
 find_package(OpenGL REQUIRED)

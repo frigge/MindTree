@@ -39,9 +39,8 @@
 #include "../../3dwidgets/widgets.h"
 #include "data/raytracing/ray.h"
 #include "data/project.h"
-#include "../../render/render.h"
-#include "../../render/renderpass.h"
-#include "../../render/primitive_renderer.h"
+
+#include "../../render/render_setup.h"
 
 #include "viewport.h"
 
@@ -65,65 +64,30 @@ Viewport::Viewport() :
     setAutoBufferSwap(false);
 
     QGLContext *ctx = const_cast<QGLContext*>(context());
-    _rendermanager = std::unique_ptr<GL::RenderManager>(new GL::RenderManager(ctx));
-
-    auto pass = _rendermanager->addPass<GL::RenderPass>();
-    pass->setCamera(activeCamera);
-
-    grid = new GL::GridRenderer(100, 100, 100, 100);
-    auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
-
-    grid->setTransformation(trans);
-    grid->setBorderColor(glm::vec4(.5, .5, .5, .5));
-    grid->setAlternatingColor(glm::vec4(.8, .8, .8, .8));
-    grid->setBorderWidth(2.);
-
-    pass->addRenderer(grid);
-    pass->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
-    pass->addOutput(std::make_shared<GL::Texture2D>("outcolor"));
-    pass->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
-    pass->addOutput(std::make_shared<GL::Texture2D>("outposition"));
-
-    auto overlaypass = _rendermanager->addPass<GL::RenderPass>();
-    overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
-    overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
-    overlaypass->addOutput(std::make_shared<GL::Renderbuffer>("id"));
-    overlaypass->addOutput(std::make_shared<GL::Renderbuffer>("position", GL::Renderbuffer::RGBA16F));
-    overlaypass->setCamera(activeCamera);
-
-    //testing translate widgets
-
     _widgetManager = std::make_shared<Widget3DManager>();
-    _widgetManager->insertWidgetsIntoRenderPass(overlaypass);
-
-    _pixelPass = _rendermanager->addPass<GL::RenderPass>().get();
-    _pixelPass->addRenderer(new GL::FullscreenQuadRenderer());
+    _renderConfigurator = std::unique_ptr<GL::ForwardRenderer>(new GL::ForwardRenderer(ctx, defaultCamera, _widgetManager.get()));
 
     setMouseTracking(true);
+    doneCurrent();
 }
 
 Viewport::~Viewport()
 {
-    MindTree::GL::RenderThread::removeManager(_rendermanager.get());
+    _renderConfigurator->stopRendering();
 
     _viewports.erase(std::find(begin(_viewports), end(_viewports), this));
 }
 
 GL::RenderManager* Viewport::getRenderManager()
 {
-    return _rendermanager.get();
-}
-
-GL::RenderPass* Viewport::getPixelPass()
-{
-    return _pixelPass;
+    return _renderConfigurator->getManager();
 }
 
 void Viewport::setData(std::shared_ptr<Group> value)
 {
     if(!value) return;
 
-    _rendermanager->getPass(0)->setRenderersFromGroup(value);
+    _renderConfigurator->setGeometry(value);
 }
 
 void Viewport::changeCamera(QString cam)    
@@ -132,56 +96,77 @@ void Viewport::changeCamera(QString cam)
 
 void Viewport::resizeEvent(QResizeEvent *)
 {
+    doneCurrent();
     activeCamera->setProjection((GLdouble)width()/(GLdouble)height());
-    _rendermanager->setSize(width(), height());
+    activeCamera->setResolution(width(), height());
 }
 
 void Viewport::paintEvent(QPaintEvent *)
 {
-    //do nothing here
+    doneCurrent();
 }
 
 void Viewport::showEvent(QShowEvent *)
 {
-    MindTree::GL::RenderThread::addManager(_rendermanager.get());
+    doneCurrent();
+    _renderConfigurator->startRendering();
 }
 
 void Viewport::hideEvent(QHideEvent *)
 {
-    MindTree::GL::RenderThread::removeManager(_rendermanager.get());
+    _renderConfigurator->stopRendering();
 }
 
 void Viewport::setShowPoints(bool b)    
 {
-    auto config = _rendermanager->getConfig();
+    auto config = _renderConfigurator->getManager()->getConfig();
     config.setDrawPoints(b);
-    _rendermanager->setConfig(config);
+    _renderConfigurator->getManager()->setConfig(config);
 }
 
 void Viewport::setShowEdges(bool b)    
 {
-    auto config = _rendermanager->getConfig();
+    auto config = _renderConfigurator->getManager()->getConfig();
     config.setDrawEdges(b);
-    _rendermanager->setConfig(config);
+    _renderConfigurator->getManager()->setConfig(config);
 }
 
 void Viewport::setShowPolygons(bool b)    
 {
-    auto config = _rendermanager->getConfig();
+    auto config = _renderConfigurator->getManager()->getConfig();
     config.setDrawPolygons(b);
-    _rendermanager->setConfig(config);
+    _renderConfigurator->getManager()->setConfig(config);
 }
 
 void Viewport::setShowFlatShading(bool b)
 {
-    auto config = _rendermanager->getConfig();
+    auto config = _renderConfigurator->getManager()->getConfig();
     config.setShowFlatShaded(b);
-    _rendermanager->setConfig(config);
+    _renderConfigurator->getManager()->setConfig(config);
+}
+
+void Viewport::setOption(const std::string &key, Property value)
+{
+    auto config = _renderConfigurator->getManager()->getConfig();
+    config.setProperty(key, value);
+    _renderConfigurator->getManager()->setConfig(config);
 }
 
 void Viewport::setShowGrid(bool b)
 {
-    grid->setVisible(b);
+    //grid->setVisible(b);
+}
+
+void Viewport::initializeGL()
+{
+}
+
+void Viewport::resizeGL(int, int)
+{
+}
+
+void Viewport::paintGL()
+{
 }
 
 void Viewport::mousePressEvent(QMouseEvent *event)    

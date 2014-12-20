@@ -31,13 +31,14 @@
 #include "../../render/glwrapper.h"
 #include "../../render/rendermanager.h"
 
-class Widget3DManager;
-
 namespace MindTree {
 namespace GL {
     class GridRenderer;
+    class RenderConfigurator;
 }
 }
+
+class Widget3DManager;
 
 class Viewport : public QGLWidget
 {
@@ -50,6 +51,7 @@ public:
 
     MindTree::GL::RenderManager* getRenderManager();
     MindTree::GL::RenderPass* getPixelPass();
+    void setOption(const std::string &key, MindTree::Property value);
 
 //SLOTS:
     Q_SLOT void setShowPoints(bool b);
@@ -62,29 +64,32 @@ public:
 //---------------
 
 protected:
-    void resizeEvent(QResizeEvent *event);
-    void paintEvent(QPaintEvent *);
-    void showEvent(QShowEvent *);
-    void hideEvent(QHideEvent *);
+    void resizeEvent(QResizeEvent *event) override;
+    void paintEvent(QPaintEvent *) override;
+    void showEvent(QShowEvent *) override;
+    void hideEvent(QHideEvent *) override;
+
+    void initializeGL() override;
+    void resizeGL(int, int) override;
+    void paintGL() override;
+
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
 
     void transform(QPointF mpos);
     void checkTransform();
     void rotateView(float xdist, float ydist);
     void panView(float xdist, float ydist);
     void zoomView(float xdist, float ydist);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void wheelEvent(QWheelEvent *event);
     void mouseToWorld();
     void drawFps();
 
 private:
     std::shared_ptr<Camera> activeCamera, defaultCamera;
-    std::unique_ptr<MindTree::GL::RenderManager> _rendermanager;
 
-    MindTree::GL::GridRenderer *grid;
-    MindTree::GL::RenderPass *_pixelPass;
+    std::unique_ptr<MindTree::GL::RenderConfigurator> _renderConfigurator;
     std::shared_ptr<Widget3DManager> _widgetManager;
 
     static std::vector<Viewport*> _viewports;

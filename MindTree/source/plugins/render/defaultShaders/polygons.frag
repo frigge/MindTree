@@ -21,9 +21,15 @@ const float GAMMA=2.2;
 
 struct Light {
     vec3 pos;
-    vec3 color;
+    vec4 color;
     float intensity;
 };
+
+uniform Light light0;
+uniform Light light1;
+uniform Light light2;
+uniform Light light3;
+uniform Light light4;
 
 float _gamma(float val, float g) {
     return pow(val, g);
@@ -37,32 +43,41 @@ vec3 gamma(vec3 col, float g) {
     return outcol;
 }
 
-Light lights[3];
+vec3 _lambert(Light l) {
+    vec3 lvec = l.pos - pos ;
+    float cosine = dot(Nn, normalize(lvec));
+    cosine = clamp(cosine, 0.0, 1.0);
+    vec3 col = gamma(l.color.rgb, GAMMA) * l.intensity * cosine;
+    return col;
+}
+
 vec3 lambert(){
     vec3 outcol = vec3(0.0);
-    for(int i=0; i<3; i++){
-        Light l = lights[i];
-        vec3 lvec = l.pos - pos ;
-        float cosine = dot(Nn, normalize(lvec));
-        cosine = clamp(cosine, 0.0, 1.0);
-        vec3 col = gamma(l.color, GAMMA) * l.intensity * cosine;
-        outcol += col;
-    }
+    outcol += _lambert(light0);
+    outcol += _lambert(light1);
+    outcol += _lambert(light2);
+    outcol += _lambert(light3);
+    outcol += _lambert(light4);
     return outcol;
+}
+
+vec3 _phong(Light l, float rough) {
+    vec3 lvec = l.pos-pos;
+    vec3 ln = normalize(lvec);
+    vec3 Half = normalize(eye + ln);
+    float cosine = clamp(dot(Nn, Half), 0., 1.);
+    cosine = pow(cosine, 1./rough);
+    vec3 col = gamma(l.color.rgb, GAMMA) * l.intensity * (cosine);
+    return col;
 }
 
 vec3 phong(float rough){
     vec3 outcol = vec3(0.);
-    for(int i=0; i<3; i++){
-        Light l = lights[i];
-        vec3 lvec = l.pos-pos;
-        vec3 ln = normalize(lvec);
-        vec3 Half = normalize(eye + ln);
-        float cosine = clamp(dot(Nn, Half), 0., 1.);
-        cosine = pow(cosine, 1./rough);
-        vec3 col = gamma(l.color, GAMMA) * l.intensity * (cosine);
-        outcol += col;
-    }
+    outcol += _phong(light0, rough);
+    outcol += _phong(light1, rough);
+    outcol += _phong(light2, rough);
+    outcol += _phong(light3, rough);
+    outcol += _phong(light4, rough);
     return outcol;
 }
 
@@ -72,9 +87,6 @@ float value(vec3 col) {
 
 void main(){
     Nn = mix(normalize(sn), normalize(cross(dFdx(pos), dFdy(pos))), flatShading);
-    lights[0] = Light(vec3(50, 50, 50), vec3(1), 0.8);
-    lights[1] = Light(vec3(-50, -10, 10), vec3(1), 0.3);
-    lights[2] = Light(vec3(0, 0, 50), vec3(1), 0.1);
 
     vec3 spec1 = phong(specrough1) * specint;
     vec3 spec2 = phong(specrough2) * specint2;

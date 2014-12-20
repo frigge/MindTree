@@ -100,6 +100,10 @@ void ViewportWidget::createToolbar()
     showPolygonsAction->setCheckable(true);
     showPolygonsAction->setChecked(true);
 
+    QAction *toggleDefaultLight = _tools->addAction("Default Light");
+    toggleDefaultLight->setCheckable(true);
+    toggleDefaultLight->setChecked(true);
+
     QAction *showFlatShadedAction = _tools->addAction("Flat Shaded");
     showFlatShadedAction->setCheckable(true);
     showFlatShadedAction->setChecked(false);
@@ -128,12 +132,18 @@ void ViewportWidget::createToolbar()
     connect(showPolygonsAction, SIGNAL(toggled(bool)), this, SLOT(togglePolygons(bool)));
     connect(showFlatShadedAction, SIGNAL(toggled(bool)), this, SLOT(toggleFlatShading(bool)));
     connect(showGridAction, SIGNAL(toggled(bool)), this, SLOT(toggleGrid(bool)));
+    connect(toggleDefaultLight, SIGNAL(toggled(bool)), this, SLOT(toggleDefaultLighting(bool)));
 }
 
 void ViewportWidget::setOutput(QString out)
 {
     _viewport->getRenderManager()->clearCustomTextureNameMapping();
     _viewport->getRenderManager()->setCustomTextureNameMapping(out.toStdString(), "outcolor");
+}
+
+void ViewportWidget::toggleDefaultLighting(bool value)
+{
+    _viewport->setOption("defaultLighting", value);
 }
 
 void ViewportWidget::refillCamBox()    

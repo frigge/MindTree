@@ -58,6 +58,7 @@ public:
     Q_SLOT void toggleGrid(bool b);
     Q_SLOT void refillCamBox();
     Q_SLOT void setOutput(QString out);
+    Q_SLOT void toggleDefaultLighting(bool value);
 
 private:
     void createToolbar();
