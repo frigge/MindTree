@@ -53,6 +53,8 @@ public:
 
     std::vector<std::shared_ptr<ShaderRenderNode>> getShaderNodes();
 
+    void setBackgroundColor(glm::vec4 color);
+
     CameraPtr getCamera();
 
     std::vector<glm::vec4> readPixel(std::vector<std::string> name, glm::ivec2 pos);
@@ -95,6 +97,9 @@ private:
     std::shared_ptr<Texture2D> _depthTexture;
     std::shared_ptr<Renderbuffer> _depthRenderbuffer;
     DepthOutput _depthOutput;
+
+    std::mutex _bgColorLock;
+    glm::vec4 _bgColor;
 };
 
 }

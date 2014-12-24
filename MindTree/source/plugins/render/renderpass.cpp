@@ -5,6 +5,8 @@
 #include "light_renderer.h"
 #include "camera_renderer.h"
 #include "empty_renderer.h"
+#include "rendermanager.h"
+#include "data/debuglog.h"
 #include "renderpass.h"
 
 using namespace MindTree;
@@ -17,6 +19,7 @@ RenderPass::RenderPass()
 
 RenderPass::~RenderPass()
 {
+    dbout("");
 }
 
 void RenderPass::setCamera(CameraPtr camera)
@@ -435,6 +438,12 @@ CameraPtr RenderPass::getCamera()
     return _camera;
 }
 
+void RenderPass::setBackgroundColor(glm::vec4 color)
+{
+    std::lock_guard<std::mutex> lock(_bgColorLock);
+    _bgColor = color;
+}
+
 void RenderPass::render(const RenderConfig &config)
 {
     if(!_initialized) init();
@@ -445,6 +454,12 @@ void RenderPass::render(const RenderConfig &config)
         MTGLERROR;
 
         GLObjectBinder<std::shared_ptr<FBO>> fbobinder(_target);
+
+        {
+            std::lock_guard<std::mutex> lock(_bgColorLock);
+            glClearColor(_bgColor.r, _bgColor.g, _bgColor.b, _bgColor.a);
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         MTGLERROR;
         getGLFramebufferError(__PRETTY_FUNCTION__);
@@ -487,14 +502,18 @@ void RenderPass::render(const RenderConfig &config)
 
             //render nodes that do not have a corresponding objectdata element (grid, 3d widgets, etc.)
             for(auto node : _shadernodes) {
+                dbout("");
                 GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
                 UniformStateManager uniformStates(node->program());
                 uniformStates.setFromPropertyMap(getProperties());
+                uniformStates.setFromPropertyMap(config.getProperties());
+
                 node->render(_camera, glm::ivec2(width, height), config);
                 uniformStates.reset();
             }
 
             for(auto node : _geometryShaderNodes) {
+                dbout("");
                 GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
                 UniformStateManager uniformStates(node->program());
                 uniformStates.setFromPropertyMap(getProperties());
