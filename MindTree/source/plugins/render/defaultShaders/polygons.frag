@@ -14,15 +14,15 @@ uniform float specrough1 = 0.15;
 uniform float specrough2 = 0.01;
 
 out vec4 outcolor;
-out vec4 outnormal;
-out vec4 outposition;
 
 const float GAMMA=2.2;
 
 struct Light {
-    vec3 pos;
+    vec4 pos;
     vec4 color;
     float intensity;
+    float coneangle;
+    bool directional;
 };
 
 uniform Light light0;
@@ -44,10 +44,15 @@ vec3 gamma(vec3 col, float g) {
 }
 
 vec3 _lambert(Light l) {
-    vec3 lvec = l.pos - pos ;
+    vec3 lvec;
+    if(l.directional)
+        lvec = -l.pos.xyz;
+    else
+        lvec = l.pos.xyz - pos;
+
     float cosine = dot(Nn, normalize(lvec));
     cosine = clamp(cosine, 0.0, 1.0);
-    vec3 col = gamma(l.color.rgb, GAMMA) * l.intensity * cosine;
+    vec3 col = gamma(l.color.rgb, GAMMA) * cosine * l.intensity;
     return col;
 }
 
@@ -58,11 +63,17 @@ vec3 lambert(){
     outcol += _lambert(light2);
     outcol += _lambert(light3);
     outcol += _lambert(light4);
+    outcol.r = clamp(outcol, vec3(0), vec3(1.));
     return outcol;
 }
 
 vec3 _phong(Light l, float rough) {
-    vec3 lvec = l.pos-pos;
+    vec3 lvec;
+    if(l.pos.w < 1)
+        lvec = l.pos.xyz;
+    else
+        lvec = l.pos.xyz - pos;
+
     vec3 ln = normalize(lvec);
     vec3 Half = normalize(eye + ln);
     float cosine = clamp(dot(Nn, Half), 0., 1.);
@@ -78,6 +89,7 @@ vec3 phong(float rough){
     outcol += _phong(light2, rough);
     outcol += _phong(light3, rough);
     outcol += _phong(light4, rough);
+    outcol.r = clamp(outcol, vec3(0), vec3(1.));
     return outcol;
 }
 
@@ -103,10 +115,8 @@ void main(){
                     diffspec + 
                     gamma(ambient.rgb, GAMMA) * ambientIntensity + 
                     spectotal
-                    , 1./GAMMA), 1
+                    , 1./GAMMA), polygoncolor.a
                    );
 
     outcolor.a = polygoncolor.a;
-    outposition = vec4(pos, 1);
-    outnormal = vec4(Nn, 1);
 }

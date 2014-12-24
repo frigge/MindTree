@@ -7,17 +7,14 @@ Object::Object()
 }
 
 Object::Object(const Object &other)
+    : _properties(other._properties)
 {
-    for(auto prop : other.getProperties())
-        _properties[prop.first] = prop.second;
 }
 
 Object::Object(const Object &&other) : 
     _properties{std::move(other._properties)}
 
 {
-    for(auto prop : other.getProperties())
-        _properties[prop.first] = prop.second;
 }
 
 Object::~Object()
@@ -26,12 +23,18 @@ Object::~Object()
 
 Object& Object::operator=(const Object &other)
 {
+    std::lock_guard<std::mutex> lock(_propertiesLock);
+    std::lock_guard<std::mutex> lock2(other._propertiesLock);
+
     _properties = other._properties;
     return *this;
 }
 
 Object& Object::operator=(const Object &&other)
 {
+    std::lock_guard<std::mutex> lock(_propertiesLock);
+    std::lock_guard<std::mutex> lock2(other._propertiesLock);
+
     _properties = std::move(other._properties);
     return *this;
 }
@@ -43,7 +46,7 @@ Property Object::getProperty(std::string name) const
     return prop;
 }
 
-const PropertyMap& Object::getProperties() const
+PropertyMap Object::getProperties() const
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
     return _properties;
@@ -58,11 +61,6 @@ Property Object::operator[](std::string name) const
 void Object::setProperty(std::string name, Property value)
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
-    auto prop = _properties.find(name);
-    if(prop != _properties.end()) {
-        _properties.erase(name);
-    }
-
     _properties[name] = value;
 }
 

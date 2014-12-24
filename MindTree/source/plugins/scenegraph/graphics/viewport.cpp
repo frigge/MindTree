@@ -147,7 +147,7 @@ void Viewport::setShowFlatShading(bool b)
 
 void Viewport::setOption(const std::string &key, Property value)
 {
-    auto config = _renderConfigurator->getManager()->getConfig();
+    GL::RenderConfig config = _renderConfigurator->getManager()->getConfig();
     config.setProperty(key, value);
     _renderConfigurator->getManager()->setConfig(config);
 }

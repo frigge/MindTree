@@ -199,11 +199,13 @@ std::vector<std::string> RenderManager::getAllOutputs() const
 
 void RenderManager::setConfig(RenderConfig cfg)    
 {
+    std::lock_guard<std::mutex> lock(_managerLock);
     config = cfg;
 }
 
 RenderConfig RenderManager::getConfig()    
 {
+    std::lock_guard<std::mutex> lock(_managerLock);
     return config;
 }
 

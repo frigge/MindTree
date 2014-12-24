@@ -1,5 +1,6 @@
 #version 330
 uniform mat4 modelView;
+uniform mat4 model;
 uniform mat4 projection;
 
 uniform bool defaultLighting = true;
@@ -16,7 +17,7 @@ void main(){
        sn = (modelView * vec4(N, 0)).xyz;
    }
    else {
-       pos = P;
-       sn = N;
+       pos = (model * vec4(P, 1)).xyz;
+       sn = (model * vec4(N, 0)).xyz;
    }
 };

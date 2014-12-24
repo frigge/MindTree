@@ -197,7 +197,7 @@ void AbstractTransformable::posAroundCenter(glm::vec3 newPos)
     glm::mat4 mat;
     {
         std::lock_guard<std::mutex> lock(_centerLock);
-        mat4 mat = glm::lookAt(newPos, center, glm::vec3(0, 1, 0)); 
+        mat = glm::lookAt(newPos, center, glm::vec3(0, 1, 0)); 
     }
     {
         std::lock_guard<std::mutex> lock(_transformationLock);
