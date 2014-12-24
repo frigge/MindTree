@@ -93,64 +93,88 @@ void ForwardRenderer::setupDefaultLights()
 {
     RenderPass *pass = getManager()->getPass(0);
 
+    static const float coneangle = 2 * 3.14159265359;
     //light0
     pass->setProperty("light0.intensity", .8);
     pass->setProperty("light0.color", glm::vec4(1));
-    pass->setProperty("light0.pos", glm::vec3(50, 50, 50));
+    pass->setProperty("light0.pos", glm::vec4(50, 50, 50, 1));
+    pass->setProperty("light0.coneangle", coneangle);
+    pass->setProperty("light0.directional", false);
 
     //light1
     pass->setProperty("light1.intensity", .3);
     pass->setProperty("light1.color", glm::vec4(1));
-    pass->setProperty("light1.pos", glm::vec3(-50, -10, 10));
+    pass->setProperty("light1.pos", glm::vec4(-50, -10, 10, 1));
+    pass->setProperty("light1.coneangle", coneangle);
+    pass->setProperty("light1.directional", false);
 
     //light2
     pass->setProperty("light2.intensity", .1);
     pass->setProperty("light2.color", glm::vec4(1));
-    pass->setProperty("light2.pos", glm::vec3(0, 0, 50));
+    pass->setProperty("light2.pos", glm::vec4(0, 0, 50, 1));
+    pass->setProperty("light2.coneangle", coneangle);
+    pass->setProperty("light2.directional", false);
 
     //light3
     pass->setProperty("light3.intensity", .0);
     pass->setProperty("light3.color", glm::vec4(1));
-    pass->setProperty("light3.pos", glm::vec3(0, 0, 0));
+    pass->setProperty("light3.pos", glm::vec4(0, 0, 0, 1));
+    pass->setProperty("light3.coneangle", coneangle);
+    pass->setProperty("light3.directional", false);
 
     //light4
     pass->setProperty("light4.intensity", .0);
     pass->setProperty("light4.color", glm::vec4(1));
-    pass->setProperty("light4.pos", glm::vec3(0, 0, 0));
+    pass->setProperty("light4.pos", glm::vec4(0, 0, 0, 1));
+    pass->setProperty("light4.coneangle", coneangle);
+    pass->setProperty("light4.directional", false);
 }
 
 void ForwardRenderer::setGeometry(std::shared_ptr<Group> grp)
 {
     RenderPass *pass = getManager()->getPass(0);
-    pass->setRenderersFromGroup(grp);
 
     auto config = getManager()->getConfig();
-    if(config.hasProperty("defaultLighting")) {
-        pass->setProperty("defaultLighting", config.getProperty("defaultLighting"));
-    }
-    else if(config["defaultLighting"].getData<bool>()) {
+    if(config.hasProperty("defaultLighting") &&
+       config["defaultLighting"].getData<bool>()) {
         setupDefaultLights();
-        return;
     }
-
-    std::vector<LightPtr> lights = grp->getLights();
-    for(size_t i = 0; i < _maxLightCount; ++i) {
-        std::string lightName = "light";
-        lightName += std::to_string(i);
-        if (i < lights.size()) {
-            LightPtr light = lights[i];
-            pass->setProperty(lightName + ".intensity", light->getIntensity());
-            pass->setProperty(lightName + ".color", light->getColor());
-            pass->setProperty(lightName + ".pos", light->getPosition());
-
-            dbout("setting " << lightName << ".intensity: " << light->getIntensity());
-            dbout("setting " << lightName << ".color: " << glm::to_string(light->getColor()));
-            dbout("setting " << lightName << ".pos: " << glm::to_string(light->getPosition()));
-        }
-        else {
-            pass->setProperty(lightName + ".intensity", 0.0);
-            pass->setProperty(lightName + ".color", glm::vec4(0));
-            pass->setProperty(lightName + ".pos", glm::vec3(0));
+    else {
+        std::vector<LightPtr> lights = grp->getLights();
+        for(size_t i = 0; i < _maxLightCount; ++i) {
+            std::string lightName = "light";
+            lightName += std::to_string(i);
+            if (i < lights.size()) {
+                LightPtr light = lights[i];
+                pass->setProperty(lightName + ".intensity", light->getIntensity());
+                pass->setProperty(lightName + ".color", light->getColor());
+                glm::vec4 pos;
+                float coneangle = 2 * 3.14159265359;
+                bool directional = false;
+                switch(light->getLightType()) {
+                    case Light::POINT:
+                        pos = glm::vec4(light->getPosition(), 1.);
+                        break;
+                    case Light::SPOT:
+                        pos = glm::vec4(light->getPosition(), 1.);
+                        coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
+                        break;
+                    case Light::DISTANT:
+                        pos = glm::vec4(light->getPosition(), 0.);
+                        directional = true;
+                        break;
+                }
+                pass->setProperty(lightName + ".pos", pos);
+                pass->setProperty(lightName + ".coneangle", coneangle);
+                pass->setProperty(lightName + ".directional", directional);
+            }
+            else {
+                pass->setProperty(lightName + ".intensity", 0.0);
+                pass->setProperty(lightName + ".color", glm::vec4(1));
+                pass->setProperty(lightName + ".pos", glm::vec4(0, 0, 0, 1));
+                pass->setProperty(lightName + ".coneangle", 2 * 3.14156);
+            }
         }
     }
+    pass->setRenderersFromGroup(grp);
 }
