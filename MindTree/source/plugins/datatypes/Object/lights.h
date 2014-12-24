@@ -48,6 +48,11 @@ public:
     SpotLight(float intensity, glm::vec4 color, float coneangle);
     AbstractTransformablePtr clone() const override;
 
+    inline float getConeAngle() const
+    {
+        return _coneAngle;
+    }
+
 private:
     float _coneAngle;
 };
