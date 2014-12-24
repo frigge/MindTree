@@ -59,7 +59,7 @@ flags = [
 '-I/usr/include/qt4/Qt',
 '-I/usr/include/qt4',
 '-I/usr/include/qt4/QtOpenGL',
-'-I/usr/include/python2.7',
+'-I/usr/include/python3.4',
 '-I/home/frigge/ownCloud/MindTree/MindTree/source/lib'
 ]
 
