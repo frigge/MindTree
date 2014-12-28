@@ -17,12 +17,14 @@ class ScrollWidget(QWidget):
     def mouseMoveEvent(self, event):
         QWidget.mouseMoveEvent(self, event)
         mpos = event.pos()
-        cellheight = self.rect().height()/7
+        cellheight = int(self.rect().height()/7)
 
-        self.selectedCell = mpos.y() / cellheight
+        self.selectedCell = int(mpos.y() / cellheight)
         currpos = self.mapToGlobal(event.pos())
         delta = currpos.x() - self.startPos.x()
+
         power = self.selectedCell - 3
+
         step = math.pow(10, power)
 
         delta *= step
@@ -124,6 +126,7 @@ class SpinBox(QWidget):
         lay.setSpacing(0)
         lay.setMargin(0)
         self._value = default
+
         self._type = type(default)
 
         self.setLayout(lay)
@@ -133,9 +136,9 @@ class SpinBox(QWidget):
         self.lineedit.setText(str(default))
 
         if self._type == int:
-            self.lineedit.setValidator(QDoubleValidator())
-        elif self._type == float:
             self.lineedit.setValidator(QIntValidator())
+        elif self._type == float:
+            self.lineedit.setValidator(QDoubleValidator())
 
         self.lineedit.setAlignment(Qt.AlignRight)
         lay.addWidget(self.scrollbutton)
@@ -143,13 +146,15 @@ class SpinBox(QWidget):
         self.lineedit.textChanged.connect(self._updateValue)
 
     def _updateValue(self, txt):
-        self.setValue(self._type(txt))
+        newvalue = self._type(txt)
+        print("setting new value: {}".format(newvalue))
+        self.setValue(newvalue)
 
     def setValue(self, val):
         if val == self._value: return
 
         self._value = val
-        self.lineedit.setText(str(val))
+        self.lineedit.setText("{:.3f}".format(val))
         self.valueChanged.emit(val)
 
     def value(self):
