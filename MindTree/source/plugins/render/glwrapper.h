@@ -365,8 +365,9 @@ public:
 
     GLenum getGLSize();
 
-protected:
     virtual void init() = 0;
+
+protected:
     void invalidate();
 
 private:
@@ -396,9 +397,9 @@ public:
     void setHeight(int h);
 
     void bind();
+    void init();
 
 protected:
-    void init();
 
 private:
     int _width, _height;

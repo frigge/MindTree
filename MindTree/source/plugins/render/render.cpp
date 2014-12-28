@@ -28,6 +28,10 @@ void Renderer::setVisible(bool visible)
 void Renderer::_init()    
 {
     RenderThread::asrt();
+
+    for (auto &child : _children)
+        child->_init();
+
     _vao = std::make_shared<VAO>();
 
     {
@@ -104,7 +108,7 @@ void Renderer::render(const CameraPtr camera, const RenderConfig &config, std::s
 {
     RenderThread::asrt();
     if(!_visible) return;
-    if(!_initialized) _init();
+    assert(_initialized);
 
     {
         GLObjectBinder<std::shared_ptr<VAO>> vaoBinder(_vao);
@@ -128,8 +132,9 @@ void Renderer::render(const CameraPtr camera, const RenderConfig &config, std::s
     }
 }
 
-ShaderRenderNode::ShaderRenderNode(std::shared_ptr<ShaderProgram> program)
-    : _program(program)
+ShaderRenderNode::ShaderRenderNode(std::shared_ptr<ShaderProgram> program) : 
+    _program(program),
+    _initialized(false)
 {
 }
 
@@ -141,21 +146,25 @@ ShaderRenderNode::~ShaderRenderNode()
 
 void ShaderRenderNode::init()
 {
+    if(_initialized) return;
+
     RenderThread::asrt();
+    _initialized = true;
+    _program->init();
     for (auto render : _renders)
         render->_init();
-    _program->init();
 }
 
 void ShaderRenderNode::addRenderer(Renderer *renderer)
 {
     _renders.push_back(std::shared_ptr<Renderer>(renderer));
+    _initialized = false;
 }
 
 void ShaderRenderNode::render(CameraPtr camera, glm::ivec2 resolution, const RenderConfig &config)
 {
     RenderThread::asrt();
-    if(!_program) return;
+    if(!_initialized || !_program) return;
 
     {
         UniformState us(_program, "resolution", resolution);

@@ -19,7 +19,6 @@ RenderPass::RenderPass()
 
 RenderPass::~RenderPass()
 {
-    dbout("");
 }
 
 void RenderPass::setCamera(CameraPtr camera)
@@ -64,6 +63,7 @@ void RenderPass::init()
         for (auto texture : _outputTextures) {
             texture->setWidth(_camera->getWidth());
             texture->setHeight(_camera->getHeight());
+            texture->init();
             {
                 GLObjectBinder<std::shared_ptr<Texture2D>> binder(texture);
                 _target->attachColorTexture(texture);
@@ -82,6 +82,7 @@ void RenderPass::init()
         for (auto renderbuffer : _outputRenderbuffers) {
             renderbuffer->setWidth(_camera->getWidth());
             renderbuffer->setHeight(_camera->getHeight());
+            renderbuffer->init();
             {
                 GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(renderbuffer);
                 _target->attachColorRenderbuffer(renderbuffer);
@@ -502,23 +503,30 @@ void RenderPass::render(const RenderConfig &config)
 
             //render nodes that do not have a corresponding objectdata element (grid, 3d widgets, etc.)
             for(auto node : _shadernodes) {
-                dbout("");
-                GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
-                UniformStateManager uniformStates(node->program());
-                uniformStates.setFromPropertyMap(getProperties());
-                uniformStates.setFromPropertyMap(config.getProperties());
-
-                node->render(_camera, glm::ivec2(width, height), config);
-                uniformStates.reset();
+                node->init();
+                {
+                    GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
+                    for(const auto &p : getProperties())
+                        node->program()->setUniformFromProperty(p.first, p.second);
+    
+                    for(const auto &p : config.getProperties())
+                        node->program()->setUniformFromProperty(p.first, p.second);
+    
+                    node->render(_camera, glm::ivec2(width, height), config);
+                }
             }
 
             for(auto node : _geometryShaderNodes) {
-                dbout("");
-                GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
-                UniformStateManager uniformStates(node->program());
-                uniformStates.setFromPropertyMap(getProperties());
-                node->render(_camera, glm::ivec2(width, height), config);
-                uniformStates.reset();
+                node->init();
+                {
+                    GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
+                    for(const auto &p : getProperties())
+                        node->program()->setUniformFromProperty(p.first, p.second);
+    
+                    for(const auto &p : config.getProperties())
+                        node->program()->setUniformFromProperty(p.first, p.second);
+                    node->render(_camera, glm::ivec2(width, height), config);
+                }
             }
         }
         if(_depthOutput == NONE)

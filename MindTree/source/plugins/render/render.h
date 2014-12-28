@@ -82,6 +82,8 @@ private:
 
     std::shared_ptr<ShaderProgram> _program;
     std::vector<std::shared_ptr<Renderer>> _renders;
+
+    std::atomic<bool> _initialized;
 };
 
 } /* GL */
