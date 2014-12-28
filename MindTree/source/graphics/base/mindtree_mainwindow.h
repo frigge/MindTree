@@ -78,7 +78,6 @@ private:
     QString stylePath;
 
     void change_window_title(QString);
-    QDockWidget *nodelib, *nodeeditor, *propeditor, *detailsview, *spaceDock;
     QHash<QString, QMenu*> menus;
 };
 } // namespace MindTree
