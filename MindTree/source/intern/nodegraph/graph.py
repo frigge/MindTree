@@ -75,7 +75,7 @@ class NodeSpace(QGraphicsScene):
         node.setViewed(True)
 
     def removeNode(self, n):
-        item = self.nodes[n.name]
+        item = self.nodes[n.ptr]
         if item:
             self.removeItem(item)
 
