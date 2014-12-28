@@ -1,6 +1,6 @@
 #include "lights.h"
 
-Light::Light(Light_t type, float intensity, glm::vec4 color)
+Light::Light(Light_t type, double intensity, glm::vec4 color)
     : AbstractTransformable(LIGHT), _type(type), _intensity(intensity), _color(color)
 {
 }
@@ -16,7 +16,7 @@ Light::Light_t Light::getLightType() const
     return _type;
 }
 
-PointLight::PointLight(float intensity, glm::vec4 color)
+PointLight::PointLight(double intensity, glm::vec4 color)
     : Light(POINT, intensity, color)
 {
 }
@@ -27,7 +27,7 @@ AbstractTransformablePtr PointLight::clone() const
     return std::shared_ptr<PointLight>(obj);
 }
 
-SpotLight::SpotLight(float intensity, glm::vec4 color, float coneangle)
+SpotLight::SpotLight(double intensity, glm::vec4 color, double coneangle)
     : Light(SPOT, intensity, color), _coneAngle(coneangle)
 {
 }
@@ -38,7 +38,7 @@ AbstractTransformablePtr SpotLight::clone() const
     return std::shared_ptr<AbstractTransformable>(obj);
 }
 
-DistantLight::DistantLight(float intensity, glm::vec4 color)
+DistantLight::DistantLight(double intensity, glm::vec4 color)
     : Light(DISTANT, intensity, color)
 {
 }

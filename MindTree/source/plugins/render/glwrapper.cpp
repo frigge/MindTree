@@ -739,43 +739,36 @@ void ShaderProgram::setUniformFromProperty(std::string name, Property prop)
 {
     if(prop.getType() == "FLOAT")
     {
-        dbout(name << ": " << prop.getData<double>());
         setUniform(name, static_cast<float>(prop.getData<double>()));
     }
 
     else if(prop.getType() == "INTEGER")
     {
-        dbout(name << ": " << prop.getData<int>());
         setUniform(name, prop.getData<int>());
     }
 
     else if(prop.getType() == "BOOLEAN")
     {
-        dbout(name << ": " << std::boolalpha << prop.getData<bool>());
         setUniform(name, static_cast<int>(prop.getData<bool>()));
     }
 
     else if(prop.getType() == "COLOR")
     {
-        dbout(name << ": " << glm::to_string(prop.getData<glm::vec4>()));
         setUniform(name, prop.getData<glm::vec4>());
     }
 
     else if(prop.getType() == "VECTOR3D")
     {
-        dbout(name << ": " << glm::to_string(prop.getData<glm::vec4>()));
         setUniform(name, prop.getData<glm::vec3>());
     }
 
     else if(prop.getType() == "INTVECTOR2D")
     {
-        dbout(name << ": " << glm::to_string(prop.getData<glm::ivec2>()));
         setUniform(name, prop.getData<glm::ivec2>());
     }
 
     else if(prop.getType() == "MAT4")
     {
-        dbout(name << ": " << glm::to_string(prop.getData<glm::mat4>()));
         setUniform(name, prop.getData<glm::mat4>());
     }
 }
@@ -981,7 +974,6 @@ UniformStateManager::UniformStateManager(std::shared_ptr<ShaderProgram> prog) :
 
 UniformStateManager::~UniformStateManager()
 {
-    dbout("");
 }
 
 void UniformStateManager::addState(std::string name, Property value)
@@ -996,7 +988,6 @@ void UniformStateManager::reset()
 
 void UniformStateManager::setFromPropertyMap(PropertyMap map)
 {
-    dbout("setting " << map.size() << " properties as uniforms");
     for(const auto &p : map) {
         _states.emplace_back(_program, p.first, p.second);
     }

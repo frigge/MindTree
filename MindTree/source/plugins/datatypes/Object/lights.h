@@ -14,14 +14,14 @@ public:
         DISTANT
     };
 
-    Light(Light_t type, float intensity, glm::vec4 color);
+    Light(Light_t type, double intensity, glm::vec4 color);
 
     AbstractTransformablePtr clone() const override;
 
     Light_t getLightType() const;
 
-    inline void setIntensity(float intensity) { _intensity = intensity; }
-    inline float getIntensity() const { return _intensity; }
+    inline void setIntensity(double intensity) { _intensity = intensity; }
+    inline double getIntensity() const { return _intensity; }
     inline glm::vec4 getColor() const { return _color; }
     inline void setColor(const glm::vec4 &color) { _color = color; }
 
@@ -36,7 +36,7 @@ typedef std::shared_ptr<PointLight> PointLightPtr;
 class PointLight : public Light
 {
 public:
-    PointLight(float intensity, glm::vec4 color);
+    PointLight(double intensity, glm::vec4 color);
     AbstractTransformablePtr clone() const override;
 };
 
@@ -45,16 +45,16 @@ typedef std::shared_ptr<SpotLight> SpotLightPtr;
 class SpotLight : public Light
 {
 public:
-    SpotLight(float intensity, glm::vec4 color, float coneangle);
+    SpotLight(double intensity, glm::vec4 color, double coneangle);
     AbstractTransformablePtr clone() const override;
 
-    inline float getConeAngle() const
+    inline double getConeAngle() const
     {
         return _coneAngle;
     }
 
 private:
-    float _coneAngle;
+    double _coneAngle;
 };
 
 class DistantLight;
@@ -62,7 +62,7 @@ typedef std::shared_ptr<DistantLight> DistantLightPtr;
 class DistantLight : public Light
 {
 public:
-    DistantLight(float intensity, glm::vec4 color);
+    DistantLight(double intensity, glm::vec4 color);
     AbstractTransformablePtr clone() const override;
 };
 
