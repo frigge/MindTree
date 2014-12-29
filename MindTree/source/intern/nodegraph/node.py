@@ -25,7 +25,10 @@ class NodeLink(QGraphicsItem):
         self.tmpEnd = end.mapToScene(end.boundingRect().center()) if end else QPointF()
         self.setZValue(self.zValue() - 1)
         self.hover = False
+        self.drop = False
         self.setAcceptHoverEvents(True)
+        self.setAcceptsHoverEvents(True)
+        self.setAcceptDrops(True)
 
     def paint(self, painter, options, widget):
         painter.setRenderHint(QPainter.Antialiasing)
@@ -44,6 +47,10 @@ class NodeLink(QGraphicsItem):
                 color = QColor(150, 255, 150, 255)
                 pen.setColor(color)
                 pen.setWidth(4)
+            elif self.drop:
+                color = QColor(200, 255, 200, 255)
+                pen.setColor(color)
+                pen.setWidth(5)
             else:
                 color = QColor(150, 255, 150, 180)
                 pen.setColor(color)
@@ -58,8 +65,81 @@ class NodeLink(QGraphicsItem):
 
     def shape(self):
         stroker = QPainterPathStroker()
-        stroker.setWidth(20)
+        stroker.setWidth(30)
         return stroker.createStroke(self.createPath())
+
+    def dropEvent(self, event):
+        nodeLabel = str(event.mimeData().text())
+        event.mimeData().setText("")
+        self.drop = False
+
+        if nodeLabel == "":
+            return
+
+        _node = MT.createNode(nodeLabel)
+
+        if _node is not None:
+            self.scene().space.addNode(_node)
+            scenePos = self.mapToScene(event.pos())
+            nw = NodeDesigner.width
+            nh = NodeDesigner.height
+            _node.pos = (scenePos.x() - nw/2, scenePos.y() - nh/2)
+
+            #link it
+            #find sockets this corresponds to
+            insocket = None
+            for socket in self.start.data.insockets:
+                if (socket.connected is not None 
+                        and socket.connected.node.ptr == self.end.data.ptr):
+                    insocket = socket
+                    break
+
+            out = insocket.connected
+
+            #find new matching insocket and link
+            insockets = list(filter(lambda in_: MT.isCompatible(in_, out), _node.insockets))
+
+            if len(insockets) == 1:
+                insockets[0].connected = out
+            else:
+                menu = QMenu()
+                for socket in insockets:
+                    action = menu.addAction(socket.name)
+                    def connect():
+                        socket.connected = out
+
+                    action.triggered.connect(connect)
+                menu.exec_(event.screenPos())
+
+            outsockets = list(filter(lambda o: MT.isCompatible(insocket, o), _node.outsockets))
+
+            if len(outsockets) == 1:
+                insocket.connected = outsockets[0]
+            else:
+                menu = QMenu()
+                for socket in outsockets:
+                    action = menu.addAction(socket.name)
+                    def connect():
+                        insocket.connected = socket
+
+                    action.triggered.connect(connect)
+                menu.exec_(event.screenPos())
+
+    def dragEnterEvent(self, event):
+        QGraphicsItem.dragEnterEvent(self, event)
+        self.drop = True
+        event.acceptProposedAction()
+        self.update()
+
+    def dragMoveEvent(self, event):
+        QGraphicsItem.dragMoveEvent(self, event)
+        self.drop = True
+        event.acceptProposedAction()
+        self.update()
+
+    def dragLeaveEvent(self, event):
+        self.drop = False
+        self.update()
 
     def createArrow(self):
         TRIANGLESIZE = 10
