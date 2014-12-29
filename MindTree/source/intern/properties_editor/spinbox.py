@@ -22,16 +22,18 @@ class ScrollWidget(QWidget):
         self.selectedCell = int(mpos.y() / cellheight)
         currpos = self.mapToGlobal(event.pos())
         delta = currpos.x() - self.startPos.x()
+        delta = int(delta / 10)
 
-        power = self.selectedCell - 3
+        if abs(delta) > 0:
+            power = self.selectedCell - 3
 
-        step = math.pow(10, power)
+            step = math.pow(10, power)
 
-        delta *= step
+            delta *= step
 
-        oldval = self.parent().parent()._value
-        self.parent().parent().setValue(oldval + delta)
-        self.startPos = currpos
+            oldval = self.parent().parent()._value
+            self.parent().parent().setValue(oldval + delta)
+            QCursor.setPos(self.startPos.x(), currpos.y())
 
         self.update()
 
@@ -147,7 +149,6 @@ class SpinBox(QWidget):
 
     def _updateValue(self, txt):
         newvalue = self._type(txt)
-        print("setting new value: {}".format(newvalue))
         self.setValue(newvalue)
 
     def setValue(self, val):
