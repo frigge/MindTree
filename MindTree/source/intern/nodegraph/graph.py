@@ -98,9 +98,13 @@ class NodeSpace(QGraphicsScene):
         self.addItem(link)
 
     def removeLink(self, insocket):
+        toremove = []
         for s in self.links.keys():
             if s == insocket:
-                self.removeItem(self.links.pop(s))
+                toremove.append(s)
+
+        for s in toremove:
+            self.removeItem(self.links.pop(s))
 
     def showTmpLink(self, socket):
         self.tmpLink = node.NodeLink(socket, socket.parentItem(), temp=True)
