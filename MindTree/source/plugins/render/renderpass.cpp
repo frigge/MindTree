@@ -12,8 +12,11 @@
 using namespace MindTree;
 using namespace MindTree::GL;
 
-RenderPass::RenderPass()
-    : _initialized(false), _depthOutput(NONE)
+RenderPass::RenderPass() : 
+    _initialized(false), 
+    _depthOutput(NONE),
+    _blendSource(GL_SRC_ALPHA),
+    _blendDest(GL_ONE_MINUS_SRC_ALPHA)
 {
 }
 
@@ -26,6 +29,13 @@ void RenderPass::setCamera(CameraPtr camera)
     std::lock_guard<std::mutex> lock(_cameraLock);
 
     _camera = camera;
+}
+
+void RenderPass::setBlendFunc(GLenum src, GLenum dst)
+{
+    std::lock_guard<std::mutex> lock(_blendLock);
+    _blendSource = src;
+    _blendDest = dst;
 }
 
 void RenderPass::init()
@@ -453,6 +463,12 @@ void RenderPass::render(const RenderConfig &config)
         if(_depthOutput == NONE)
            glDisable(GL_DEPTH_TEST);
         MTGLERROR;
+
+        {
+            std::lock_guard<std::mutex> lock(_blendLock);
+            glBlendFunc(_blendSource, _blendDest);
+            MTGLERROR;
+        }
 
         GLObjectBinder<std::shared_ptr<FBO>> fbobinder(_target);
 

@@ -7,6 +7,7 @@
 #include "vector"
 #include "queue"
 #include "utility"
+
 #include "../datatypes/Object/object.h"
 #include "../datatypes/Object/lights.h"
 #include "data/mtobject.h"
@@ -56,6 +57,8 @@ public:
 
     void setBackgroundColor(glm::vec4 color);
 
+    void setBlendFunc(GLenum src, GLenum dst);
+
     CameraPtr getCamera();
 
     std::vector<glm::vec4> readPixel(std::vector<std::string> name, glm::ivec2 pos);
@@ -97,6 +100,10 @@ private:
 
     std::shared_ptr<Texture2D> _depthTexture;
     std::shared_ptr<Renderbuffer> _depthRenderbuffer;
+
+    std::mutex _blendLock;
+    GLenum _blendSource, _blendDest;
+
     DepthOutput _depthOutput;
 
     std::mutex _bgColorLock;
