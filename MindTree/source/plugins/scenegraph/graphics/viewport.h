@@ -21,8 +21,6 @@
 #define VIEWPORT
 
 #include "QDockWidget"
-#include "QGLWidget"
-#include "QGLBuffer"
 #include "QTimer"
 #include "QThread"
 
@@ -30,6 +28,8 @@
 #include "data/nodes/nodetype.h"
 #include "../../render/glwrapper.h"
 #include "../../render/rendermanager.h"
+
+#include "QGLWidget"
 
 namespace MindTree {
 namespace GL {

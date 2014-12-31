@@ -19,17 +19,11 @@
 #define GLM_SWIZZLE
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "GL/glew.h"
 
 #include "QApplication"
 #include "QMenu"
-#include "QGraphicsSceneContextMenuEvent"
 #include "QMouseEvent"
-#include "QGLShaderProgram"
-#include "QGLFramebufferObject"
 #include "QPointF"
-#include "QMetaObject"
-#include "GL/glut.h"
 
 #include "iostream"
 #include "ctime"

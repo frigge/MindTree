@@ -1,6 +1,7 @@
 #ifndef MT_GL_RENDERPASS_H
 #define MT_GL_RENDERPASS_H
 
+#include "GL/glew.h"
 #include "memory"
 #include "mutex"
 #include "vector"

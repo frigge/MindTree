@@ -1,6 +1,5 @@
 #define GLM_SWIZZLE
 
-#include "GL/glew.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glwrapper.h"
 

@@ -4,8 +4,11 @@
 
 #include "vector"
 #include "memory"
-#include "GL/gl.h"
+#include "GL/glew.h"
+
 #include "QGLFormat"
+#include "QGLContext"
+
 #include "../datatypes/Object/object.h"
 
 namespace MindTree
