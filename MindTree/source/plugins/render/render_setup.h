@@ -46,6 +46,18 @@ private:
     uint _maxLightCount;
 };
 
+class  DeferredRenderer : public RenderConfigurator
+{
+public:
+    DeferredRenderer(QGLContext *context, std::shared_ptr<Camera> camera, Widget3DManager *widgetManager);
+
+    void setGeometry(std::shared_ptr<Group> grp);
+
+private:
+    void setupDefaultLights();
+
+};
+
 }
 }
 

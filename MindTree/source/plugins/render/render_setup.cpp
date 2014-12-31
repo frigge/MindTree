@@ -178,3 +178,92 @@ void ForwardRenderer::setGeometry(std::shared_ptr<Group> grp)
     }
     pass->setRenderersFromGroup(grp);
 }
+
+DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
+    RenderConfigurator(context, camera)
+{
+    RenderManager *manager = getManager();
+    auto config = manager->getConfig();
+    config.setProperty("defaultLighting", true);
+    manager->setConfig(config);
+
+    auto gridpass = manager->addPass<GL::RenderPass>();
+    gridpass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
+    gridpass->addOutput(std::make_shared<GL::Texture2D>("grid"));
+
+    auto grid = new GL::GridRenderer(100, 100, 100, 100);
+    auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
+
+    grid->setTransformation(trans);
+    grid->setBorderColor(glm::vec4(.5, .5, .5, .5));
+    grid->setAlternatingColor(glm::vec4(.8, .8, .8, .8));
+    grid->setBorderWidth(2.);
+
+    gridpass->addRenderer(grid);
+
+    auto gpass = manager->addPass<GL::RenderPass>();
+    gpass->setCamera(camera);
+
+    gpass->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
+    gpass->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
+    gpass->addOutput(std::make_shared<GL::Texture2D>("outposition"));
+
+    auto overlaypass = manager->addPass<GL::RenderPass>();
+    overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
+    overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
+    overlaypass->setCamera(camera);
+
+    if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlaypass);
+
+    auto *pixelPass = manager->addPass<GL::RenderPass>().get();
+    pixelPass->addRenderer(new GL::FullscreenQuadRenderer());
+
+    setupDefaultLights();
+}
+
+void DeferredRenderer::setGeometry(std::shared_ptr<Group> grp)
+{
+
+}
+
+void DeferredRenderer::setupDefaultLights()
+{
+    RenderPass *pass = getManager()->getPass(0);
+
+    static const float coneangle = 2 * 3.14159265359;
+    //light0
+    pass->setProperty("light0.intensity", .8);
+    pass->setProperty("light0.color", glm::vec4(1));
+    pass->setProperty("light0.pos", glm::vec4(50, 50, 50, 1));
+    pass->setProperty("light0.coneangle", coneangle);
+    pass->setProperty("light0.directional", false);
+
+    //light1
+    pass->setProperty("light1.intensity", .3);
+    pass->setProperty("light1.color", glm::vec4(1));
+    pass->setProperty("light1.pos", glm::vec4(-50, -10, 10, 1));
+    pass->setProperty("light1.coneangle", coneangle);
+    pass->setProperty("light1.directional", false);
+
+    //light2
+    pass->setProperty("light2.intensity", .1);
+    pass->setProperty("light2.color", glm::vec4(1));
+    pass->setProperty("light2.pos", glm::vec4(0, 0, 50, 1));
+    pass->setProperty("light2.coneangle", coneangle);
+    pass->setProperty("light2.directional", false);
+
+    //light3
+    pass->setProperty("light3.intensity", .0);
+    pass->setProperty("light3.color", glm::vec4(1));
+    pass->setProperty("light3.pos", glm::vec4(0, 0, 0, 1));
+    pass->setProperty("light3.coneangle", coneangle);
+    pass->setProperty("light3.directional", false);
+
+    //light4
+    pass->setProperty("light4.intensity", .0);
+    pass->setProperty("light4.color", glm::vec4(1));
+    pass->setProperty("light4.pos", glm::vec4(0, 0, 0, 1));
+    pass->setProperty("light4.coneangle", coneangle);
+    pass->setProperty("light4.directional", false);
+}
+
