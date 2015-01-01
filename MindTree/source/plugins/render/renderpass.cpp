@@ -7,6 +7,7 @@
 #include "empty_renderer.h"
 #include "rendermanager.h"
 #include "data/debuglog.h"
+#include "shader_render_node.h"
 #include "renderpass.h"
 
 using namespace MindTree;
