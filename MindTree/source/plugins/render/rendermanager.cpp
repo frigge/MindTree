@@ -5,6 +5,7 @@
 #include "chrono"
 #include "render.h"
 #include "renderpass.h"
+#include "shader_render_node.h"
 #include "rendermanager.h"
 
 using namespace MindTree::GL;
