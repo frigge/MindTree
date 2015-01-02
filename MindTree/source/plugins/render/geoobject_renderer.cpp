@@ -15,11 +15,10 @@ GeoObjectRenderer::~GeoObjectRenderer()
 {
 }
 
-void GeoObjectRenderer::init()    
+void GeoObjectRenderer::init(std::shared_ptr<ShaderProgram> prog)    
 {
     auto data = obj->getData();
     auto propmap = data->getProperties();
-    auto prog = getProgram();
     for(auto propPair : propmap){
         bool has_attr = prog->hasAttribute(propPair.first);
         if(has_attr) {

@@ -64,7 +64,7 @@ glm::mat4 ShapeRendererGroup::getStaticWorldTransformation() const
     return _staticTransformation;
 }
 
-void ShapeRendererGroup::init()
+void ShapeRendererGroup::init(std::shared_ptr<ShaderProgram> prog)
 {
     /* nothing to do here */
 }
@@ -196,7 +196,7 @@ void LineRenderer::setPoints(std::initializer_list<glm::vec3> points)
     _points = points;
 }
 
-void LineRenderer::init()
+void LineRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     _vbo = std::make_shared<VBO>("P", 0);
     _defaultProgram->bindAttributeLocation(0, "P");
@@ -224,7 +224,7 @@ QuadRenderer::QuadRenderer(float width, float height, ShapeRendererGroup *parent
 {
 }
 
-void QuadRenderer::init()
+void QuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     _vbo = std::make_shared<VBO>("P", 0);
     _defaultProgram->bindAttributeLocation(0, "P");
@@ -270,7 +270,7 @@ std::shared_ptr<ShaderProgram> FullscreenQuadRenderer::getProgram()
     return _defaultProgram;
 }
 
-void FullscreenQuadRenderer::init()
+void FullscreenQuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     _vbo = std::make_shared<VBO>("P", 0);
     _coord_vbo = std::make_shared<VBO>("st", 1);
@@ -340,7 +340,7 @@ GridRenderer::~GridRenderer()
 {
 }
 
-void GridRenderer::init()
+void GridRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     _vbo = std::make_shared<VBO>("P", 0);
     _defaultProgram->bindAttributeLocation(0, "P");
@@ -397,7 +397,7 @@ DiscRenderer::DiscRenderer(ShapeRendererGroup *parent)
 {
 }
 
-void DiscRenderer::init()
+void DiscRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     if(_vbo) {
         _vbo->bind();
@@ -436,7 +436,7 @@ CircleRenderer::CircleRenderer(ShapeRendererGroup *parent)
 {
 }
 
-void CircleRenderer::init()
+void CircleRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     if(_vbo) {
         _vbo->bind();
@@ -474,7 +474,7 @@ ConeRenderer::ConeRenderer(ShapeRendererGroup *parent)
     new CircleRenderer(this);
 }
 
-void ConeRenderer::init()
+void ConeRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     if(_vbo) {
         _vbo->bind();

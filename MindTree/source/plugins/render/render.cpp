@@ -24,12 +24,12 @@ void Renderer::setVisible(bool visible)
     _visible = visible;
 }
 
-void Renderer::_init()    
+void Renderer::_init(std::shared_ptr<ShaderProgram> program)    
 {
     RenderThread::asrt();
 
     for (auto &child : _children)
-        child->_init();
+        child->_init(program);
 
     _vao = std::make_shared<VAO>();
 
@@ -37,7 +37,7 @@ void Renderer::_init()
         GLObjectBinder<std::shared_ptr<VAO>> binder(_vao);
 
         _initialized = true;
-        init();
+        init(program);
     }
 }
 

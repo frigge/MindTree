@@ -15,9 +15,9 @@ using namespace MindTree::GL;
 
 RenderPass::RenderPass() : 
     _initialized(false), 
-    _depthOutput(NONE),
     _blendSource(GL_SRC_ALPHA),
-    _blendDest(GL_ONE_MINUS_SRC_ALPHA)
+    _blendDest(GL_ONE_MINUS_SRC_ALPHA),
+    _depthOutput(NONE)
 {
 }
 
@@ -37,6 +37,12 @@ void RenderPass::setBlendFunc(GLenum src, GLenum dst)
     std::lock_guard<std::mutex> lock(_blendLock);
     _blendSource = src;
     _blendDest = dst;
+}
+
+void RenderPass::setOverrideProgram(std::shared_ptr<ShaderProgram> program)
+{
+    std::lock_guard<std::mutex> lock(_overrideProgramLock);
+    _overrideProgram = program;
 }
 
 void RenderPass::init()
@@ -325,6 +331,15 @@ std::shared_ptr<Texture2D> RenderPass::getOutDepthTexture()
 void RenderPass::addRenderer(Renderer *renderer)
 {
     std::lock_guard<std::mutex> lock(_shapesLock);
+    std::lock_guard<std::mutex> lock2(_overrideProgramLock);
+    if(_overrideProgram) {
+        if (_shadernodes.empty()) {
+            auto newnode = std::make_shared<ShaderRenderNode>(_overrideProgram);
+            _shadernodes.push_back(newnode);
+        }
+        _shadernodes[0]->addRenderer(renderer);
+        return;
+    }
 
     for(auto shaderNode : _shadernodes) {
         if(shaderNode->program() == renderer->getProgram()) {
@@ -340,6 +355,15 @@ void RenderPass::addRenderer(Renderer *renderer)
 
 void RenderPass::addGeometryRenderer(Renderer *renderer)
 {
+    if(_overrideProgram) {
+        if (_geometryShaderNodes.empty()) {
+            auto newnode = std::make_shared<ShaderRenderNode>(_overrideProgram);
+            _geometryShaderNodes.push_back(newnode);
+        }
+        _geometryShaderNodes[0]->addRenderer(renderer);
+        return;
+    }
+
     for(auto shaderNode : _geometryShaderNodes) {
         if(shaderNode->program() == renderer->getProgram()) {
             shaderNode->addRenderer(renderer);

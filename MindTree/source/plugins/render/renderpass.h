@@ -23,6 +23,7 @@ class VAO;
 class FBO;
 class Renderbuffer;
 class RenderConfig;
+class ShaderProgram;
 
 class RenderPass : public Object
 {
@@ -62,6 +63,8 @@ public:
     CameraPtr getCamera();
 
     std::vector<glm::vec4> readPixel(std::vector<std::string> name, glm::ivec2 pos);
+
+    void setOverrideProgram(std::shared_ptr<ShaderProgram> program);
 
 private:
     void init();
@@ -108,6 +111,9 @@ private:
 
     std::mutex _bgColorLock;
     glm::vec4 _bgColor;
+
+    std::mutex _overrideProgramLock;
+    std::shared_ptr<ShaderProgram> _overrideProgram;
 };
 
 }
