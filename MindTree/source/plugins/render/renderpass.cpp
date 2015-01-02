@@ -349,14 +349,15 @@ void RenderPass::addRenderer(Renderer *renderer)
         return;
     }
 
+    std::shared_ptr<ShaderProgram> prog = renderer->getProgram();
     for(auto shaderNode : _shadernodes) {
-        if(shaderNode->program() == renderer->getProgram()) {
+        if(shaderNode->program() == prog) {
             shaderNode->addRenderer(renderer);
             return;
         }
     }
 
-    auto newnode = std::make_shared<ShaderRenderNode>(renderer->getProgram());
+    auto newnode = std::make_shared<ShaderRenderNode>(prog);
     newnode->addRenderer(renderer);
     _shadernodes.push_back(newnode);
 }
@@ -375,14 +376,15 @@ void RenderPass::addGeometryRenderer(Renderer *renderer)
         return;
     }
 
+    std::shared_ptr<ShaderProgram> prog = renderer->getProgram();
     for(auto shaderNode : _geometryShaderNodes) {
-        if(shaderNode->program() == renderer->getProgram()) {
+        if(shaderNode->program() == prog) {
             shaderNode->addRenderer(renderer);
             return;
         }
     }
 
-    auto newnode = std::make_shared<ShaderRenderNode>(renderer->getProgram());
+    auto newnode = std::make_shared<ShaderRenderNode>(prog);
     newnode->addRenderer(renderer);
     _geometryShaderNodes.push_back(newnode);
 }
