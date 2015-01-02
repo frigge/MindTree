@@ -21,7 +21,7 @@ protected:
 
 private:
     void initCustom();
-    static std::shared_ptr<ShaderProgram> _defaultProgram;
+    static std::weak_ptr<ShaderProgram> _defaultProgram;
 };
 
 class EdgeRenderer : public GeoObjectRenderer
@@ -37,7 +37,7 @@ protected:
 
 private:
     void initCustom();
-    static std::shared_ptr<ShaderProgram> _defaultProgram;
+    static std::weak_ptr<ShaderProgram> _defaultProgram;
 };
 
 class PointRenderer : public GeoObjectRenderer
@@ -52,7 +52,7 @@ protected:
     void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
 private:
-    static std::shared_ptr<ShaderProgram> _defaultProgram;
+    static std::weak_ptr<ShaderProgram> _defaultProgram;
 };
 
 }

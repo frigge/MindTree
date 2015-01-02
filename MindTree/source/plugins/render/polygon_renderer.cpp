@@ -8,20 +8,11 @@
 
 using namespace MindTree::GL;
 
-std::shared_ptr<ShaderProgram> PolygonRenderer::_defaultProgram;
+std::weak_ptr<ShaderProgram> PolygonRenderer::_defaultProgram;
 
 PolygonRenderer::PolygonRenderer(std::shared_ptr<GeoObject> o)
     : GeoObjectRenderer(o)
 {
-    if(!_defaultProgram) {
-        _defaultProgram = std::make_shared<ShaderProgram>();
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
-                                ShaderProgram::VERTEX);
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.frag", 
-                                ShaderProgram::FRAGMENT);
-    }
 }
 
 PolygonRenderer::~PolygonRenderer()
@@ -30,7 +21,19 @@ PolygonRenderer::~PolygonRenderer()
 
 std::shared_ptr<ShaderProgram> PolygonRenderer::getProgram()
 {
-    return _defaultProgram;
+    std::shared_ptr<ShaderProgram> prog;
+    if(_defaultProgram.expired()) {
+        prog = std::make_shared<ShaderProgram>();
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.frag", 
+                                ShaderProgram::FRAGMENT);
+        _defaultProgram = prog;
+    }
+
+    return _defaultProgram.lock();
 }
 
 void PolygonRenderer::initCustom()
@@ -65,20 +68,11 @@ void PolygonRenderer::draw(const CameraPtr camera, const RenderConfig &config, s
     MTGLERROR;
 }
 
-std::shared_ptr<ShaderProgram> EdgeRenderer::_defaultProgram;
+std::weak_ptr<ShaderProgram> EdgeRenderer::_defaultProgram;
 
 EdgeRenderer::EdgeRenderer(std::shared_ptr<GeoObject> o)
     : GeoObjectRenderer(o)
 {
-    if(!_defaultProgram) {
-        _defaultProgram = std::make_shared<ShaderProgram>();
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/edges.vert", 
-                                ShaderProgram::VERTEX);
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/edges.frag", 
-                                ShaderProgram::FRAGMENT);
-    }
 }
 
 EdgeRenderer::~EdgeRenderer()
@@ -87,7 +81,19 @@ EdgeRenderer::~EdgeRenderer()
 
 std::shared_ptr<ShaderProgram> EdgeRenderer::getProgram()
 {
-    return _defaultProgram;
+    std::shared_ptr<ShaderProgram> prog;
+    if(_defaultProgram.expired()) {
+        prog = std::make_shared<ShaderProgram>();
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/edges.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/edges.frag", 
+                                ShaderProgram::FRAGMENT);
+        _defaultProgram = prog;
+    }
+
+    return _defaultProgram.lock();
 }
 
 void EdgeRenderer::initCustom()
@@ -126,20 +132,11 @@ void EdgeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std:
     glDisable(GL_LINE_SMOOTH);
 }
 
-std::shared_ptr<ShaderProgram> PointRenderer::_defaultProgram;
+std::weak_ptr<ShaderProgram> PointRenderer::_defaultProgram;
 
 PointRenderer::PointRenderer(std::shared_ptr<GeoObject> o)
     : GeoObjectRenderer(o)
 {
-    if(!_defaultProgram) {
-        _defaultProgram = std::make_shared<ShaderProgram>();
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/points.vert", 
-                                ShaderProgram::VERTEX);
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/points.frag", 
-                                ShaderProgram::FRAGMENT);
-    }
 }
 
 PointRenderer::~PointRenderer()
@@ -148,7 +145,18 @@ PointRenderer::~PointRenderer()
 
 std::shared_ptr<ShaderProgram> PointRenderer::getProgram()
 {
-    return _defaultProgram;
+    std::shared_ptr<ShaderProgram> prog;
+    if(_defaultProgram.expired()) {
+        prog = std::make_shared<ShaderProgram>();
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/points.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/points.frag", 
+                                ShaderProgram::FRAGMENT);
+        _defaultProgram = prog;
+    }
+    return _defaultProgram.lock();
 }
 
 void PointRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)

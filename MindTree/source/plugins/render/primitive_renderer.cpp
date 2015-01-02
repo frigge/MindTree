@@ -10,7 +10,7 @@
 using namespace MindTree;
 using namespace MindTree::GL;
 
-std::shared_ptr<ShaderProgram> ShapeRendererGroup::_defaultProgram;
+std::weak_ptr<ShaderProgram> ShapeRendererGroup::_defaultProgram;
 
 ShapeRendererGroup::ShapeRendererGroup(ShapeRendererGroup *parent)
     : _fillColor(glm::vec4(1)),
@@ -19,17 +19,6 @@ ShapeRendererGroup::ShapeRendererGroup(ShapeRendererGroup *parent)
     _fixedScreenSize(false),
     _screenOriented(false)
 {
-    if(!_defaultProgram) {
-        _defaultProgram = std::make_shared<ShaderProgram>();
-
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/primitive.vert", 
-                                ShaderProgram::VERTEX);
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/primitive.frag", 
-                                ShaderProgram::FRAGMENT);
-    }
-
     if(parent) setParentPrimitive(parent);
 }
 
@@ -139,7 +128,21 @@ bool ShapeRendererGroup::getScreenOriented() const
 
 std::shared_ptr<ShaderProgram> ShapeRendererGroup::getProgram()
 {
-    return _defaultProgram;
+    std::shared_ptr<ShaderProgram> prog;
+
+    if(_defaultProgram.expired()) {
+        prog = std::make_shared<ShaderProgram>();
+
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/primitive.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/primitive.frag", 
+                                ShaderProgram::FRAGMENT);
+        _defaultProgram = prog;
+    }
+
+    return _defaultProgram.lock();
 }
 
 ShapeRenderer::~ShapeRenderer()
@@ -199,7 +202,7 @@ void LineRenderer::setPoints(std::initializer_list<glm::vec3> points)
 void LineRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     _vbo = std::make_shared<VBO>("P", 0);
-    _defaultProgram->bindAttributeLocation(0, "P");
+    prog->bindAttributeLocation(0, "P");
     _vbo->bind();
 
     VertexList points;
@@ -227,7 +230,7 @@ QuadRenderer::QuadRenderer(float width, float height, ShapeRendererGroup *parent
 void QuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     _vbo = std::make_shared<VBO>("P", 0);
-    _defaultProgram->bindAttributeLocation(0, "P");
+    prog->bindAttributeLocation(0, "P");
     _vbo->bind();
 
     VertexList verts;
@@ -242,20 +245,10 @@ void QuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
     _vbo->setPointer();
 }
 
-std::shared_ptr<ShaderProgram> FullscreenQuadRenderer::_defaultProgram;
+std::weak_ptr<ShaderProgram> FullscreenQuadRenderer::_defaultProgram;
 
 FullscreenQuadRenderer::FullscreenQuadRenderer()
 {
-    if(!_defaultProgram) {
-        _defaultProgram = std::make_shared<ShaderProgram>();
-
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.frag", 
-                                ShaderProgram::FRAGMENT);
-    }
 }
 
 FullscreenQuadRenderer::~FullscreenQuadRenderer()
@@ -267,7 +260,20 @@ FullscreenQuadRenderer::~FullscreenQuadRenderer()
 
 std::shared_ptr<ShaderProgram> FullscreenQuadRenderer::getProgram()
 {
-    return _defaultProgram;
+    std::shared_ptr<ShaderProgram> prog;
+    if(_defaultProgram.expired()) {
+        prog = std::make_shared<ShaderProgram>();
+
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.frag", 
+                                ShaderProgram::FRAGMENT);
+        _defaultProgram = prog;
+    }
+
+    return _defaultProgram.lock();
 }
 
 void FullscreenQuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
@@ -276,7 +282,7 @@ void FullscreenQuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
     _coord_vbo = std::make_shared<VBO>("st", 1);
 
     _vbo->bind();
-    _defaultProgram->bindAttributeLocation(0, "P");
+    prog->bindAttributeLocation(0, "P");
     
     VertexList verts;
     verts.insert(verts.begin(), {
@@ -298,7 +304,7 @@ void FullscreenQuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
     _vbo->setPointer();
 
     _coord_vbo->bind();
-    _defaultProgram->bindAttributeLocation(1, "_st");
+    prog->bindAttributeLocation(1, "_st");
     _coord_vbo->data(coords);
     _coord_vbo->setPointer();
 }
@@ -312,7 +318,7 @@ void FullscreenQuadRenderer::draw(const CameraPtr /* camera */,
     MTGLERROR;
 }
 
-std::shared_ptr<ShaderProgram> GridRenderer::_defaultProgram;
+std::weak_ptr<ShaderProgram> GridRenderer::_defaultProgram;
 
 GridRenderer::GridRenderer(int width, int height, int xres, int yres, ShapeRendererGroup *parent) : 
     ShapeRenderer(parent),
@@ -324,16 +330,6 @@ GridRenderer::GridRenderer(int width, int height, int xres, int yres, ShapeRende
 {
     setFillColor(glm::vec4(0));
 
-    if(!_defaultProgram) {
-        _defaultProgram = std::make_shared<ShaderProgram>();
-
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/grid.vert", 
-                                ShaderProgram::VERTEX);
-        _defaultProgram
-            ->addShaderFromFile("../plugins/render/defaultShaders/grid.frag", 
-                                ShaderProgram::FRAGMENT);
-    }
 }
 
 GridRenderer::~GridRenderer()
@@ -343,7 +339,7 @@ GridRenderer::~GridRenderer()
 void GridRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
     _vbo = std::make_shared<VBO>("P", 0);
-    _defaultProgram->bindAttributeLocation(0, "P");
+    prog->bindAttributeLocation(0, "P");
     _vbo->bind();
 
     VertexList verts;
@@ -382,7 +378,20 @@ void GridRenderer::drawBorder(const CameraPtr camera, const RenderConfig &/*conf
 
 std::shared_ptr<ShaderProgram> GridRenderer::getProgram()
 {
-    return _defaultProgram;
+    std::shared_ptr<ShaderProgram> prog;
+    if(_defaultProgram.expired()) {
+        prog = std::make_shared<ShaderProgram>();
+
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/grid.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/grid.frag", 
+                                ShaderProgram::FRAGMENT);
+        _defaultProgram = prog;
+    }
+
+    return _defaultProgram.lock();
 }
 
 void GridRenderer::setAlternatingColor(glm::vec4 col)
@@ -405,7 +414,7 @@ void DiscRenderer::init(std::shared_ptr<ShaderProgram> prog)
         return;
     }
     _vbo = std::make_shared<VBO>("P", 0);
-    _defaultProgram->bindAttributeLocation(0, "P");
+    prog->bindAttributeLocation(0, "P");
     _vbo->bind();
 
     VertexList verts;
@@ -444,7 +453,7 @@ void CircleRenderer::init(std::shared_ptr<ShaderProgram> prog)
         return;
     }
     _vbo = std::make_shared<VBO>("P", 0);
-    _defaultProgram->bindAttributeLocation(0, "P");
+    prog->bindAttributeLocation(0, "P");
     _vbo->bind();
 
     VertexList verts;
@@ -482,7 +491,7 @@ void ConeRenderer::init(std::shared_ptr<ShaderProgram> prog)
         return;
     }
     _vbo = std::make_shared<VBO>("P", 0);
-    _defaultProgram->bindAttributeLocation(0, "P");
+    prog->bindAttributeLocation(0, "P");
     _vbo->bind();
 
     VertexList verts;

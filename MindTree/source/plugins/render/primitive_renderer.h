@@ -42,7 +42,7 @@ protected:
     virtual void init(std::shared_ptr<ShaderProgram> prog);
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
-    static std::shared_ptr<ShaderProgram> _defaultProgram;
+    static std::weak_ptr<ShaderProgram> _defaultProgram;
 
 private:
     std::vector<ShapeRendererGroup*> _childPrimitives;
@@ -116,7 +116,7 @@ protected:
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
 private:
-    static std::shared_ptr<ShaderProgram> _defaultProgram;
+    static std::weak_ptr<ShaderProgram> _defaultProgram;
     std::shared_ptr<VBO> _vbo;
     std::shared_ptr<VBO> _coord_vbo;
 };
@@ -137,7 +137,7 @@ protected:
 private:
     int _width, _height, _xres, _yres;
     glm::vec4 _alternatingColor;
-    static std::shared_ptr<ShaderProgram> _defaultProgram;
+    static std::weak_ptr<ShaderProgram> _defaultProgram;
     std::shared_ptr<VBO> _vbo;
 };
 
