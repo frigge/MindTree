@@ -1,10 +1,6 @@
 #include "GL/glew.h"
 #include "glwrapper.h"
 #include "render.h"
-#include "polygon_renderer.h"
-#include "light_renderer.h"
-#include "camera_renderer.h"
-#include "empty_renderer.h"
 #include "rendermanager.h"
 #include "data/debuglog.h"
 #include "shader_render_node.h"
@@ -328,6 +324,18 @@ std::shared_ptr<Texture2D> RenderPass::getOutDepthTexture()
     return _depthTexture;
 }
 
+void RenderPass::addShaderNode(std::shared_ptr<ShaderRenderNode> node)
+{
+    std::lock_guard<std::mutex> lock(_shapesLock);
+    _shadernodes.push_back(node);
+}
+
+void RenderPass::addGeometryShaderNode(std::shared_ptr<ShaderRenderNode> node)
+{
+    std::lock_guard<std::mutex> lock(_geometryLock);
+    _geometryShaderNodes.push_back(node);
+}
+
 void RenderPass::addRenderer(Renderer *renderer)
 {
     std::lock_guard<std::mutex> lock(_shapesLock);
@@ -355,6 +363,9 @@ void RenderPass::addRenderer(Renderer *renderer)
 
 void RenderPass::addGeometryRenderer(Renderer *renderer)
 {
+    std::lock_guard<std::mutex> lock(_geometryLock);
+    std::lock_guard<std::mutex> lock2(_overrideProgramLock);
+
     if(_overrideProgram) {
         if (_geometryShaderNodes.empty()) {
             auto newnode = std::make_shared<ShaderRenderNode>(_overrideProgram);
@@ -376,21 +387,18 @@ void RenderPass::addGeometryRenderer(Renderer *renderer)
     _geometryShaderNodes.push_back(newnode);
 }
 
-std::vector<std::shared_ptr<ShaderRenderNode>> RenderPass::getShaderNodes()
+void RenderPass::clearRenderers()
 {
-    return _shadernodes;
-}
-
-void RenderPass::setRenderersFromGroup(std::shared_ptr<Group> group)
-{
-    assert(group);
     std::lock_guard<std::mutex> lock(_geometryLock);
     //clear all the nodes but leave the shaders there!!
     for (auto node : _geometryShaderNodes)
         node->clear();
 
-    addRenderersFromGroup(group->getMembers());
+}
 
+void RenderPass::clearUnusedShaderNodes()
+{
+    std::lock_guard<std::mutex> lock(_geometryLock);
     //find out which shaders are still unused
     std::vector<std::shared_ptr<ShaderRenderNode>> obsolete;
     for (auto node : _geometryShaderNodes) {
@@ -403,70 +411,9 @@ void RenderPass::setRenderersFromGroup(std::shared_ptr<Group> group)
         _geometryShaderNodes.erase(std::find(begin(_geometryShaderNodes), end(_geometryShaderNodes), node));
 }
 
-void RenderPass::addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group)
+std::vector<std::shared_ptr<ShaderRenderNode>> RenderPass::getShaderNodes()
 {
-    for(const auto &transformable : group) {
-        addRendererFromTransformable(transformable);
-    }
-}
-
-void RenderPass::addRendererFromTransformable(AbstractTransformablePtr transformable)
-{
-    assert(transformable);
-    switch(transformable->getType()) {
-        case AbstractTransformable::GEO:
-            addRendererFromObject(std::dynamic_pointer_cast<GeoObject>(transformable));
-            break;
-        case AbstractTransformable::LIGHT:
-            addRendererFromLight(std::dynamic_pointer_cast<Light>(transformable));
-            break;
-        case AbstractTransformable::CAMERA:
-            addRendererFromCamera(std::dynamic_pointer_cast<Camera>(transformable));
-            break;
-        case AbstractTransformable::EMPTY:
-            addRendererFromEmpty(std::dynamic_pointer_cast<Empty>(transformable));
-            break;
-    }
-    addRenderersFromGroup(transformable->getChildren());
-}
-
-void RenderPass::addRendererFromObject(GeoObjectPtr obj)
-{
-        auto data = obj->getData();
-        switch(data->getType()){
-            case ObjectData::MESH:
-                addGeometryRenderer(new PolygonRenderer(obj));
-                addGeometryRenderer(new EdgeRenderer(obj));
-                addGeometryRenderer(new PointRenderer(obj));
-                break;
-        }
-}
-
-void RenderPass::addRendererFromLight(LightPtr obj)
-{
-    assert(obj);
-    switch(obj->getLightType()) {
-        case Light::POINT:
-            addGeometryRenderer(new PointLightRenderer(std::dynamic_pointer_cast<PointLight>(obj)));
-            break;
-        case Light::SPOT:
-            addGeometryRenderer(new SpotLightRenderer(std::dynamic_pointer_cast<SpotLight>(obj)));
-            break;
-        case Light::DISTANT:
-            addGeometryRenderer(new DistantLightRenderer(std::dynamic_pointer_cast<DistantLight>(obj)));
-            break;
-    }
-
-}
-
-void RenderPass::addRendererFromCamera(CameraPtr obj)
-{
-    addGeometryRenderer(new CameraRenderer(obj));
-}
-
-void RenderPass::addRendererFromEmpty(EmptyPtr obj)
-{
-    addGeometryRenderer(new EmptyRenderer(obj));
+    return _shadernodes;
 }
 
 CameraPtr RenderPass::getCamera()

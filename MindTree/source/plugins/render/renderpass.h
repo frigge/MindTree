@@ -32,9 +32,6 @@ public:
     virtual ~RenderPass();
 
     void setCamera(CameraPtr camera);
-    void setRenderersFromGroup(const std::shared_ptr<Group> group);
-
-    void addRenderer(Renderer *renderer);
 
     void setTarget(std::shared_ptr<FBO> target);
     std::shared_ptr<FBO> getTarget();
@@ -66,20 +63,20 @@ public:
 
     void setOverrideProgram(std::shared_ptr<ShaderProgram> program);
 
+    void addShaderNode(std::shared_ptr<ShaderRenderNode> node);
+    void addGeometryShaderNode(std::shared_ptr<ShaderRenderNode> node);
+
+    void addRenderer(Renderer *renderer);
+    void addGeometryRenderer(Renderer *renderer);
+
 private:
+    void clearRenderers();
+    void clearUnusedShaderNodes();
+
     void init();
     void render(const RenderConfig &config);
 
-    void addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group);
-
-    void addRendererFromObject(const std::shared_ptr<GeoObject> obj);
-    void addRendererFromLight(const LightPtr obj);
-    void addRendererFromCamera(const CameraPtr obj);
-    void addRendererFromEmpty(const EmptyPtr obj);
-
-    void addRendererFromTransformable(const AbstractTransformablePtr transformable);
     void processPixelRequests();
-    void addGeometryRenderer(Renderer *renderer);
 
     std::vector<glm::vec4> _requestedPixels;
     std::queue<std::pair<std::string, glm::ivec2>> _pixelRequests;

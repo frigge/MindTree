@@ -8,6 +8,10 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "data/debuglog.h"
+#include "polygon_renderer.h"
+#include "light_renderer.h"
+#include "camera_renderer.h"
+#include "empty_renderer.h"
 
 #include "render_setup.h"
 
@@ -15,7 +19,8 @@ using namespace MindTree;
 using namespace GL;
 
 RenderConfigurator::RenderConfigurator(QGLContext *context, CameraPtr camera) :
-    _rendermanager(new RenderManager(context)), _camera(camera)
+    _rendermanager(new RenderManager(context)),
+    _camera(camera)
 {
 
 }
@@ -35,8 +40,80 @@ RenderManager* RenderConfigurator::getManager()
     return _rendermanager.get();
 }
 
+void RenderConfigurator::setRenderersFromGroup(std::shared_ptr<Group> group)
+{
+    addRenderersFromGroup(group->getMembers());
+}
+
+void RenderConfigurator::addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group)
+{
+    for(const auto &transformable : group) {
+        addRendererFromTransformable(transformable);
+    }
+}
+
+void RenderConfigurator::addRendererFromTransformable(AbstractTransformablePtr transformable)
+{
+    assert(transformable);
+    switch(transformable->getType()) {
+        case AbstractTransformable::GEO:
+            addRendererFromObject(std::dynamic_pointer_cast<GeoObject>(transformable));
+            break;
+        case AbstractTransformable::LIGHT:
+            addRendererFromLight(std::dynamic_pointer_cast<Light>(transformable));
+            break;
+        case AbstractTransformable::CAMERA:
+            addRendererFromCamera(std::dynamic_pointer_cast<Camera>(transformable));
+            break;
+        case AbstractTransformable::EMPTY:
+            addRendererFromEmpty(std::dynamic_pointer_cast<Empty>(transformable));
+            break;
+    }
+    addRenderersFromGroup(transformable->getChildren());
+}
+
+void RenderConfigurator::addRendererFromObject(GeoObjectPtr obj)
+{
+        auto data = obj->getData();
+        switch(data->getType()){
+            case ObjectData::MESH:
+                _geometryPass.lock()->addGeometryRenderer(new PolygonRenderer(obj));
+                _geometryPass.lock()->addGeometryRenderer(new EdgeRenderer(obj));
+                _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
+                break;
+        }
+}
+
+void RenderConfigurator::addRendererFromLight(LightPtr obj)
+{
+    assert(obj);
+    switch(obj->getLightType()) {
+        case Light::POINT:
+            _geometryPass.lock()->addGeometryRenderer(new PointLightRenderer(std::dynamic_pointer_cast<PointLight>(obj)));
+            break;
+        case Light::SPOT:
+            _geometryPass.lock()->addGeometryRenderer(new SpotLightRenderer(std::dynamic_pointer_cast<SpotLight>(obj)));
+            break;
+        case Light::DISTANT:
+            _geometryPass.lock()->addGeometryRenderer(new DistantLightRenderer(std::dynamic_pointer_cast<DistantLight>(obj)));
+            break;
+    }
+
+}
+
+void RenderConfigurator::addRendererFromCamera(CameraPtr obj)
+{
+    _geometryPass.lock()->addGeometryRenderer(new CameraRenderer(obj));
+}
+
+void RenderConfigurator::addRendererFromEmpty(EmptyPtr obj)
+{
+    _geometryPass.lock()->addGeometryRenderer(new EmptyRenderer(obj));
+}
+
 void RenderConfigurator::setGeometry(std::shared_ptr<Group> grp)
 {
+    setRenderersFromGroup(grp);
 }
 
 void RenderConfigurator::setCamera(std::shared_ptr<Camera> camera)
@@ -57,8 +134,8 @@ ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3D
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
 
-    auto pass = manager->addPass<GL::RenderPass>();
-    pass->setCamera(camera);
+    _geometryPass = manager->addPass<GL::RenderPass>();
+    _geometryPass.lock()->setCamera(camera);
 
     auto grid = new GL::GridRenderer(100, 100, 100, 100);
     auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
@@ -68,9 +145,9 @@ ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3D
     grid->setAlternatingColor(glm::vec4(.8, .8, .8, .8));
     grid->setBorderWidth(2.);
 
-    pass->addRenderer(grid);
+    _geometryPass.lock()->addRenderer(grid);
     //pass->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
-    pass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
+    _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
     //pass->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
     //pass->addOutput(std::make_shared<GL::Texture2D>("outposition"));
 
@@ -81,7 +158,7 @@ ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3D
 //    overlaypass->addOutput(std::make_shared<GL::Renderbuffer>("position", GL::Renderbuffer::RGBA16F));
 //    overlaypass->setCamera(activeCamera);
 //
-    if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(pass);
+    if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(_geometryPass.lock());
 
     //auto *pixelPass = manager->addPass<GL::RenderPass>().get();
     //pixelPass->addRenderer(new GL::FullscreenQuadRenderer());
@@ -95,45 +172,43 @@ void ForwardRenderer::setupDefaultLights()
 
     static const float coneangle = 2 * 3.14159265359;
     //light0
-    pass->setProperty("light0.intensity", .8);
-    pass->setProperty("light0.color", glm::vec4(1));
-    pass->setProperty("light0.pos", glm::vec4(50, 50, 50, 1));
-    pass->setProperty("light0.coneangle", coneangle);
-    pass->setProperty("light0.directional", false);
+    _geometryPass.lock()->setProperty("light0.intensity", .8);
+    _geometryPass.lock()->setProperty("light0.color", glm::vec4(1));
+    _geometryPass.lock()->setProperty("light0.pos", glm::vec4(50, 50, 50, 1));
+    _geometryPass.lock()->setProperty("light0.coneangle", coneangle);
+    _geometryPass.lock()->setProperty("light0.directional", false);
 
     //light1
-    pass->setProperty("light1.intensity", .3);
-    pass->setProperty("light1.color", glm::vec4(1));
-    pass->setProperty("light1.pos", glm::vec4(-50, -10, 10, 1));
-    pass->setProperty("light1.coneangle", coneangle);
-    pass->setProperty("light1.directional", false);
+    _geometryPass.lock()->setProperty("light1.intensity", .3);
+    _geometryPass.lock()->setProperty("light1.color", glm::vec4(1));
+    _geometryPass.lock()->setProperty("light1.pos", glm::vec4(-50, -10, 10, 1));
+    _geometryPass.lock()->setProperty("light1.coneangle", coneangle);
+    _geometryPass.lock()->setProperty("light1.directional", false);
 
     //light2
-    pass->setProperty("light2.intensity", .1);
-    pass->setProperty("light2.color", glm::vec4(1));
-    pass->setProperty("light2.pos", glm::vec4(0, 0, 50, 1));
-    pass->setProperty("light2.coneangle", coneangle);
-    pass->setProperty("light2.directional", false);
+    _geometryPass.lock()->setProperty("light2.intensity", .1);
+    _geometryPass.lock()->setProperty("light2.color", glm::vec4(1));
+    _geometryPass.lock()->setProperty("light2.pos", glm::vec4(0, 0, 50, 1));
+    _geometryPass.lock()->setProperty("light2.coneangle", coneangle);
+    _geometryPass.lock()->setProperty("light2.directional", false);
 
     //light3
-    pass->setProperty("light3.intensity", .0);
-    pass->setProperty("light3.color", glm::vec4(1));
-    pass->setProperty("light3.pos", glm::vec4(0, 0, 0, 1));
-    pass->setProperty("light3.coneangle", coneangle);
-    pass->setProperty("light3.directional", false);
+    _geometryPass.lock()->setProperty("light3.intensity", .0);
+    _geometryPass.lock()->setProperty("light3.color", glm::vec4(1));
+    _geometryPass.lock()->setProperty("light3.pos", glm::vec4(0, 0, 0, 1));
+    _geometryPass.lock()->setProperty("light3.coneangle", coneangle);
+    _geometryPass.lock()->setProperty("light3.directional", false);
 
     //light4
-    pass->setProperty("light4.intensity", .0);
-    pass->setProperty("light4.color", glm::vec4(1));
-    pass->setProperty("light4.pos", glm::vec4(0, 0, 0, 1));
-    pass->setProperty("light4.coneangle", coneangle);
-    pass->setProperty("light4.directional", false);
+    _geometryPass.lock()->setProperty("light4.intensity", .0);
+    _geometryPass.lock()->setProperty("light4.color", glm::vec4(1));
+    _geometryPass.lock()->setProperty("light4.pos", glm::vec4(0, 0, 0, 1));
+    _geometryPass.lock()->setProperty("light4.coneangle", coneangle);
+    _geometryPass.lock()->setProperty("light4.directional", false);
 }
 
 void ForwardRenderer::setGeometry(std::shared_ptr<Group> grp)
 {
-    RenderPass *pass = getManager()->getPass(0);
-
     auto config = getManager()->getConfig();
     if(config.hasProperty("defaultLighting") &&
        config["defaultLighting"].getData<bool>()) {
@@ -146,8 +221,8 @@ void ForwardRenderer::setGeometry(std::shared_ptr<Group> grp)
             lightName += std::to_string(i);
             if (i < lights.size()) {
                 LightPtr light = lights[i];
-                pass->setProperty(lightName + ".intensity", light->getIntensity());
-                pass->setProperty(lightName + ".color", light->getColor());
+                _geometryPass.lock()->setProperty(lightName + ".intensity", light->getIntensity());
+                _geometryPass.lock()->setProperty(lightName + ".color", light->getColor());
                 glm::vec4 pos;
                 float coneangle = 2 * 3.14159265359;
                 bool directional = false;
@@ -164,19 +239,19 @@ void ForwardRenderer::setGeometry(std::shared_ptr<Group> grp)
                         directional = true;
                         break;
                 }
-                pass->setProperty(lightName + ".pos", pos);
-                pass->setProperty(lightName + ".coneangle", coneangle);
-                pass->setProperty(lightName + ".directional", directional);
+                _geometryPass.lock()->setProperty(lightName + ".pos", pos);
+                _geometryPass.lock()->setProperty(lightName + ".coneangle", coneangle);
+                _geometryPass.lock()->setProperty(lightName + ".directional", directional);
             }
             else {
-                pass->setProperty(lightName + ".intensity", 0.0);
-                pass->setProperty(lightName + ".color", glm::vec4(1));
-                pass->setProperty(lightName + ".pos", glm::vec4(0, 0, 0, 1));
-                pass->setProperty(lightName + ".coneangle", 2 * 3.14156);
+                _geometryPass.lock()->setProperty(lightName + ".intensity", 0.0);
+                _geometryPass.lock()->setProperty(lightName + ".color", glm::vec4(1));
+                _geometryPass.lock()->setProperty(lightName + ".pos", glm::vec4(0, 0, 0, 1));
+                _geometryPass.lock()->setProperty(lightName + ".coneangle", 2 * 3.14156);
             }
         }
     }
-    pass->setRenderersFromGroup(grp);
+    setRenderersFromGroup(grp);
 }
 
 DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
@@ -201,12 +276,12 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 
     gridpass->addRenderer(grid);
 
-    auto gpass = manager->addPass<GL::RenderPass>();
-    gpass->setCamera(camera);
+    _geometryPass = manager->addPass<GL::RenderPass>();
+    _geometryPass.lock()->setCamera(camera);
 
-    gpass->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
-    gpass->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
-    gpass->addOutput(std::make_shared<GL::Texture2D>("outposition"));
+    _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
+    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
+    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outposition"));
 
     auto overlaypass = manager->addPass<GL::RenderPass>();
     overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
