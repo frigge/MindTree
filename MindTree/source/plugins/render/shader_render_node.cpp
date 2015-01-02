@@ -21,6 +21,7 @@ ShaderRenderNode::~ShaderRenderNode()
 void ShaderRenderNode::init()
 {
     if(_initialized) return;
+    std::lock_guard<std::mutex> lock(_rendersLock);
 
     RenderThread::asrt();
     _initialized = true;
@@ -31,6 +32,7 @@ void ShaderRenderNode::init()
 
 void ShaderRenderNode::addRenderer(Renderer *renderer)
 {
+    std::lock_guard<std::mutex> lock(_rendersLock);
     _renders.push_back(std::shared_ptr<Renderer>(renderer));
     _initialized = false;
 }
@@ -38,6 +40,7 @@ void ShaderRenderNode::addRenderer(Renderer *renderer)
 void ShaderRenderNode::render(CameraPtr camera, glm::ivec2 resolution, const RenderConfig &config)
 {
     RenderThread::asrt();
+    std::lock_guard<std::mutex> lock(_rendersLock);
     if(!_initialized || !_program) return;
 
     {
@@ -55,11 +58,13 @@ std::shared_ptr<ShaderProgram> ShaderRenderNode::program()
 
 void ShaderRenderNode::clear()
 {
+    std::lock_guard<std::mutex> lock(_rendersLock);
     _renders.clear();
 }
 
 const std::vector<std::shared_ptr<Renderer>>& ShaderRenderNode::renders()
 {
+    std::lock_guard<std::mutex> lock(_rendersLock);
     return _renders;
 }
 

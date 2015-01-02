@@ -35,6 +35,7 @@ private:
 
     std::shared_ptr<ShaderProgram> _program;
     std::vector<std::shared_ptr<Renderer>> _renders;
+    std::mutex _rendersLock;
 
     std::atomic<bool> _initialized;
 };
