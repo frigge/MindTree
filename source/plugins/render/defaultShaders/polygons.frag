@@ -69,8 +69,8 @@ vec3 lambert(){
 
 vec3 _phong(Light l, float rough) {
     vec3 lvec;
-    if(l.pos.w < 1)
-        lvec = l.pos.xyz;
+    if(l.directional)
+        lvec = -l.pos.xyz;
     else
         lvec = l.pos.xyz - pos;
 
