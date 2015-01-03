@@ -42,7 +42,9 @@ RenderManager* RenderConfigurator::getManager()
 
 void RenderConfigurator::setRenderersFromGroup(std::shared_ptr<Group> group)
 {
+    _geometryPass.lock()->clearRenderers();
     addRenderersFromGroup(group->getMembers());
+    _geometryPass.lock()->clearUnusedShaderNodes();
 }
 
 void RenderConfigurator::addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group)

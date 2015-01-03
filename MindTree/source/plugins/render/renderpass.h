@@ -69,10 +69,10 @@ public:
     void addRenderer(Renderer *renderer);
     void addGeometryRenderer(Renderer *renderer);
 
-private:
     void clearRenderers();
     void clearUnusedShaderNodes();
 
+private:
     void init();
     void render(const RenderConfig &config);
 
