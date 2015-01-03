@@ -172,7 +172,7 @@ void ForwardRenderer::setupDefaultLights()
 {
     RenderPass *pass = getManager()->getPass(0);
 
-    static const float coneangle = 2 * 3.14159265359;
+    static const double coneangle = 2 * 3.14159265359;
     //light0
     _geometryPass.lock()->setProperty("light0.intensity", .8);
     _geometryPass.lock()->setProperty("light0.color", glm::vec4(1));
