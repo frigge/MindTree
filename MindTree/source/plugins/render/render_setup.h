@@ -19,6 +19,7 @@ namespace GL {
 
 class RenderPass;
 class RenderManager;
+class ShaderProgram;
 
 class RenderConfigurator
 {
@@ -73,6 +74,7 @@ public:
 private:
     void setupDefaultLights();
 
+    std::shared_ptr<ShaderProgram> _gbufferShader;
 };
 
 }
