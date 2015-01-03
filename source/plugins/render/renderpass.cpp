@@ -116,6 +116,7 @@ void RenderPass::init()
                 {
                     _depthTexture->setWidth(_camera->getWidth());
                     _depthTexture->setHeight(_camera->getHeight());
+                    _depthTexture->init();
                     {
                         GLObjectBinder<std::shared_ptr<Texture2D>> binder(_depthTexture);
                         _target->attachDepthTexture(_depthTexture);
@@ -127,6 +128,7 @@ void RenderPass::init()
                 {
                     _depthRenderbuffer->setWidth(_camera->getWidth());
                     _depthRenderbuffer->setHeight(_camera->getHeight());
+                    _depthRenderbuffer->init();
                     {
                         GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(_depthRenderbuffer);
                         _target->attachDepthRenderbuffer(_depthRenderbuffer);

@@ -9,6 +9,7 @@ in vec3 P;
 in vec3 N;
 out vec3 pos;
 out vec3 sn;
+
 void main(){
    gl_Position = projection * modelView * vec4(P, 1);
    

@@ -1037,15 +1037,13 @@ GLenum Texture::getGLTarget()
     }
 }
 
-void Texture::_init()
+void Texture::init()
 {
     _initialized = true;
 
     if(!_id) glGenTextures(1, &_id);
 
     MTGLERROR;
-
-    init();
 }
 
 GLuint Texture::getID()    
@@ -1091,6 +1089,8 @@ void Texture2D::setHeight(int h)
 
 void Texture2D::init()
 {
+    Texture::init();
+
     GLenum format, internalFormat, type;
     switch(getFormat()) {
         case RGB:

@@ -20,6 +20,7 @@ namespace GL {
 class RenderPass;
 class RenderManager;
 class ShaderProgram;
+class ShaderRenderNode;
 
 class RenderConfigurator
 {
@@ -37,13 +38,14 @@ public:
 
     void setRenderersFromGroup(std::shared_ptr<Group> group);
     void addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group);
+
+protected:
     virtual void addRendererFromTransformable(std::shared_ptr<AbstractTransformable> transformable);
     virtual void addRendererFromObject(std::shared_ptr<GeoObject> obj);
     virtual void addRendererFromLight(std::shared_ptr<Light> obj);
     virtual void addRendererFromCamera(std::shared_ptr<Camera> obj);
     virtual void addRendererFromEmpty(std::shared_ptr<Empty> obj);
 
-protected:
     std::weak_ptr<RenderPass> _geometryPass;
 
 private:
@@ -62,19 +64,6 @@ private:
     void setupDefaultLights();
 
     uint _maxLightCount;
-};
-
-class  DeferredRenderer : public RenderConfigurator
-{
-public:
-    DeferredRenderer(QGLContext *context, std::shared_ptr<Camera> camera, Widget3DManager *widgetManager);
-
-    void setGeometry(std::shared_ptr<Group> grp);
-
-private:
-    void setupDefaultLights();
-
-    std::shared_ptr<ShaderProgram> _gbufferShader;
 };
 
 }

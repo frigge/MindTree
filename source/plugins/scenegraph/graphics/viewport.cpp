@@ -34,7 +34,7 @@
 #include "data/raytracing/ray.h"
 #include "data/project.h"
 
-#include "../../render/render_setup.h"
+#include "../../render/deferred_renderer.h"
 
 #include "viewport.h"
 
@@ -59,7 +59,7 @@ Viewport::Viewport() :
 
     QGLContext *ctx = const_cast<QGLContext*>(context());
     _widgetManager = std::make_shared<Widget3DManager>();
-    _renderConfigurator = std::unique_ptr<GL::ForwardRenderer>(new GL::ForwardRenderer(ctx, defaultCamera, _widgetManager.get()));
+    _renderConfigurator = std::unique_ptr<GL::DeferredRenderer>(new GL::DeferredRenderer(ctx, defaultCamera, _widgetManager.get()));
 
     setMouseTracking(true);
     doneCurrent();

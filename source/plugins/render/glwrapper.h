@@ -368,13 +368,12 @@ public:
 
     GLenum getGLSize();
 
-    virtual void init() = 0;
+    virtual void init();
 
 protected:
     void invalidate();
 
 private:
-    void _init();
     GLenum getGLTarget();
 
     GLuint _id;

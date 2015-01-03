@@ -1,6 +1,7 @@
 project(render)
 set(RENDER_SRC
     camera_renderer.cpp
+    deferred_renderer.cpp
     empty_renderer.cpp
     geoobject_renderer.cpp
     glwrapper.cpp
