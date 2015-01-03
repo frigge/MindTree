@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(mindTree)
+
+option(CLANG_SANITIZE_THREAD "CLANG_SANITIZE_THREAD" OFF)
+option(CLANG_SANITIZE_ADDRESS "CLANG_SANITIZE_ADDRESS" OFF)
+
 SET(HEADER
 #            source/data/code_generator/shaderwriter.h
 #            source/data/code_generator/rslwriter.h
@@ -41,14 +45,26 @@ endif()
 
 message("C++ compiler: " ${CMAKE_CXX_COMPILER_ID})
 message("CMake Build Type: " ${CMAKE_BUILD_TYPE})
+
 #set(CMAKE_VERBOSE_MAKEFILE true)
 if((CMAKE_BUILD_TYPE STREQUAL "Debug") AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-    #add_definitions("-O1")
-    #add_definitions("-fsanitize=thread")
-    #add_definitions("-fno-omit-frame-pointer")
-    #set(CMAKE_EXE_LINKER_FLAGS "-fsanitize=thread ${CMAKE_EXE_LINKER_FLAGS}")
-    #set(CMAKE_SHARED_LINKER_FLAGS "-fsanitize=thread ${CMAKE_SHARED_LINKER_FLAGS}")
-    #message("compiling with cmake thread sanitizer")
+    if(CLANG_SANITIZE_THREAD)
+        add_definitions("-O1")
+        add_definitions("-fsanitize=thread")
+        add_definitions("-fno-omit-frame-pointer")
+        set(CMAKE_EXE_LINKER_FLAGS "-fsanitize=thread ${CMAKE_EXE_LINKER_FLAGS}")
+        set(CMAKE_SHARED_LINKER_FLAGS "-fsanitize=thread ${CMAKE_SHARED_LINKER_FLAGS}")
+        message("compiling with clang thread sanitizer")
+    elseif(CLANG_SANITIZE_ADDRESS)
+        add_definitions("-O1")
+        add_definitions("-fsanitize=address")
+        add_definitions("-fno-omit-frame-pointer")
+        set(CMAKE_EXE_LINKER_FLAGS "-fsanitize=address ${CMAKE_EXE_LINKER_FLAGS}")
+        set(CMAKE_SHARED_LINKER_FLAGS "-fsanitize=address ${CMAKE_SHARED_LINKER_FLAGS}")
+        message("compiling with clang address sanitizer")
+    else()
+        message("no or wrong sanitize option specified")
+    endif()
 else()
     add_definitions("-O3")
     add_definitions("-msse2")
