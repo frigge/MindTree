@@ -1,6 +1,7 @@
 *.pro.user
 tags/
 tags
+*.user
 source/tags
 cscope.*
 build/
