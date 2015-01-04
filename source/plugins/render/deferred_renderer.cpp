@@ -18,17 +18,17 @@
 using namespace MindTree;
 using namespace GL;
 
-std::weak_ptr<ShaderProgram> DeferredRendererPass::_defaultProgram;
+std::weak_ptr<ShaderProgram> LightAccumulationPass::_defaultProgram;
 
-DeferredRendererPass::DeferredRendererPass()
+LightAccumulationPass::LightAccumulationPass()
 {
 }
 
-DeferredRendererPass::~DeferredRendererPass()
+LightAccumulationPass::~LightAccumulationPass()
 {
 }
 
-std::shared_ptr<ShaderProgram> DeferredRendererPass::getProgram()
+std::shared_ptr<ShaderProgram> LightAccumulationPass::getProgram()
 {
     std::shared_ptr<ShaderProgram> prog;
     if(_defaultProgram.expired()) {
@@ -46,7 +46,7 @@ std::shared_ptr<ShaderProgram> DeferredRendererPass::getProgram()
     return _defaultProgram.lock();
 }
 
-void DeferredRendererPass::draw(const CameraPtr /* camera */, 
+void LightAccumulationPass::draw(const CameraPtr /* camera */, 
                                   const RenderConfig& /* config */, 
                                   std::shared_ptr<ShaderProgram> program)
 {
@@ -88,7 +88,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     auto deferredPass = manager->addPass<GL::RenderPass>();
     deferredPass->addOutput(std::make_shared<GL::Texture2D>("shading_out"));
     deferredPass->setCamera(camera);
-    _deferredRenderer = new DeferredRendererPass();
+    _deferredRenderer = new LightAccumulationPass();
     deferredPass->addRenderer(_deferredRenderer);
 
     auto overlaypass = manager->addPass<GL::RenderPass>();

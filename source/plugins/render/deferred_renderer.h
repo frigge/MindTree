@@ -7,11 +7,11 @@
 namespace MindTree {
 namespace GL {
 
-class DeferredRendererPass : public FullscreenQuadRenderer
+class LightAccumulationPass : public FullscreenQuadRenderer
 {
 public:
-    DeferredRendererPass();
-    virtual ~DeferredRendererPass();
+    LightAccumulationPass();
+    virtual ~LightAccumulationPass();
 
     std::shared_ptr<ShaderProgram> getProgram();
 
@@ -37,7 +37,7 @@ private:
     void setupGBuffer();
 
     std::weak_ptr<ShaderRenderNode> _gbufferNode;
-    DeferredRendererPass *_deferredRenderer;
+    LightAccumulationPass *_deferredRenderer;
 };
 
 }
