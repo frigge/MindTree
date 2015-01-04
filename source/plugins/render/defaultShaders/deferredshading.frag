@@ -85,8 +85,8 @@ void main(){
     else
         eye = (modelView * vec4(0, 0, 0, 1)).xyz;
 
-    vec3 pos = texture(outposition, st);
-    vec3 Nn = texture(outnormal, st);
+    pos = texture(outposition, st).xyz;
+    Nn = texture(outnormal, st).xyz;
 
     vec3 spec1 = phong(specrough1) * specint;
     vec3 spec2 = phong(specrough2) * specint2;
@@ -97,12 +97,12 @@ void main(){
     vec3 diff = gamma(polygoncolor.rgb, GAMMA) * lambert()*diffint;
     float diffspecratio = 0.5 * value(diff) / clamp(0.0001, 1., value(spectotal));
     vec3 diffspec = mix(diff, spectotal, diffspecratio);
-    final_color = vec4(gamma(
+    shading_out = vec4(gamma(
                     diffspec + 
                     gamma(ambient.rgb, GAMMA) * ambientIntensity + 
                     spectotal
                     , 1./GAMMA), polygoncolor.a
                    );
 
-    final_color.a = polygoncolor.a;
+    shading_out.a = polygoncolor.a;
 }
