@@ -46,6 +46,11 @@ std::shared_ptr<ShaderProgram> LightAccumulationPass::getProgram()
     return _defaultProgram.lock();
 }
 
+void LightAccumulationPass::setLights(std::vector<std::shared_ptr<Light>> lights)
+{
+    _lights = lights;
+}
+
 void LightAccumulationPass::draw(const CameraPtr /* camera */, 
                                   const RenderConfig& /* config */, 
                                   std::shared_ptr<ShaderProgram> program)

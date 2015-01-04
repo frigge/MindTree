@@ -15,11 +15,14 @@ public:
 
     std::shared_ptr<ShaderProgram> getProgram();
 
+    void setLights(std::vector<std::shared_ptr<Light>> lights);
+
 protected:
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
 private:
     static std::weak_ptr<ShaderProgram> _defaultProgram;
+    std::vector<std::shared_ptr<Light>> _lights;
 };
 
 class  DeferredRenderer : public RenderConfigurator
