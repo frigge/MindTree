@@ -303,6 +303,7 @@ private:
     std::string _tessEvalSource;
     std::string _computeSource;
     std::vector<std::shared_ptr<Texture2D>> _textures;
+    std::unordered_map<int, std::string> _fileNameMap;
 };
 
 class UniformState

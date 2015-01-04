@@ -524,22 +524,29 @@ void ShaderProgram::_addShaderFromSource(std::string src, GLenum type)
     std::string log((char*)infolog);
     delete [] infolog;
     std::string shadertype;
+    ShaderType t;
     switch(type)
     {
         case GL_VERTEX_SHADER:
+            t = VERTEX;
             shadertype = "Vertex Shader";
             break;
         case GL_FRAGMENT_SHADER:
+            t = FRAGMENT;
             shadertype = "Fragment Shader";
             break;
         case GL_GEOMETRY_SHADER:
+            t = GEOMETRY;
             shadertype = "Geometry Shader";
             break;
         default:
             break;
     }
+
+    std::string filename = _fileNameMap[t];
+
     if(log != "") {
-        std::cout << "=========compile log(" << shadertype << "):================" << std::endl;
+        std::cout << "=========compile log(" << shadertype << ":" << filename << ")================" << std::endl;
         std::cout << log << std::endl;
         std::cout << "=====================================" << std::endl;
     }
@@ -550,6 +557,8 @@ void ShaderProgram::_addShaderFromSource(std::string src, GLenum type)
 
 void ShaderProgram::addShaderFromFile(std::string filename, ShaderProgram::ShaderType type)
 {
+    _fileNameMap[type] = filename;
+
     std::ifstream stream(filename);
 
     if(!stream.is_open()) {
