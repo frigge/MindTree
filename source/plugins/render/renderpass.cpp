@@ -43,9 +43,6 @@ void RenderPass::setOverrideProgram(std::shared_ptr<ShaderProgram> program)
 
 void RenderPass::init()
 {
-    if(_initialized)
-        return;
-
     _initialized = true;
     
     //make sure shaderprograms are clean
@@ -433,7 +430,20 @@ void RenderPass::setBackgroundColor(glm::vec4 color)
 
 void RenderPass::render(const RenderConfig &config)
 {
-    if(!_initialized) init();
+    int width = _camera->getWidth();
+    int height = _camera->getHeight();
+
+    if(!width || !height) {
+        std::cout << "No viewport geometry" << std::endl;
+        return;
+    }
+
+    int currentWidth, currentHeight;
+    if(_outputTextures.size() > 0) {
+        currentWidth = _outputTextures[0]->width();
+        currentHeight = _outputTextures[0]->height();
+    }
+    if(!_initialized || currentHeight != height || currentWidth != width) init();
 
     {
         if(_depthOutput == NONE)
@@ -476,14 +486,6 @@ void RenderPass::render(const RenderConfig &config)
 
         if(_shadernodes.size() == 0 && _geometryShaderNodes.size() == 0) {
             std::cout << "RenderPass is empty" << std::endl;
-            return;
-        }
-
-        int width = _camera->getWidth();
-        int height = _camera->getHeight();
-
-        if(!width || !height) {
-            std::cout << "No viewport geometry" << std::endl;
             return;
         }
 
