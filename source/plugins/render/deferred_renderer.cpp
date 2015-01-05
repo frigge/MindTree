@@ -55,8 +55,24 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
                                   const RenderConfig& /* config */, 
                                   std::shared_ptr<ShaderProgram> program)
 {
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    MTGLERROR;
+    double coneangle = 2 * 3.14159265359;
+    glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+    UniformStateManager states(program);
+    for (const LightPtr light : _lights) {
+        if(light->getLightType() == Light::SPOT)
+            coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
+
+        states.addState("light.pos", 
+                        glm::vec4(light->getPosition(), 
+                                               light->getLightType() == Light::DISTANT ? 0 : 1));
+        states.addState("light.color", light->getColor());
+        states.addState("light.intensity", light->getIntensity());
+        states.addState("light.coneangle", coneangle);
+        states.addState("light.directional", light->getLightType() == Light::DISTANT);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        MTGLERROR;
+    }
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 
@@ -87,8 +103,8 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _geometryPass.lock()->setCamera(camera);
 
     _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
-    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
-    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outposition"));
+    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outnormal", GL::Texture::RGBA16F));
+    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outposition", GL::Texture::RGBA16F));
 
     auto deferredPass = manager->addPass<GL::RenderPass>();
     deferredPass->addOutput(std::make_shared<GL::Texture2D>("shading_out"));
@@ -134,33 +150,7 @@ void DeferredRenderer::setGeometry(std::shared_ptr<Group> grp)
         setupDefaultLights();
     }
     else {
-        std::vector<LightPtr> lights = grp->getLights();
-        size_t i = 0;
-        for(auto &light : lights) {
-            std::string lightName = "light";
-            lightName += std::to_string(i);
-            _geometryPass.lock()->setProperty(lightName + ".intensity", light->getIntensity());
-            _geometryPass.lock()->setProperty(lightName + ".color", light->getColor());
-            glm::vec4 pos;
-            float coneangle = 2 * 3.14159265359;
-            bool directional = false;
-            switch(light->getLightType()) {
-                case Light::POINT:
-                    pos = glm::vec4(light->getPosition(), 1.);
-                    break;
-                case Light::SPOT:
-                    pos = glm::vec4(light->getPosition(), 1.);
-                    coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
-                    break;
-                case Light::DISTANT:
-                    pos = glm::vec4(light->getPosition(), 0.);
-                    directional = true;
-                    break;
-            }
-            _geometryPass.lock()->setProperty(lightName + ".pos", pos);
-            _geometryPass.lock()->setProperty(lightName + ".coneangle", coneangle);
-            _geometryPass.lock()->setProperty(lightName + ".directional", directional);
-        }
+        _deferredRenderer->setLights(grp->getLights());
     }
     setRenderersFromGroup(grp);
 }
@@ -180,25 +170,16 @@ void DeferredRenderer::addRendererFromObject(std::shared_ptr<GeoObject> obj)
 void DeferredRenderer::setupDefaultLights()
 {
     static const double coneangle = 2 * 3.14159265359;
-    //light0
-    _geometryPass.lock()->setProperty("light0.intensity", .8);
-    _geometryPass.lock()->setProperty("light0.color", glm::vec4(1));
-    _geometryPass.lock()->setProperty("light0.pos", glm::vec4(-50, -50, -50, 0));
-    _geometryPass.lock()->setProperty("light0.coneangle", coneangle);
-    _geometryPass.lock()->setProperty("light0.directional", true);
+    auto light1 = std::make_shared<DistantLight>(.8, glm::vec4(1));
+    light1->setPosition(-1, -1, -1);
 
-    //light1
-    _geometryPass.lock()->setProperty("light1.intensity", .3);
-    _geometryPass.lock()->setProperty("light1.color", glm::vec4(1));
-    _geometryPass.lock()->setProperty("light1.pos", glm::vec4(50, 10, -10, 0));
-    _geometryPass.lock()->setProperty("light1.coneangle", coneangle);
-    _geometryPass.lock()->setProperty("light1.directional", true);
+    auto light2 = std::make_shared<DistantLight>(.3, glm::vec4(1));
+    light2->setPosition(5, 1, -1);
 
-    //light2
-    _geometryPass.lock()->setProperty("light2.intensity", .1);
-    _geometryPass.lock()->setProperty("light2.color", glm::vec4(1));
-    _geometryPass.lock()->setProperty("light2.pos", glm::vec4(0, 0, -50, 0));
-    _geometryPass.lock()->setProperty("light2.coneangle", coneangle);
-    _geometryPass.lock()->setProperty("light2.directional", true);
+    auto light3 = std::make_shared<DistantLight>(.1, glm::vec4(1));
+    light3->setPosition(0, 0, -1);
+
+    std::vector<LightPtr> lights = {light1, light2, light3};
+    _deferredRenderer->setLights(lights);
 }
 
