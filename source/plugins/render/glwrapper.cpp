@@ -1145,6 +1145,7 @@ void Texture2D::init()
     }
 
     glBindTexture(GL_TEXTURE_2D, getID());
+    MTGLERROR;
     glTexImage2D(GL_TEXTURE_2D,
                  0,
                  format,
