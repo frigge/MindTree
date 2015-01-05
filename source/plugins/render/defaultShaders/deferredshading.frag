@@ -86,7 +86,7 @@ void main(){
         eye = (modelView * vec4(0, 0, 0, 1)).xyz;
 
     pos = texture(outposition, st).xyz;
-    Nn = texture(outnormal, st).xyz;
+    Nn = normalize(texture(outnormal, st).xyz);
 
     vec3 spec1 = phong(specrough1) * specint;
     vec3 spec2 = phong(specrough2) * specint2;
