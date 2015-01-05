@@ -1148,11 +1148,11 @@ void Texture2D::init()
     MTGLERROR;
     glTexImage2D(GL_TEXTURE_2D,
                  0,
-                 format,
+                 internalFormat,
                  _width,
                  _height,
                  0,
-                 internalFormat,
+                 format,
                  type,
                  nullptr);
     MTGLERROR;
