@@ -88,15 +88,15 @@ void ViewportWidget::createMainLayout()
 
 void ViewportWidget::createToolbar()    
 {
-    QAction *showPointsAction = _tools->addAction("P");
+    QAction *showPointsAction = _tools->addAction("Show Points");
     showPointsAction->setCheckable(true);
     showPointsAction->setChecked(true);
 
-    QAction *showEdgesAction = _tools->addAction("E");
+    QAction *showEdgesAction = _tools->addAction("Show Edges");
     showEdgesAction->setCheckable(true);
     showEdgesAction->setChecked(true);
 
-    QAction *showPolygonsAction = _tools->addAction("F");
+    QAction *showPolygonsAction = _tools->addAction("Show Faces");
     showPolygonsAction->setCheckable(true);
     showPolygonsAction->setChecked(true);
 
@@ -112,20 +112,26 @@ void ViewportWidget::createToolbar()
     showGridAction->setCheckable(true);
     showGridAction->setChecked(true);
 
+    QAction *overrideOutputAction = _tools->addAction("Override Output");
+    overrideOutputAction->setCheckable(true);
+    overrideOutputAction->setChecked(false);
+
+
     auto outputs = _viewport->getRenderManager()->getAllOutputs();
-    auto *outputBox = new QComboBox();
+    _outputBox = new QComboBox();
+    _outputBox->setEnabled(false);
 
     QStringList l;
     for(auto out : outputs)
         l.append(out.c_str());
 
-    outputBox->addItems(l);
+    _outputBox->addItems(l);
 
     _camBox = new QComboBox();
     _tools->addWidget(_camBox);
-    _tools->addWidget(outputBox);
+    _tools->addWidget(_outputBox);
 
-    connect(outputBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(setOutput(QString)));
+    connect(_outputBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(setOutput(QString)));
 
     connect(showPointsAction, SIGNAL(toggled(bool)), this, SLOT(togglePoints(bool)));
     connect(showEdgesAction, SIGNAL(toggled(bool)), this, SLOT(toggleEdges(bool)));
@@ -133,6 +139,14 @@ void ViewportWidget::createToolbar()
     connect(showFlatShadedAction, SIGNAL(toggled(bool)), this, SLOT(toggleFlatShading(bool)));
     connect(showGridAction, SIGNAL(toggled(bool)), this, SLOT(toggleGrid(bool)));
     connect(toggleDefaultLight, SIGNAL(toggled(bool)), this, SLOT(toggleDefaultLighting(bool)));
+    connect(overrideOutputAction, SIGNAL(toggled(bool)), this, SLOT(setOverrideOutput(bool)));
+}
+
+void ViewportWidget::setOverrideOutput(bool value)
+{
+    _outputBox->setEnabled(value);
+    if(!value)
+        _viewport->getRenderManager()->clearCustomTextureNameMapping();
 }
 
 void ViewportWidget::setOutput(QString out)

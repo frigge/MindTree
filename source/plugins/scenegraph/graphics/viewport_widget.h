@@ -59,6 +59,7 @@ public:
     Q_SLOT void refillCamBox();
     Q_SLOT void setOutput(QString out);
     Q_SLOT void toggleDefaultLighting(bool value);
+    Q_SLOT void setOverrideOutput(bool value);
 
 private:
     void createToolbar();
