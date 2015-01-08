@@ -56,6 +56,7 @@ public:
     void setBackgroundColor(glm::vec4 color);
 
     void setBlendFunc(GLenum src, GLenum dst);
+    void setEnableBlending(bool value);
 
     CameraPtr getCamera();
 
@@ -103,6 +104,7 @@ private:
 
     std::mutex _blendLock;
     GLenum _blendSource, _blendDest;
+    std::atomic<bool> _blending;
 
     DepthOutput _depthOutput;
 

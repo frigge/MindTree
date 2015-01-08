@@ -14,6 +14,7 @@ class QGLContext;
 namespace MindTree {
 namespace GL {
 
+class Texture;
 class RenderPass;
 
 class RenderConfig : public Object
@@ -87,6 +88,7 @@ public:
 private:
     void init();
     void draw();
+    std::string getTextureName(std::shared_ptr<Texture> tex) const;
     friend class RenderThread;
 
     std::mutex _managerLock;

@@ -13,7 +13,8 @@ RenderPass::RenderPass() :
     _initialized(false), 
     _blendSource(GL_SRC_ALPHA),
     _blendDest(GL_ONE_MINUS_SRC_ALPHA),
-    _depthOutput(NONE)
+    _depthOutput(NONE),
+    _blending(true)
 {
 }
 
@@ -33,6 +34,11 @@ void RenderPass::setBlendFunc(GLenum src, GLenum dst)
     std::lock_guard<std::mutex> lock(_blendLock);
     _blendSource = src;
     _blendDest = dst;
+}
+
+void RenderPass::setEnableBlending(bool value)
+{
+    _blending = value;
 }
 
 void RenderPass::setOverrideProgram(std::shared_ptr<ShaderProgram> program)
@@ -446,7 +452,9 @@ void RenderPass::render(const RenderConfig &config)
     if(!_initialized || currentHeight != height || currentWidth != width) init();
 
     {
-        if(_depthOutput == NONE)
+        if(_depthOutput != NONE)
+           glEnable(GL_DEPTH_TEST);
+        else
            glDisable(GL_DEPTH_TEST);
         MTGLERROR;
 
@@ -463,8 +471,11 @@ void RenderPass::render(const RenderConfig &config)
             glClearColor(_bgColor.r, _bgColor.g, _bgColor.b, _bgColor.a);
         }
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        MTGLERROR;
+        if(_blending)
+            glEnable(GL_BLEND);
+        else
+            glDisable(GL_BLEND);
+
         getGLFramebufferError(__PRETTY_FUNCTION__);
         MTGLERROR;
         std::vector<GLenum> buffers;
@@ -490,6 +501,9 @@ void RenderPass::render(const RenderConfig &config)
         }
 
         glViewport(0, 0, (GLint)width, (GLint)height);
+        MTGLERROR;
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         MTGLERROR;
 
         {
@@ -523,8 +537,6 @@ void RenderPass::render(const RenderConfig &config)
                 }
             }
         }
-        if(_depthOutput == NONE)
-           glEnable(GL_DEPTH_TEST);
         MTGLERROR;
         processPixelRequests();
     }

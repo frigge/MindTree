@@ -158,10 +158,6 @@ void RenderManager::init()
     _initialized = true;
     glClearColor( 0., 0., 0., 0. );
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-
-
     //connect output textures to all following passes
     uint i=0;
     for(auto &pass : passes){
@@ -174,7 +170,7 @@ void RenderManager::init()
                 auto shadernodes = pass->getShaderNodes();
                 for (auto shadernode : shadernodes) {
                     for(auto texture : textures) {
-                        shadernode->program()->setTexture(texture, _textureNameMappings[texture->getName()]);
+                        shadernode->program()->setTexture(texture, getTextureName(texture));
                     }
                     if(lastPass->_depthOutput == RenderPass::TEXTURE)
                         shadernode->program()->setTexture(lastPass->getOutDepthTexture());
@@ -183,6 +179,15 @@ void RenderManager::init()
         }
         ++i;
     }
+}
+
+std::string RenderManager::getTextureName(std::shared_ptr<Texture> tex) const
+{
+    std::string realName = tex->getName();
+    if(_textureNameMappings.find(realName) != end(_textureNameMappings))
+        return _textureNameMappings.at(realName);
+    else
+        return realName;
 }
 
 std::vector<std::string> RenderManager::getAllOutputs() const
