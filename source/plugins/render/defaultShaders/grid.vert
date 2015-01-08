@@ -22,8 +22,8 @@ void main(){
    int yaxis = int(ceil(float(gridRes.x) / 2));
 
    if(currline == yaxis)
-       col = vec4(0.3, 0.3, 1.0, .8);
+       col = vec4(0.3, 0.3, 1.0, 1.0);
 
    if(currline - gridRes.x == xaxis)
-       col = vec4(1.0, 0.3, 0.3, .8);
+       col = vec4(1.0, 0.3, 0.3, 1.0);
 };

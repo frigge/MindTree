@@ -3,10 +3,11 @@ vec3 pos;
 vec3 Nn;
 
 vec3 eye;
-uniform mat4 modelView;
+uniform mat4 view;
 uniform bool defaultLighting = true;
 
 in vec2 st;
+uniform ivec2 resolution;
 
 uniform sampler2D outnormal;
 uniform sampler2D outposition;
@@ -81,12 +82,14 @@ float value(vec3 col) {
 
 void main(){
     if (defaultLighting)
-        eye = vec3(0);
+        eye = vec3(0, 0, 1);
     else
-        eye = (modelView * vec4(0, 0, 0, 1)).xyz;
+        eye = normalize((view * vec4(0, 0, 1, 0)).xyz);
 
-    pos = texture(outposition, st).xyz;
-    Nn = normalize(texture(outnormal, st).xyz);
+    ivec2 p = ivec2(st.x * resolution.x, st.y * resolution.y);
+    vec4 _pos = texelFetch(outposition, p, 0);
+    pos = _pos.xyz;
+    Nn = normalize(texelFetch(outnormal, p, 0).xyz);
 
     vec3 spec1 = phong(specrough1) * specint;
     vec3 spec2 = phong(specrough2) * specint2;
@@ -101,8 +104,6 @@ void main(){
                     diffspec + 
                     gamma(ambient.rgb, GAMMA) * ambientIntensity + 
                     spectotal
-                    , 1./GAMMA), polygoncolor.a
+                    , 1./GAMMA), _pos.a
                    );
-
-    shading_out.a = polygoncolor.a;
 }
