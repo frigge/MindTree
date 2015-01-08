@@ -55,10 +55,10 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
                                   const RenderConfig& /* config */, 
                                   std::shared_ptr<ShaderProgram> program)
 {
-    double coneangle = 2 * 3.14159265359;
-    glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);
     UniformStateManager states(program);
     for (const LightPtr light : _lights) {
+        double coneangle = 2 * 3.14159265359;
         if(light->getLightType() == Light::SPOT)
             coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
 
@@ -72,7 +72,6 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         MTGLERROR;
     }
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 
@@ -84,38 +83,37 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
 
-    auto gridpass = manager->addPass<GL::RenderPass>();
-    gridpass->setCamera(camera);
-    gridpass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
-    gridpass->addOutput(std::make_shared<GL::Texture2D>("grid"));
-
     auto grid = new GL::GridRenderer(100, 100, 100, 100);
     auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
 
     grid->setTransformation(trans);
-    grid->setBorderColor(glm::vec4(.5, .5, .5, .5));
-    grid->setAlternatingColor(glm::vec4(.8, .8, .8, .8));
+    grid->setBorderColor(glm::vec4(.3, .3, .3, 1.0));
+    grid->setAlternatingColor(glm::vec4(.7, .7, .7, 1.0));
     grid->setBorderWidth(2.);
-
-    gridpass->addRenderer(grid);
 
     _geometryPass = manager->addPass<GL::RenderPass>();
     _geometryPass.lock()->setCamera(camera);
+    _geometryPass.lock()->setEnableBlending(false);
 
     _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
+    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outcolor"));
     _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outnormal", GL::Texture::RGBA16F));
     _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outposition", GL::Texture::RGBA16F));
+    _geometryPass.lock()->addRenderer(grid);
+
+    _geometryPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
+
+    auto overlaypass = manager->addPass<GL::RenderPass>();
+    overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
+    overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
+    overlaypass->setCamera(camera);
 
     auto deferredPass = manager->addPass<GL::RenderPass>();
     deferredPass->addOutput(std::make_shared<GL::Texture2D>("shading_out"));
     deferredPass->setCamera(camera);
     _deferredRenderer = new LightAccumulationPass();
     deferredPass->addRenderer(_deferredRenderer);
-
-    auto overlaypass = manager->addPass<GL::RenderPass>();
-    overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
-    overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
-    overlaypass->setCamera(camera);
+    deferredPass->setBlendFunc(GL_ONE, GL_ONE);
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlaypass);
 
