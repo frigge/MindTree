@@ -50,29 +50,36 @@ vec3 gamma(vec3 col, float g) {
 
 vec3 lambert() {
     vec3 lvec;
+    float atten = 1;
     if(light.directional)
         lvec = -light.pos.xyz;
-    else
+    else {
         lvec = light.pos.xyz - pos;
+        atten = 1.0 / dot(lvec, lvec);
+    }
+
 
     float cosine = dot(Nn, normalize(lvec));
     cosine = clamp(cosine, 0.0, 1.0);
-    vec3 col = gamma(light.color.rgb, GAMMA) * cosine * light.intensity;
+    vec3 col = gamma(light.color.rgb, GAMMA) * cosine * light.intensity * atten;
     return col;
 }
 
 vec3 phong(float rough) {
     vec3 lvec;
+    float atten = 1;
     if(light.directional)
         lvec = -light.pos.xyz;
-    else
+    else {
         lvec = light.pos.xyz - pos;
+        atten = 1.0 / dot(lvec, lvec);
+    }
 
     vec3 ln = normalize(lvec);
     vec3 Half = normalize(eye + ln);
     float cosine = clamp(dot(Nn, Half), 0., 1.);
     cosine = pow(cosine, 1./rough);
-    vec3 col = gamma(light.color.rgb, GAMMA) * light.intensity * (cosine);
+    vec3 col = gamma(light.color.rgb, GAMMA) * light.intensity * cosine * atten;
     return col;
 }
 
