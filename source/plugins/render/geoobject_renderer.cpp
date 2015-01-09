@@ -24,7 +24,7 @@ void GeoObjectRenderer::init(std::shared_ptr<ShaderProgram> prog)
         if(has_attr) {
             RenderManager::getResourceManager()->uploadData(data, propPair.first);
             auto vbo = RenderManager::getResourceManager()->getVBO(data, propPair.first);
-            prog->bindAttributeLocation(vbo->getIndex(), propPair.first);
+            prog->bindAttributeLocation(vbo);
         }
     }
     

@@ -201,9 +201,9 @@ void LineRenderer::setPoints(std::initializer_list<glm::vec3> points)
 
 void LineRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
-    _vbo = std::make_shared<VBO>("P", 0);
-    prog->bindAttributeLocation(0, "P");
+    _vbo = std::make_shared<VBO>("P");
     _vbo->bind();
+    prog->bindAttributeLocation(_vbo);
 
     VertexList points;
     for(auto p : _points) {
@@ -229,9 +229,9 @@ QuadRenderer::QuadRenderer(float width, float height, ShapeRendererGroup *parent
 
 void QuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
-    _vbo = std::make_shared<VBO>("P", 0);
-    prog->bindAttributeLocation(0, "P");
+    _vbo = std::make_shared<VBO>("P");
     _vbo->bind();
+    prog->bindAttributeLocation(_vbo);
 
     VertexList verts;
     verts.insert(begin(verts), {
@@ -278,11 +278,12 @@ std::shared_ptr<ShaderProgram> FullscreenQuadRenderer::getProgram()
 
 void FullscreenQuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
-    _vbo = std::make_shared<VBO>("P", 0);
-    _coord_vbo = std::make_shared<VBO>("st", 1);
+    _vbo = std::make_shared<VBO>("P");
+    _coord_vbo = std::make_shared<VBO>("st");
+    _coord_vbo->overrideIndex(1);
 
     _vbo->bind();
-    prog->bindAttributeLocation(0, "P");
+    prog->bindAttributeLocation(_vbo);
     
     VertexList verts;
     verts.insert(verts.begin(), {
@@ -304,7 +305,7 @@ void FullscreenQuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
     _vbo->setPointer();
 
     _coord_vbo->bind();
-    prog->bindAttributeLocation(1, "_st");
+    prog->bindAttributeLocation(_coord_vbo);
     _coord_vbo->data(coords);
     _coord_vbo->setPointer();
 }
@@ -338,9 +339,9 @@ GridRenderer::~GridRenderer()
 
 void GridRenderer::init(std::shared_ptr<ShaderProgram> prog)
 {
-    _vbo = std::make_shared<VBO>("P", 0);
-    prog->bindAttributeLocation(0, "P");
+    _vbo = std::make_shared<VBO>("P");
     _vbo->bind();
+    prog->bindAttributeLocation(_vbo);
 
     VertexList verts;
 
@@ -413,9 +414,9 @@ void DiscRenderer::init(std::shared_ptr<ShaderProgram> prog)
         _vbo->setPointer();
         return;
     }
-    _vbo = std::make_shared<VBO>("P", 0);
-    prog->bindAttributeLocation(0, "P");
+    _vbo = std::make_shared<VBO>("P");
     _vbo->bind();
+    prog->bindAttributeLocation(_vbo);
 
     VertexList verts;
 
@@ -452,9 +453,9 @@ void CircleRenderer::init(std::shared_ptr<ShaderProgram> prog)
         _vbo->setPointer();
         return;
     }
-    _vbo = std::make_shared<VBO>("P", 0);
-    prog->bindAttributeLocation(0, "P");
+    _vbo = std::make_shared<VBO>("P");
     _vbo->bind();
+    prog->bindAttributeLocation(_vbo);
 
     VertexList verts;
 
@@ -490,9 +491,9 @@ void ConeRenderer::init(std::shared_ptr<ShaderProgram> prog)
         _vbo->setPointer();
         return;
     }
-    _vbo = std::make_shared<VBO>("P", 0);
-    prog->bindAttributeLocation(0, "P");
+    _vbo = std::make_shared<VBO>("P");
     _vbo->bind();
+    prog->bindAttributeLocation(_vbo);
 
     VertexList verts;
 

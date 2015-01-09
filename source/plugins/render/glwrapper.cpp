@@ -78,6 +78,7 @@ void VAO::release()
 Buffer::Buffer(GLenum bufferType)
     : _bufferType(bufferType)
 {
+    dbout("gen vbo");
     glGenBuffers(1, &id);
     MTGLERROR;
 }
@@ -100,14 +101,23 @@ void Buffer::release()
     MTGLERROR;
 }
 
-VBO::VBO(std::string name, GLuint index)
-    : Buffer(GL_ARRAY_BUFFER),
-        _name(name), _index(index), _size(0), _datatype(GL_FLOAT)
+VBO::VBO(std::string name) : 
+    Buffer(GL_ARRAY_BUFFER),
+    _name(name),
+    _index(RenderManager::getResourceManager()->getIndexForAttribute(name)),
+    _size(0), 
+    _datatype(GL_FLOAT)
 {
+    dbout("creating a VBO with name: " << name << " at index: " << _index);
 }
 
 VBO::~VBO()
 {
+}
+
+void VBO::overrideIndex(uint index)
+{
+    _index = index;
 }
 
 std::string VBO::getName()    
@@ -852,18 +862,18 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
     if(wasntbound) release();
 }
 
-void ShaderProgram::bindAttributeLocation(unsigned int index, std::string name)    
+void ShaderProgram::bindAttributeLocation(std::shared_ptr<VBO> vbo)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
-    if(!hasAttribute(name)) return;
+    if(!hasAttribute(vbo->getName())) return;
 
     bool wasntbound = false;
     if(!_isBound) {
         wasntbound = true;
         bind();
     }
-    glBindAttribLocation(_id, index, name.c_str()); 
+    glBindAttribLocation(_id, vbo->getIndex(), vbo->getName().c_str());
     MTGLERROR;
 
     //needs to be relinked so that the binding actually goes into effect
@@ -1218,11 +1228,23 @@ void ResourceManager::cleanUp()
     _scheduledIBOs.clear();
 }
 
+int ResourceManager::getIndexForAttribute(std::string name)
+{
+    uint index = -1;
+    if(_attributeIndexMap.find(name) == end(_attributeIndexMap)) {
+        index = _attributeIndexMap.size();
+        _attributeIndexMap[name] = index;
+    }
+    else
+        index = _attributeIndexMap.at(name);
+    
+    return index;
+}
+
 std::shared_ptr<VBO> ResourceManager::createVBO(ObjectDataPtr data, std::string name)    
 {
     auto &vbos = _vboMap[data];
-    uint index = vbos.size();
-    auto vbo = std::make_shared<VBO>(name, index);
+    auto vbo = std::make_shared<VBO>(name);
     vbos.push_back(vbo);
     return vbo;
 }

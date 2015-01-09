@@ -107,7 +107,7 @@ private:
 class VBO : public Buffer
 {
 public:
-    VBO(std::string name, GLuint index);
+    VBO(std::string name);
     virtual ~VBO();
 
     void bind();
@@ -118,6 +118,7 @@ public:
     void data(std::vector<glm::vec2> l);
     void setPointer();
     GLint getIndex();
+    void overrideIndex(uint index);
 
 private:
     GLuint _index;
@@ -271,7 +272,7 @@ public:
 
     void setTexture(std::shared_ptr<Texture2D> texture, std::string name="");
 
-    void bindAttributeLocation(unsigned int index, std::string name);
+    void bindAttributeLocation(std::shared_ptr<VBO> vbo);
     void bindFragmentLocation(unsigned int index, std::string name);
 
     bool hasAttribute(std::string name);
@@ -422,6 +423,7 @@ public:
     void scheduleCleanUp(std::shared_ptr<VBO> vbo);
     void scheduleCleanUp(std::shared_ptr<VAO> vbo);
     void scheduleCleanUp(std::shared_ptr<IBO> vbo);
+    int getIndexForAttribute(std::string name);
 
 private:
     friend class RenderManager;
@@ -437,6 +439,7 @@ private:
 
     std::unordered_map<ObjectDataPtr, std::vector<std::shared_ptr<VBO>>> _vboMap;
     std::unordered_map<ObjectDataPtr, std::shared_ptr<IBO>> _iboMap;
+    std::unordered_map<std::string, int> _attributeIndexMap;
 };
 
 class ContextBinder
