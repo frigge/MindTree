@@ -9,6 +9,7 @@
 #include "functional"
 #include "data/nodes/nodetype.h"
 #include "data/datatypes.h"
+#include "glm/glm.hpp"
 
 namespace MindTree {
 class DNode;
@@ -30,6 +31,11 @@ public:
     OutStream& operator<<(double value);
 
     OutStream& operator<<(const Vec2i &point);
+
+    OutStream& operator<<(const glm::ivec2 &vec);
+    OutStream& operator<<(const glm::vec2 &vec);
+    OutStream& operator<<(const glm::vec3 &vec);
+    OutStream& operator<<(const glm::vec4 &vec);
 
     OutStream& operator<<(const TypeBase &t);
     OutStream& operator<<(const DNode &node);
@@ -84,6 +90,11 @@ public:
 
     InStream& operator>>(Vec2i &point);
 
+    InStream& operator>>(glm::ivec2 &vec);
+    InStream& operator>>(glm::vec2 &vec);
+    InStream& operator>>(glm::vec3 &vec);
+    InStream& operator>>(glm::vec4 &vec);
+
     InStream& operator>>(DataType &t);
     InStream& operator>>(NodeType &t);
     InStream& operator>>(DNode &node);
@@ -121,7 +132,7 @@ IO::OutStream& operator<<(IO::OutStream& stream, const T &data)
 template<typename T>
 IO::InStream& operator>>(IO::InStream& stream, T &data) 
 {
-    std::cout << "Type " << typeid(data).name() << " does not support serialization" << std::endl;
+    std::cout << "Type " << typeid(data).name() << " does not support deserialization" << std::endl;
     return stream;
 }
 }

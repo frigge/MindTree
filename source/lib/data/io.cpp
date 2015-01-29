@@ -131,6 +131,33 @@ OutStream& OutStream::operator<<(const Vec2i &point)
     return *this;
 }
 
+OutStream& OutStream::operator<<(const glm::ivec2 &vec)
+{
+    *this << vec.x << vec.y;
+    return *this;
+}
+
+OutStream& OutStream::operator<<(const glm::vec2 &vec)
+{
+    *this << vec.x << vec.y;
+    return *this;
+}
+
+OutStream& OutStream::operator<<(const glm::vec3 &vec)
+{
+    double x = vec.x;
+    double y = vec.x;
+    double z = vec.x;
+    *this << x << y << z;
+    return *this;
+}
+
+OutStream& OutStream::operator<<(const glm::vec4 &vec)
+{
+    *this << vec.x << vec.y << vec.z << vec.w;
+    return *this;
+}
+
 OutStream& OutStream::operator<<(const DNode &node)
 {
     beginBlock("DNode");
@@ -326,6 +353,36 @@ InStream& InStream::operator>>(Vec2i &point)
     int x, y;
     *this >> x >> y;
     point = Vec2i(x, y);
+    return *this;
+}
+
+InStream& InStream::operator>>(glm::ivec2 &vec)
+{
+    *this >> vec.x >> vec.y;
+    return *this;
+}
+
+InStream& InStream::operator>>(glm::vec2 &vec)
+{
+    *this >> vec.x >> vec.y;
+    return *this;
+}
+
+InStream& InStream::operator>>(glm::vec3 &vec)
+{
+    double x = vec.x;
+    double y = vec.x;
+    double z = vec.x;
+    *this >> x >> y >> z;
+    vec.x = x;
+    vec.y = y;
+    vec.z = z;
+    return *this;
+}
+
+InStream& InStream::operator>>(glm::vec4 &vec)
+{
+    *this >> vec.x >> vec.y >> vec.z >> vec.w;
     return *this;
 }
 
