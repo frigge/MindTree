@@ -19,33 +19,26 @@ class TestCase:
             success = fn(*args)
         except:
             self.exceptions.append(sys.exc_info())
+
+        self.success = self.success and success
         return success
 
     def equal(self, a, b, msg="test"):
         succ = self._check(self._equal, a, b)
-        if succ:
-            self.success = self.success and True
-        else:
+        if not succ:
             print("{}: comparison of {} and {} failed".format(msg, a, b))
-            self.success = False
         return succ
 
     def contains(self, a, b, msg="test"):
         succ = self._check(self._contains, a, b)
-        if succ:
-            self.success = self.success and True
-        else:
+        if not succ:
             print("{}: {} not found in {}".format(msg, a, b))
-            self.success = False
         return succ
 
     def floatEqual(self, a, b, tol, msg="test"):
-        succ = self._check(self.floatEqual, a, b, tol)
-        if succ:
-            self.success = self.success and True
-        else:
+        succ = self._check(self._floatEqual, a, b, tol)
+        if not succ:
             print("{}: comparison of {} and {} failed".format(msg, a, b))
-            self.success = False
         return succ
 
 
