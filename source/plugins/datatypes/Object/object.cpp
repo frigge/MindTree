@@ -40,17 +40,17 @@ PROPERTY_TYPE_INFO(VertexListPtr, "VERTEXLIST");
 PROPERTY_TYPE_INFO(PolygonListPtr, "POLYGONLIST");
 
 AbstractTransformable::AbstractTransformable(eObjType t)
-    : center(0, 0, 0), type(t), parent(nullptr)
+    : center(0, 0, 0), type(t), _parent(nullptr)
 {
 }
 
 AbstractTransformable::AbstractTransformable(const AbstractTransformable &other)
     : MindTree::Object(other),
     type(other.type),
-    parent(other.parent),
+    _parent(other._parent),
     center(other.center),
     transformation(other.transformation),
-    name(other.name)
+    _name(other._name)
 
 {
     
@@ -73,34 +73,29 @@ AbstractTransformable::eObjType AbstractTransformable::getType()
 
 void AbstractTransformable::removeChild(AbstractTransformable* child)
 {
-    for(auto &c : children) {
+    for(auto &c : _children) {
         if (c.get() == child)
-            children.erase(std::find(begin(children), end(children), c));
+            _children.erase(std::find(begin(_children), end(_children), c));
     }
-}
-
-void AbstractTransformable::setParent(AbstractTransformable* p)
-{
-    parent = p;
-    parent->addChild(this);
 }
 
 AbstractTransformable* AbstractTransformable::getParent()    
 {
-    return parent;
+    return _parent;
 }
 
 const AbstractTransformable* AbstractTransformable::getParent() const
 {
-    return parent;
+    return _parent;
 }
 
-void AbstractTransformable::addChild(AbstractTransformable *obj)    
+void AbstractTransformable::addChild(AbstractTransformablePtr obj)    
 {
-    children.push_back(std::shared_ptr<AbstractTransformable>(obj));
+    obj->_parent = this;
+    _children.push_back(obj);
 }
 
-void AbstractTransformable::addChildren(std::vector<AbstractTransformable*>objs)    
+void AbstractTransformable::addChildren(std::vector<AbstractTransformablePtr> objs)    
 {
     for(auto obj : objs)
         addChild(obj);
@@ -108,17 +103,17 @@ void AbstractTransformable::addChildren(std::vector<AbstractTransformable*>objs)
 
 std::vector<std::shared_ptr<AbstractTransformable>> AbstractTransformable::getChildren()    
 {
-    return children; 
+    return _children; 
 }
 
 std::string AbstractTransformable::getName()
 {
-    return name;
+    return _name;
 }
 
 void AbstractTransformable::setName(std::string value)
 {
-    name = value;
+    _name = value;
 }
 
 glm::mat4 AbstractTransformable::getTransformation()
@@ -241,7 +236,7 @@ glm::mat4 AbstractTransformable::getWorldTransformation()
         std::lock_guard<std::mutex> lock(_transformationLock);
         trans = transformation;
     }
-    auto p = parent;
+    auto p = _parent;
     while(p){
         trans = p->getTransformation() * trans;
         p = p->getParent();

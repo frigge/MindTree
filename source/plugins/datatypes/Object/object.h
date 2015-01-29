@@ -93,11 +93,10 @@ public:
     void posAroundCenter(glm::vec3 newPos);
     void moveToCenter(double fac);
 
-    void setParent(AbstractTransformable* p);
     AbstractTransformable* getParent();
     const AbstractTransformable* getParent() const;
-    void addChild(AbstractTransformable* child);
-    void addChildren(std::vector<AbstractTransformable*>objs);
+    void addChild(std::shared_ptr<AbstractTransformable> child);
+    void addChildren(std::vector<AbstractTransformablePtr> objs);
     void removeChild(AbstractTransformable *child);
     std::vector<std::shared_ptr<AbstractTransformable>> getChildren();
 
@@ -111,9 +110,9 @@ private:
     std::mutex _transformationLock;
     std::mutex _centerLock;
 
-    AbstractTransformable *parent;
-    std::vector<std::shared_ptr<AbstractTransformable>> children;
-    std::string name;
+    AbstractTransformable *_parent;
+    std::vector<std::shared_ptr<AbstractTransformable>> _children;
+    std::string _name;
 };
 
 class Empty;
