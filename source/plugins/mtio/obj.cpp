@@ -63,6 +63,8 @@ void ObjImporter::readData(QTextStream &stream)
 std::shared_ptr<GeoObject> ObjImporter::addObject(QString line)    
 {
     auto obj = std::make_shared<GeoObject>();
+    obj->setName("ObjImported");
+
     if(!grp) grp = std::make_shared<Group>();
     grp->addMember(obj);
     QStringList l = line.split(" ");
@@ -122,7 +124,7 @@ ObjImportNode::ObjImportNode(bool raw)
 {
     setType("OBJIMPORT");
     if(!raw){
-        filesocket = new DinSocket("Filename", std::string("DIRECTORY"), this);
+        new DinSocket("Filename", std::string("DIRECTORY"), this);
         new DoutSocket("Group", "GROUPDATA", this);
     }
 }
@@ -132,13 +134,8 @@ ObjImportNode::ObjImportNode(const ObjImportNode &node)
 {
 }
 
-DinSocket* ObjImportNode::getFileSocket()    
-{
-    return filesocket; 
-}
-
 std::string ObjImportNode::getFilePath() const
 {
-    return filesocket->getProperty().getData<std::string>();
+    return getInSockets()[0]->getProperty().getData<std::string>();
 }
 
