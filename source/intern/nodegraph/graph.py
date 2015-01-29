@@ -24,8 +24,10 @@ class NodeSpace(QGraphicsScene):
         self.cb = MT.attachToSignal("createLink", self.drawLink)
         self.setSceneRect(-5000, -5000, 10000, 10000)
 
+    def clearCallbacks(self):
+        del self.cb
+
     def changeSpace(self, space):
-        print("changing from {} to {}".format(self.space, space))
         self.space = space
         for node in self.nodes.values():
             self.removeItem(node)
@@ -138,8 +140,8 @@ class NodeGraph(QGraphicsView):
     def __init__(self, widget):
         QGraphicsView.__init__(self)
 
-        self.widget = widget
         self.setScene(NodeSpace(MT.project.root))
+        self.widget = widget
         #QGL.setPreferredPaintEngine(QPaintEngine.OpenGL2)
         #glFmt = QGLFormat.defaultFormat()
         #glFmt.setSwapInterval(0)
@@ -161,10 +163,14 @@ class NodeGraph(QGraphicsView):
 
         self.cb = MT.attachToSignal("addNode", self.addNode)
         self.cb2 = MT.attachToSignal("removeNode", self.removeNode)
+        self.cb3 = MT.attachToSignal("newProject", self.newGraph)
 
         self.space = MT.project.root
         self.setAcceptDrops(True)
         self.dragPos = None
+
+    def newGraph(self, project):
+        self.scene().changeSpace(project.root)
 
     def resizeEvent(self, event):
         QGraphicsView.resizeEvent(self, event)
@@ -193,7 +199,7 @@ class NodeGraph(QGraphicsView):
             _node.pos = (scenePos.x() - nw/2, scenePos.y() - nh/2)
 
     def addNode(self, n):
-        if n.space != self.scene().space:
+        if n.space.ptr != self.scene().space.ptr:
             return
 
         item = self.scene().addNode(n)
