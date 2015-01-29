@@ -3,6 +3,7 @@
 #include "lights.h"
 #include "data/cache_main.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "data/debuglog.h"
 
 #include "../../3dwidgets/translate_widgets.h"
 #include "python.h"
@@ -96,6 +97,23 @@ void transformProc(MindTree::DataCache *cache)
     cache->pushData(newtransformable);
 }
 
+void parentProc(MindTree::DataCache *cache)
+{
+    dbout("");
+    auto oldparent = cache->getData(0).getData<AbstractTransformablePtr>();
+    auto parent = oldparent->clone();
+    Property childOrChildren = cache->getData(1);
+    
+    if(childOrChildren.getType() == "GROUP") {
+        auto grp = childOrChildren.getData<GroupPtr>();
+        for (auto &oldchild : grp->getMembers()) {
+            dbout("cloning: " << oldchild->getName());
+            parent->addChild(oldchild->clone());
+        }
+    }
+    cache->pushData(parent);
+}
+
 void createTranslateWidget()
 {
     auto translater1 = [] () { return std::make_shared<TranslateXWidget>(); };
@@ -150,6 +168,9 @@ BOOST_PYTHON_MODULE(object){
 
     proc = new CacheProcessor(transformProc);
     DataCache::addProcessor("TRANSFORMABLE", "TRANSFORM", proc);
+
+    proc = new CacheProcessor(parentProc);
+    DataCache::addProcessor("TRANSFORMABLE", "PARENTOBJECT", proc);
 
     ObjectDataPyWrapper::wrap();
     ObjectPyWrapper::wrap();

@@ -21,6 +21,16 @@ class TransformObjectNodeDecorator(MT.pytypes.NodeDecorator):
             ]
     outsockets = [("Object", "TRANSFORMABLE")]
 
+class ParentNodeDecorator(MT.pytypes.NodeDecorator):
+    label = "Objects.Parent"
+    type = "PARENTOBJECT"
+    insockets = [
+            ("Parent", "TRANSFORMABLE"),
+            ("Child(ren)", "VARIABLE")
+            ]
+    outsockets = [("Object", "TRANSFORMABLE")]
+
+
 class PointLightNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Lights.Point Light"
     type = "POINTLIGHT"
@@ -59,6 +69,7 @@ class DistantLightNodeDecorator(MT.pytypes.NodeDecorator):
 
 MT.registerNode(GroupObjectsNodeDecorator)
 MT.registerNode(TransformObjectNodeDecorator)
+MT.registerNode(ParentNodeDecorator)
 MT.registerNode(PointLightNodeDecorator)
 MT.registerNode(SpotLightNodeDecorator)
 MT.registerNode(DistantLightNodeDecorator)

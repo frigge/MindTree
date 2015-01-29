@@ -35,6 +35,7 @@ public:
 };
 
 namespace MindTree { class DataCache; }
+void parentProc(MindTree::DataCache *cache);
 void groupProc(MindTree::DataCache *cache);
 void transformProc(MindTree::DataCache *cache);
 
