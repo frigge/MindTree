@@ -7,8 +7,11 @@
 #include "data/datatypes.h"
 #include "data/nodes/containernode.h"
 #include "data/nodes/data_node.h"
+#include "data/debuglog.h"
 
 #include "io.h"
+
+//#define DEBUG_IO
 
 using namespace MindTree::IO;
 
@@ -209,6 +212,9 @@ InStream::InStream(std::string filename)
 
 void InStream::beginBlock(std::string blockName)
 {
+#ifdef DEBUG_IO
+    dbout("reading block: " << blockName);
+#endif
     _blocks.push(BlockInfo());
     auto &info = _blocks.top();
     _stream.read(reinterpret_cast<char*>(&info.size), sizeof(info.size));
@@ -223,6 +229,9 @@ void InStream::beginBlock(std::string blockName)
 
 void InStream::endBlock(std::string blockName)
 {
+#ifdef DEBUG_IO
+    dbout("end block: " << blockName);
+#endif
     BlockInfo currentBlock = _blocks.top();
     int32_t remaining_bytes = currentBlock.size - currentBlock.pos;
 
@@ -331,6 +340,10 @@ InStream& InStream::operator>>(std::string &str)
         str.push_back(ch);
         read(&ch, 1);
     }
+
+#ifdef DEBUG_IO
+    dbout("read string: " << str);
+#endif
     return *this;
 }
 
@@ -416,6 +429,11 @@ InStream& InStream::operator>>(DNode &node)
         beginBlock("DinSocket");
         auto *socket = new DinSocket("", "", &node);
         *this >> *socket;
+#ifdef DEBUG_IO
+        dbout("socket loaded:");
+        dbout("\tname: " << socket->getName());
+        dbout("\ttype: " << socket->getType().toStr());
+#endif
         endBlock("DinSocket");
     }
 
