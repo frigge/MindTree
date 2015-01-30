@@ -180,6 +180,8 @@ public:
     void clearLink();
 
 private:
+    friend IO::InStream& operator>>(IO::InStream& stream, DinSocket &socket);
+
     Signal::CallbackHandler _linkedNameChangeCallback;
     Signal::CallbackHandler _linkedTypeChangeCallback;
     Signal::CallbackHandler _linkedChangeCallback;

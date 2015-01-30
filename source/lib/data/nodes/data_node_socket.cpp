@@ -357,7 +357,7 @@ IO::InStream& MindTree::operator>>(IO::InStream& stream, DinSocket &socket)
     int cntdID = -1;
     Property prop;
     stream >> cntdID >> prop;
-    socket.setProperty(prop);
+    socket.prop = prop;
 
     socket.setTempCntdID(cntdID);
 
