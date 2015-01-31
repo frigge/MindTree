@@ -289,7 +289,7 @@ public:
     void init();
 
 private:
-    void _addShaderFromSource(std::string src, GLenum type);
+    void _addShaderFromSource(std::string src, ShaderType type);
 
     GLuint _id;
     std::atomic<bool> _isBound, _initialized;
@@ -297,12 +297,7 @@ private:
     size_t _offset;
     std::mutex _srcLock;
     std::unordered_map<std::string, int> _attributeLocations;
-    std::string _vertexSource;
-    std::string _fragmentSource;
-    std::string _geometrySource;
-    std::string _tessControlSource;
-    std::string _tessEvalSource;
-    std::string _computeSource;
+    std::unordered_map<int, std::string> _shaderSources;
     std::vector<std::shared_ptr<Texture2D>> _textures;
     std::unordered_map<int, std::string> _fileNameMap;
 };

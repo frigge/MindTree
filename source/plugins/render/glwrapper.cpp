@@ -454,8 +454,8 @@ void ShaderProgram::init()
     _id = glCreateProgram();
     MTGLERROR;
 
-    _addShaderFromSource(_vertexSource, GL_VERTEX_SHADER);
-    _addShaderFromSource(_fragmentSource, GL_FRAGMENT_SHADER);
+    for (auto p : _shaderSources)
+        _addShaderFromSource(p.second, static_cast<ShaderType>(p.first));
 
     link();
 }
@@ -469,7 +469,7 @@ void ShaderProgram::bind()
     _isBound  = !MTGLERROR;
 }
 
-void ShaderProgram::release()    
+void ShaderProgram::release()
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     if(!_id) return;
@@ -478,7 +478,7 @@ void ShaderProgram::release()
     MTGLERROR;
 }
 
-void ShaderProgram::link()    
+void ShaderProgram::link()
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     _textures.clear();
@@ -491,35 +491,37 @@ void ShaderProgram::link()
     MTGLERROR;
 }
 
-void ShaderProgram::addShaderFromSource(std::string src, ShaderProgram::ShaderType type)    
+void ShaderProgram::addShaderFromSource(std::string src, ShaderProgram::ShaderType type)
 {
     std::lock_guard<std::mutex> lock(_srcLock);
-    switch(type) {
-        case VERTEX:
-            _vertexSource = src;
-            break;
-        case FRAGMENT:
-            _fragmentSource = src;
-            break;
-        case GEOMETRY:
-            _geometrySource = src;
-        case TESSELATION_EVALUATION:
-            _tessEvalSource = src;
-            break;
-        case TESSELATION_CONTROL:
-            _tessControlSource = src;
-            break;
-        case COMPUTE:
-            _computeSource = src;
-            break;
-    }
+    _shaderSources[type] = src;
 }
 
-void ShaderProgram::_addShaderFromSource(std::string src, GLenum type)    
+void ShaderProgram::_addShaderFromSource(std::string src, ShaderProgram::ShaderType type)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
 
-    GLuint shader = glCreateShader(type);
+    std::string shadertype;
+    GLenum t = GL_VERTEX_SHADER;
+    switch(type)
+    {
+        case VERTEX:
+            t = GL_VERTEX_SHADER;
+            shadertype = "Vertex Shader";
+            break;
+        case FRAGMENT:
+            t = GL_FRAGMENT_SHADER;
+            shadertype = "Fragment Shader";
+            break;
+        case GEOMETRY:
+            t = GL_GEOMETRY_SHADER;
+            shadertype = "Geometry Shader";
+            break;
+        default:
+            break;
+    }
+
+    GLuint shader = glCreateShader(t);
     MTGLERROR;
     const char* c_str = src.c_str();
     glShaderSource(shader, 1, &c_str, 0);
@@ -533,27 +535,8 @@ void ShaderProgram::_addShaderFromSource(std::string src, GLenum type)
     glGetShaderInfoLog(shader, infologlength, 0, infolog);
     std::string log((char*)infolog);
     delete [] infolog;
-    std::string shadertype;
-    ShaderType t;
-    switch(type)
-    {
-        case GL_VERTEX_SHADER:
-            t = VERTEX;
-            shadertype = "Vertex Shader";
-            break;
-        case GL_FRAGMENT_SHADER:
-            t = FRAGMENT;
-            shadertype = "Fragment Shader";
-            break;
-        case GL_GEOMETRY_SHADER:
-            t = GEOMETRY;
-            shadertype = "Geometry Shader";
-            break;
-        default:
-            break;
-    }
 
-    std::string filename = _fileNameMap[t];
+    std::string filename = _fileNameMap[type];
 
     if(log != "") {
         std::cout << "=========compile log(" << shadertype << ":" << filename << ")================" << std::endl;
