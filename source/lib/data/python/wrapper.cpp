@@ -28,6 +28,7 @@
 #include "graphics/viewer.h"
 #include "data/signal.h"
 #include "data/properties.h"
+#include "data/debuglog.h"
 #include "wrapper.h"
 
 using namespace MindTree;
@@ -124,7 +125,6 @@ void PyWrapper::wrap()
 
 int PyWrapper::ptr()
 {
-    if(!alive()) return 0;
     return reinterpret_cast<intptr_t>(getWrapped<PyExposable>());
 }
 
