@@ -81,6 +81,8 @@ void transformProc(MindTree::DataCache *cache)
 
     auto newtransformable = transformable->clone();
 
+    dbout("transforming " << newtransformable);
+
     glm::mat4 rotx = glm::rotate(glm::mat4(), rotation.x, glm::vec3(1, 0, 0));
     glm::mat4 roty = glm::rotate(glm::mat4(), rotation.y, glm::vec3(0, 1, 0));
     glm::mat4 rotz = glm::rotate(glm::mat4(), rotation.z, glm::vec3(0, 0, 1));
@@ -99,15 +101,13 @@ void transformProc(MindTree::DataCache *cache)
 
 void parentProc(MindTree::DataCache *cache)
 {
-    dbout("");
     auto oldparent = cache->getData(0).getData<AbstractTransformablePtr>();
     auto parent = oldparent->clone();
     Property childOrChildren = cache->getData(1);
     
-    if(childOrChildren.getType() == "GROUP") {
+    if(childOrChildren.getType() == "GROUPDATA") {
         auto grp = childOrChildren.getData<GroupPtr>();
         for (auto &oldchild : grp->getMembers()) {
-            dbout("cloning: " << oldchild->getName());
             parent->addChild(oldchild->clone());
         }
     }
