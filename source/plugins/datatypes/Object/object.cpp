@@ -54,7 +54,6 @@ AbstractTransformable::AbstractTransformable(const AbstractTransformable &other)
     _children(other._children)
 
 {
-    
 }
 
 AbstractTransformable::~AbstractTransformable()
@@ -352,7 +351,7 @@ GeoObject::GeoObject()
 }
 
 GeoObject::GeoObject(const GeoObject &other)
-    : AbstractTransformable(other), data(other.data)
+    : AbstractTransformable(other), data(other.data), _material(other._material)
 {
 }
 
