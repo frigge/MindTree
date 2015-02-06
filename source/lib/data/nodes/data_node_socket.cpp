@@ -506,6 +506,7 @@ void DinSocket::setCntdSocket(DoutSocket *socket)
 void DinSocket::cntdSocketFromID()
 {
     cntdSocket = const_cast<DSocket*>(LoadSocketIDMapper::getSocket(getTempCntdID()))->toOut();
+    if(cntdSocket) cntdSocket->pushSocket(this);
     setTempCntdID(0);
 }
 
@@ -556,7 +557,12 @@ void DoutSocket::registerSocket(DinSocket *socket)
     MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "outLinkChanged", socket);
     if(this == getNode()->getVarSocket())
         getNode()->incVarSocket();
+    
+    pushSocket(socket);
+}
 
+void DoutSocket::pushSocket(DinSocket *socket)
+{
     if(std::find(cntdSockets.begin(),
                  cntdSockets.end(),
                  socket->toIn()) == cntdSockets.end())

@@ -203,8 +203,11 @@ public:
     bool operator==(DoutSocket &socket)const;
     bool operator!=(DoutSocket &socket)const;
     std::vector<DinSocket*> getCntdSockets() const;
+
     void registerSocket(DinSocket *socket);
     void unregisterSocket(DinSocket *socket, bool decr=true);
+    void pushSocket(DinSocket *socket);
+
     void listenToLinkedName();
     void listenToLinkedType();
     void listenToLinked();
