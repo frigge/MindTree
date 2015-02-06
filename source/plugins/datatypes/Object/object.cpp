@@ -50,7 +50,8 @@ AbstractTransformable::AbstractTransformable(const AbstractTransformable &other)
     _parent(other._parent),
     center(other.center),
     transformation(other.transformation),
-    _name(other._name)
+    _name(other._name + "_clone"),
+    _children(other._children)
 
 {
     
