@@ -42,5 +42,7 @@ std::shared_ptr<GeoObject> prim3d::createCube(float scale)
     mesh->setProperty("polygon", polygons);
     mesh->computeVertexNormals();
 
+    obj->setName("Cube");
+
     return obj;
 }

@@ -23,5 +23,6 @@ GeoObjectPtr prim3d::createPlane(float scale)
 
     polygons->push_back(Polygon{3, 2, 1, 0});
 
+    obj->setName("Plane");
     return obj;
 }
