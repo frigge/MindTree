@@ -237,12 +237,10 @@ glm::mat4 AbstractTransformable::getWorldTransformation()
         std::lock_guard<std::mutex> lock(_transformationLock);
         trans = transformation;
     }
-    auto p = _parent;
-    while(p){
-        trans = p->getTransformation() * trans;
-        p = p->getParent();
-    }
-    return trans;
+    if(!_parent)
+        return trans;
+    else
+        return _parent->getWorldTransformation() * trans;
 }
 
 ObjectData::ObjectData(ObjectData::eDataType t)
