@@ -39,7 +39,7 @@ private:
     void setupDefaultLights();
     void setupGBuffer();
 
-    std::weak_ptr<ShaderRenderNode> _gbufferNode;
+    std::shared_ptr<ShaderRenderNode> _gbufferNode;
     LightAccumulationPass *_deferredRenderer;
 };
 

@@ -158,7 +158,7 @@ void DeferredRenderer::addRendererFromObject(std::shared_ptr<GeoObject> obj)
     auto data = obj->getData();
     switch(data->getType()){
         case ObjectData::MESH:
-            _gbufferNode.lock()->addRenderer(new PolygonRenderer(obj));
+            _gbufferNode->addRenderer(new PolygonRenderer(obj));
             _geometryPass.lock()->addGeometryRenderer(new EdgeRenderer(obj));
             _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
             break;
