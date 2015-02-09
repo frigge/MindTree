@@ -75,6 +75,9 @@ void groupProc(MindTree::DataCache *cache)
 void transformProc(MindTree::DataCache *cache)
 {
     auto transformable = cache->getData(0).getData<AbstractTransformablePtr>();
+    if(!transformable)
+        return;
+
     glm::vec3 translate = cache->getData(1).getData<glm::vec3>();
     glm::vec3 rotation = cache->getData(2).getData<glm::vec3>();
     glm::vec3 scale = cache->getData(3).getData<glm::vec3>();
