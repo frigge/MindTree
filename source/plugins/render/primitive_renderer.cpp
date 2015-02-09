@@ -156,15 +156,15 @@ void ShapeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std
 
     uniformStates.addState("fixed_screensize", getFixedScreenSize());
     uniformStates.addState("screen_oriented", getScreenOriented());
+    uniformStates.addState("fillColor", getFillColor());
+    uniformStates.addState("borderColor", getBorderColor());
     if(getFillColor().a > 0) {
         program->setUniform("isBorder", 0);
-        uniformStates.addState("fillColor", getFillColor());
         drawFill(camera, config, program);
     }
 
     if(getBorderColor().a > 0 && getBorderWidth() > 0) {
         program->setUniform("isBorder", 1);
-        uniformStates.addState("borderColor", getBorderColor());
         glLineWidth(getBorderWidth());
         drawBorder(camera, config, program);
         glLineWidth(1);
@@ -477,7 +477,7 @@ std::shared_ptr<VBO> ConeRenderer::_vbo;
 ConeRenderer::ConeRenderer(ShapeRendererGroup *parent)
     : ShapeRenderer(parent), _segments(8)
 {
-    new CircleRenderer(this);
+    new DiscRenderer(this);
 }
 
 void ConeRenderer::init(std::shared_ptr<ShaderProgram> prog)
