@@ -68,19 +68,11 @@ public:
     std::vector<std::string> getAllOutputs() const;
 
     void removePass(uint index);
+    std::weak_ptr<RenderPass> addPass();
     RenderPass* getPass(uint index);
     void setConfig(RenderConfig cfg);
     RenderConfig getConfig();
     void setDirty();
-
-    template<typename T>
-    std::shared_ptr<T> addPass()
-    {
-        std::lock_guard<std::mutex> lock(_managerLock);
-        auto pass = std::make_shared<T>();
-        passes.push_back(pass);
-        return pass;
-    }
 
     static std::shared_ptr<ResourceManager> getResourceManager();
 

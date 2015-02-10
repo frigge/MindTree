@@ -214,6 +214,14 @@ RenderConfig RenderManager::getConfig()
     return config;
 }
 
+std::weak_ptr<RenderPass> RenderManager::addPass()
+{
+    std::lock_guard<std::mutex> lock(_managerLock);
+    auto pass = std::make_shared<T>();
+    passes.push_back(pass);
+    return pass;
+}
+
 void RenderManager::removePass(uint index)    
 {
     std::lock_guard<std::mutex> lock(_managerLock);

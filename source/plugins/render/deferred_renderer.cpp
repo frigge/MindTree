@@ -91,7 +91,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     grid->setAlternatingColor(glm::vec4(.7, .7, .7, 1.0));
     grid->setBorderWidth(2.);
 
-    _geometryPass = manager->addPass<GL::RenderPass>();
+    _geometryPass = manager->addPass();
     _geometryPass.lock()->setCamera(camera);
     _geometryPass.lock()->setEnableBlending(false);
 
@@ -106,13 +106,13 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 
     _geometryPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
 
-    auto overlaypass = manager->addPass<GL::RenderPass>();
+    auto overlaypass = manager->addPass().lock();
     overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", 
                                                                    GL::Renderbuffer::DEPTH));
     overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
     overlaypass->setCamera(camera);
 
-    auto deferredPass = manager->addPass<GL::RenderPass>();
+    auto deferredPass = manager->addPass().lock();
     deferredPass->addOutput(std::make_shared<GL::Texture2D>("shading_out",
                                                             GL::Texture::RGBA16F));
     deferredPass->setCamera(camera);
@@ -122,7 +122,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlaypass);
 
-    auto *pixelPass = manager->addPass<GL::RenderPass>().get();
+    auto pixelPass = manager->addPass().lock();
     pixelPass->setCamera(camera);
     pixelPass->addRenderer(new GL::FullscreenQuadRenderer());
 

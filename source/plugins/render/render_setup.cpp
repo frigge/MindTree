@@ -137,7 +137,7 @@ ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3D
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
 
-    _geometryPass = manager->addPass<GL::RenderPass>();
+    _geometryPass = manager->addPass();
     _geometryPass.lock()->setCamera(camera);
 
     auto grid = new GL::GridRenderer(100, 100, 100, 100);
@@ -149,22 +149,8 @@ ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3D
     grid->setBorderWidth(2.);
 
     _geometryPass.lock()->addRenderer(grid);
-    //pass->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
     _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
-    //pass->addOutput(std::make_shared<GL::Texture2D>("outnormal"));
-    //pass->addOutput(std::make_shared<GL::Texture2D>("outposition"));
-
-//    auto overlaypass = manager->addPass<GL::RenderPass>();
-//    overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
-//    overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
-//    overlaypass->addOutput(std::make_shared<GL::Renderbuffer>("id"));
-//    overlaypass->addOutput(std::make_shared<GL::Renderbuffer>("position", GL::Renderbuffer::RGBA16F));
-//    overlaypass->setCamera(activeCamera);
-//
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(_geometryPass.lock());
-
-    //auto *pixelPass = manager->addPass<GL::RenderPass>().get();
-    //pixelPass->addRenderer(new GL::FullscreenQuadRenderer());
 
     setupDefaultLights();
 }
