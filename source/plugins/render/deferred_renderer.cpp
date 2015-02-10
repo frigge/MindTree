@@ -95,21 +95,26 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _geometryPass.lock()->setCamera(camera);
     _geometryPass.lock()->setEnableBlending(false);
 
-    _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Texture2D>("depth", GL::Texture::DEPTH));
+    _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Texture2D>("depth", 
+                                                                         GL::Texture::DEPTH));
     _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outcolor"));
-    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outnormal", GL::Texture::RGBA16F));
-    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outposition", GL::Texture::RGBA16F));
+    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outnormal", 
+                                                                    GL::Texture::RGBA16F));
+    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outposition", 
+                                                                    GL::Texture::RGBA16F));
     _geometryPass.lock()->addRenderer(grid);
 
     _geometryPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
 
     auto overlaypass = manager->addPass<GL::RenderPass>();
-    overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
+    overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", 
+                                                                   GL::Renderbuffer::DEPTH));
     overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
     overlaypass->setCamera(camera);
 
     auto deferredPass = manager->addPass<GL::RenderPass>();
-    deferredPass->addOutput(std::make_shared<GL::Texture2D>("shading_out"));
+    deferredPass->addOutput(std::make_shared<GL::Texture2D>("shading_out",
+                                                            GL::Texture::RGBA16F));
     deferredPass->setCamera(camera);
     _deferredRenderer = new LightAccumulationPass();
     deferredPass->addRenderer(_deferredRenderer);
