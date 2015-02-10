@@ -44,7 +44,7 @@ class PointLightNodeDecorator(MT.pytypes.NodeDecorator):
 
 class SpotLightNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Lights.Spot Light"
-    type = "POINTLIGHT"
+    type = "SPOTLIGHT"
 
     insockets = [
             ("Intensity", "FLOAT", 1.0),
@@ -57,7 +57,7 @@ class SpotLightNodeDecorator(MT.pytypes.NodeDecorator):
 
 class DistantLightNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Lights.Distant Light"
-    type = "POINTLIGHT"
+    type = "DISTANTLIGHT"
 
     insockets = [
             ("Intensity", "FLOAT", 1.0),
