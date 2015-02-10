@@ -103,6 +103,9 @@ void transformProc(MindTree::DataCache *cache)
 void parentProc(MindTree::DataCache *cache)
 {
     auto oldparent = cache->getData(0).getData<AbstractTransformablePtr>();
+    if(!oldparent)
+        return;
+
     auto parent = oldparent->clone();
     Property childOrChildren = cache->getData(1);
     
