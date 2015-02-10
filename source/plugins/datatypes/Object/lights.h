@@ -14,11 +14,20 @@ public:
         DISTANT
     };
 
+    struct ShadowInfo {
+        ShadowInfo() : _enabled(false), _size(256, 256) {}
+        bool _enabled;
+        glm::ivec2 _size;
+    };
+
     Light(Light_t type, double intensity, glm::vec4 color);
 
     AbstractTransformablePtr clone() const override;
 
     Light_t getLightType() const;
+
+    void setShadowInfo(ShadowInfo info);
+    Light::ShadowInfo getShadowInfo() const;
 
     inline void setIntensity(double intensity) { _intensity = intensity; }
     inline double getIntensity() const { return _intensity; }
@@ -29,6 +38,8 @@ private:
     double _intensity;
     Light_t _type;
     glm::vec4 _color;
+
+    ShadowInfo _shadowInfo;
 };
 
 class PointLight;

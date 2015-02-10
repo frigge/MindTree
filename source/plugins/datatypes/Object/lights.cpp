@@ -16,6 +16,16 @@ Light::Light_t Light::getLightType() const
     return _type;
 }
 
+void Light::setShadowInfo(ShadowInfo info)
+{
+    _shadowInfo = info;
+}
+
+Light::ShadowInfo Light::getShadowInfo() const
+{
+    return _shadowInfo;
+}
+
 PointLight::PointLight(double intensity, glm::vec4 color)
     : Light(POINT, intensity, color)
 {
