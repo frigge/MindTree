@@ -107,10 +107,9 @@ void main(){
     vec3 diff = gamma(polygoncolor.rgb, GAMMA) * lambert()*diffint;
     float diffspecratio = 0.5 * value(diff) / clamp(0.0001, 1., value(spectotal));
     vec3 diffspec = mix(diff, spectotal, diffspecratio);
-    shading_out = vec4(gamma(
-                    diffspec + 
+    shading_out = vec4( diffspec + 
                     gamma(ambient.rgb, GAMMA) * ambientIntensity + 
                     spectotal
-                    , 1./GAMMA), _pos.a
+                    , _pos.a
                    );
 }
