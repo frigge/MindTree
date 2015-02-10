@@ -14,7 +14,8 @@ RenderPass::RenderPass() :
     _blendSource(GL_SRC_ALPHA),
     _blendDest(GL_ONE_MINUS_SRC_ALPHA),
     _depthOutput(NONE),
-    _blending(true)
+    _blending(true),
+    _bgColor(0)
 {
 }
 
