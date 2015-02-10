@@ -103,6 +103,7 @@ DNode::DNode(const DNode& node)
 
 DNode::~DNode()
 {
+    MT_CUSTOM_SIGNAL_EMITTER("nodeDeleted", this);
     for (auto *in : getInSockets())
         in->clearLink();
 
@@ -116,7 +117,6 @@ DNode::~DNode()
         delete socket;
 
     if(space)space->unregisterNode(this);
-    MT_CUSTOM_SIGNAL_EMITTER("nodeDeleted", this);
 }
 
 DNode::BuildInType DNode::getBuildInType() const
