@@ -31,8 +31,16 @@ SpotLightRenderer::SpotLightRenderer(const SpotLightPtr l)
     : _light(l)
 {
     auto *cone = new ConeRenderer(this);
+    auto *circle1 = new CircleRenderer(this);
+    cone->setStaticTransformation(glm::scale(glm::mat4(), glm::vec3(.5, 1, .5)));
+    circle1->setStaticTransformation(glm::translate(glm::mat4(), glm::vec3(0, -1, 0)));
 
     setTransformation(l->getWorldTransformation());
+
+    setFillColor(glm::vec4(1, 1, 0, .5));
+    setBorderColor(glm::vec4(1, 1, 0, 1));
+    setBorderWidth(2);
+    setFixedScreenSize(true);
 }
 
 DistantLightRenderer::DistantLightRenderer(const DistantLightPtr l)
