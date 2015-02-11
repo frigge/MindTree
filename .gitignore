@@ -6,3 +6,4 @@ source/tags
 cscope.*
 build/
 *.swp
+*.pyc
