@@ -8,6 +8,7 @@ uniform bool defaultLighting = true;
 in vec3 P;
 in vec3 N;
 out vec3 pos;
+out vec3 cameraPos;
 out vec3 sn;
 
 void main(){
@@ -16,9 +17,11 @@ void main(){
    if(defaultLighting) {
        pos = (modelView * vec4(P, 1)).xyz;
        sn = (modelView * vec4(N, 0)).xyz;
+       cameraPos = pos;
    }
    else {
        pos = (model * vec4(P, 1)).xyz;
        sn = (model * vec4(N, 0)).xyz;
+       cameraPos = (modelView * vec4(P, 1)).xyz;
    }
 };
