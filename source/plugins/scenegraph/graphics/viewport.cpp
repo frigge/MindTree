@@ -91,7 +91,7 @@ void Viewport::changeCamera(QString cam)
 void Viewport::resizeEvent(QResizeEvent *)
 {
     doneCurrent();
-    activeCamera->setProjection((GLdouble)width()/(GLdouble)height());
+    activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
     activeCamera->setResolution(width(), height());
 }
 
