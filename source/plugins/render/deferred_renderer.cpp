@@ -1,3 +1,4 @@
+#define GLM_SWIZZLE
 #include "render.h"
 #include "renderpass.h"
 #include "primitive_renderer.h"
@@ -9,6 +10,7 @@
 #include "data/debuglog.h"
 #include "polygon_renderer.h"
 #include "light_renderer.h"
+#include "../datatypes/Object/lights.h"
 #include "camera_renderer.h"
 #include "empty_renderer.h"
 #include "shader_render_node.h"
@@ -48,7 +50,14 @@ std::shared_ptr<ShaderProgram> LightAccumulationPass::getProgram()
 
 void LightAccumulationPass::setLights(std::vector<std::shared_ptr<Light>> lights)
 {
+    std::lock_guard<std::mutex> lock(_lightsLock);
     _lights = lights;
+}
+
+void LightAccumulationPass::setShadowPasses(std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> shadowPasses)
+{
+    std::lock_guard<std::mutex> lock(_shadowPassesLock);
+    _shadowPasses = shadowPasses;
 }
 
 void LightAccumulationPass::draw(const CameraPtr /* camera */, 
@@ -57,7 +66,13 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
 {
     glBlendEquation(GL_FUNC_ADD);
     UniformStateManager states(program);
+    std::lock_guard<std::mutex> lock(_lightsLock);
+    std::lock_guard<std::mutex> lock2(_shadowPassesLock);
     for (const LightPtr light : _lights) {
+        if(_shadowPasses.find(light) != _shadowPasses.end()) {
+            auto shadowmap = _shadowPasses[light].lock()->getOutputTextures()[0];
+            program->setTexture(shadowmap, "shadow");
+        }
         double coneangle = 2 * 3.14159265359;
         if(light->getLightType() == Light::SPOT)
             coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
@@ -65,10 +80,21 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
         states.addState("light.pos", 
                         glm::vec4(light->getPosition(), 
                                                light->getLightType() == Light::DISTANT ? 0 : 1));
+
+        glm::vec3 dir(0);
+        if (light->getLightType() == Light::DISTANT
+            || light->getLightType() == Light::SPOT)
+            dir = light->getTransformation()[2].xyz();
+
+        auto shadowcam = _shadowPasses[light].lock()->getCamera();
+        glm::mat4 mvp = shadowcam->getProjection() 
+            * shadowcam->getWorldTransformation();
+        states.addState("light.shadowmvp", mvp);
+        states.addState("light.pos", light->getPosition());
+        states.addState("light.dir", dir);
         states.addState("light.color", light->getColor());
         states.addState("light.intensity", light->getIntensity());
         states.addState("light.coneangle", coneangle);
-        states.addState("light.directional", light->getLightType() == Light::DISTANT);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         MTGLERROR;
     }
@@ -92,47 +118,53 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     grid->setBorderWidth(2.);
 
     _geometryPass = manager->addPass();
-    _geometryPass.lock()->setCamera(camera);
-    _geometryPass.lock()->setEnableBlending(false);
+    auto geopass = _geometryPass.lock();
 
-    _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Texture2D>("depth", 
-                                                                         GL::Texture::DEPTH));
-    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outcolor"));
-    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outnormal", 
-                                                                    GL::Texture::RGBA16F));
-    _geometryPass.lock()->addOutput(std::make_shared<GL::Texture2D>("outposition", 
-                                                                    GL::Texture::RGBA16F));
-    _geometryPass.lock()->addRenderer(grid);
+    geopass->setCamera(camera);
+    geopass->setEnableBlending(false);
 
-    _geometryPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
+    geopass->setDepthOutput(std::make_shared<Texture2D>("depth", 
+                                                        Texture::DEPTH));
+    geopass->addOutput(std::make_shared<Texture2D>("outcolor"));
+    geopass->addOutput(std::make_shared<Texture2D>("outnormal", 
+                                                   Texture::RGBA16F));
+    geopass->addOutput(std::make_shared<Texture2D>("outposition", 
+                                                   Texture::RGBA16F));
+    geopass->addRenderer(grid);
 
-    auto overlaypass = manager->addPass().lock();
-    overlaypass->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", 
-                                                                   GL::Renderbuffer::DEPTH));
-    overlaypass->addOutput(std::make_shared<GL::Texture2D>("overlay"));
-    overlaypass->setCamera(camera);
+    geopass->setBlendFunc(GL_ONE, GL_ONE);
 
-    auto deferredPass = manager->addPass().lock();
-    deferredPass->addOutput(std::make_shared<GL::Texture2D>("shading_out",
-                                                            GL::Texture::RGBA16F));
-    deferredPass->setCamera(camera);
+    auto overlay = manager->addPass().lock();
+    overlay
+        ->setDepthOutput(std::make_shared<Renderbuffer>("depth",
+                                                        Renderbuffer::DEPTH));
+    overlay->addOutput(std::make_shared<Texture2D>("overlay"));
+    overlay->setCamera(camera);
+
+    _deferredPass = manager->addPass();
+    _deferredPass.lock()
+        ->addOutput(std::make_shared<Texture2D>("shading_out",
+                                                Texture::RGBA16F));
+
+    _deferredPass.lock()->setCamera(camera);
     _deferredRenderer = new LightAccumulationPass();
-    deferredPass->addRenderer(_deferredRenderer);
-    deferredPass->setBlendFunc(GL_ONE, GL_ONE);
+    _deferredPass.lock()->addRenderer(_deferredRenderer);
+    _deferredPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
 
-    if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlaypass);
+    if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
 
     auto pixelPass = manager->addPass().lock();
     pixelPass->setCamera(camera);
-    pixelPass->addRenderer(new GL::FullscreenQuadRenderer());
+    pixelPass->addRenderer(new FullscreenQuadRenderer());
 
     setupDefaultLights();
     setupGBuffer();
+    setupShadowPasses();
 }
 
 void DeferredRenderer::setupGBuffer()
 {
-    std::shared_ptr<ShaderProgram> gbufferShader = std::make_shared<ShaderProgram>();
+    auto gbufferShader = std::make_shared<ShaderProgram>();
     gbufferShader
         ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
                             ShaderProgram::VERTEX);
@@ -147,6 +179,12 @@ void DeferredRenderer::setupGBuffer()
 
 void DeferredRenderer::setGeometry(std::shared_ptr<Group> grp)
 {
+    //clear shadow passes
+    for(auto p : _shadowPasses) {
+        getManager()->removePass(p.second);
+    }
+    _shadowPasses.clear();
+
     auto config = getManager()->getConfig();
     if(config.hasProperty("defaultLighting") &&
        config["defaultLighting"].getData<bool>()) {
@@ -154,8 +192,21 @@ void DeferredRenderer::setGeometry(std::shared_ptr<Group> grp)
     }
     else {
         _deferredRenderer->setLights(grp->getLights());
+        _deferredRenderer->setShadowPasses(_shadowPasses);
     }
     setRenderersFromGroup(grp);
+}
+
+void DeferredRenderer::setupShadowPasses()
+{
+    auto shadowShader = std::make_shared<ShaderProgram>();
+    _shadowNode = std::make_shared<ShaderRenderNode>(shadowShader);
+    shadowShader
+        ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
+                            ShaderProgram::VERTEX);
+    shadowShader
+        ->addShaderFromFile("../plugins/render/defaultShaders/shadow.frag", 
+                            ShaderProgram::FRAGMENT);
 }
 
 void DeferredRenderer::addRendererFromObject(std::shared_ptr<GeoObject> obj)
@@ -164,9 +215,43 @@ void DeferredRenderer::addRendererFromObject(std::shared_ptr<GeoObject> obj)
     switch(data->getType()){
         case ObjectData::MESH:
             _gbufferNode->addRenderer(new PolygonRenderer(obj));
+            _shadowNode->addRenderer(new PolygonRenderer(obj));
             _geometryPass.lock()->addGeometryRenderer(new EdgeRenderer(obj));
             _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
             break;
+    }
+}
+
+void DeferredRenderer::createShadowPass(SpotLightPtr spot)
+{
+    Light::ShadowInfo info = spot->getShadowInfo();
+    if(!info._enabled) return;
+
+    auto shadowPass = getManager()->insertPassAfter(_deferredPass);
+    size_t shadowCount = _shadowPasses.size();
+    _shadowPasses.insert({spot, shadowPass});
+
+    auto camera = std::make_shared<Camera>();
+    camera->setResolution(info._size.x, info._size.y);
+    camera->setTransformation(spot->getTransformation());
+    shadowPass.lock()->setCamera(camera);
+    shadowPass.lock()
+        ->setDepthOutput(std::make_shared<Texture2D>("shadow",
+                                                     Texture::DEPTH16));
+
+    shadowPass.lock()->addGeometryShaderNode(_shadowNode);
+}
+
+void DeferredRenderer::addRendererFromLight(LightPtr obj)
+{
+    RenderConfigurator::addRendererFromLight(obj);
+
+    switch(obj->getLightType()) {
+        case Light::POINT:
+        case Light::DISTANT:
+            break;
+        case Light::SPOT:
+           createShadowPass(std::dynamic_pointer_cast<SpotLight>(obj));
     }
 }
 
