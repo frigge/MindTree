@@ -437,6 +437,8 @@ void RenderPass::setBackgroundColor(glm::vec4 color)
 
 void RenderPass::render(const RenderConfig &config)
 {
+    std::lock_guard<std::mutex> lock(_cameraLock);
+    if(!_camera) return;
     int width = _camera->getWidth();
     int height = _camera->getHeight();
 
