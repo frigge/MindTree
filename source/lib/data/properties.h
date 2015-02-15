@@ -277,7 +277,7 @@ public:
         return reinterpret_cast<PropertyData<T>*>(data)->getData();
     }
 
-    BPy::object toPython() const noexcept;
+    BPy::object toPython() const;
     const MindTree::DataType& getType() const;
     inline operator bool() const
     {
