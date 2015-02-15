@@ -11,6 +11,7 @@ uniform ivec2 resolution;
 
 uniform sampler2D outnormal;
 uniform sampler2D outposition;
+uniform sampler2D shadow;
 
 uniform vec4 polygoncolor = vec4(1);
 uniform int flatShading = 0;
@@ -27,14 +28,19 @@ out vec4 shading_out;
 const float GAMMA=2.2;
 
 struct Light {
-    vec4 pos;
     vec4 color;
     float intensity;
     float coneangle;
-    bool directional;
+    vec3 pos;
+    vec3 dir;
+    mat4 shadowmvp;
 };
 
 uniform Light light;
+
+vec3 lvec;
+float atten = 1;
+float angleMask = 1; // for spots only
 
 float _gamma(float val, float g) {
     return pow(val, g);
@@ -49,37 +55,17 @@ vec3 gamma(vec3 col, float g) {
 }
 
 vec3 lambert() {
-    vec3 lvec;
-    float atten = 1;
-    if(light.directional)
-        lvec = -light.pos.xyz;
-    else {
-        lvec = light.pos.xyz - pos;
-        atten = 1.0 / dot(lvec, lvec);
-    }
-
-
-    float cosine = dot(Nn, normalize(lvec));
+    float cosine = dot(Nn, lvec);
     cosine = clamp(cosine, 0.0, 1.0);
-    vec3 col = gamma(light.color.rgb, GAMMA) * cosine * light.intensity * atten;
+    vec3 col = gamma(light.color.rgb, GAMMA) * cosine * light.intensity * atten * angleMask;
     return col;
 }
 
 vec3 phong(float rough) {
-    vec3 lvec;
-    float atten = 1;
-    if(light.directional)
-        lvec = -light.pos.xyz;
-    else {
-        lvec = light.pos.xyz - pos;
-        atten = 1.0 / dot(lvec, lvec);
-    }
-
-    vec3 ln = normalize(lvec);
-    vec3 Half = normalize(eye + ln);
+    vec3 Half = normalize(eye + lvec);
     float cosine = clamp(dot(Nn, Half), 0., 1.);
     cosine = pow(cosine, 1./rough);
-    vec3 col = gamma(light.color.rgb, GAMMA) * light.intensity * cosine * atten;
+    vec3 col = gamma(light.color.rgb, GAMMA) * light.intensity * cosine * atten * angleMask;
     return col;
 }
 
@@ -88,6 +74,23 @@ float value(vec3 col) {
 }
 
 void main(){
+    float lightDirLength = length(light.dir);
+
+    if(lightDirLength < 1)
+        lvec = light.pos.xyz - pos;
+        atten = 1.0 / dot(lvec, lvec);
+    else {
+        lvec = -light.dir;
+    }
+
+    lvec = normalize(lvec);
+    if(lightDirLength > 0) { // is spot
+        angleMask = acos(dot(lvec, light.dir));
+        angleMask = smoothstep(0, 0.01, angleMask);
+        angleMask = smoothstep(0.99, 1, angleMask);
+    }
+
+
     if (defaultLighting)
         eye = vec3(0, 0, 1);
     else
