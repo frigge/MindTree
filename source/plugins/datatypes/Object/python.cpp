@@ -147,10 +147,15 @@ void regLightProcs()
     };
 
     auto spotLightProc = [](DataCache *cache) {
-        float intensity = cache->getData(0).getData<double>();
-        glm::vec4 color = cache->getData(1).getData<glm::vec4>();
-        float coneangle = cache->getData(2).getData<double>();
+        auto intensity = cache->getData(0).getData<double>();
+        auto color = cache->getData(1).getData<glm::vec4>();
+        auto coneangle = cache->getData(2).getData<double>();
+        auto attenuation = cache->getData(3).getData<bool>();
+        auto shadowMapping = cache->getData(4).getData<bool>();
+        auto shadowSize = cache->getData(5).getData<glm::ivec2>();
         auto light = std::make_shared<SpotLight>(intensity, color, coneangle);
+        Light::ShadowInfo info{shadowMapping, shadowSize};
+        light->setShadowInfo(info);
         cache->pushData(light);
     };
 
