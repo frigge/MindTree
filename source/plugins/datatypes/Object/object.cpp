@@ -122,10 +122,11 @@ glm::mat4 AbstractTransformable::getTransformation()
     return transformation;
 }
 
-//void AbstractTransformable::setTransformation(glm::mat4 value)
-//{
-//    transformation = value;
-//}
+void AbstractTransformable::setTransformation(glm::mat4 value)
+{
+    std::lock_guard<std::mutex> lock(_transformationLock);
+    transformation = value;
+}
 
 glm::vec3 AbstractTransformable::getCenter()    
 {
