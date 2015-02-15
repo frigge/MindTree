@@ -88,6 +88,15 @@ public: \
 #endif
 
 template<>
+struct PyConverter<glm::ivec2>
+{
+    static BPy::object pywrap(glm::ivec2 data)
+    {
+        return BPy::make_tuple(data[0], data[1]);
+    }
+};
+
+template<>
 struct PyConverter<glm::vec3>
 {
     static BPy::object pywrap(glm::vec3 data)
