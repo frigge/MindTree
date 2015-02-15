@@ -16,6 +16,7 @@ public:
 
     struct ShadowInfo {
         ShadowInfo() : _enabled(false), _size(256, 256) {}
+        ShadowInfo(bool en, glm::ivec2 s) : _enabled(en), _size(s) {}
         bool _enabled;
         glm::ivec2 _size;
     };
