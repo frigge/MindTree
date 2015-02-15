@@ -20,6 +20,7 @@
 #include "exception"
 #include "glm/glm.hpp"
 #include "iostream"
+#include "data/debuglog.h"
 
 #include "properties.h"
 
@@ -120,7 +121,30 @@ Property Property::createPropertyFromPython(const BPy::object &pyobj)
     }
     else if(t == "tuple") {
         BPy::tuple tuple(pyobj);
-        if(BPy::len(tuple) == 3) {
+        if(BPy::len(tuple) == 2) {
+            std::string elemType = Python::type(pyobj[0]);
+            if(elemType == "int") { 
+                int x, y;
+                x = BPy::extract<int>(pyobj[0]);
+                y = BPy::extract<int>(pyobj[1]);
+                glm::ivec2 val(x, y);
+                return Property(val);
+            }        
+            else if(elemType == "float") { 
+                double x, y;
+                x = BPy::extract<float>(pyobj[0]);
+                y = BPy::extract<float>(pyobj[1]);
+                glm::vec2 val(x, y);
+                return Property(val);
+            }
+            else if(elemType == "long") { 
+                long x, y;
+                x = BPy::extract<long>(pyobj[0]);
+                y = BPy::extract<long>(pyobj[1]);
+                glm::ivec2 val(x, y);
+                return Property(val);
+            }
+        } else if(BPy::len(tuple) == 3) {
             double x, y, z;
             x = BPy::extract<float>(pyobj[0]);
             y = BPy::extract<float>(pyobj[1]);
@@ -152,7 +176,7 @@ const MindTree::DataType& Property::getType() const
     return type;
 }
 
-BPy::object Property::toPython() const noexcept
+BPy::object Property::toPython() const
 {
     if(!data) {
         return BPy::object();
