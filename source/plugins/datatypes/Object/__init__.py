@@ -50,7 +50,9 @@ class SpotLightNodeDecorator(MT.pytypes.NodeDecorator):
             ("Intensity", "FLOAT", 1.0),
             ("Color", "COLOR", (1, 1, 1, 1)),
             ("Cone Angle", "FLOAT", 45.0),
-            ("Square Attenuation", "BOOLEAN", False)
+            ("Square Attenuation", "BOOLEAN", False),
+            ("Shadow Mapping", "BOOLEAN", False),
+            ("Shadow Map Size", "INTVECTOR2D", (256, 256)),
             ]
     outsockets = [
             ("Object", "TRANSFORMABLE")]
