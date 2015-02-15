@@ -438,8 +438,8 @@ std::vector<std::shared_ptr<Light>> Group::getLights()
 }
 
 Camera::Camera()
-    : AbstractTransformable(CAMERA), fov(45), perspective(true),
-    near(.1), far(10000), _width(0), _height(0)
+    : AbstractTransformable(CAMERA), _fov(45),
+    _near(.1), _far(10000), _width(0), _height(0), _aspect(1)
 {
     setPosition(0, 10, -10);
     setCenter(0, 0, 0);
@@ -447,11 +447,10 @@ Camera::Camera()
 
 Camera::Camera(const Camera &other) :
     AbstractTransformable(other),
-    projection(other.projection),
-    fov{other.fov.load()},
-    perspective{other.perspective.load()},
-    near{other.near.load()},
-    far{other.far.load()},
+    _fov{other._fov.load()},
+    _aspect{other._aspect.load()},
+    _near{other._near.load()},
+    _far{other._far.load()},
     _width{other._width.load()},
     _height{other._height.load()}
 
@@ -484,16 +483,24 @@ AbstractTransformablePtr Camera::clone() const
     return std::shared_ptr<AbstractTransformable>(obj);
 }
 
-void Camera::setProjection(double aspect)    
+void Camera::setAspect(double aspect)
 {
-    std::lock_guard<std::mutex> lock(_projectionLock);
-    projection = glm::perspective(fov.load(), aspect, near.load(), far.load()); 
+    _aspect = aspect;
+}
+
+void Camera::setNear(double near)
+{
+    _near = near;
+}
+
+void Camera::setFar(double far)
+{
+    _far = far;
 }
 
 glm::mat4 Camera::getProjection()
 {
-    std::lock_guard<std::mutex> lock(_projectionLock);
-    return projection;
+    return glm::perspective(_fov.load(), _aspect.load(), _near.load(), _far.load()); 
 }
 
 glm::mat4 Camera::getViewMatrix()    

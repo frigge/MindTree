@@ -79,6 +79,7 @@ public:
     void setName(std::string value);
 
     glm::mat4 getTransformation();
+    void setTransformation(glm::mat4 value);
     glm::mat4 getWorldTransformation();
     glm::vec3 getPosition();
     void setPosition(glm::vec3 pos);
@@ -226,6 +227,10 @@ public:
     glm::mat4 getProjection();
     glm::mat4 getViewMatrix();
 
+    void setAspect(double aspect);
+    void setNear(double near);
+    void setFar(double far);
+
     void setResolution(int width, int height);
     int getWidth() const;
     int getHeight() const;
@@ -233,12 +238,9 @@ public:
 private:
     Camera(const Camera &other);
 
-    glm::mat4 projection;
-    std::mutex _projectionLock;
-
-    std::atomic<double> fov;
-    std::atomic<bool> perspective;
-    std::atomic<double> near, far;
+    std::atomic<float> _fov;
+    std::atomic<float> _aspect;
+    std::atomic<float> _near, _far;
 
     std::atomic<int> _width, _height;
 };
