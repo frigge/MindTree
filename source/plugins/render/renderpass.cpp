@@ -124,6 +124,14 @@ void RenderPass::init()
                     {
                         GLObjectBinder<std::shared_ptr<Texture2D>> binder(_depthTexture);
                         _target->attachDepthTexture(_depthTexture);
+
+                        //init shader programs
+                        for(auto shadernode : _shadernodes) {
+                            shadernode->program()->bindFragmentLocation(i, _depthTexture->getName());
+                        }
+                        for(auto shadernode : _geometryShaderNodes) {
+                            shadernode->program()->bindFragmentLocation(i, _depthTexture->getName());
+                        }
                     }
                     break;
                 }
@@ -136,6 +144,14 @@ void RenderPass::init()
                     {
                         GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(_depthRenderbuffer);
                         _target->attachDepthRenderbuffer(_depthRenderbuffer);
+
+                        //init shader programs
+                        for(auto shadernode : _shadernodes) {
+                            shadernode->program()->bindFragmentLocation(i, _depthRenderbuffer->getName());
+                        }
+                        for(auto shadernode : _geometryShaderNodes) {
+                            shadernode->program()->bindFragmentLocation(i, _depthRenderbuffer->getName());
+                        }
                     }
                     break;
                 }
@@ -494,7 +510,10 @@ void RenderPass::render(const RenderConfig &config)
             MTGLERROR;
         }
         else {
-            glDrawBuffer(GL_BACK);
+            if(!_target)
+                glDrawBuffer(GL_BACK);
+            else
+                glDrawBuffer(GL_NONE);
             MTGLERROR;
         }
 
