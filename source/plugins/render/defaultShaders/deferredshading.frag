@@ -11,7 +11,8 @@ uniform ivec2 resolution;
 
 uniform sampler2D outnormal;
 uniform sampler2D outposition;
-uniform sampler2D shadow;
+uniform sampler2DShadow shadow;
+float inLight = 1;
 
 uniform vec4 polygoncolor = vec4(1);
 uniform int flatShading = 0;
@@ -76,10 +77,10 @@ float value(vec3 col) {
 void main(){
     float lightDirLength = length(light.dir);
 
-    if(lightDirLength < 1)
+    if(lightDirLength < 1) {
         lvec = light.pos.xyz - pos;
         atten = 1.0 / dot(lvec, lvec);
-    else {
+    } else {
         lvec = -light.dir;
     }
 
@@ -90,7 +91,6 @@ void main(){
         angleMask = smoothstep(0.99, 1, angleMask);
     }
 
-
     if (defaultLighting)
         eye = vec3(0, 0, 1);
     else
@@ -100,6 +100,11 @@ void main(){
     vec4 _pos = texelFetch(outposition, p, 0);
     pos = _pos.xyz;
     Nn = normalize(texelFetch(outnormal, p, 0).xyz);
+
+    vec4 shadowP = (inverse(light.shadowmvp) * _pos);
+    shadowP.xy /= shadowP.w;
+
+    inLight = texture(shadow, shadowP.xyz);
 
     vec3 spec1 = phong(specrough1) * specint;
     vec3 spec2 = phong(specrough2) * specint2;
