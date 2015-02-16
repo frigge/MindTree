@@ -2,8 +2,8 @@
 
 in vec3 cameraPos;
 
-out vec4 shadow;
+out float shadow;
 void main()
 {
-    shadow = vec4(vec3(cameraPos.z), 1);
+    shadow = gl_FragCoord.z;
 }
