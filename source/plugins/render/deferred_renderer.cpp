@@ -72,6 +72,10 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
         if(_shadowPasses.find(light) != _shadowPasses.end()) {
             auto shadowmap = _shadowPasses[light].lock()->getOutputTextures()[0];
             program->setTexture(shadowmap, "shadow");
+            auto shadowcam = _shadowPasses[light].lock()->getCamera();
+            glm::mat4 mvp = shadowcam->getProjection() 
+                * shadowcam->getWorldTransformation();
+            states.addState("light.shadowmvp", mvp);
         }
         double coneangle = 2 * 3.14159265359;
         if(light->getLightType() == Light::SPOT)
@@ -86,10 +90,6 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
             || light->getLightType() == Light::SPOT)
             dir = light->getTransformation()[2].xyz();
 
-        auto shadowcam = _shadowPasses[light].lock()->getCamera();
-        glm::mat4 mvp = shadowcam->getProjection() 
-            * shadowcam->getWorldTransformation();
-        states.addState("light.shadowmvp", mvp);
         states.addState("light.pos", light->getPosition());
         states.addState("light.dir", dir);
         states.addState("light.color", light->getColor());
