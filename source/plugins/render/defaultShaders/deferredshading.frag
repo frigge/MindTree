@@ -103,6 +103,8 @@ void main(){
 
     vec4 shadowP = (inverse(light.shadowmvp) * _pos);
     shadowP.xy /= shadowP.w;
+    shadowP.xy += vec2(1);
+    shadowP.xy *= 0.5;
 
     inLight = texture(shadow, shadowP.xyz);
 
