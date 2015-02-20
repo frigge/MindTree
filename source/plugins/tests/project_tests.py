@@ -52,12 +52,14 @@ def testLoadProject():
     node6 = MT.createNode("Values.Vector2D")
     node7 = MT.createNode("Values.Color Value")
     node8 = MT.createNode("Objects.Transform")
+    node9 = MT.createNode("Objects.Lights.Spot Light")
 
     node4.pos = (0, 0)
     node5.pos = (0, 20)
     node6.pos = (0, 40)
     node7.pos = (0, 60)
     node8.pos = (0, 80)
+    node9.pos = (0, 100)
 
     MT.project.root.addNode(node)
     MT.project.root.addNode(node1)
@@ -69,8 +71,11 @@ def testLoadProject():
     node3.graph.addNode(node6)
     node3.graph.addNode(node7)
     node3.graph.addNode(node8)
+    node3.graph.addNode(node9)
 
-    containerSize = len(MT.project.root[3].graph)
+    graphsize = len(node3.graph)
+
+    node9.insockets[4].value = True
 
     node1.insockets[0].value = 5.7
     node2.insockets[0].value = 14
@@ -96,6 +101,7 @@ def testLoadProject():
     node6 = MT.project.root[3].graph[4]
     node7 = MT.project.root[3].graph[5]
     node8 = MT.project.root[3].graph[6]
+    node9 = MT.project.root[3].graph[7]
     
     test = TestCase()
 
@@ -114,14 +120,17 @@ def testLoadProject():
     test.equal((0, 60), node7.pos)
     test.equal((0, 80), node8.pos)
     test.equal(node.insockets[0].connected, node1.outsockets[0], "add insocket and float value out")
-    test.equal(containerSize, 7)
-    test.equal(len(node3.graph), 7)
+    test.equal(len(node3.graph), graphsize)
     test.contains("String Value", node4.name)
     test.contains("Vector3D", node5.name)
     test.contains("Vector2D", node6.name)
     test.contains("Color Value", node7.name)
     test.contains("Transform", node8.name)
+    test.contains("Spot Light", node9.name)
     test.equal(len(node8.insockets), 4)
     test.equal(node2.insockets[0].value, 14)
     test.floatEqual(node1.insockets[0].value, 5.7, 0.00001)
+    test.equal(node9.insockets[3].value, False)
+    test.equal(node9.insockets[4].value, True)
+    test.equal(node9.insockets[5].value, (256, 256))
     return test.exit()
