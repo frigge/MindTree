@@ -227,7 +227,7 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
     Light::ShadowInfo info = spot->getShadowInfo();
     if(!info._enabled) return;
 
-    auto shadowPass = getManager()->insertPassAfter(_deferredPass);
+    auto shadowPass = getManager()->insertPassAfter(_geometryPass);
     size_t shadowCount = _shadowPasses.size();
     _shadowPasses.insert({spot, shadowPass});
 
