@@ -21,8 +21,10 @@ BOOST_PYTHON_MODULE(generic_processor)
     IO::Input::registerReader<double>();
     IO::Input::registerReader<std::string>();
     IO::Input::registerReader<int>();
+    IO::Input::registerReader<bool>();
     IO::Input::registerReader<glm::vec3>();
     IO::Input::registerReader<glm::vec2>();
+    IO::Input::registerReader<glm::ivec2>();
     IO::Input::registerReader<glm::vec4>();
 
     DataCache::addProcessor("FLOAT", "FLOATVALUE", new CacheProcessor(values));
