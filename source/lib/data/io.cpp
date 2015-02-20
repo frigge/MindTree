@@ -100,9 +100,8 @@ OutStream& OutStream::operator<<(bool value)
         return *this;
     }
 
-    int8_t num = value ? 1 : 0;
-    const char* output = reinterpret_cast<const char*>(&num);
-    write(output, sizeof(num));
+    char num = value;
+    write(&num, 1);
     return *this;
 }
 
@@ -142,22 +141,26 @@ OutStream& OutStream::operator<<(const glm::ivec2 &vec)
 
 OutStream& OutStream::operator<<(const glm::vec2 &vec)
 {
-    *this << vec.x << vec.y;
+    *this << static_cast<double>(vec.x) << static_cast<double>(vec.y);
     return *this;
 }
 
 OutStream& OutStream::operator<<(const glm::vec3 &vec)
 {
     double x = vec.x;
-    double y = vec.x;
-    double z = vec.x;
+    double y = vec.y;
+    double z = vec.z;
     *this << x << y << z;
     return *this;
 }
 
 OutStream& OutStream::operator<<(const glm::vec4 &vec)
 {
-    *this << vec.x << vec.y << vec.z << vec.w;
+    double x = vec.x;
+    double y = vec.y;
+    double z = vec.z;
+    double w = vec.w;
+    *this << x << y << z << w;
     return *this;
 }
 
@@ -377,15 +380,16 @@ InStream& InStream::operator>>(glm::ivec2 &vec)
 
 InStream& InStream::operator>>(glm::vec2 &vec)
 {
-    *this >> vec.x >> vec.y;
+    double x, y;
+    *this >> x >> y;
+    vec.x = x;
+    vec.y = y;
     return *this;
 }
 
 InStream& InStream::operator>>(glm::vec3 &vec)
 {
-    double x = vec.x;
-    double y = vec.x;
-    double z = vec.x;
+    double x, y, z;
     *this >> x >> y >> z;
     vec.x = x;
     vec.y = y;
@@ -395,7 +399,12 @@ InStream& InStream::operator>>(glm::vec3 &vec)
 
 InStream& InStream::operator>>(glm::vec4 &vec)
 {
-    *this >> vec.x >> vec.y >> vec.z >> vec.w;
+    double x, y, z, w;
+    *this >> x >> y >> z >> w;
+    vec.x = x;
+    vec.y = y;
+    vec.z = z;
+    vec.w = w;
     return *this;
 }
 
