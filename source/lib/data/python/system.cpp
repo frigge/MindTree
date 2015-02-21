@@ -29,6 +29,7 @@ void MindTree::Python::sys::wrap()
     BPy::def("newProject", MindTree::Python::sys::newProject);
 
     MindTree::Signal::getHandler<MindTree::Project*>().connect("newProject", [](MindTree::Project* prj) {
+        GILLocker locker;
         BPy::object mtmodule = BPy::import("MT");
         ProjectPyWrapper *project = new ProjectPyWrapper(prj);
         BPy::scope(mtmodule).attr("project") = BPy::ptr(project);
