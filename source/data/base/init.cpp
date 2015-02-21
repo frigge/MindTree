@@ -9,6 +9,7 @@
 
 namespace {
     bool nogui = false;
+    std::string loadFile = "";
 }
 
 void MindTree::initApp(int argc, char *argv[])
@@ -24,8 +25,10 @@ void MindTree::initApp(int argc, char *argv[])
 
 void MindTree::initGui()
 {
-    //MindTree::GL::init();
     MindTree::Python::loadSettings();
+
+    if(loadFile != "")
+        Project::load(loadFile);
 }
 
 void MindTree::finalizeApp()    
@@ -49,6 +52,21 @@ void MindTree::parseArguments(int argc, char* argv[])
                 testmode = true;
                 break;
             }
+
+            if (*it == "--open" || *it == "-o"){
+                if((it+1) == end(arguments)) {
+                    std::cout << "you have to specify a filename" << std::endl;
+                    nogui = true;
+                    return;
+                }
+
+                std::cout << std::endl;
+                std::cout << std::endl;
+                loadFile = *(it + 1);
+                std::cout<<"open project: " << loadFile << std::endl;
+                return;
+            }
+
         }
         if(testmode) runTests(std::vector<std::string>(arguments.begin() + 2, arguments.end()));
         nogui = true;

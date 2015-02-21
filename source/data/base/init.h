@@ -13,9 +13,6 @@ namespace MindTree
 
     bool noGui();
 
-namespace {
-    bool nogui;
-}
 } /* MindTree */
 
 #endif /* end of include guard: INIT_HN78IJ70 */
