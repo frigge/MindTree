@@ -87,10 +87,10 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
 
         glm::vec3 dir(0);
         if (light->getLightType() == Light::DISTANT
-            || light->getLightType() == Light::SPOT)
+            || light->getLightType() == Light::SPOT){
             dir = light->getTransformation()[2].xyz();
+        }
 
-        states.addState("light.pos", light->getPosition());
         states.addState("light.dir", dir);
         states.addState("light.color", light->getColor());
         states.addState("light.intensity", light->getIntensity());
@@ -255,17 +255,31 @@ void DeferredRenderer::addRendererFromLight(LightPtr obj)
     }
 }
 
+glm::mat4 createTransFromZVec(glm::vec3 z)
+{
+    glm::mat4 trans;
+    z = glm::normalize(z);
+    glm::vec3 x = glm::normalize(glm::cross(z + glm::vec3(1, 0, 0), z));
+    glm::vec3 y = glm::normalize(glm::cross(x, z));
+
+    trans[0] = glm::vec4(x, 0);
+    trans[1] = glm::vec4(y, 0);
+    trans[2] = glm::vec4(z, 0);
+
+    return trans;
+}
+
 void DeferredRenderer::setupDefaultLights()
 {
     static const double coneangle = 2 * 3.14159265359;
     auto light1 = std::make_shared<DistantLight>(.8, glm::vec4(1));
-    light1->setPosition(-1, -1, -1);
+    light1->setTransformation(createTransFromZVec(glm::vec3(-1, -1, -1)));
 
     auto light2 = std::make_shared<DistantLight>(.3, glm::vec4(1));
-    light2->setPosition(5, 1, -1);
+    light2->setTransformation(createTransFromZVec(glm::vec3(5, 1, -1)));
 
     auto light3 = std::make_shared<DistantLight>(.1, glm::vec4(1));
-    light3->setPosition(0, 0, -1);
+    light3->setTransformation(createTransFromZVec(glm::vec3(0, 0, -1)));
 
     std::vector<LightPtr> lights = {light1, light2, light3};
     _deferredRenderer->setLights(lights);

@@ -32,7 +32,7 @@ struct Light {
     vec4 color;
     float intensity;
     float coneangle;
-    vec3 pos;
+    vec4 pos;
     vec3 dir;
     mat4 shadowmvp;
 };
@@ -58,7 +58,7 @@ vec3 gamma(vec3 col, float g) {
 vec3 lambert() {
     float cosine = dot(Nn, lvec);
     cosine = clamp(cosine, 0.0, 1.0);
-    vec3 col = gamma(light.color.rgb, GAMMA) * cosine * light.intensity * atten * angleMask;
+    vec3 col = gamma(light.color.rgb, GAMMA) * cosine * light.intensity * atten;
     return col;
 }
 
@@ -66,7 +66,7 @@ vec3 phong(float rough) {
     vec3 Half = normalize(eye + lvec);
     float cosine = clamp(dot(Nn, Half), 0., 1.);
     cosine = pow(cosine, 1./rough);
-    vec3 col = gamma(light.color.rgb, GAMMA) * light.intensity * cosine * atten * angleMask;
+    vec3 col = gamma(light.color.rgb, GAMMA) * light.intensity * cosine * atten;
     return col;
 }
 
@@ -77,15 +77,16 @@ float value(vec3 col) {
 void main(){
     float lightDirLength = length(light.dir);
 
-    if(lightDirLength < 1) {
+    if(light.pos.w > 0.1) {// is point
         lvec = light.pos.xyz - pos;
         atten = 1.0 / dot(lvec, lvec);
     } else {
-        lvec = -light.dir;
+        lvec = light.dir;
     }
 
     lvec = normalize(lvec);
-    if(lightDirLength > 0) { // is spot
+    if(lightDirLength > 0.1
+       && light.pos.w > 0.1) { // is spot
         angleMask = acos(dot(lvec, light.dir));
         angleMask = smoothstep(0, 0.01, angleMask);
         angleMask = smoothstep(0.99, 1, angleMask);
@@ -101,12 +102,12 @@ void main(){
     pos = _pos.xyz;
     Nn = normalize(texelFetch(outnormal, p, 0).xyz);
 
-    vec4 shadowP = (inverse(light.shadowmvp) * _pos);
-    shadowP.xy /= shadowP.w;
-    shadowP.xy += vec2(1);
-    shadowP.xy *= 0.5;
+    //vec4 shadowP = (inverse(light.shadowmvp) * _pos);
+    //shadowP.xy /= shadowP.w;
+    //shadowP.xy += vec2(1);
+    //shadowP.xy *= 0.5;
 
-    inLight = texture(shadow, shadowP.xyz);
+    //inLight = texture(shadow, shadowP.xyz);
 
     vec3 spec1 = phong(specrough1) * specint;
     vec3 spec2 = phong(specrough2) * specint2;
@@ -117,9 +118,8 @@ void main(){
     vec3 diff = gamma(polygoncolor.rgb, GAMMA) * lambert()*diffint;
     float diffspecratio = 0.5 * value(diff) / clamp(0.0001, 1., value(spectotal));
     vec3 diffspec = mix(diff, spectotal, diffspecratio);
-    shading_out = vec4( diffspec + 
-                    gamma(ambient.rgb, GAMMA) * ambientIntensity + 
-                    spectotal
+    shading_out = vec4( diff
+                    //gamma(ambient.rgb, GAMMA) * ambientIntensity
                     , _pos.a
                    );
 }
