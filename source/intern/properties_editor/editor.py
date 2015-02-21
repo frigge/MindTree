@@ -128,6 +128,8 @@ class IntVector2DEditor(QWidget):
         self.setLayout(lay)
         self.xspin = QSpinBox()
         self.yspin = QSpinBox()
+        self.xspin.setRange(-100000, 100000)
+        self.yspin.setRange(-100000, 100000)
 
         lay.addWidget(self.xspin)
         lay.addWidget(self.yspin)
