@@ -144,12 +144,11 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _deferredPass = manager->addPass();
     _deferredPass.lock()
         ->addOutput(std::make_shared<Texture2D>("shading_out",
-                                                Texture::RGBA16F));
+                                                Texture::RGB));
 
     _deferredPass.lock()->setCamera(camera);
     _deferredRenderer = new LightAccumulationPass();
     _deferredPass.lock()->addRenderer(_deferredRenderer);
-    _deferredPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
 
