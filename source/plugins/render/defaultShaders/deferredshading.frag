@@ -14,7 +14,6 @@ uniform sampler2D outposition;
 uniform sampler2DShadow shadow;
 float inLight = 1;
 
-uniform vec4 polygoncolor = vec4(1);
 uniform int flatShading = 0;
 uniform float ambientIntensity = 0.1;
 uniform vec4 ambient; // = vec4(vec3(.1), 1.);
@@ -75,23 +74,6 @@ float value(vec3 col) {
 }
 
 void main(){
-    float lightDirLength = length(light.dir);
-
-    if(light.pos.w > 0.1) {// is point
-        lvec = light.pos.xyz - pos;
-        atten = 1.0 / dot(lvec, lvec);
-    } else {
-        lvec = light.dir;
-    }
-
-    lvec = normalize(lvec);
-    if(lightDirLength > 0.1
-       && light.pos.w > 0.1) { // is spot
-        angleMask = acos(dot(lvec, light.dir));
-        angleMask = smoothstep(0, 0.01, angleMask);
-        angleMask = smoothstep(0.99, 1, angleMask);
-    }
-
     if (defaultLighting)
         eye = vec3(0, 0, 1);
     else
@@ -102,24 +84,39 @@ void main(){
     pos = _pos.xyz;
     Nn = normalize(texelFetch(outnormal, p, 0).xyz);
 
-    //vec4 shadowP = (inverse(light.shadowmvp) * _pos);
-    //shadowP.xy /= shadowP.w;
-    //shadowP.xy += vec2(1);
-    //shadowP.xy *= 0.5;
+    vec4 shadowP = (inverse(light.shadowmvp) * _pos);
+    shadowP.xy /= shadowP.w;
+    shadowP.xy += vec2(1);
+    shadowP.xy *= 0.5;
 
-    //inLight = texture(shadow, shadowP.xyz);
+    float lightDirLength = length(light.dir);
 
-    vec3 spec1 = phong(specrough1) * specint;
-    vec3 spec2 = phong(specrough2) * specint2;
+    if(light.pos.w > 0.1) {// is point
+        lvec = light.pos.xyz - pos;
+        atten = 1.0 / dot(lvec, lvec);
+    } else {
+        lvec = -light.dir;
+    }
+
+    lvec = normalize(lvec);
+    if(lightDirLength > 0.1
+       && light.pos.w > 0.1) { // is spot
+        angleMask = acos(dot(lvec, light.dir));
+        angleMask = smoothstep(0, 0.01, angleMask);
+        angleMask = smoothstep(0.99, 1, angleMask);
+    }
+
+
+    inLight = texture(shadow, shadowP.xyz);
+
+    vec3 spec1 = clamp(phong(specrough1) * specint, vec3(0), vec3(1));
+    vec3 spec2 = clamp(phong(specrough2) * specint2, vec3(0), vec3(1));
 
     float specratio = 0.5 * value(spec1) / clamp(0.0001, 1., value(spec2));
     vec3 spectotal = mix(spec1, spec2, specratio);
 
-    vec3 diff = gamma(polygoncolor.rgb, GAMMA) * lambert()*diffint;
+    vec3 diff = clamp(lambert()*diffint, vec3(0), vec3(1));
     float diffspecratio = 0.5 * value(diff) / clamp(0.0001, 1., value(spectotal));
     vec3 diffspec = mix(diff, spectotal, diffspecratio);
-    shading_out = vec4( diff
-                    //gamma(ambient.rgb, GAMMA) * ambientIntensity
-                    , _pos.a
-                   );
+    shading_out = vec4(diff + spec1 + spec2, _pos.a);
 }
