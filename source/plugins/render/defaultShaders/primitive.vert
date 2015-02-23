@@ -22,6 +22,15 @@ mat4 extractTranslation(mat4 mat){
     return mat * inverse(mat4(mat3(mat)));
 }
 
+mat4 extractRotation(mat4 mat) {
+    mat4 rot = mat4(1);
+    rot[0] = mat[0];
+    rot[1] = mat[1];
+    rot[2] = mat[2];
+
+    return rot;
+}
+
 vec2 project(vec4 pos) {
     vec4 posndc = projection * view * extractTranslation(model) * pos;
     posndc /= posndc.w;
@@ -49,13 +58,14 @@ mat4 computeScaleMatrix() {
 void main(){
     mat4 screenTransform;
     mat4 translation = extractTranslation(model);
+    mat4 rot = extractRotation(model);
 
     vec4 staticTransformedP = staticTransformation * vec4(P, 1);
     if (screen_oriented) {
         screenTransform = projection * view * translation * computeScreenOrientation();
     }
     else
-        screenTransform = projection * view * translation;
+        screenTransform = projection * view * model;
 
     vec4 output;
     if (fixed_screensize)
