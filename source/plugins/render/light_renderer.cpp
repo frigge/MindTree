@@ -34,6 +34,7 @@ SpotLightRenderer::SpotLightRenderer(const SpotLightPtr l)
     auto *circle1 = new CircleRenderer(this);
     cone->setStaticTransformation(glm::scale(glm::mat4(), glm::vec3(.5, 1, .5)));
     circle1->setStaticTransformation(glm::translate(glm::mat4(), glm::vec3(0, -1, 0)));
+    setStaticTransformation(glm::rotate(glm::mat4(), -90.f, glm::vec3(1, 0, 0)));
 
     setTransformation(l->getWorldTransformation());
 
