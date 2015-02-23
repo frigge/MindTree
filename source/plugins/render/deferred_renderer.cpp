@@ -68,22 +68,23 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
     UniformStateManager states(program);
     std::lock_guard<std::mutex> lock(_lightsLock);
     std::lock_guard<std::mutex> lock2(_shadowPassesLock);
+    static const float PI = 3.14159265359;
     for (const LightPtr light : _lights) {
         if(_shadowPasses.find(light) != _shadowPasses.end()) {
             auto shadowmap = _shadowPasses[light].lock()->getOutputTextures()[0];
             program->setTexture(shadowmap, "shadow");
             auto shadowcam = _shadowPasses[light].lock()->getCamera();
             glm::mat4 mvp = shadowcam->getProjection() 
-                * shadowcam->getWorldTransformation();
+                * shadowcam->getViewMatrix();
             states.addState("light.shadowmvp", mvp);
         }
-        double coneangle = 2 * 3.14159265359;
+        double coneangle = 2 * PI;
         if(light->getLightType() == Light::SPOT)
             coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
 
-        states.addState("light.pos", 
-                        glm::vec4(light->getPosition(), 
-                                               light->getLightType() == Light::DISTANT ? 0 : 1));
+        states.addState("light.pos",
+                        glm::vec4(light->getPosition(),
+                                  light->getLightType() == Light::DISTANT ? 0 : 1));
 
         glm::vec3 dir(0);
         if (light->getLightType() == Light::DISTANT
@@ -94,12 +95,11 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
         states.addState("light.dir", dir);
         states.addState("light.color", light->getColor());
         states.addState("light.intensity", light->getIntensity());
-        states.addState("light.coneangle", coneangle);
+        states.addState("light.coneangle", coneangle * PI /180);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         MTGLERROR;
     }
 }
-
 
 DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
     RenderConfigurator(context, camera)
