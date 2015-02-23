@@ -101,13 +101,10 @@ void main(){
     lvec = normalize(lvec);
     if(lightDirLength > 0.1
        && light.pos.w > 0.1) { // is spot
-        angleMask = acos(dot(lvec, light.dir));
-        angleMask = smoothstep(0, 0.01, angleMask);
-        angleMask = smoothstep(0.99, 1, angleMask);
+        float lightangle = acos(abs(dot(lvec, normalize(-light.dir))));
+        angleMask = smoothstep(light.coneangle, light.coneangle - 0.1, lightangle);
+        inLight = texture(shadow, shadowP.xyz);
     }
-
-
-    inLight = texture(shadow, shadowP.xyz);
 
     vec3 spec1 = clamp(phong(specrough1) * specint, vec3(0), vec3(1));
     vec3 spec2 = clamp(phong(specrough2) * specint2, vec3(0), vec3(1));
@@ -119,4 +116,6 @@ void main(){
     float diffspecratio = 0.5 * value(diff) / clamp(0.0001, 1., value(spectotal));
     vec3 diffspec = mix(diff, spectotal, diffspecratio);
     shading_out = vec4(diff + spec1 + spec2, _pos.a);
+    shading_out *= angleMask;
+    shading_out *= inLight;
 }
