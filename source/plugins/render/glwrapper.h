@@ -416,8 +416,10 @@ public:
 
     void scheduleCleanUp(std::shared_ptr<ShaderProgram> prog);
     void scheduleCleanUp(std::shared_ptr<VBO> vbo);
-    void scheduleCleanUp(std::shared_ptr<VAO> vbo);
-    void scheduleCleanUp(std::shared_ptr<IBO> vbo);
+    void scheduleCleanUp(std::shared_ptr<VAO> vao);
+    void scheduleCleanUp(std::shared_ptr<IBO> ibo);
+    void scheduleCleanUp(std::shared_ptr<Texture> texture);
+    void scheduleCleanUp(std::shared_ptr<Renderbuffer> texture);
     int getIndexForAttribute(std::string name);
 
 private:
@@ -431,6 +433,8 @@ private:
     std::vector<std::shared_ptr<VBO>> _scheduledVBOs;
     std::vector<std::shared_ptr<IBO>> _scheduledIBOs;
     std::vector<std::shared_ptr<VAO>> _scheduledVAOs;
+    std::vector<std::shared_ptr<Texture>> _scheduledTextures;
+    std::vector<std::shared_ptr<Renderbuffer>> _scheduledRenderbuffers;
 
     std::unordered_map<ObjectDataPtr, std::vector<std::shared_ptr<VBO>>> _vboMap;
     std::unordered_map<ObjectDataPtr, std::shared_ptr<IBO>> _iboMap;

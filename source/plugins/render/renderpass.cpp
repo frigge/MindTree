@@ -21,6 +21,16 @@ RenderPass::RenderPass() :
 
 RenderPass::~RenderPass()
 {
+    for (auto tx : _outputTextures) {
+        RenderManager::getResourceManager()->scheduleCleanUp(tx);
+    }
+
+    for (auto rb : _outputRenderbuffers) {
+        RenderManager::getResourceManager()->scheduleCleanUp(rb);
+    }
+
+    RenderManager::getResourceManager()->scheduleCleanUp(_depthTexture);
+    RenderManager::getResourceManager()->scheduleCleanUp(_depthRenderbuffer);
 }
 
 void RenderPass::setCamera(CameraPtr camera)

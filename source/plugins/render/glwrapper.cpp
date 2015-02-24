@@ -1203,6 +1203,16 @@ void ResourceManager::scheduleCleanUp(std::shared_ptr<IBO> ibo)
     _scheduledIBOs.push_back(ibo);
 }
 
+void ResourceManager::scheduleCleanUp(std::shared_ptr<Texture> texture)
+{
+    _scheduledTextures.push_back(texture);
+}
+
+void ResourceManager::scheduleCleanUp(std::shared_ptr<Renderbuffer> rb)
+{
+    _scheduledRenderbuffers.push_back(rb);
+}
+
 void ResourceManager::cleanUp()
 {
     _scheduledShaders.clear();
