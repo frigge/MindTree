@@ -39,8 +39,10 @@ execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
 message("compiler flags: " ${CMAKE_CXX_FLAGS})
 if(GCC_VERSION VERSION_LESS 4.7)
     add_definitions("-std=c++0x")
-else()
+elseif(GCC_VERSION VERSION_LESS 4.9)
     add_definitions("-std=c++11")
+else()
+    add_definitions("-std=c++14")
 endif()
 
 message("C++ compiler: " ${CMAKE_CXX_COMPILER_ID})
