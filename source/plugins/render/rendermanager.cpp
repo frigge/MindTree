@@ -217,6 +217,7 @@ RenderConfig RenderManager::getConfig()
 std::weak_ptr<RenderPass> RenderManager::addPass()
 {
     std::lock_guard<std::mutex> lock(_managerLock);
+    _initialized = false;
     auto pass = std::make_shared<RenderPass>();
     passes.push_back(pass);
     return pass;
@@ -225,6 +226,7 @@ std::weak_ptr<RenderPass> RenderManager::addPass()
 std::weak_ptr<RenderPass> RenderManager::insertPassBefore(std::weak_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
+    _initialized = false;
     auto newpass = std::make_shared<RenderPass>();
     auto it = std::find(begin(passes), end(passes), pass.lock());
     passes.insert(it, newpass);
@@ -234,6 +236,7 @@ std::weak_ptr<RenderPass> RenderManager::insertPassBefore(std::weak_ptr<RenderPa
 std::weak_ptr<RenderPass> RenderManager::insertPassAfter(std::weak_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
+    _initialized = false;
     auto newpass = std::make_shared<RenderPass>();
     auto it = std::find(begin(passes), end(passes), pass.lock());
     ++it;
@@ -244,6 +247,7 @@ std::weak_ptr<RenderPass> RenderManager::insertPassAfter(std::weak_ptr<RenderPas
 void RenderManager::removePass(std::weak_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
+    _initialized = false;
     auto it = std::find(begin(passes), end(passes), pass.lock());
     if(it != passes.end())
         passes.erase(it);
