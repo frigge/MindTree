@@ -366,9 +366,7 @@ public:
     GLenum getGLSize();
 
     virtual void init();
-
-protected:
-    void invalidate();
+    bool isInitialized() const;
 
 private:
     GLenum getGLTarget();
@@ -404,6 +402,22 @@ private:
     int _width, _height;
 };
 
+class AbstractResource
+{
+
+};
+
+template<class T>
+class Resource : public AbstractResource
+{
+public:
+    Resource(std::shared_ptr<T> resource) :
+        _resource(resource) {};
+
+private:
+    std::shared_ptr<T> _resource;
+};
+
 class ResourceManager
 {
 public:
@@ -414,12 +428,12 @@ public:
     std::shared_ptr<IBO> getIBO(ObjectDataPtr data);
     void uploadData(ObjectDataPtr data, std::string name);
 
-    void scheduleCleanUp(std::shared_ptr<ShaderProgram> prog);
-    void scheduleCleanUp(std::shared_ptr<VBO> vbo);
-    void scheduleCleanUp(std::shared_ptr<VAO> vao);
-    void scheduleCleanUp(std::shared_ptr<IBO> ibo);
-    void scheduleCleanUp(std::shared_ptr<Texture> texture);
-    void scheduleCleanUp(std::shared_ptr<Renderbuffer> texture);
+    template<class T>
+    void scheduleCleanUp(std::shared_ptr<T> resource)
+    {
+        auto res = std::make_unique<Resource<T>>(resource);
+        _scheduledResource.push_back(std::move(res));
+    }
     int getIndexForAttribute(std::string name);
 
 private:
@@ -429,12 +443,7 @@ private:
     std::shared_ptr<IBO> createIBO(ObjectDataPtr data);
     void cleanUp();
 
-    std::vector<std::shared_ptr<ShaderProgram>> _scheduledShaders;
-    std::vector<std::shared_ptr<VBO>> _scheduledVBOs;
-    std::vector<std::shared_ptr<IBO>> _scheduledIBOs;
-    std::vector<std::shared_ptr<VAO>> _scheduledVAOs;
-    std::vector<std::shared_ptr<Texture>> _scheduledTextures;
-    std::vector<std::shared_ptr<Renderbuffer>> _scheduledRenderbuffers;
+    std::vector<std::unique_ptr<AbstractResource>> _scheduledResource;
 
     std::unordered_map<ObjectDataPtr, std::vector<std::shared_ptr<VBO>>> _vboMap;
     std::unordered_map<ObjectDataPtr, std::shared_ptr<IBO>> _iboMap;

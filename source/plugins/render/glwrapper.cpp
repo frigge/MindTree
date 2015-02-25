@@ -11,6 +11,8 @@
 
 using namespace MindTree::GL;
 
+#define DEBUG_GL_WRAPPER
+
 bool MindTree::GL::getGLFramebufferError(std::string location)
 {
     switch(glCheckFramebufferStatus(GL_FRAMEBUFFER)) {
@@ -812,7 +814,20 @@ void ShaderProgram::setUniforms(PropertyMap map)
 void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string name)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
+
     assert(_initialized);
+
+    if(!texture->isInitialized())
+        texture->init();
+
+    std::string n;
+    if(name == "")
+        n = texture->getName();
+    else
+        n = name;
+    GLint location = getUniformLocation(name);
+    if(location > -1)
+        return;
 
     int textureSlot;
     auto it = std::find(begin(_textures), end(_textures), texture);
@@ -835,11 +850,6 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
     MTGLERROR;
 
     texture->bind();
-    std::string n;
-    if(name == "")
-        n = texture->getName();
-    else
-        n = name;
     setUniform(n, textureSlot);
 
     if(wasntbound) release();
@@ -866,6 +876,9 @@ void ShaderProgram::bindAttributeLocation(std::shared_ptr<VBO> vbo)
 
 void ShaderProgram::bindFragmentLocation(unsigned int index, std::string name)
 {
+#ifdef DEBUG_GL_WRAPPER
+    dbout("binding fragment location: " << index << " to out variable: " << name);
+#endif
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
 
@@ -1039,6 +1052,11 @@ GLenum Texture::getGLTarget()
     }
 }
 
+bool Texture::isInitialized() const
+{
+    return _initialized;
+}
+
 void Texture::init()
 {
     _initialized = true;
@@ -1063,11 +1081,6 @@ void Texture::setFormat(Texture::Format format)
     _format = format;
 }
 
-void Texture::invalidate()
-{
-    _initialized = false;
-}
-
 Texture2D::Texture2D(std::string name, Texture::Format format, int width, int height)
     : Texture(name, format, TEXTURE2D), _width(width), _height(height)
 {
@@ -1080,13 +1093,11 @@ Texture2D::~Texture2D()
 void Texture2D::setWidth(int w)
 {
     _width = w;
-    invalidate();
 }
 
 void Texture2D::setHeight(int h)
 {
     _height = h;
-    invalidate();
 }
 
 void Texture2D::init()
@@ -1183,42 +1194,9 @@ ResourceManager::~ResourceManager()
 {
 }
 
-void ResourceManager::scheduleCleanUp(std::shared_ptr<ShaderProgram> prog)
-{
-    _scheduledShaders.push_back(prog);
-}
-
-void ResourceManager::scheduleCleanUp(std::shared_ptr<VAO> vao)
-{
-    _scheduledVAOs.push_back(vao);
-}
-
-void ResourceManager::scheduleCleanUp(std::shared_ptr<VBO> vbo)
-{
-    _scheduledVBOs.push_back(vbo);
-}
-
-void ResourceManager::scheduleCleanUp(std::shared_ptr<IBO> ibo)
-{
-    _scheduledIBOs.push_back(ibo);
-}
-
-void ResourceManager::scheduleCleanUp(std::shared_ptr<Texture> texture)
-{
-    _scheduledTextures.push_back(texture);
-}
-
-void ResourceManager::scheduleCleanUp(std::shared_ptr<Renderbuffer> rb)
-{
-    _scheduledRenderbuffers.push_back(rb);
-}
-
 void ResourceManager::cleanUp()
 {
-    _scheduledShaders.clear();
-    _scheduledVAOs.clear();
-    _scheduledVBOs.clear();
-    _scheduledIBOs.clear();
+    _scheduledResource.clear();
 }
 
 int ResourceManager::getIndexForAttribute(std::string name)
