@@ -31,6 +31,7 @@ RenderPass::~RenderPass()
 
     RenderManager::getResourceManager()->scheduleCleanUp(_depthTexture);
     RenderManager::getResourceManager()->scheduleCleanUp(_depthRenderbuffer);
+    RenderManager::getResourceManager()->scheduleCleanUp(_target);
 }
 
 void RenderPass::setCamera(CameraPtr camera)
@@ -79,7 +80,8 @@ void RenderPass::init()
 
     //if there are no outputs, were rendering to the default framebuffer
     //so no need to setup anything
-    if(_outputTextures.size() == 0 && _outputRenderbuffers.size() == 0)
+    if(_outputTextures.size() == 0 && _outputRenderbuffers.size() == 0
+       && _depthOutput == NONE)
         return;
 
     _target = std::make_shared<FBO>();
@@ -134,14 +136,6 @@ void RenderPass::init()
                     {
                         GLObjectBinder<std::shared_ptr<Texture2D>> binder(_depthTexture);
                         _target->attachDepthTexture(_depthTexture);
-
-                        //init shader programs
-                        for(auto shadernode : _shadernodes) {
-                            shadernode->program()->bindFragmentLocation(i, _depthTexture->getName());
-                        }
-                        for(auto shadernode : _geometryShaderNodes) {
-                            shadernode->program()->bindFragmentLocation(i, _depthTexture->getName());
-                        }
                     }
                     break;
                 }
@@ -154,14 +148,6 @@ void RenderPass::init()
                     {
                         GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(_depthRenderbuffer);
                         _target->attachDepthRenderbuffer(_depthRenderbuffer);
-
-                        //init shader programs
-                        for(auto shadernode : _shadernodes) {
-                            shadernode->program()->bindFragmentLocation(i, _depthRenderbuffer->getName());
-                        }
-                        for(auto shadernode : _geometryShaderNodes) {
-                            shadernode->program()->bindFragmentLocation(i, _depthRenderbuffer->getName());
-                        }
                     }
                     break;
                 }
