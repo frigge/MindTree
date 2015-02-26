@@ -149,6 +149,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _deferredPass.lock()->setCamera(camera);
     _deferredRenderer = new LightAccumulationPass();
     _deferredPass.lock()->addRenderer(_deferredRenderer);
+    _deferredPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
 
