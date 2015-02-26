@@ -11,7 +11,7 @@
 
 using namespace MindTree::GL;
 
-#define DEBUG_GL_WRAPPER
+//#define DEBUG_GL_WRAPPER
 
 bool MindTree::GL::getGLFramebufferError(std::string location)
 {
@@ -821,18 +821,11 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
 
     assert(_initialized);
 
-    if(!texture->isInitialized())
-        texture->init();
-
     std::string n;
     if(name == "")
         n = texture->getName();
     else
         n = name;
-    GLint location = getUniformLocation(name);
-    if(location > -1)
-        return;
-
     int textureSlot;
     auto it = std::find(begin(_textures), end(_textures), texture);
     if(it != end(_textures)) {
