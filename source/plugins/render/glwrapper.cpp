@@ -265,6 +265,10 @@ void FBO::attachColorTexture(std::shared_ptr<Texture2D> tex)
     _textures.push_back(tex);
     _attachments.push_back(tex->getName());
 
+#ifdef DEBUG_GL_WRAPPER
+    dbout("attaching texture: " << tex->getName() << " to color attachment: " << color_attachments);
+#endif
+
     MTGLERROR;
     glFramebufferTexture2D(GL_FRAMEBUFFER, 
         GL_COLOR_ATTACHMENT0 + color_attachments++,
@@ -848,6 +852,10 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
     glActiveTexture(GL_TEXTURE0 + textureSlot);
 
     MTGLERROR;
+
+#ifdef DEBUG_GL_WRAPPER
+    dbout("attaching texture: " << n << " to textureSlot: " << textureSlot);
+#endif
 
     texture->bind();
     setUniform(n, textureSlot);
