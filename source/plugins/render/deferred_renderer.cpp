@@ -229,7 +229,8 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
 
     auto shadowPass = getManager()->insertPassAfter(_geometryPass);
     size_t shadowCount = _shadowPasses.size();
-    _shadowPasses.insert({spot, shadowPass});
+
+    _shadowPasses[spot] = shadowPass;
 
     auto camera = std::make_shared<Camera>();
     camera->setResolution(info._size.x, info._size.y);
