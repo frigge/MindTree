@@ -165,11 +165,11 @@ public:
     void bind();
     void release();
 
-    void attachColorTexture(std::shared_ptr<Texture2D> tex);
-    void attachDepthTexture(std::shared_ptr<Texture2D> tex);
+    void attachColorTexture(std::weak_ptr<Texture2D> tex);
+    void attachDepthTexture(std::weak_ptr<Texture2D> tex);
 
-    void attachColorRenderbuffer(std::shared_ptr<Renderbuffer> rb);
-    void attachDepthRenderbuffer(std::shared_ptr<Renderbuffer> rb);
+    void attachColorRenderbuffer(std::weak_ptr<Renderbuffer> rb);
+    void attachDepthRenderbuffer(std::weak_ptr<Renderbuffer> rb);
 
     std::vector<std::string> getAttachments();
     int getAttachmentPos(std::string name);
@@ -178,8 +178,8 @@ private:
     uint color_attachments;
     GLuint id;
     std::vector<std::string> _attachments;
-    std::vector<std::shared_ptr<Texture2D>> _textures;
-    std::vector<std::shared_ptr<Renderbuffer>> _renderbuffers;
+    std::vector<std::weak_ptr<Texture2D>> _textures;
+    std::vector<std::weak_ptr<Renderbuffer>> _renderbuffers;
 };
 
 class Renderbuffer
@@ -354,9 +354,10 @@ public:
     };
 
     Texture(std::string name, Texture::Format format, Target target);
+    virtual ~Texture();
+
     std::string getName();
     void setName(std::string name);
-    virtual ~Texture();
     virtual void bind();
     virtual void release();
     GLuint getID();

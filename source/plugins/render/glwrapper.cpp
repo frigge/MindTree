@@ -11,7 +11,7 @@
 
 using namespace MindTree::GL;
 
-//#define DEBUG_GL_WRAPPER
+#define DEBUG_GL_WRAPPER
 
 bool MindTree::GL::getGLFramebufferError(std::string location)
 {
@@ -257,41 +257,43 @@ void FBO::release()
     MTGLERROR;
 }
 
-void FBO::attachColorTexture(std::shared_ptr<Texture2D> tex)    
+void FBO::attachColorTexture(std::weak_ptr<Texture2D> tex)    
 {
-    if(std::find(begin(_textures), end(_textures), tex) != end(_textures))
-        return;
+    for(auto tx : _textures)
+        if(tx.lock() == tex.lock())
+            return;
 
     _textures.push_back(tex);
-    _attachments.push_back(tex->getName());
+    _attachments.push_back(tex.lock()->getName());
 
 #ifdef DEBUG_GL_WRAPPER
-    dbout("attaching texture: " << tex->getName() << " to color attachment: " << color_attachments);
+    dbout("attaching texture: " << tex.lock()->getName() << " to color attachment: " << color_attachments);
 #endif
 
     MTGLERROR;
     glFramebufferTexture2D(GL_FRAMEBUFFER, 
         GL_COLOR_ATTACHMENT0 + color_attachments++,
         GL_TEXTURE_2D,
-        tex->getID(),
+        tex.lock()->getID(),
         0);
     MTGLERROR;
 
 }
 
-void FBO::attachColorRenderbuffer(std::shared_ptr<Renderbuffer> rb)
+void FBO::attachColorRenderbuffer(std::weak_ptr<Renderbuffer> rb)
 {
-    if(std::find(begin(_renderbuffers), end(_renderbuffers), rb) != end(_renderbuffers))
-        return;
+    for(auto r : _renderbuffers)
+        if(r.lock() == rb.lock())
+            return;
 
     _renderbuffers.push_back(rb);
-    _attachments.push_back(rb->getName());
+    _attachments.push_back(rb.lock()->getName());
 
     MTGLERROR;
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, 
         GL_COLOR_ATTACHMENT0 + color_attachments++,
         GL_RENDERBUFFER,
-        rb->getID());
+        rb.lock()->getID());
     MTGLERROR;
 
 }
@@ -309,24 +311,24 @@ int FBO::getAttachmentPos(std::string name)
     return index;
 }
 
-void FBO::attachDepthTexture(std::shared_ptr<Texture2D> tex)    
+void FBO::attachDepthTexture(std::weak_ptr<Texture2D> tex)    
 {
     MTGLERROR;
     glFramebufferTexture2D(GL_FRAMEBUFFER, 
         GL_DEPTH_ATTACHMENT,
         GL_TEXTURE_2D,
-        tex->getID(),
+        tex.lock()->getID(),
         0);
     MTGLERROR;
 }
 
-void FBO::attachDepthRenderbuffer(std::shared_ptr<Renderbuffer> rb)
+void FBO::attachDepthRenderbuffer(std::weak_ptr<Renderbuffer> rb)
 {
     MTGLERROR;
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, 
         GL_DEPTH_ATTACHMENT,
         GL_RENDERBUFFER,
-        rb->getID());
+        rb.lock()->getID());
     MTGLERROR;
 }
 
