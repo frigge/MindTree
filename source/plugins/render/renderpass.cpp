@@ -459,10 +459,19 @@ void RenderPass::render(const RenderConfig &config)
         return;
     }
 
-    int currentWidth, currentHeight;
+    int currentWidth = 0;
+    int currentHeight = 0;
     if(_outputTextures.size() > 0) {
         currentWidth = _outputTextures[0]->width();
         currentHeight = _outputTextures[0]->height();
+    }
+    else if (_depthTexture) {
+        currentWidth = _depthTexture->width();
+        currentHeight = _depthTexture->height();
+    }
+    else if(_depthRenderbuffer) {
+        currentWidth = _depthRenderbuffer->width();
+        currentHeight = _depthRenderbuffer->height();
     }
     if(!_initialized || currentHeight != height || currentWidth != width) init();
 
