@@ -264,9 +264,6 @@ void RenderManager::draw()
     ContextBinder binder(_context);
     RenderThread::asrt();
 
-    if(!_initialized) {
-        init();
-    }
     glEnable(GL_POINT_SMOOTH);
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_POLYGON_OFFSET_POINT);
@@ -274,6 +271,9 @@ void RenderManager::draw()
     auto start = std::chrono::steady_clock::now();
     {
         std::lock_guard<std::mutex> lock(_managerLock);
+        if(!_initialized) {
+            init();
+        }
         int i = 0;
         for(auto &pass : passes){
             pass->render(config);
