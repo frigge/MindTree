@@ -1020,6 +1020,9 @@ Texture::Texture(std::string name, Texture::Format format, Target target)
 
 Texture::~Texture()
 {
+#ifdef DEBUG_GL_WRAPPER
+    dbout("delete texture: " << _id);
+#endif
     glDeleteTextures(1, &_id); 
     MTGLERROR;
 }
@@ -1063,6 +1066,9 @@ void Texture::init()
     _initialized = true;
 
     if(!_id) glGenTextures(1, &_id);
+#ifdef DEBUG_GL_WRAPPER
+    dbout("generated texture: " << _id);
+#endif
 
     MTGLERROR;
 }
@@ -1186,6 +1192,38 @@ void Texture2D::bind()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     }
 }
+
+AbstractResource::AbstractResource(std::string name)
+    : _name(name)
+{
+}
+
+AbstractResource::~AbstractResource()
+{
+#ifdef DEBUG_GL_WRAPPER
+    dbout("destroying " << _name);
+#endif
+}
+template<>
+const std::string Resource<Texture2D>::s_resource_name("Texture2D");
+
+template<>
+const std::string Resource<ShaderProgram>::s_resource_name("ShaderProgram");
+
+template<>
+const std::string Resource<FBO>::s_resource_name("FBO");
+
+template<>
+const std::string Resource<VBO>::s_resource_name("VBO");
+
+template<>
+const std::string Resource<IBO>::s_resource_name("IBO");
+
+template<>
+const std::string Resource<VAO>::s_resource_name("VAO");
+
+template<>
+const std::string Resource<Renderbuffer>::s_resource_name("Renderbuffer");
 
 ResourceManager::ResourceManager()
 {

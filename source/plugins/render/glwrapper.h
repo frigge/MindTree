@@ -404,7 +404,12 @@ private:
 
 class AbstractResource
 {
+public:
+    AbstractResource(std::string name);
+    virtual ~AbstractResource();
 
+private:
+    std::string _name;
 };
 
 template<class T>
@@ -412,10 +417,13 @@ class Resource : public AbstractResource
 {
 public:
     Resource(std::shared_ptr<T> resource) :
+        AbstractResource(s_resource_name), 
         _resource(resource) {};
 
 private:
     std::shared_ptr<T> _resource;
+
+    static const std::string s_resource_name;
 };
 
 class ResourceManager
