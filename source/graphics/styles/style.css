@@ -175,8 +175,13 @@ QMenu::item:selected {
     padding: 4px;
 }
 
-
 QLineEdit {
+    background-color: rgb(50, 50, 50);
+    border-image: url(:./lineedit.png) 2 2 2 2;
+    padding: 4px;
+}
+
+QComboBox {
     background-color: rgb(50, 50, 50);
     border-image: url(:./lineedit.png) 2 2 2 2;
     padding: 4px;
