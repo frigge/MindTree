@@ -29,6 +29,7 @@ Light::ShadowInfo Light::getShadowInfo() const
 PointLight::PointLight(double intensity, glm::vec4 color)
     : Light(POINT, intensity, color)
 {
+    setName("PointLight");
 }
 
 AbstractTransformablePtr PointLight::clone() const
@@ -40,6 +41,7 @@ AbstractTransformablePtr PointLight::clone() const
 SpotLight::SpotLight(double intensity, glm::vec4 color, double coneangle)
     : Light(SPOT, intensity, color), _coneAngle(coneangle)
 {
+    setName("SpotLight");
 }
 
 AbstractTransformablePtr SpotLight::clone() const
@@ -51,6 +53,7 @@ AbstractTransformablePtr SpotLight::clone() const
 DistantLight::DistantLight(double intensity, glm::vec4 color)
     : Light(DISTANT, intensity, color)
 {
+    setName("DistantLight");
 }
 
 AbstractTransformablePtr DistantLight::clone() const
