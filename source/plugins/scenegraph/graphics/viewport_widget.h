@@ -56,10 +56,12 @@ public:
     Q_SLOT void togglePoints(bool b);
     Q_SLOT void toggleFlatShading(bool b);
     Q_SLOT void toggleGrid(bool b);
-    Q_SLOT void refillCamBox();
     Q_SLOT void setOutput(QString out);
     Q_SLOT void toggleDefaultLighting(bool value);
     Q_SLOT void setOverrideOutput(bool value);
+    Q_SLOT void setCamera(QString cam);
+
+    void setCameras();
 
 private:
     void createToolbar();

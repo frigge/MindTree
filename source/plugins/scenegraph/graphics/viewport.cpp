@@ -35,6 +35,9 @@
 #include "data/project.h"
 
 #include "../../render/deferred_renderer.h"
+#include "../../datatypes/Object/lights.cpp"
+
+#include "data/debuglog.h"
 
 #include "viewport.h"
 
@@ -81,12 +84,69 @@ GL::RenderManager* Viewport::getRenderManager()
 void Viewport::setData(std::shared_ptr<Group> value)
 {
     if(!value) return;
+    _camNames.clear();
 
     _renderConfigurator->setGeometry(value);
+
+    //cache cameras
+    std::unordered_map<std::string, int> camcnt;
+
+    for(const auto &cam : value->getCameras()) {
+        std::string name = "Camera";
+        if(camcnt.find(name) == end(camcnt))
+            camcnt[name] = 0;
+
+        if(camcnt[name] > 0)
+            name += std::to_string(camcnt[name]);
+
+        _camNames.push_back(name);
+        camcnt[name]++;
+
+        _cameras[name] = cam;
+    }
+
+    for(const auto &light : value->getLights()) {
+        std::string name = light->getName();
+        if(camcnt.find(name) == end(camcnt))
+            camcnt[name] = 0;
+
+        if(camcnt[name] > 0)
+            name += std::to_string(camcnt[name]);
+
+        _camNames.push_back(name);
+        camcnt[name]++;
+
+        _lights[name] = light;
+    }
 }
 
-void Viewport::changeCamera(QString cam)    
+std::vector<std::string> Viewport::getCameras() const
 {
+    return _camNames;
+}
+
+void Viewport::changeCamera(std::string cam)
+{
+    if(cam == "Default")
+    {
+        activeCamera = defaultCamera;
+    } 
+    else if(_cameras.find(cam) != end(_cameras)) {
+        activeCamera = _cameras[cam];
+    } 
+    else if(_lights.find(cam) != end(_lights)) {
+        activeCamera = std::make_shared<Camera>();
+        activeCamera->setNear(_lights[cam]->getShadowInfo()._near);
+        activeCamera->setFar(_lights[cam]->getShadowInfo()._far);
+        activeCamera->setTransformation(_lights[cam]->getWorldTransformation());
+    } 
+    else {
+        return;
+    }
+
+    activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
+    activeCamera->setResolution(width(), height());
+    _renderConfigurator->setCamera(activeCamera);
 }
 
 void Viewport::resizeEvent(QResizeEvent *)
@@ -94,6 +154,7 @@ void Viewport::resizeEvent(QResizeEvent *)
     doneCurrent();
     activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
     activeCamera->setResolution(width(), height());
+    _renderConfigurator->getManager()->setDirty();
 }
 
 void Viewport::paintEvent(QPaintEvent *)

@@ -16,16 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "viewport_widget.h"
-
 #include "QComboBox"
-
 #include "iostream"
 #include "viewport.h"
 #include "data/nodes/data_node.h"
 #include "../../render/rendermanager.h"
 #include "../../render/renderpass.h"
 #include "../../render/render.h"
+#include "data/debuglog.h"
+
+#include "viewport_widget.h"
 
 using namespace MindTree;
 ViewportViewer::ViewportViewer(DoutSocket *socket)
@@ -40,7 +40,8 @@ ViewportViewer::~ViewportViewer()
 
 void ViewportViewer::update()
 {
-    auto *viewport = static_cast<ViewportWidget*>(getWidget())->getViewport();
+    auto widget = dynamic_cast<ViewportWidget*>(getWidget());
+    auto *viewport = widget->getViewport();
     Property data = cache.getOutput(getStart());
 
     if(data.getType() == "GROUPDATA") {
@@ -53,6 +54,7 @@ void ViewportViewer::update()
         grp->addMember(obj);
         viewport->setData(grp);
     }
+    widget->setCameras();
 }
 
 ViewportWidget::ViewportWidget(ViewportViewer *viewer)
@@ -65,6 +67,26 @@ ViewportWidget::ViewportWidget(ViewportViewer *viewer)
 ViewportWidget::~ViewportWidget()
 {
     delete _viewer;
+}
+
+void ViewportWidget::setCameras()
+{
+    auto cameras = _viewport->getCameras();
+
+    //try to cache last camera
+    QString lastcam = _camBox->currentText();
+    _camBox->clear();
+    QStringList list;
+    list.append("Default");
+    for(const auto &cam : cameras) {
+        list.append(cam.c_str());
+        dbout(cam.c_str());
+    }
+
+    _camBox->addItems(list);
+
+    int itemIndex = _camBox->findText(lastcam);
+    _camBox->setCurrentIndex(itemIndex);
 }
 
 Viewport* ViewportWidget::getViewport()    
@@ -132,6 +154,7 @@ void ViewportWidget::createToolbar()
     _tools->addWidget(_outputBox);
 
     connect(_outputBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(setOutput(QString)));
+    connect(_camBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(setCamera(QString)));
 
     connect(showPointsAction, SIGNAL(toggled(bool)), this, SLOT(togglePoints(bool)));
     connect(showEdgesAction, SIGNAL(toggled(bool)), this, SLOT(toggleEdges(bool)));
@@ -140,6 +163,11 @@ void ViewportWidget::createToolbar()
     connect(showGridAction, SIGNAL(toggled(bool)), this, SLOT(toggleGrid(bool)));
     connect(toggleDefaultLight, SIGNAL(toggled(bool)), this, SLOT(toggleDefaultLighting(bool)));
     connect(overrideOutputAction, SIGNAL(toggled(bool)), this, SLOT(setOverrideOutput(bool)));
+}
+
+void ViewportWidget::setCamera(QString cam)
+{
+    _viewport->changeCamera(cam.toStdString());
 }
 
 void ViewportWidget::setOverrideOutput(bool value)
@@ -158,20 +186,6 @@ void ViewportWidget::setOutput(QString out)
 void ViewportWidget::toggleDefaultLighting(bool value)
 {
     _viewport->setOption("defaultLighting", value);
-}
-
-void ViewportWidget::refillCamBox()    
-{
-    //QString curCamName = camBox->currentText();
-    //camBox->clear();
-    ////DoutSocket *startSocket = dock->getViewport()->getStartSocket();
-    //DoutSocket *startSocket = 0;
-    //if(!startSocket)return;
-    //auto cameras = grp->getCameras();
-    //for(auto cam : cameras)
-    //    camBox->addItem(cam->getName().c_str());
-    //if(camBox->findData(curCamName) == -1)
-    //    camBox->setCurrentIndex(camBox->findText(curCamName));
 }
 
 void ViewportWidget::togglePoints(bool b)    

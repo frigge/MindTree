@@ -53,13 +53,15 @@ public:
     MindTree::GL::RenderPass* getPixelPass();
     void setOption(const std::string &key, MindTree::Property value);
 
+    std::vector<std::string> getCameras() const;
+
 //SLOTS:
     Q_SLOT void setShowPoints(bool b);
     Q_SLOT void setShowEdges(bool b);
     Q_SLOT void setShowPolygons(bool b);
     Q_SLOT void setShowFlatShading(bool b);
     Q_SLOT void setShowGrid(bool b);
-    Q_SLOT void changeCamera(QString cam);
+    Q_SLOT void changeCamera(std::string cam);
     Q_SLOT void setData(std::shared_ptr<Group> value);
 //---------------
 
@@ -93,6 +95,9 @@ private:
     std::shared_ptr<Widget3DManager> _widgetManager;
 
     static std::vector<Viewport*> _viewports;
+    std::unordered_map<std::string, std::shared_ptr<Light>> _lights;
+    std::unordered_map<std::string, std::shared_ptr<Camera>> _cameras;
+    std::vector<std::string> _camNames;
 
     QPointF lastpos;
     QPointF winClickPos;
