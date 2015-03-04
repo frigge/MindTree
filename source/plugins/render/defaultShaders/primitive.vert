@@ -55,6 +55,15 @@ mat4 computeScaleMatrix() {
     return scalemat;
 }
 
+mat4 normalizeMat4(mat4 mat)
+{
+    mat[0] = normalize(mat[0]);
+    mat[1] = normalize(mat[1]);
+    mat[2] = normalize(mat[2]);
+
+    return mat;
+}
+
 void main(){
     mat4 screenTransform;
     mat4 translation = extractTranslation(model);
@@ -65,7 +74,7 @@ void main(){
         screenTransform = projection * view * translation * computeScreenOrientation();
     }
     else
-        screenTransform = projection * view * model;
+        screenTransform = projection * view * normalizeMat4(model);
 
     vec4 output;
     if (fixed_screensize)
