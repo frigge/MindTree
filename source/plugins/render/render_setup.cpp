@@ -122,6 +122,7 @@ void RenderConfigurator::setGeometry(std::shared_ptr<Group> grp)
 void RenderConfigurator::setCamera(std::shared_ptr<Camera> camera)
 {
     _camera = camera;
+    _rendermanager->setDirty();
 }
 
 std::shared_ptr<Camera> RenderConfigurator::getCamera() const
