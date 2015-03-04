@@ -510,6 +510,6 @@ glm::mat4 Camera::getProjection()
 
 glm::mat4 Camera::getViewMatrix()    
 {
-    return glm::inverse(getTransformation());
+    return glm::inverse(getWorldTransformation());
 }
 
