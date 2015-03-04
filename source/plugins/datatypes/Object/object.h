@@ -230,6 +230,7 @@ public:
     void setAspect(double aspect);
     void setNear(double near);
     void setFar(double far);
+    void setFov(double fov);
 
     void setResolution(int width, int height);
     int getWidth() const;

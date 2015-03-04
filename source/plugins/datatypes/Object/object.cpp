@@ -483,6 +483,11 @@ AbstractTransformablePtr Camera::clone() const
     return std::shared_ptr<AbstractTransformable>(obj);
 }
 
+void Camera::setFov(double fov)
+{
+    _fov = fov;
+}
+
 void Camera::setAspect(double aspect)
 {
     _aspect = aspect;
