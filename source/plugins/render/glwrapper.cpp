@@ -11,7 +11,7 @@
 
 using namespace MindTree::GL;
 
-#define DEBUG_GL_WRAPPER
+//#define DEBUG_GL_WRAPPER
 
 bool MindTree::GL::getGLFramebufferError(std::string location)
 {
@@ -829,7 +829,12 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
     else
         n = name;
     int textureSlot;
-    auto it = std::find(begin(_textures), end(_textures), texture);
+    auto it = std::find_if(begin(_textures), 
+                           end(_textures), 
+                           [texture] (std::weak_ptr<Texture2D> other){ 
+                               return other.lock() == texture; 
+                           });
+
     if(it != end(_textures)) {
         textureSlot = std::distance(begin(_textures), it);
     }
@@ -1184,15 +1189,19 @@ int Texture2D::height()
 void Texture2D::bind()    
 {
     Texture::bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    GLenum wrap = GL_REPEAT;
+    GLenum filter = GL_NEAREST;
     if(getFormat() == DEPTH || getFormat() == DEPTH16 || getFormat() == DEPTH32F) {
         glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+        wrap = GL_CLAMP_TO_EDGE;
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+        filter = GL_LINEAR;
     }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 }
 
 AbstractResource::AbstractResource(std::string name)
@@ -1237,6 +1246,7 @@ ResourceManager::~ResourceManager()
 
 void ResourceManager::cleanUp()
 {
+    std::lock_guard<std::mutex> lock(_resourceMutex);
     _scheduledResource.clear();
 }
 
