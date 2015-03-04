@@ -29,7 +29,7 @@ public:
     void startRendering();
     void stopRendering();
 
-    void setCamera(std::shared_ptr<Camera> camera);
+    virtual void setCamera(std::shared_ptr<Camera> camera);
     std::shared_ptr<Camera> getCamera() const;
 
     RenderManager* getManager();
