@@ -286,15 +286,17 @@ void Viewport::rotateView(float xdist, float ydist)
 {
     if(!activeCamera)
         return;
-    glm::mat4 mat;
     glm::vec3 campos = activeCamera->getPosition();
     glm::vec3 center = activeCamera->getCenter();
-    glm::vec3 lookat = campos - center;
+    glm::mat4 camtrans = activeCamera->getTransformation();
 
-    mat = glm::rotate(mat, (float)ydist, glm::cross(glm::vec3(0, 1, 0), center - campos));
-    mat = glm::rotate(mat, (float)xdist, glm::vec3(0, 1, 0));
-    lookat = (mat * glm::vec4(lookat, 1)).xyz();
-    activeCamera->posAroundCenter(lookat + center);
+    glm::mat4 rotx = glm::rotate(glm::mat4(), (float)ydist, glm::cross(glm::vec3(0, 1, 0), -camtrans[2].xyz()));
+    glm::mat4 roty = glm::rotate(glm::mat4(), (float)xdist, glm::vec3(0, 1, 0));
+    glm::mat4 rotation = roty * rotx;
+
+    glm::mat4 translation = glm::translate(glm::mat4(), center);
+    camtrans = glm::inverse(translation) * rotation * translation * camtrans;
+    activeCamera->setTransformation(camtrans);
 }
 
 void Viewport::panView(float xdist, float ydist)    
