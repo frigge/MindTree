@@ -84,11 +84,6 @@ void main(){
     pos = _pos.xyz;
     Nn = normalize(texelFetch(outnormal, p, 0).xyz);
 
-    vec4 shadowP = (inverse(light.shadowmvp) * _pos);
-    shadowP.xy /= shadowP.w;
-    shadowP.xy += vec2(1);
-    shadowP.xy *= 0.5;
-
     float lightDirLength = length(light.dir);
 
     if(light.pos.w > 0.1) {// is point
@@ -99,10 +94,20 @@ void main(){
     }
 
     lvec = normalize(lvec);
+    vec4 shadowP = vec4(1);
     if(lightDirLength > 0.1
        && light.pos.w > 0.1) { // is spot
-        float lightangle = acos(abs(dot(lvec, normalize(-light.dir))));
+        float lightAngleCos = abs(dot(lvec, normalize(light.dir)));
+        float lightangle = acos(lightAngleCos);
         angleMask = smoothstep(light.coneangle, light.coneangle - 0.1, lightangle);
+        angleMask *= lightAngleCos;
+
+        shadowP = (light.shadowmvp * vec4(pos, 1));
+        shadowP /= shadowP.w;
+        shadowP += 1;
+        shadowP *= 0.5;
+
+        float bias = 0.1;
         inLight = texture(shadow, shadowP.xyz);
     }
 
