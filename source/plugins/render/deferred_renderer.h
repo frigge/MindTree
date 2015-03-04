@@ -36,6 +36,7 @@ public:
     DeferredRenderer(QGLContext *context, std::shared_ptr<Camera> camera, Widget3DManager *widgetManager);
 
     void setGeometry(std::shared_ptr<Group> grp);
+    void setCamera(std::shared_ptr<Camera> cam);
 
 protected:
     void addRendererFromObject(std::shared_ptr<GeoObject> obj) override;
@@ -52,6 +53,8 @@ private:
     std::shared_ptr<ShaderRenderNode> _shadowNode;
     LightAccumulationPass *_deferredRenderer;
     std::weak_ptr<RenderPass> _deferredPass;
+    std::weak_ptr<RenderPass> _pixelPass;
+    std::weak_ptr<RenderPass> _overlayPass;
     std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> _shadowPasses;
 };
 
