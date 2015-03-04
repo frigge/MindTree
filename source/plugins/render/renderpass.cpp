@@ -62,6 +62,9 @@ void RenderPass::setOverrideProgram(std::shared_ptr<ShaderProgram> program)
 void RenderPass::init()
 {
     _initialized = true;
+
+    _currentWidth = getCamera()->getWidth();
+    _currentHeight = getCamera()->getHeight();
     
     //make sure shaderprograms are clean
     {
@@ -459,21 +462,7 @@ void RenderPass::render(const RenderConfig &config)
         return;
     }
 
-    int currentWidth = 0;
-    int currentHeight = 0;
-    if(_outputTextures.size() > 0) {
-        currentWidth = _outputTextures[0]->width();
-        currentHeight = _outputTextures[0]->height();
-    }
-    else if (_depthTexture) {
-        currentWidth = _depthTexture->width();
-        currentHeight = _depthTexture->height();
-    }
-    else if(_depthRenderbuffer) {
-        currentWidth = _depthRenderbuffer->width();
-        currentHeight = _depthRenderbuffer->height();
-    }
-    if(!_initialized || currentHeight != height || currentWidth != width) init();
+    if(!_initialized || _currentHeight != height || _currentWidth != width) init();
 
     {
         if(_depthOutput != NONE)
@@ -515,11 +504,14 @@ void RenderPass::render(const RenderConfig &config)
             MTGLERROR;
         }
         else {
-            if(!_target)
+            if(!_target) {
                 glDrawBuffer(GL_BACK);
-            else
+                MTGLERROR;
+            }
+            else {
                 glDrawBuffer(GL_NONE);
-            MTGLERROR;
+                MTGLERROR;
+            }
         }
 
         if(_shadernodes.size() == 0 && _geometryShaderNodes.size() == 0) {

@@ -113,6 +113,8 @@ private:
 
     std::mutex _overrideProgramLock;
     std::shared_ptr<ShaderProgram> _overrideProgram;
+
+    int _currentWidth, _currentHeight;
 };
 
 }
