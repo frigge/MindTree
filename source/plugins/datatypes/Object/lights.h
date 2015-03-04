@@ -15,10 +15,12 @@ public:
     };
 
     struct ShadowInfo {
-        ShadowInfo() : _enabled(false), _size(256, 256) {}
+        ShadowInfo() : _enabled(false), _size(256, 256), _near(1), _far(10) {}
         ShadowInfo(bool en, glm::ivec2 s) : _enabled(en), _size(s) {}
         bool _enabled;
         glm::ivec2 _size;
+        double _near;
+        double _far;
     };
 
     Light(Light_t type, double intensity, glm::vec4 color);

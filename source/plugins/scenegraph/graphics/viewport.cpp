@@ -56,6 +56,7 @@ Viewport::Viewport() :
 
     activeCamera = defaultCamera;
     setAutoBufferSwap(false);
+    defaultCamera->setFar(1000);
 
     QGLContext *ctx = const_cast<QGLContext*>(context());
     _widgetManager = std::make_shared<Widget3DManager>();

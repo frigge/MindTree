@@ -235,6 +235,8 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
     auto camera = std::make_shared<Camera>();
     camera->setResolution(info._size.x, info._size.y);
     camera->setTransformation(spot->getTransformation());
+    camera->setNear(info._near);
+    camera->setFar(info._far);
     shadowPass.lock()->setCamera(camera);
     shadowPass.lock()
         ->setDepthOutput(std::make_shared<Texture2D>("shadow",
