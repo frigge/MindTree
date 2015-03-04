@@ -298,7 +298,7 @@ private:
     std::mutex _srcLock;
     std::unordered_map<std::string, int> _attributeLocations;
     std::unordered_map<int, std::string> _shaderSources;
-    std::vector<std::shared_ptr<Texture2D>> _textures;
+    std::vector<std::weak_ptr<Texture2D>> _textures;
     std::unordered_map<int, std::string> _fileNameMap;
 };
 
@@ -420,6 +420,12 @@ public:
     Resource(std::shared_ptr<T> resource) :
         AbstractResource(s_resource_name), 
         _resource(resource) {};
+    ~Resource() 
+    {
+        if(_resource.use_count() > 1)
+            std::cout << "There are still " << _resource.use_count() << " references" << std::endl;
+        assert(_resource.use_count() <= 1);
+    }
 
 private:
     std::shared_ptr<T> _resource;
@@ -440,6 +446,7 @@ public:
     template<class T>
     void scheduleCleanUp(std::shared_ptr<T> resource)
     {
+        std::lock_guard<std::mutex> lock(_resourceMutex);
         auto res = std::make_unique<Resource<T>>(resource);
         _scheduledResource.push_back(std::move(res));
     }
@@ -454,6 +461,7 @@ private:
 
     std::vector<std::unique_ptr<AbstractResource>> _scheduledResource;
 
+    std::mutex _resourceMutex;
     std::unordered_map<ObjectDataPtr, std::vector<std::shared_ptr<VBO>>> _vboMap;
     std::unordered_map<ObjectDataPtr, std::shared_ptr<IBO>> _iboMap;
     std::unordered_map<std::string, int> _attributeIndexMap;
