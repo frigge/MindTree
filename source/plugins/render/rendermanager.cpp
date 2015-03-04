@@ -170,7 +170,7 @@ void RenderManager::init()
                 auto shadernodes = pass->getShaderNodes();
                 for (auto shadernode : shadernodes) {
                     for(auto texture : textures) {
-                        shadernode->program()->setTexture(texture, getTextureName(texture));
+                        shadernode->program()->setTexture(texture, texture->getName());
                     }
                     if(lastPass->_depthOutput == RenderPass::TEXTURE)
                         shadernode->program()->setTexture(lastPass->getOutDepthTexture());
@@ -247,10 +247,14 @@ std::weak_ptr<RenderPass> RenderManager::insertPassAfter(std::weak_ptr<RenderPas
 void RenderManager::removePass(std::weak_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
-    _initialized = false;
     auto it = std::find(begin(passes), end(passes), pass.lock());
-    if(it != passes.end())
+    if(it != passes.end()) {
         passes.erase(it);
+        _initialized = false;
+    }
+    else {
+        std::cout << "could not remove renderpass" << std::endl;
+    }
 }
 
 RenderPass* RenderManager::getPass(uint index)
