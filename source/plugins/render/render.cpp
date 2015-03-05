@@ -16,7 +16,7 @@ Renderer::Renderer()
 Renderer::~Renderer()
 {
     auto manager = RenderManager::getResourceManager();
-    if(_vao && _vao.use_count() == 1) manager->scheduleCleanUp(std::move(_vao));
+    manager->scheduleCleanUp(std::move(_vao));
 }
 
 void Renderer::setVisible(bool visible)
