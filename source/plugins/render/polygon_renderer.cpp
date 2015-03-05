@@ -3,6 +3,7 @@
 
 #include "glwrapper.h"
 #include "rendermanager.h"
+#include "data/debuglog.h"
 
 #include "polygon_renderer.h"
 
@@ -50,7 +51,11 @@ void PolygonRenderer::draw(const CameraPtr camera, const RenderConfig &config, s
     GeoObjectRenderer::draw(camera, config, program);
 
     auto data = obj->getData();
-    UniformState flatState(program, "flatShading", (int)config.flatShading());
+    UniformStateManager manager(program);
+    manager.addState("flatShading", (int)config.flatShading());
+    if(obj->getMaterial()) {
+        manager.setFromPropertyMap(obj->getMaterial()->getProperties());
+    }
 
     auto ibo = RenderManager::getResourceManager()->getIBO(data);
 

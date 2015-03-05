@@ -4,8 +4,8 @@ uniform vec4 bgcolor;
 
 in vec2 st;
 uniform sampler2D overlay;
-uniform sampler2D outcolor;
 uniform sampler2D shading_out;
+uniform sampler2D outcolor;
 
 out vec4 final_color;
 
@@ -22,9 +22,9 @@ vec3 gamma(vec3 col, float g) {
 }
 
 void main(){
-    vec4 col = texture(outcolor, st);
     vec4 over = texture(overlay, st);
     vec4 shading = texture(shading_out, st);
+    vec4 col = texture(outcolor, st);
 
     vec4 _bg = mix(bgcolor * .85, bgcolor, smoothstep(0., .5, length(vec2(.5) - st)));
 

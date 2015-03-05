@@ -70,6 +70,28 @@ class DistantLightNodeDecorator(MT.pytypes.NodeDecorator):
     outsockets = [
             ("Object", "TRANSFORMABLE")]
 
+class MaterialInstanceNodeDecorator(MT.pytypes.NodeDecorator):
+    label = "Objects.Material.Default"
+    type = "DEFAULTMATERIAL"
+
+    insockets = [
+            ("Diffuse Color", "COLOR", (1, 1, 1, 1)),
+            ("Diffuse Intensity", "FLOAT", 0.8),
+            ("Specular Intensity", "FLOAT", 0.8)
+            ]
+    outsockets = [("Material", "MATERIAL")]
+
+class SetMaterialInstanceNodeDecorator(MT.pytypes.NodeDecorator):
+    label = "Objects.Material.Set Material"
+    type = "SETMATERIALINSTANCE"
+
+    insockets = [
+            ("Object", "TRANSFORMABLE"),
+            ("Material", "MATERIAL")
+            ]
+    outsockets = [("Object", "TRANSFORMABLE")]
+
+
 
 MT.registerNode(GroupObjectsNodeDecorator)
 MT.registerNode(TransformObjectNodeDecorator)
@@ -77,3 +99,5 @@ MT.registerNode(ParentNodeDecorator)
 MT.registerNode(PointLightNodeDecorator)
 MT.registerNode(SpotLightNodeDecorator)
 MT.registerNode(DistantLightNodeDecorator)
+MT.registerNode(MaterialInstanceNodeDecorator)
+MT.registerNode(SetMaterialInstanceNodeDecorator)

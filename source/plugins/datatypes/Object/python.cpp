@@ -175,6 +175,39 @@ void regLightProcs()
     DataCache::addProcessor("TRANSFORMABLE", "DISTANTLIGHT", new CacheProcessor(distantLightProc));
 }
 
+void materialProcs()
+{
+    auto materialInstanceProc = [] (DataCache *cache) {
+        auto diff_color = cache->getData(0).getData<glm::vec4>();
+        auto diff_int = cache->getData(1).getData<double>();
+        auto spec_int = cache->getData(2).getData<double>();
+
+        auto material = std::make_shared<DefaultMaterial>();
+        material->setProperty("diffuse_color", diff_color);
+        material->setProperty("specular_intensity", spec_int);
+        material->setProperty("diffuse_intensity", diff_int);
+
+        cache->pushData(material);
+    };
+
+    auto setMaterialProc = [] (DataCache *cache) {
+        auto obj = cache->getData(0).getData<GeoObjectPtr>();
+        if(obj->getType() != AbstractTransformable::GEO)
+            return;
+
+        auto mat = cache->getData(1).getData<MaterialPtr>();
+        auto instance = std::make_shared<MaterialInstance>(mat);
+
+        auto newObj = obj->clone();
+        std::dynamic_pointer_cast<GeoObject>(newObj)->setMaterial(instance);
+
+        cache->pushData(newObj);
+    };
+
+    DataCache::addProcessor("MATERIAL", "DEFAULTMATERIAL", new CacheProcessor(materialInstanceProc));
+    DataCache::addProcessor("TRANSFORMABLE", "SETMATERIALINSTANCE", new CacheProcessor(setMaterialProc));
+}
+
 BOOST_PYTHON_MODULE(object){
     auto proc = new CacheProcessor(groupProc);
     DataCache::addProcessor("GROUPDATA", "GROUP", proc);
@@ -192,4 +225,5 @@ BOOST_PYTHON_MODULE(object){
     createTranslateWidget();
 
     regLightProcs();
+    materialProcs();
 }

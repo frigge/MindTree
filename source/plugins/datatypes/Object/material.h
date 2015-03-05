@@ -4,6 +4,7 @@
 #include "memory"
 #include "data/mtobject.h"
 
+class MaterialInstance;
 class Material : public MindTree::Object
 {
 public:
@@ -14,11 +15,17 @@ public:
     void setName(std::string name);
 
 private:
-    MindTree::PropertyMap _properties;
+    friend class MaterialInstance;
     std::string _name;
 };
 
 typedef std::shared_ptr<Material> MaterialPtr;
+
+class DefaultMaterial : public Material
+{
+public:
+    DefaultMaterial();
+};
 
 class MaterialInstance : public MindTree::Object
 {
@@ -30,6 +37,7 @@ public:
 
 private:
     MaterialPtr _material;
+    std::string _name;
 };
 
 typedef std::shared_ptr<MaterialInstance> MaterialInstancePtr;

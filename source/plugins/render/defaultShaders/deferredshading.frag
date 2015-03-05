@@ -11,17 +11,13 @@ uniform ivec2 resolution;
 
 uniform sampler2D outnormal;
 uniform sampler2D outposition;
+uniform sampler2D outdiffusecolor;
+uniform sampler2D outdiffuseintensity;
+uniform sampler2D outspecintensity;
 uniform sampler2DShadow shadow;
 float inLight = 1;
 
 uniform int flatShading = 0;
-uniform float ambientIntensity = 0.1;
-uniform vec4 ambient; // = vec4(vec3(.1), 1.);
-uniform float diffint = 0.9;
-uniform float specint = 0.8;
-uniform float specint2 = 0.7;
-uniform float specrough1 = 0.15;
-uniform float specrough2 = 0.01;
 
 out vec4 shading_out;
 
@@ -84,6 +80,10 @@ void main(){
     pos = _pos.xyz;
     Nn = normalize(texelFetch(outnormal, p, 0).xyz);
 
+    vec4 diffuse_color = texture(outdiffusecolor, st);
+    float diffint = texture(outdiffusecolor, st).r;
+    float specint = texture(outdiffusecolor, st).r;
+
     float lightDirLength = length(light.dir);
 
     if(light.pos.w > 0.1) {// is point
@@ -111,16 +111,13 @@ void main(){
         inLight = texture(shadow, shadowP.xyz);
     }
 
-    vec3 spec1 = clamp(phong(specrough1) * specint, vec3(0), vec3(1));
-    vec3 spec2 = clamp(phong(specrough2) * specint2, vec3(0), vec3(1));
+    float specrough = .3;
+    vec3 spec = clamp(phong(specrough) * specint, vec3(0), vec3(1));
 
-    float specratio = 0.5 * value(spec1) / clamp(0.0001, 1., value(spec2));
-    vec3 spectotal = mix(spec1, spec2, specratio);
-
-    vec3 diff = clamp(lambert()*diffint, vec3(0), vec3(1));
-    float diffspecratio = 0.5 * value(diff) / clamp(0.0001, 1., value(spectotal));
-    vec3 diffspec = mix(diff, spectotal, diffspecratio);
-    shading_out = vec4(diff + spec1 + spec2, _pos.a);
+    vec3 diff = clamp(lambert()*diffint * diffuse_color.xyz, vec3(0), vec3(1));
+    float diffspecratio = 0.5 * value(diff) / clamp(0.0001, 1., value(spec));
+    vec3 diffspec = mix(diff, spec, diffspecratio);
+    shading_out = vec4(diffspec, 1);
     shading_out *= angleMask;
     shading_out *= inLight;
 }

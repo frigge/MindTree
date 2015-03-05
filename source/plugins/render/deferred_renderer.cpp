@@ -125,7 +125,10 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 
     geopass->setDepthOutput(std::make_shared<Texture2D>("depth", 
                                                         Texture::DEPTH));
+    geopass->addOutput(std::make_shared<Texture2D>("outdiffusecolor"));
     geopass->addOutput(std::make_shared<Texture2D>("outcolor"));
+    geopass->addOutput(std::make_shared<Texture2D>("outdiffuseintensity"));
+    geopass->addOutput(std::make_shared<Texture2D>("outspecintensity"));
     geopass->addOutput(std::make_shared<Texture2D>("outnormal", 
                                                    Texture::RGBA16F));
     geopass->addOutput(std::make_shared<Texture2D>("outposition", 
