@@ -12,7 +12,7 @@ GeoObjectPtr prim3d::createPlane(float scale)
     auto polygons = std::make_shared<PolygonList>();
 
     mesh->setProperty("P", vertices);
-    mesh->setProperty("N", vertices);
+    mesh->setProperty("N", normals);
     mesh->setProperty("polygon", polygons);
     obj->setData(mesh);
 
