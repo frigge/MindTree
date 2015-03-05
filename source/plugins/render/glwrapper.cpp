@@ -80,7 +80,9 @@ void VAO::release()
 Buffer::Buffer(GLenum bufferType)
     : _bufferType(bufferType)
 {
+#ifdef DEBUG_GL_WRAPPER
     dbout("gen vbo");
+#endif
     glGenBuffers(1, &id);
     MTGLERROR;
 }
@@ -110,7 +112,9 @@ VBO::VBO(std::string name) :
     _size(0), 
     _datatype(GL_FLOAT)
 {
+#ifdef DEBUG_GL_WRAPPER
     dbout("creating a VBO with name: " << name << " at index: " << _index);
+#endif
 }
 
 VBO::~VBO()
