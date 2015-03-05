@@ -13,7 +13,7 @@ std::thread WorkerThread::_updateThread;
 std::mutex WorkerThread::_updateMutex;
 std::atomic<bool> WorkerThread::_running(false);
 
-std::deque<Viewer*> WorkerThread::_updateQueue;
+std::deque<WorkerThread::UpdateInfo> WorkerThread::_updateQueue;
 
 bool WorkerThread::needToUpdate()
 {
@@ -21,11 +21,11 @@ bool WorkerThread::needToUpdate()
     return !_updateQueue.empty();
 }
 
-void WorkerThread::notifyUpdate(Viewer *viewer)
+void WorkerThread::notifyUpdate(UpdateInfo info)
 {
     {
         std::lock_guard<std::mutex> lock(_updateMutex);
-        _updateQueue.push_back(viewer);
+        _updateQueue.push_back(info);
     }
     if(!_running) start();
 }
@@ -34,8 +34,13 @@ void WorkerThread::removeViewer(Viewer *viewer)
 {
     {
         std::lock_guard<std::mutex> lock(_updateMutex);
-        if(std::find(begin(_updateQueue), end(_updateQueue), viewer) != end(_updateQueue))
-            _updateQueue.erase(std::remove(begin(_updateQueue), end(_updateQueue), viewer));
+        auto it = std::find_if(begin(_updateQueue), 
+                               end(_updateQueue), 
+                               [viewer] (UpdateInfo i) { 
+                               return i._viewer == viewer; 
+                               });
+        if(it != end(_updateQueue))
+            _updateQueue.erase(it);
     }
 
     if(!needToUpdate()) stop();
@@ -51,10 +56,11 @@ void WorkerThread::start()
             {
                 std::lock_guard<std::mutex> lock(_updateMutex);
 
-                Viewer *viewer = _updateQueue.front();
-                viewer->cache.start(viewer->start);
+                UpdateInfo info = _updateQueue.front();
+                if(info._node) DataCache::invalidate(info._node);
+                info._viewer->cache.start(info._viewer->start);
                 _updateQueue.pop_front();
-                viewer->update();
+                info._viewer->update();
             }
         }
         WorkerThread::_running = false;
@@ -108,7 +114,6 @@ Viewer::~Viewer()
 
 void Viewer::update_viewer(DNode *node)
 {
-    if(node) DataCache::invalidate(node);
     //check whether start and socket are connected
     bool connected = false;
     if (!node || node == start->getNode()) {
@@ -125,13 +130,14 @@ void Viewer::update_viewer(DNode *node)
     }
 
     if(connected) {
-        WorkerThread::notifyUpdate(this);
+        WorkerThread::notifyUpdate({this, node});
     }
 }
 
 void Viewer::update_viewer(DinSocket *socket)
 {
-    if(socket) DataCache::invalidate(socket->getNode());
+    DNode *node = nullptr;
+    if(socket) node = socket->getNode();
     //check whether start and socket are connected
     bool connected = false;
     if (!socket || socket->getNode() == start->getNode()) {
@@ -151,7 +157,7 @@ void Viewer::update_viewer(DinSocket *socket)
     }
 
     if(connected) {
-        WorkerThread::notifyUpdate(this);
+        WorkerThread::notifyUpdate({this, node});
     }
 }
 

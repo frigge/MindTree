@@ -26,8 +26,14 @@ class Viewer;
 class WorkerThread
 {
 public:
+
+struct UpdateInfo {
+    Viewer *_viewer;
+    DNode *_node;
+};
+
     static bool needToUpdate();
-    static void notifyUpdate(Viewer *viewer);
+    static void notifyUpdate(UpdateInfo info);
     static void removeViewer(Viewer *viewer);
 
     static void start();
@@ -39,7 +45,7 @@ private:
     static std::thread _updateThread;
     static std::mutex _updateMutex;
 
-    static std::deque<Viewer*> _updateQueue;
+    static std::deque<UpdateInfo> _updateQueue;
     static std::atomic<bool> _running;
 };
 
