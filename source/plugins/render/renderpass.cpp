@@ -63,8 +63,11 @@ void RenderPass::init()
 {
     _initialized = true;
 
-    _currentWidth = getCamera()->getWidth();
-    _currentHeight = getCamera()->getHeight();
+    {
+        std::lock_guard<std::mutex> lock(_cameraLock);
+        _currentWidth = getCamera()->getWidth();
+        _currentHeight = getCamera()->getHeight();
+    }
     
     //make sure shaderprograms are clean
     {
@@ -93,8 +96,8 @@ void RenderPass::init()
         GLObjectBinder<std::shared_ptr<FBO>> binder(_target);
         uint i = 0;
         for (auto texture : _outputTextures) {
-            texture->setWidth(_camera->getWidth());
-            texture->setHeight(_camera->getHeight());
+            texture->setWidth(_currentWidth);
+            texture->setHeight(_currentHeight);
             texture->init();
             {
                 GLObjectBinder<std::shared_ptr<Texture2D>> binder(texture);
@@ -112,8 +115,8 @@ void RenderPass::init()
         }
 
         for (auto renderbuffer : _outputRenderbuffers) {
-            renderbuffer->setWidth(_camera->getWidth());
-            renderbuffer->setHeight(_camera->getHeight());
+            renderbuffer->setWidth(_currentWidth);
+            renderbuffer->setHeight(_currentHeight);
             renderbuffer->init();
             {
                 GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(renderbuffer);
@@ -133,8 +136,8 @@ void RenderPass::init()
         switch(_depthOutput) {
             case TEXTURE:
                 {
-                    _depthTexture->setWidth(_camera->getWidth());
-                    _depthTexture->setHeight(_camera->getHeight());
+                    _depthTexture->setWidth(_currentWidth);
+                    _depthTexture->setHeight(_currentHeight);
                     _depthTexture->init();
                     {
                         GLObjectBinder<std::shared_ptr<Texture2D>> binder(_depthTexture);
@@ -145,8 +148,8 @@ void RenderPass::init()
 
             case RENDERBUFFER:
                 {
-                    _depthRenderbuffer->setWidth(_camera->getWidth());
-                    _depthRenderbuffer->setHeight(_camera->getHeight());
+                    _depthRenderbuffer->setWidth(_currentWidth);
+                    _depthRenderbuffer->setHeight(_currentHeight);
                     _depthRenderbuffer->init();
                     {
                         GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(_depthRenderbuffer);
@@ -452,10 +455,13 @@ void RenderPass::setBackgroundColor(glm::vec4 color)
 
 void RenderPass::render(const RenderConfig &config)
 {
-    std::lock_guard<std::mutex> lock(_cameraLock);
-    if(!_camera) return;
-    int width = _camera->getWidth();
-    int height = _camera->getHeight();
+    int width, height;
+    {
+        std::lock_guard<std::mutex> lock(_cameraLock);
+        if(!_camera) return;
+        width = _camera->getWidth();
+        height = _camera->getHeight();
+    }
 
     if(!width || !height) {
         std::cout << "No viewport geometry" << std::endl;
@@ -539,7 +545,10 @@ void RenderPass::render(const RenderConfig &config)
                     for(const auto &p : config.getProperties())
                         node->program()->setUniformFromProperty(p.first, p.second);
     
-                    node->render(_camera, glm::ivec2(width, height), config);
+                    {
+                        std::lock_guard<std::mutex> lock(_cameraLock);
+                        node->render(_camera, glm::ivec2(width, height), config);
+                    }
                 }
             }
 
@@ -552,7 +561,10 @@ void RenderPass::render(const RenderConfig &config)
     
                     for(const auto &p : config.getProperties())
                         node->program()->setUniformFromProperty(p.first, p.second);
-                    node->render(_camera, glm::ivec2(width, height), config);
+                    {
+                        std::lock_guard<std::mutex> lock(_cameraLock);
+                        node->render(_camera, glm::ivec2(width, height), config);
+                    }
                 }
             }
         }
