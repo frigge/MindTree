@@ -282,9 +282,9 @@ void RenderManager::draw()
         for(auto &pass : passes){
             pass->render(config);
         }
+        _resourceManager->cleanUp();
     }
 
-    _resourceManager->cleanUp();
 
     glDisable(GL_POINT_SMOOTH);
     glDisable(GL_PROGRAM_POINT_SIZE);
@@ -292,6 +292,7 @@ void RenderManager::draw()
     _context->swapBuffers();
 
     glFinish();
+
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
     renderTime = duration.count() / 1000000000.0;
