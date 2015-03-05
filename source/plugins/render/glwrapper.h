@@ -285,6 +285,8 @@ public:
     void enableAttribute(std::string name);
     void disableAttribute(std::string name);
 
+    std::string getFileName(int shaderType);
+
     void link();
     void init();
 
@@ -305,7 +307,7 @@ private:
 class UniformState
 {
 public:
-    UniformState(std::shared_ptr<ShaderProgram> prog, std::string name, Property value);
+    UniformState(std::weak_ptr<ShaderProgram> prog, std::string name, Property value);
     UniformState(const UniformState &other) = delete;
     UniformState(const UniformState &&other);
     ~UniformState();
@@ -317,13 +319,13 @@ private:
     mutable bool _valid;
     std::string _name;
     Property _oldValue;
-    std::shared_ptr<ShaderProgram> _program;
+    std::weak_ptr<ShaderProgram> _program;
 };
 
 class UniformStateManager
 {
 public:
-    UniformStateManager(std::shared_ptr<ShaderProgram> prog);
+    UniformStateManager(std::weak_ptr<ShaderProgram> prog);
     ~UniformStateManager();
 
     void addState(std::string name, Property value);
@@ -331,7 +333,7 @@ public:
     void reset();
 
 private:
-    std::shared_ptr<ShaderProgram> _program;
+    std::weak_ptr<ShaderProgram> _program;
     std::vector<UniformState> _states;
 };
 

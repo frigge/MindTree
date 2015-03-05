@@ -116,7 +116,7 @@ protected:
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
 private:
-    std::shared_ptr<ShaderProgram> _program;
+    std::weak_ptr<ShaderProgram> _program;
     std::shared_ptr<VBO> _vbo;
     std::shared_ptr<VBO> _coord_vbo;
 };

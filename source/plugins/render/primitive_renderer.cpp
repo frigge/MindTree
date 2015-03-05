@@ -258,18 +258,21 @@ FullscreenQuadRenderer::~FullscreenQuadRenderer()
 
 std::shared_ptr<ShaderProgram> FullscreenQuadRenderer::getProgram()
 {
-    if(!_program) {
-        _program = std::make_shared<ShaderProgram>();
+    std::shared_ptr<ShaderProgram> prog;
+    if(_program.expired()) {
+        prog = std::make_shared<ShaderProgram>();
 
-        _program
+        prog
             ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
                                 ShaderProgram::VERTEX);
-        _program
+        prog
             ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.frag", 
                                 ShaderProgram::FRAGMENT);
+
+        _program = prog;
     }
 
-    return _program;
+    return prog;
 }
 
 void FullscreenQuadRenderer::init(std::shared_ptr<ShaderProgram> prog)

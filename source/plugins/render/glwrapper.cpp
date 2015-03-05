@@ -956,13 +956,20 @@ void ShaderProgram::disableAttribute(std::string name)
     MTGLERROR;
 }
 
-UniformState::UniformState(std::shared_ptr<ShaderProgram> prog, std::string name, Property value) : 
-    _valid(prog->getUniformLocation(name) > -1),
+std::string ShaderProgram::getFileName(int shaderType)
+{
+    if(_fileNameMap.find(shaderType) == _fileNameMap.end())
+        return "";
+
+    return _fileNameMap[shaderType];
+}
+UniformState::UniformState(std::weak_ptr<ShaderProgram> prog, std::string name, Property value) : 
+    _valid(prog.lock()->getUniformLocation(name) > -1),
     _name(name), 
-    _oldValue(_valid ? prog->getUniformAsProperty(name, value.getType()) : Property()),
+    _oldValue(_valid ? prog.lock()->getUniformAsProperty(name, value.getType()) : Property()),
     _program(prog)
 {
-    if(_valid) prog->setUniformFromProperty(name, value);
+    if(_valid) prog.lock()->setUniformFromProperty(name, value);
 }
 
 UniformState::UniformState(const UniformState &&other) :
@@ -986,11 +993,11 @@ UniformState& UniformState::operator=(const UniformState&& other)
 
 UniformState::~UniformState()
 {
-    assert(_program->isBound());
-    if(_valid) _program->setUniformFromProperty(_name, _oldValue);
+    assert(_program.lock()->isBound());
+    if(_valid) _program.lock()->setUniformFromProperty(_name, _oldValue);
 }
 
-UniformStateManager::UniformStateManager(std::shared_ptr<ShaderProgram> prog) :
+UniformStateManager::UniformStateManager(std::weak_ptr<ShaderProgram> prog) :
     _program(prog)
 {
 }
