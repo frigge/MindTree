@@ -80,7 +80,6 @@ void ViewportWidget::setCameras()
     list.append("Default");
     for(const auto &cam : cameras) {
         list.append(cam.c_str());
-        dbout(cam.c_str());
     }
 
     _camBox->addItems(list);
