@@ -16,12 +16,12 @@ void main(){
    
    if(defaultLighting) {
        pos = (modelView * vec4(P, 1)).xyz;
-       sn = (modelView * vec4(N, 0)).xyz;
+       sn = normalize(modelView * vec4(N, 0)).xyz;
        cameraPos = pos;
    }
    else {
        pos = (model * vec4(P, 1)).xyz;
-       sn = (model * vec4(N, 0)).xyz;
+       sn = normalize(model * vec4(N, 0)).xyz;
        cameraPos = (modelView * vec4(P, 1)).xyz;
    }
 };
