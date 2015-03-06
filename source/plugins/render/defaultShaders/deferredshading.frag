@@ -101,13 +101,14 @@ void main(){
         float lightangle = acos(lightAngleCos);
         angleMask = smoothstep(light.coneangle, light.coneangle - 0.1, lightangle);
         angleMask *= lightAngleCos;
+        //float bias = tan(acos(clamp(0, 1, dot(Nn, light.dir))));
 
         shadowP = (light.shadowmvp * vec4(pos, 1));
         shadowP /= shadowP.w;
         shadowP += 1;
         shadowP *= 0.5;
 
-        float bias = 0.001;
+        float bias = .005;
         shadowP.z -= bias;
         inLight = texture(shadow, shadowP.xyz);
 

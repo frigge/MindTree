@@ -3,7 +3,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glwrapper.h"
 
-#include "rendermanager.h"
+#include "rendertree.h"
 #include "render.h"
 
 using namespace MindTree::GL;
@@ -15,7 +15,7 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
-    auto manager = RenderManager::getResourceManager();
+    auto manager = RenderTree::getResourceManager();
     manager->scheduleCleanUp(std::move(_vao));
 }
 

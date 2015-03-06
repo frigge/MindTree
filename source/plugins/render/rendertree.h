@@ -36,12 +36,12 @@ private:
     bool _flatShading = false;
 };
 
-class RenderManager;
+class RenderTree;
 class RenderThread
 {
 public:
-    static void addManager(RenderManager* manager);
-    static void removeManager(RenderManager *manager);
+    static void addManager(RenderTree* manager);
+    static void removeManager(RenderTree *manager);
     inline static std::thread::id id() { return _renderThread.get_id(); }
     inline static void asrt() { assert(_renderThread.get_id() == std::this_thread::get_id()); }
 
@@ -53,15 +53,15 @@ private:
     static bool _rendering;
     static std::mutex _renderingLock;
     static std::thread _renderThread;
-    static std::vector<RenderManager*> _renderQueue;
+    static std::vector<RenderTree*> _renderQueue;
 };
 
 class ResourceManager;
-class RenderManager
+class RenderTree
 {
 public:
-    RenderManager(QGLContext *context);
-    virtual ~RenderManager();
+    RenderTree(QGLContext *context);
+    virtual ~RenderTree();
 
     void setCustomTextureNameMapping(std::string realname, std::string newname);
     void clearCustomTextureNameMapping();

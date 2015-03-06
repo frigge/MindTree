@@ -2,7 +2,7 @@
 #include "render.h"
 #include "renderpass.h"
 #include "primitive_renderer.h"
-#include "rendermanager.h"
+#include "rendertree.h"
 #include "../3dwidgets/widgets.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -10,6 +10,7 @@
 #include "data/debuglog.h"
 #include "polygon_renderer.h"
 #include "light_renderer.h"
+#include "light_accumulation_plane.h"
 #include "../datatypes/Object/lights.h"
 #include "camera_renderer.h"
 #include "empty_renderer.h"
@@ -20,92 +21,10 @@
 using namespace MindTree;
 using namespace GL;
 
-std::weak_ptr<ShaderProgram> LightAccumulationPass::_defaultProgram;
-
-LightAccumulationPass::LightAccumulationPass()
-{
-}
-
-LightAccumulationPass::~LightAccumulationPass()
-{
-}
-
-std::shared_ptr<ShaderProgram> LightAccumulationPass::getProgram()
-{
-    std::shared_ptr<ShaderProgram> prog;
-    if(_defaultProgram.expired()) {
-        prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/deferredshading.frag", 
-                                ShaderProgram::FRAGMENT);
-        _defaultProgram = prog;
-    }
-
-    return _defaultProgram.lock();
-}
-
-void LightAccumulationPass::setLights(std::vector<std::shared_ptr<Light>> lights)
-{
-    std::lock_guard<std::mutex> lock(_lightsLock);
-    _lights = lights;
-}
-
-void LightAccumulationPass::setShadowPasses(std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> shadowPasses)
-{
-    std::lock_guard<std::mutex> lock(_shadowPassesLock);
-    _shadowPasses = shadowPasses;
-}
-
-void LightAccumulationPass::draw(const CameraPtr /* camera */, 
-                                  const RenderConfig& /* config */, 
-                                  std::shared_ptr<ShaderProgram> program)
-{
-    glBlendEquation(GL_FUNC_ADD);
-    UniformStateManager states(program);
-    std::lock_guard<std::mutex> lock(_lightsLock);
-    std::lock_guard<std::mutex> lock2(_shadowPassesLock);
-    static const float PI = 3.14159265359;
-    for (const LightPtr light : _lights) {
-        states.addState("light.shadow", static_cast<int>(light->getShadowInfo()._enabled));
-        if(_shadowPasses.find(light) != _shadowPasses.end()) {
-            auto shadowmap = _shadowPasses[light].lock()->getOutDepthTexture();
-            program->setTexture(shadowmap, "shadow");
-            auto shadowcam = _shadowPasses[light].lock()->getCamera();
-            glm::mat4 mvp = shadowcam->getProjection() 
-                * shadowcam->getViewMatrix();
-            states.addState("light.shadowmvp", mvp);
-        }
-        double coneangle = 360;
-        if(light->getLightType() == Light::SPOT)
-            coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
-
-        states.addState("light.pos",
-                        glm::vec4(light->getPosition(),
-                                  light->getLightType() == Light::DISTANT ? 0 : 1));
-
-        glm::vec3 dir(0);
-        if (light->getLightType() == Light::DISTANT
-            || light->getLightType() == Light::SPOT){
-            dir = light->getTransformation()[2].xyz();
-        }
-
-        states.addState("light.dir", dir);
-        states.addState("light.color", light->getColor());
-        states.addState("light.intensity", light->getIntensity());
-        states.addState("light.coneangle", coneangle * PI /180);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        MTGLERROR;
-    }
-}
-
 DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
     RenderConfigurator(context, camera)
 {
-    RenderManager *manager = getManager();
+    RenderTree *manager = getManager();
     auto config = manager->getConfig();
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
@@ -158,7 +77,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
                                                 Texture::RGB));
 
     _deferredPass.lock()->setCamera(camera);
-    _deferredRenderer = new LightAccumulationPass();
+    _deferredRenderer = new LightAccumulationPlane();
     _deferredPass.lock()->addRenderer(_deferredRenderer);
     _deferredPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
 

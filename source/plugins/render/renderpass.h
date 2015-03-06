@@ -84,7 +84,7 @@ private:
     std::queue<std::pair<std::string, glm::ivec2>> _pixelRequests;
     std::mutex _pixelRequestsLock;
 
-    friend class RenderManager;
+    friend class RenderTree;
 
     bool _initialized;
     std::shared_ptr<Camera> _camera;

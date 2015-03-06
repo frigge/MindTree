@@ -2,7 +2,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 #include "glwrapper.h"
-#include "rendermanager.h"
+#include "rendertree.h"
 #include "data/debuglog.h"
 
 #include "polygon_renderer.h"
@@ -40,7 +40,7 @@ std::shared_ptr<ShaderProgram> PolygonRenderer::getProgram()
 void PolygonRenderer::initCustom()
 {
     auto data = obj->getData();
-    auto ibo = RenderManager::getResourceManager()->getIBO(data);
+    auto ibo = RenderTree::getResourceManager()->getIBO(data);
     ibo->bind();
     ibo->data(data->getProperty("polygon").getData<PolygonListPtr>());
 }
@@ -57,7 +57,7 @@ void PolygonRenderer::draw(const CameraPtr camera, const RenderConfig &config, s
         manager.setFromPropertyMap(obj->getMaterial()->getProperties());
     }
 
-    auto ibo = RenderManager::getResourceManager()->getIBO(data);
+    auto ibo = RenderTree::getResourceManager()->getIBO(data);
 
     auto polysizes = ibo->getSizes();
     auto indexOffsets = ibo->getOffsets();
@@ -104,7 +104,7 @@ std::shared_ptr<ShaderProgram> EdgeRenderer::getProgram()
 void EdgeRenderer::initCustom()
 {
     auto data = obj->getData();
-    auto ibo = RenderManager::getResourceManager()->getIBO(data);
+    auto ibo = RenderTree::getResourceManager()->getIBO(data);
     ibo->bind();
     ibo->data(data->getProperty("polygon").getData<PolygonListPtr>());
 }
@@ -120,7 +120,7 @@ void EdgeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std:
         lineWidth =  obj->getProperty("display.lineWidth").getData<double>();
 
     auto data = obj->getData();
-    auto ibo = RenderManager::getResourceManager()->getIBO(data);
+    auto ibo = RenderTree::getResourceManager()->getIBO(data);
 
     auto polysizes = ibo->getSizes();
     auto indexOffsets = ibo->getOffsets();

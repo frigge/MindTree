@@ -27,7 +27,7 @@
 #include "source/plugins/datatypes/Object/object.h"
 #include "data/nodes/nodetype.h"
 #include "../../render/glwrapper.h"
-#include "../../render/rendermanager.h"
+#include "../../render/rendertree.h"
 
 #include "QGLWidget"
 
@@ -49,7 +49,7 @@ public:
     void setStartSocket(MindTree::DoutSocket *socket);
     MindTree::DoutSocket* getStartSocket();
 
-    MindTree::GL::RenderManager* getRenderManager();
+    MindTree::GL::RenderTree* getRenderTree();
     MindTree::GL::RenderPass* getPixelPass();
     void setOption(const std::string &key, MindTree::Property value);
 

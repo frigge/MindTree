@@ -4,7 +4,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "iostream"
 #include "fstream"
-#include "rendermanager.h"
+#include "rendertree.h"
 #include "data/debuglog.h"
 
 #include "glwrapper.h"
@@ -108,7 +108,7 @@ void Buffer::release()
 VBO::VBO(std::string name) : 
     Buffer(GL_ARRAY_BUFFER),
     _name(name),
-    _index(RenderManager::getResourceManager()->getIndexForAttribute(name)),
+    _index(RenderTree::getResourceManager()->getIndexForAttribute(name)),
     _size(0), 
     _datatype(GL_FLOAT)
 {

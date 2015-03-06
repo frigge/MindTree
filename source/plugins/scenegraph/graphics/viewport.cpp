@@ -76,7 +76,7 @@ Viewport::~Viewport()
     _viewports.erase(std::find(begin(_viewports), end(_viewports), this));
 }
 
-GL::RenderManager* Viewport::getRenderManager()
+GL::RenderTree* Viewport::getRenderTree()
 {
     return _renderConfigurator->getManager();
 }

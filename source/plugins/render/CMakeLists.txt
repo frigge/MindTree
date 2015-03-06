@@ -5,12 +5,13 @@ set(RENDER_SRC
     empty_renderer.cpp
     geoobject_renderer.cpp
     glwrapper.cpp
+    light_accumulation_plane.cpp
     light_renderer.cpp
     polygon_renderer.cpp
     primitive_renderer.cpp
     render.cpp
     render_setup.cpp
-    rendermanager.cpp
+    rendertree.cpp
     renderpass.cpp
     shader_render_node.cpp
 )

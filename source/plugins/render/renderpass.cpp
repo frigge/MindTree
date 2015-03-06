@@ -1,7 +1,7 @@
 #include "GL/glew.h"
 #include "glwrapper.h"
 #include "render.h"
-#include "rendermanager.h"
+#include "rendertree.h"
 #include "data/debuglog.h"
 #include "shader_render_node.h"
 #include "renderpass.h"
@@ -23,16 +23,16 @@ RenderPass::RenderPass() :
 RenderPass::~RenderPass()
 {
     for (auto tx : _outputTextures) {
-        RenderManager::getResourceManager()->scheduleCleanUp(tx);
+        RenderTree::getResourceManager()->scheduleCleanUp(tx);
     }
 
     for (auto rb : _outputRenderbuffers) {
-        RenderManager::getResourceManager()->scheduleCleanUp(rb);
+        RenderTree::getResourceManager()->scheduleCleanUp(rb);
     }
 
-    RenderManager::getResourceManager()->scheduleCleanUp(_depthTexture);
-    RenderManager::getResourceManager()->scheduleCleanUp(_depthRenderbuffer);
-    RenderManager::getResourceManager()->scheduleCleanUp(_target);
+    RenderTree::getResourceManager()->scheduleCleanUp(_depthTexture);
+    RenderTree::getResourceManager()->scheduleCleanUp(_depthRenderbuffer);
+    RenderTree::getResourceManager()->scheduleCleanUp(_target);
 }
 
 void RenderPass::setCamera(CameraPtr camera)

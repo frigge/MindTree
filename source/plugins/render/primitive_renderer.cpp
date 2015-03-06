@@ -2,7 +2,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "GL/glew.h"
 #include "renderpass.h"
-#include "rendermanager.h"
+#include "rendertree.h"
 #include "primitive_renderer.h"
 
 #define PI 3.14159265359
@@ -251,7 +251,7 @@ FullscreenQuadRenderer::FullscreenQuadRenderer()
 
 FullscreenQuadRenderer::~FullscreenQuadRenderer()
 {
-    auto manager = RenderManager::getResourceManager();
+    auto manager = RenderTree::getResourceManager();
     manager->scheduleCleanUp(_vbo);
     manager->scheduleCleanUp(_coord_vbo);
 }

@@ -20,7 +20,7 @@
 #include "iostream"
 #include "viewport.h"
 #include "data/nodes/data_node.h"
-#include "../../render/rendermanager.h"
+#include "../../render/rendertree.h"
 #include "../../render/renderpass.h"
 #include "../../render/render.h"
 #include "data/debuglog.h"
@@ -138,7 +138,7 @@ void ViewportWidget::createToolbar()
     overrideOutputAction->setChecked(false);
 
 
-    auto outputs = _viewport->getRenderManager()->getAllOutputs();
+    auto outputs = _viewport->getRenderTree()->getAllOutputs();
     _outputBox = new QComboBox();
     _outputBox->setEnabled(false);
 
@@ -173,13 +173,13 @@ void ViewportWidget::setOverrideOutput(bool value)
 {
     _outputBox->setEnabled(value);
     if(!value)
-        _viewport->getRenderManager()->clearCustomTextureNameMapping();
+        _viewport->getRenderTree()->clearCustomTextureNameMapping();
 }
 
 void ViewportWidget::setOutput(QString out)
 {
-    _viewport->getRenderManager()->clearCustomTextureNameMapping();
-    _viewport->getRenderManager()->setCustomTextureNameMapping(out.toStdString(), "outcolor");
+    _viewport->getRenderTree()->clearCustomTextureNameMapping();
+    _viewport->getRenderTree()->setCustomTextureNameMapping(out.toStdString(), "outcolor");
 }
 
 void ViewportWidget::toggleDefaultLighting(bool value)

@@ -18,7 +18,7 @@ namespace MindTree {
 namespace GL {
 
 class RenderPass;
-class RenderManager;
+class RenderTree;
 class ShaderProgram;
 class ShaderRenderNode;
 
@@ -32,7 +32,7 @@ public:
     virtual void setCamera(std::shared_ptr<Camera> camera);
     std::shared_ptr<Camera> getCamera() const;
 
-    RenderManager* getManager();
+    RenderTree* getManager();
 
     virtual void setGeometry(std::shared_ptr<Group> grp);
 
@@ -49,7 +49,7 @@ protected:
     std::weak_ptr<RenderPass> _geometryPass;
 
 private:
-    std::unique_ptr<MindTree::GL::RenderManager> _rendermanager;
+    std::unique_ptr<MindTree::GL::RenderTree> _rendertree;
     std::shared_ptr<Camera> _camera;
 };
 

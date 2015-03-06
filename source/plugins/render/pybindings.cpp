@@ -6,7 +6,7 @@ using namespace MindTree::GL;
 
 BOOST_PYTHON_MODULE(pyrender)
 {
-    bpy::class_<RenderManager>("RenderManager");
+    bpy::class_<RenderTree>("RenderTree");
     bpy::class_<RenderPass>("RenderPass");
     bpy::class_<RenderConfig>("RenderConfig");
 }

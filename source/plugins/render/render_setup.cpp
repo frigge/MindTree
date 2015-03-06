@@ -1,7 +1,7 @@
 #include "render.h"
 #include "renderpass.h"
 #include "primitive_renderer.h"
-#include "rendermanager.h"
+#include "rendertree.h"
 #include "../3dwidgets/widgets.h"
 
 #include "glm/gtc/matrix_transform.hpp"
@@ -20,7 +20,7 @@ using namespace MindTree;
 using namespace GL;
 
 RenderConfigurator::RenderConfigurator(QGLContext *context, CameraPtr camera) :
-    _rendermanager(new RenderManager(context)),
+    _rendertree(new RenderTree(context)),
     _camera(camera)
 {
 
@@ -28,17 +28,17 @@ RenderConfigurator::RenderConfigurator(QGLContext *context, CameraPtr camera) :
 
 void RenderConfigurator::startRendering()
 {
-    MindTree::GL::RenderThread::addManager(_rendermanager.get());
+    MindTree::GL::RenderThread::addManager(_rendertree.get());
 }
 
 void RenderConfigurator::stopRendering()
 {
-    MindTree::GL::RenderThread::removeManager(_rendermanager.get());
+    MindTree::GL::RenderThread::removeManager(_rendertree.get());
 }
 
-RenderManager* RenderConfigurator::getManager()
+RenderTree* RenderConfigurator::getManager()
 {
-    return _rendermanager.get();
+    return _rendertree.get();
 }
 
 void RenderConfigurator::setRenderersFromGroup(std::shared_ptr<Group> group)
@@ -122,7 +122,7 @@ void RenderConfigurator::setGeometry(std::shared_ptr<Group> grp)
 void RenderConfigurator::setCamera(std::shared_ptr<Camera> camera)
 {
     _camera = camera;
-    _rendermanager->setDirty();
+    _rendertree->setDirty();
 }
 
 std::shared_ptr<Camera> RenderConfigurator::getCamera() const
@@ -133,7 +133,7 @@ std::shared_ptr<Camera> RenderConfigurator::getCamera() const
 ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager)
     : RenderConfigurator(context, camera), _maxLightCount(5)
 {
-    RenderManager *manager = getManager();
+    RenderTree *manager = getManager();
     auto config = manager->getConfig();
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);

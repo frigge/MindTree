@@ -1,5 +1,5 @@
 #include "glwrapper.h"
-#include "rendermanager.h"
+#include "rendertree.h"
 #include "geoobject_renderer.h"
 
 using namespace MindTree;
@@ -22,8 +22,8 @@ void GeoObjectRenderer::init(std::shared_ptr<ShaderProgram> prog)
     for(auto propPair : propmap){
         bool has_attr = prog->hasAttribute(propPair.first);
         if(has_attr) {
-            RenderManager::getResourceManager()->uploadData(data, propPair.first);
-            auto vbo = RenderManager::getResourceManager()->getVBO(data, propPair.first);
+            RenderTree::getResourceManager()->uploadData(data, propPair.first);
+            auto vbo = RenderTree::getResourceManager()->getVBO(data, propPair.first);
             prog->bindAttributeLocation(vbo);
         }
     }

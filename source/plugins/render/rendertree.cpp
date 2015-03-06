@@ -6,7 +6,7 @@
 #include "render.h"
 #include "renderpass.h"
 #include "shader_render_node.h"
-#include "rendermanager.h"
+#include "rendertree.h"
 
 using namespace MindTree::GL;
 
@@ -53,9 +53,9 @@ bool RenderConfig::flatShading() const
 bool RenderThread::_rendering = false;
 std::mutex RenderThread::_renderingLock;
 std::thread RenderThread::_renderThread;
-std::vector<RenderManager*> RenderThread::_renderQueue;
+std::vector<RenderTree*> RenderThread::_renderQueue;
 
-void RenderThread::addManager(RenderManager* manager)
+void RenderThread::addManager(RenderTree* manager)
 {
     auto it = std::find(begin(_renderQueue), end(_renderQueue), manager);
     if(it == end(_renderQueue))
@@ -64,7 +64,7 @@ void RenderThread::addManager(RenderManager* manager)
     if(!isRendering()) start();
 }
 
-void RenderThread::removeManager(RenderManager *manager)
+void RenderThread::removeManager(RenderTree *manager)
 {
     auto it = std::find(begin(_renderQueue), end(_renderQueue), manager);
     if(it != end(_renderQueue))
@@ -105,30 +105,30 @@ void RenderThread::stop()
     if (_renderThread.joinable()) _renderThread.join();
 }
 
-std::shared_ptr<ResourceManager> RenderManager::_resourceManager;
+std::shared_ptr<ResourceManager> RenderTree::_resourceManager;
 
-RenderManager::RenderManager(QGLContext *context)
+RenderTree::RenderTree(QGLContext *context)
     : _initialized(false), _context(context)
 {
     if(!_resourceManager) _resourceManager = std::make_shared<ResourceManager>();
 }
 
-RenderManager::~RenderManager()
+RenderTree::~RenderTree()
 {
 }
 
-std::shared_ptr<ResourceManager> RenderManager::getResourceManager()
+std::shared_ptr<ResourceManager> RenderTree::getResourceManager()
 {
     return _resourceManager;
 }
 
-void RenderManager::setDirty()
+void RenderTree::setDirty()
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     _initialized = false;
 }
 
-void RenderManager::setCustomTextureNameMapping(std::string realname, std::string newname)
+void RenderTree::setCustomTextureNameMapping(std::string realname, std::string newname)
 {
     {
         std::lock_guard<std::mutex> lock(_managerLock);
@@ -137,7 +137,7 @@ void RenderManager::setCustomTextureNameMapping(std::string realname, std::strin
     setDirty();
 }
 
-void RenderManager::clearCustomTextureNameMapping()
+void RenderTree::clearCustomTextureNameMapping()
 {
     {
         std::lock_guard<std::mutex> lock(_managerLock);
@@ -146,7 +146,7 @@ void RenderManager::clearCustomTextureNameMapping()
     setDirty();
 }
 
-void RenderManager::init()
+void RenderTree::init()
 {
     RenderThread::asrt();
     if(_initialized) return;
@@ -181,7 +181,7 @@ void RenderManager::init()
     }
 }
 
-std::string RenderManager::getTextureName(std::shared_ptr<Texture> tex) const
+std::string RenderTree::getTextureName(std::shared_ptr<Texture> tex) const
 {
     std::string realName = tex->getName();
     if(_textureNameMappings.find(realName) != end(_textureNameMappings))
@@ -190,7 +190,7 @@ std::string RenderManager::getTextureName(std::shared_ptr<Texture> tex) const
         return realName;
 }
 
-std::vector<std::string> RenderManager::getAllOutputs() const
+std::vector<std::string> RenderTree::getAllOutputs() const
 {
     std::vector<std::string> outputs;
     for(const auto &pass : passes) {
@@ -202,26 +202,26 @@ std::vector<std::string> RenderManager::getAllOutputs() const
     return outputs;
 }
 
-void RenderManager::setConfig(RenderConfig cfg)    
+void RenderTree::setConfig(RenderConfig cfg)    
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     config = cfg;
 }
 
-RenderConfig RenderManager::getConfig()    
+RenderConfig RenderTree::getConfig()    
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     return config;
 }
 
-void RenderManager::addPass(std::shared_ptr<RenderPass> pass)
+void RenderTree::addPass(std::shared_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     _initialized = false;
     passes.push_back(pass);
 }
 
-void RenderManager::insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
+void RenderTree::insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     _initialized = false;
@@ -229,7 +229,7 @@ void RenderManager::insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::sh
     passes.insert(it, pass);
 }
 
-void RenderManager::insertPassAfter(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
+void RenderTree::insertPassAfter(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     _initialized = false;
@@ -238,7 +238,7 @@ void RenderManager::insertPassAfter(std::weak_ptr<RenderPass> ref_pass, std::sha
     passes.insert(it, pass);
 }
 
-void RenderManager::removePass(std::weak_ptr<RenderPass> pass)
+void RenderTree::removePass(std::weak_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     auto it = std::find(begin(passes), end(passes), pass.lock());
@@ -251,13 +251,13 @@ void RenderManager::removePass(std::weak_ptr<RenderPass> pass)
     }
 }
 
-RenderPass* RenderManager::getPass(uint index)
+RenderPass* RenderTree::getPass(uint index)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     return std::next(begin(passes), index)->get();
 }
 
-void RenderManager::draw()
+void RenderTree::draw()
 {
     ContextBinder binder(_context);
     RenderThread::asrt();

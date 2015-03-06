@@ -22,7 +22,7 @@ class ShaderProgram;
 
 class RenderConfig;
 
-class RenderManager;
+class RenderTree;
 class Renderer
 {
 public:

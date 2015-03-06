@@ -1,4 +1,4 @@
-#include "rendermanager.h"
+#include "rendertree.h"
 #include "glwrapper.h"
 #include "render.h"
 #include "shader_render_node.h"
@@ -14,7 +14,7 @@ ShaderRenderNode::ShaderRenderNode(std::shared_ptr<ShaderProgram> program) :
 
 ShaderRenderNode::~ShaderRenderNode()
 {
-    if(_program) RenderManager::getResourceManager()
+    if(_program) RenderTree::getResourceManager()
         ->scheduleCleanUp(_program);
 }
 

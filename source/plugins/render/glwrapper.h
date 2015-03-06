@@ -455,7 +455,7 @@ public:
     int getIndexForAttribute(std::string name);
 
 private:
-    friend class RenderManager;
+    friend class RenderTree;
 
     std::shared_ptr<VBO> createVBO(ObjectDataPtr data, std::string name);
     std::shared_ptr<IBO> createIBO(ObjectDataPtr data);
