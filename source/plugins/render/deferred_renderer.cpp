@@ -205,6 +205,7 @@ void DeferredRenderer::setGeometry(std::shared_ptr<Group> grp)
     for(auto p : _shadowPasses) {
         getManager()->removePass(p.second);
     }
+    _shadowNode->clear();
     _shadowPasses.clear();
 
     auto config = getManager()->getConfig();
