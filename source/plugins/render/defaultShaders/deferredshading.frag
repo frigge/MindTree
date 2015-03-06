@@ -93,7 +93,6 @@ void main(){
     } else {
         lvec = -light.dir;
     }
-
     lvec = normalize(lvec);
     vec4 shadowP = vec4(1);
     if(lightDirLength > 0.1
@@ -108,7 +107,8 @@ void main(){
         shadowP += 1;
         shadowP *= 0.5;
 
-        float bias = 0.1;
+        float bias = 0.001;
+        shadowP.z -= bias;
         inLight = texture(shadow, shadowP.xyz);
 
         inLight += clamp(1 - light.shadow, 0, 1);
