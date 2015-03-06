@@ -70,6 +70,7 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
     std::lock_guard<std::mutex> lock2(_shadowPassesLock);
     static const float PI = 3.14159265359;
     for (const LightPtr light : _lights) {
+        states.addState("light.shadow", static_cast<int>(light->getShadowInfo()._enabled));
         if(_shadowPasses.find(light) != _shadowPasses.end()) {
             auto shadowmap = _shadowPasses[light].lock()->getOutDepthTexture();
             program->setTexture(shadowmap, "shadow");
