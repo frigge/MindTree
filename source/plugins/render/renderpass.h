@@ -54,6 +54,7 @@ public:
     std::vector<std::shared_ptr<ShaderRenderNode>> getShaderNodes();
 
     void setBackgroundColor(glm::vec4 color);
+    void setClearDepth(float value);
 
     void setBlendFunc(GLenum src, GLenum dst);
     void setEnableBlending(bool value);
@@ -110,6 +111,8 @@ private:
 
     std::mutex _bgColorLock;
     glm::vec4 _bgColor;
+
+    std::atomic<float> _depth;
 
     std::mutex _overrideProgramLock;
     std::shared_ptr<ShaderProgram> _overrideProgram;

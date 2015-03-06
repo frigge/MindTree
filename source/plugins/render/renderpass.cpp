@@ -15,7 +15,8 @@ RenderPass::RenderPass() :
     _blendDest(GL_ONE_MINUS_SRC_ALPHA),
     _depthOutput(NONE),
     _blending(true),
-    _bgColor(0)
+    _bgColor(0),
+    _depth(1)
 {
 }
 
@@ -453,6 +454,11 @@ void RenderPass::setBackgroundColor(glm::vec4 color)
     _bgColor = color;
 }
 
+void RenderPass::setClearDepth(float value)
+{
+    _depth = value;
+}
+
 void RenderPass::render(const RenderConfig &config)
 {
     int width, height;
@@ -489,6 +495,7 @@ void RenderPass::render(const RenderConfig &config)
             std::lock_guard<std::mutex> lock(_bgColorLock);
             glClearColor(_bgColor.r, _bgColor.g, _bgColor.b, _bgColor.a);
         }
+        glClearDepth(_depth);
 
         if(_blending)
             glEnable(GL_BLEND);

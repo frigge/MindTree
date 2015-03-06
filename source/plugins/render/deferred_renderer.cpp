@@ -263,6 +263,7 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
     shadowPass.lock()->addOutput(std::make_shared<Texture2D>("flux"));
 
     shadowPass.lock()->addGeometryShaderNode(_shadowNode);
+    shadowPass.lock()->setClearDepth(1.);
 }
 
 void DeferredRenderer::addRendererFromLight(LightPtr obj)
