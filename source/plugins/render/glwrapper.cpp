@@ -1198,6 +1198,12 @@ int Texture2D::width()
     return _width;
 }
 
+namespace {
+    bool isDepthTexture(Texture::Format fm)
+    {
+        return fm >= Texture::DEPTH;
+    }
+}
 int Texture2D::height()
 {
     return _height;
