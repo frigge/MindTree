@@ -117,7 +117,9 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     grid->setAlternatingColor(glm::vec4(.7, .7, .7, 1.0));
     grid->setBorderWidth(2.);
 
-    _geometryPass = manager->addPass();
+    auto geometryPass = std::make_shared<RenderPass>();
+    _geometryPass = geometryPass;
+    manager->addPass(geometryPass);
     auto geopass = _geometryPass.lock();
 
     geopass->setCamera(camera);
@@ -137,7 +139,9 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 
     geopass->setBlendFunc(GL_ONE, GL_ONE);
 
-    _overlayPass = manager->addPass();
+    auto overlayPass = std::make_shared<RenderPass>();
+    _overlayPass = overlayPass;
+    manager->addPass(overlayPass);
     auto overlay = _overlayPass.lock();
     overlay
         ->setDepthOutput(std::make_shared<Renderbuffer>("depth",
@@ -145,7 +149,9 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     overlay->addOutput(std::make_shared<Texture2D>("overlay"));
     overlay->setCamera(camera);
 
-    _deferredPass = manager->addPass();
+    auto deferredPass = std::make_shared<RenderPass>();
+    _deferredPass = deferredPass;
+    manager->addPass(deferredPass);
     _deferredPass.lock()
         ->addOutput(std::make_shared<Texture2D>("shading_out",
                                                 Texture::RGB));
@@ -157,8 +163,9 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
 
-    _pixelPass = manager->addPass();
-    auto pixelPass = _pixelPass.lock();
+    auto pixelPass = std::make_shared<RenderPass>();
+    _pixelPass = pixelPass;
+    manager->addPass(pixelPass);
     pixelPass->setCamera(camera);
     pixelPass->addRenderer(new FullscreenQuadRenderer());
 
@@ -241,7 +248,7 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
     Light::ShadowInfo info = spot->getShadowInfo();
     if(!info._enabled) return;
 
-    auto shadowPass = getManager()->insertPassAfter(_geometryPass);
+    auto shadowPass = std::make_shared<RenderPass>();
     size_t shadowCount = _shadowPasses.size();
 
     _shadowPasses[spot] = shadowPass;
@@ -252,18 +259,20 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
     camera->setFov(spot->getConeAngle());
     camera->setNear(info._near);
     camera->setFar(info._far);
-    shadowPass.lock()->setCamera(camera);
-    shadowPass.lock()
+    shadowPass->setCamera(camera);
+    shadowPass
         ->setDepthOutput(std::make_shared<Texture2D>("shadow",
                                                      Texture::DEPTH32F));
-    shadowPass.lock()->addOutput(std::make_shared<Texture2D>("shadow_position",
+    shadowPass->addOutput(std::make_shared<Texture2D>("shadow_position",
                                                              Texture::RGBA16F));
-    shadowPass.lock()->addOutput(std::make_shared<Texture2D>("shadow_normal",
+    shadowPass->addOutput(std::make_shared<Texture2D>("shadow_normal",
                                                              Texture::RGBA16F));
-    shadowPass.lock()->addOutput(std::make_shared<Texture2D>("flux"));
+    shadowPass->addOutput(std::make_shared<Texture2D>("shadow_flux"));
 
-    shadowPass.lock()->addGeometryShaderNode(_shadowNode);
-    shadowPass.lock()->setClearDepth(1.);
+    shadowPass->addGeometryShaderNode(_shadowNode);
+    shadowPass->setClearDepth(1.);
+
+    getManager()->insertPassAfter(_geometryPass, shadowPass);
 }
 
 void DeferredRenderer::addRendererFromLight(LightPtr obj)

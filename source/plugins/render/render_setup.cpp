@@ -138,7 +138,9 @@ ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3D
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
 
-    _geometryPass = manager->addPass();
+    auto geometryPass = std::make_shared<RenderPass>();
+    _geometryPass = geometryPass;
+    manager->addPass(geometryPass);
     _geometryPass.lock()->setCamera(camera);
 
     auto grid = new GL::GridRenderer(100, 100, 100, 100);

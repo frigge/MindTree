@@ -67,9 +67,9 @@ public:
     void clearCustomTextureNameMapping();
     std::vector<std::string> getAllOutputs() const;
 
-    std::weak_ptr<RenderPass> addPass();
-    std::weak_ptr<RenderPass> insertPassBefore(std::weak_ptr<RenderPass> pass);
-    std::weak_ptr<RenderPass> insertPassAfter(std::weak_ptr<RenderPass> pass);
+    void addPass(std::shared_ptr<RenderPass> pass);
+    void insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass);
+    void insertPassAfter(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass);
     void removePass(std::weak_ptr<RenderPass> pass);
     RenderPass* getPass(uint index);
 
