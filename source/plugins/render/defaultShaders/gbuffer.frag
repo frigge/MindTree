@@ -20,7 +20,7 @@ vec3 Nn;
 
 void main() {
     Nn = mix(normalize(sn), normalize(cross(dFdx(pos), dFdy(pos))), flatShading);
-    outnormal = vec4(Nn, 1);
+    outnormal = normalize(vec4(Nn, 1));
     outposition = vec4(pos, 1);
     outdiffusecolor = diffuse_color;
     outdiffuseintensity = vec4(vec3(diffuse_intensity), 1);
