@@ -139,6 +139,8 @@ void Viewport::changeCamera(std::string cam)
         activeCamera->setNear(_lights[cam]->getShadowInfo()._near);
         activeCamera->setFar(_lights[cam]->getShadowInfo()._far);
         activeCamera->setTransformation(_lights[cam]->getWorldTransformation());
+        if(_lights[cam]->getLightType() == Light::SPOT)
+            activeCamera->setFov(2 * std::dynamic_pointer_cast<SpotLight>(_lights[cam])->getConeAngle());
     } 
     else {
         return;

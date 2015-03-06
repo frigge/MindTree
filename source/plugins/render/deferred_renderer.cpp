@@ -79,7 +79,7 @@ void LightAccumulationPass::draw(const CameraPtr /* camera */,
                 * shadowcam->getViewMatrix();
             states.addState("light.shadowmvp", mvp);
         }
-        double coneangle = 2 * PI;
+        double coneangle = 360;
         if(light->getLightType() == Light::SPOT)
             coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
 
@@ -258,7 +258,7 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
     auto camera = std::make_shared<Camera>();
     camera->setResolution(info._size.x, info._size.y);
     camera->setTransformation(spot->getWorldTransformation());
-    camera->setFov(spot->getConeAngle());
+    camera->setFov(spot->getConeAngle() * 2);
     camera->setNear(info._near);
     camera->setFar(info._far);
     shadowPass->setCamera(camera);
@@ -273,6 +273,8 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
 
     shadowPass->addGeometryShaderNode(_shadowNode);
     shadowPass->setClearDepth(1.);
+    static const float PI = 3.14159265359;
+    shadowPass->setProperty("coneangle", spot->getConeAngle() * PI /180);
 
     getManager()->insertPassAfter(_geometryPass, shadowPass);
 }
