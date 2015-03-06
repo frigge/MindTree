@@ -2,7 +2,6 @@
 
 in vec3 pos;
 in vec3 sn;
-in vec3 eye;
 
 uniform vec4 diffuse_color = vec4(1);
 uniform float specular_intensity = .5;
