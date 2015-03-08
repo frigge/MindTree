@@ -179,7 +179,7 @@ void ViewportWidget::setOverrideOutput(bool value)
 void ViewportWidget::setOutput(QString out)
 {
     _viewport->getRenderTree()->clearCustomTextureNameMapping();
-    _viewport->getRenderTree()->setCustomTextureNameMapping(out.toStdString(), "outcolor");
+    _viewport->getRenderTree()->setCustomTextureNameMapping(out.toStdString(), "final_out");
 }
 
 void ViewportWidget::toggleDefaultLighting(bool value)

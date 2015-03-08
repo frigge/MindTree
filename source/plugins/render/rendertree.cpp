@@ -137,6 +137,15 @@ void RenderTree::setCustomTextureNameMapping(std::string realname, std::string n
     setDirty();
 }
 
+std::string RenderTree::getTextureName(std::shared_ptr<Texture> tex) const
+{
+    std::string realName = tex->getName();
+    if(_textureNameMappings.find(realName) != end(_textureNameMappings))
+        return _textureNameMappings.at(realName);
+    else
+        return realName;
+}
+
 void RenderTree::clearCustomTextureNameMapping()
 {
     {
@@ -170,7 +179,7 @@ void RenderTree::init()
                 auto shadernodes = pass->getShaderNodes();
                 for (auto shadernode : shadernodes) {
                     for(auto texture : textures) {
-                        shadernode->program()->setTexture(texture, texture->getName());
+                        shadernode->program()->setTexture(texture, getTextureName(texture));
                     }
                     if(lastPass->_depthOutput == RenderPass::TEXTURE)
                         shadernode->program()->setTexture(lastPass->getOutDepthTexture());
@@ -179,15 +188,6 @@ void RenderTree::init()
         }
         ++i;
     }
-}
-
-std::string RenderTree::getTextureName(std::shared_ptr<Texture> tex) const
-{
-    std::string realName = tex->getName();
-    if(_textureNameMappings.find(realName) != end(_textureNameMappings))
-        return _textureNameMappings.at(realName);
-    else
-        return realName;
 }
 
 std::vector<std::string> RenderTree::getAllOutputs() const
