@@ -28,12 +28,14 @@ class WorkerThread
 public:
 
 struct UpdateInfo {
-    Viewer *_viewer;
-    DNode *_node;
+    UpdateInfo(Viewer* viewer) : _viewer(viewer), _node(nullptr), _update(false) {}
+    Viewer* _viewer;
+    std::atomic<DNode*> _node;
+    std::atomic<bool> _update;
 };
 
     static bool needToUpdate();
-    static void notifyUpdate(UpdateInfo info);
+    static void notifyUpdate(std::weak_ptr<UpdateInfo> info);
     static void removeViewer(Viewer *viewer);
 
     static void start();
@@ -45,7 +47,7 @@ private:
     static std::thread _updateThread;
     static std::mutex _updateMutex;
 
-    static std::deque<UpdateInfo> _updateQueue;
+    static std::vector<std::weak_ptr<UpdateInfo>> _updateQueue;
     static std::atomic<bool> _running;
 };
 
@@ -71,6 +73,7 @@ private:
     DoutSocket *start;
     Signal::LiveTimeTracker *_signalLiveTime;
     std::vector<Signal::CallbackHandler> cbhandlers;
+    std::shared_ptr<WorkerThread::UpdateInfo> _updateInfo;
 
     friend class WorkerThread;
 };

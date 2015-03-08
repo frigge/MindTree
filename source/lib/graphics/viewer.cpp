@@ -13,7 +13,7 @@ std::thread WorkerThread::_updateThread;
 std::mutex WorkerThread::_updateMutex;
 std::atomic<bool> WorkerThread::_running(false);
 
-std::deque<WorkerThread::UpdateInfo> WorkerThread::_updateQueue;
+std::vector<std::weak_ptr<WorkerThread::UpdateInfo>> WorkerThread::_updateQueue;
 
 bool WorkerThread::needToUpdate()
 {
@@ -21,7 +21,7 @@ bool WorkerThread::needToUpdate()
     return !_updateQueue.empty();
 }
 
-void WorkerThread::notifyUpdate(UpdateInfo info)
+void WorkerThread::notifyUpdate(std::weak_ptr<WorkerThread::UpdateInfo> info)
 {
     {
         std::lock_guard<std::mutex> lock(_updateMutex);
@@ -36,8 +36,8 @@ void WorkerThread::removeViewer(Viewer *viewer)
         std::lock_guard<std::mutex> lock(_updateMutex);
         auto it = std::find_if(begin(_updateQueue), 
                                end(_updateQueue), 
-                               [viewer] (UpdateInfo i) { 
-                               return i._viewer == viewer; 
+                               [viewer] (std::weak_ptr<UpdateInfo> i) { 
+                               return i.lock()->_viewer == viewer; 
                                });
         if(it != end(_updateQueue))
             _updateQueue.erase(it);
@@ -52,15 +52,23 @@ void WorkerThread::start()
 
     auto updateFunc = []{
         WorkerThread::_running = true;
+        size_t i = 0;
         while(WorkerThread::needToUpdate()) {
             {
                 std::lock_guard<std::mutex> lock(_updateMutex);
 
-                UpdateInfo info = _updateQueue.front();
-                if(info._node) DataCache::invalidate(info._node);
-                info._viewer->cache.start(info._viewer->start);
-                _updateQueue.pop_front();
-                info._viewer->update();
+                std::weak_ptr<UpdateInfo> info = _updateQueue[i];
+                if(!info.expired()) {
+                    auto ptr = info.lock();
+                    if(!ptr->_update) continue;
+
+                    if(ptr->_node) DataCache::invalidate(ptr->_node);
+                    ptr->_viewer->cache.start(ptr->_viewer->start);
+                    ptr->_viewer->update();
+                    ptr->_update = false;
+                }
+                ++i;
+                i = i % _updateQueue.size();
             }
         }
         WorkerThread::_running = false;
@@ -82,7 +90,8 @@ void WorkerThread::stop()
 Viewer::Viewer(DoutSocket *start)
     : widget(0),
     start(start),
-    _signalLiveTime(new Signal::LiveTimeTracker(this))
+    _signalLiveTime(new Signal::LiveTimeTracker(this)),
+    _updateInfo(std::make_shared<WorkerThread::UpdateInfo>(this))
 {
     auto cbhandler = Signal::getHandler<DinSocket*>()
         .connect("createLink", 
@@ -105,6 +114,8 @@ Viewer::Viewer(DoutSocket *start)
     cbhandlers.push_back(cbhandler);
     cbhandlers.push_back(cbhandler2);
     cbhandlers.push_back(cbhandler3);
+
+    WorkerThread::notifyUpdate(_updateInfo);
 }
 
 Viewer::~Viewer()
@@ -130,7 +141,8 @@ void Viewer::update_viewer(DNode *node)
     }
 
     if(connected) {
-        WorkerThread::notifyUpdate({this, node});
+        _updateInfo->_node = node;
+        _updateInfo->_update = true;
     }
 }
 
@@ -157,7 +169,8 @@ void Viewer::update_viewer(DinSocket *socket)
     }
 
     if(connected) {
-        WorkerThread::notifyUpdate({this, node});
+        _updateInfo->_node = node;
+        _updateInfo->_update = true;
     }
 }
 
