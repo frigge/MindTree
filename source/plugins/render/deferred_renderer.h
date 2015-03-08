@@ -2,7 +2,7 @@
 #define DEFERRED_RENDERER_H
 
 #include "render_setup.h"
-#include "primitive_renderer.h"
+#include "unordered_map"
 
 class SpotLight;
 namespace MindTree {

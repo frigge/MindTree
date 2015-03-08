@@ -7,12 +7,14 @@ set(RENDER_SRC
     glwrapper.cpp
     light_accumulation_plane.cpp
     light_renderer.cpp
+    pixel_plane.cpp
     polygon_renderer.cpp
     primitive_renderer.cpp
     render.cpp
     render_setup.cpp
-    rendertree.cpp
     renderpass.cpp
+    rendertree.cpp
+    rsm_computation_plane.cpp
     shader_render_node.cpp
 )
 

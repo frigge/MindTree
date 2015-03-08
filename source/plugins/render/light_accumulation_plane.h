@@ -1,13 +1,14 @@
 #ifndef LIGHT_ACCUMULATION_PLANE_H
 #define LIGHT_ACCUMULATION_PLANE_H
 
+#include "pixel_plane.h"
 #include "renderpass.h"
 
 class SpotLight;
 namespace MindTree {
 namespace GL {
 
-class LightAccumulationPlane : public FullscreenQuadRenderer
+class LightAccumulationPlane : public PixelPlane
 {
 public:
     LightAccumulationPlane();

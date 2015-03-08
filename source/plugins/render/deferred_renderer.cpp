@@ -1,7 +1,6 @@
 #define GLM_SWIZZLE
 #include "render.h"
 #include "renderpass.h"
-#include "primitive_renderer.h"
 #include "rendertree.h"
 #include "../3dwidgets/widgets.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -11,6 +10,7 @@
 #include "polygon_renderer.h"
 #include "light_renderer.h"
 #include "light_accumulation_plane.h"
+#include "pixel_plane.h"
 #include "../datatypes/Object/lights.h"
 #include "camera_renderer.h"
 #include "empty_renderer.h"
@@ -20,6 +20,36 @@
 
 using namespace MindTree;
 using namespace GL;
+
+struct Compositor : public PixelPlane::ShaderProvider {
+    std::shared_ptr<ShaderProgram> provideProgram() {
+        auto prog = std::make_shared<ShaderProgram>();
+
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.frag", 
+                                ShaderProgram::FRAGMENT);
+
+        return prog;
+    }
+};
+
+struct FinalOut : public PixelPlane::ShaderProvider {
+    std::shared_ptr<ShaderProgram> provideProgram() {
+        auto prog = std::make_shared<ShaderProgram>();
+
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/finalout.frag", 
+                                ShaderProgram::FRAGMENT);
+
+        return prog;
+    }
+};
 
 DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
     RenderConfigurator(context, camera)
@@ -57,8 +87,6 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
                                                    Texture::RGBA16F));
     geopass->addRenderer(grid);
 
-    geopass->setBlendFunc(GL_ONE, GL_ONE);
-
     auto overlayPass = std::make_shared<RenderPass>();
     _overlayPass = overlayPass;
     manager->addPass(overlayPass);
@@ -74,7 +102,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     manager->addPass(deferredPass);
     _deferredPass.lock()
         ->addOutput(std::make_shared<Texture2D>("shading_out",
-                                                Texture::RGB));
+                                                Texture::RGB16F));
 
     _deferredPass.lock()->setCamera(camera);
     _deferredRenderer = new LightAccumulationPlane();
@@ -87,7 +115,17 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _pixelPass = pixelPass;
     manager->addPass(pixelPass);
     pixelPass->setCamera(camera);
-    pixelPass->addRenderer(new FullscreenQuadRenderer());
+    auto pplane = new PixelPlane();
+    pplane->setProvider<Compositor>();
+    pixelPass->addRenderer(pplane);
+    pixelPass->addOutput(std::make_shared<Texture2D>("final_out"));
+
+    auto finalPass = std::make_shared<RenderPass>();
+    finalPass->setCamera(camera);
+    manager->addPass(finalPass);
+    pplane = new PixelPlane();
+    pplane->setProvider<FinalOut>();
+    finalPass->addRenderer(pplane);
 
     setupDefaultLights();
     setupGBuffer();

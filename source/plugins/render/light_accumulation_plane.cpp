@@ -7,8 +7,23 @@ using namespace GL;
 
 std::weak_ptr<ShaderProgram> LightAccumulationPlane::_defaultProgram;
 
+struct LightAccumProvider : public PixelPlane::ShaderProvider {
+    std::shared_ptr<ShaderProgram> provideProgram() {
+        auto prog = std::make_shared<ShaderProgram>();
+
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/deferredshading.frag", 
+                                ShaderProgram::FRAGMENT);
+        return prog;
+    }
+};
+
 LightAccumulationPlane::LightAccumulationPlane()
 {
+    setProvider<LightAccumProvider>();
 }
 
 LightAccumulationPlane::~LightAccumulationPlane()
@@ -17,18 +32,8 @@ LightAccumulationPlane::~LightAccumulationPlane()
 
 std::shared_ptr<ShaderProgram> LightAccumulationPlane::getProgram()
 {
-    std::shared_ptr<ShaderProgram> prog;
-    if(_defaultProgram.expired()) {
-        prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/deferredshading.frag", 
-                                ShaderProgram::FRAGMENT);
-        _defaultProgram = prog;
-    }
+    std::shared_ptr<ShaderProgram> prog = PixelPlane::getProgram();
+    _defaultProgram = prog;
 
     return _defaultProgram.lock();
 }

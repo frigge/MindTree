@@ -103,24 +103,6 @@ private:
     std::shared_ptr<VBO> _vbo;
 };
 
-class FullscreenQuadRenderer : public Renderer
-{
-public:
-    FullscreenQuadRenderer();
-    virtual ~FullscreenQuadRenderer();
-
-    std::shared_ptr<ShaderProgram> getProgram();
-
-protected:
-    virtual void init(std::shared_ptr<ShaderProgram> prog);
-    virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-
-private:
-    std::weak_ptr<ShaderProgram> _program;
-    std::shared_ptr<VBO> _vbo;
-    std::shared_ptr<VBO> _coord_vbo;
-};
-
 class GridRenderer : public ShapeRenderer
 {
 public:
