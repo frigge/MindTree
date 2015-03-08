@@ -12,6 +12,7 @@
 using namespace MindTree::GL;
 
 //#define DEBUG_GL_WRAPPER
+//#define DEBUG_GL_WRAPPER1
 
 bool MindTree::GL::getGLFramebufferError(std::string location)
 {
@@ -835,8 +836,8 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
     int textureSlot;
     auto it = std::find_if(begin(_textures), 
                            end(_textures), 
-                           [texture] (std::weak_ptr<Texture2D> other){ 
-                               return other.lock() == texture; 
+                           [texture, n] (TextureInfo other){ 
+                               return other.name == n; 
                            });
 
     if(it != end(_textures)) {
@@ -844,7 +845,7 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
     }
     else {
         textureSlot = _textures.size();
-        _textures.push_back(texture);
+        _textures.push_back({texture, n});
     }
 
     bool wasntbound = false;
@@ -854,10 +855,10 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
     }
 
     glActiveTexture(GL_TEXTURE0 + textureSlot);
+    if(MTGLERROR)
+        dbout(textureSlot);
 
-    MTGLERROR;
-
-#ifdef DEBUG_GL_WRAPPER
+#ifdef DEBUG_GL_WRAPPER1
     dbout("attaching texture: " << n << " to textureSlot: " << textureSlot);
 #endif
 
@@ -1156,6 +1157,11 @@ void Texture2D::init()
             format = GL_RGBA;
             internalFormat = GL_RGBA8;
             type = GL_UNSIGNED_BYTE;
+            break;
+        case RGB16F:
+            format = GL_RGBA;
+            internalFormat = GL_RGB16F;
+            type = GL_FLOAT;
             break;
         case RGBA16F:
             format = GL_RGBA;

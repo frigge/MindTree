@@ -291,6 +291,11 @@ public:
     void init();
 
 private:
+    struct TextureInfo {
+        std::weak_ptr<Texture2D> texture;
+        std::string name;
+    };
+
     void _addShaderFromSource(std::string src, ShaderType type);
 
     GLuint _id;
@@ -300,7 +305,7 @@ private:
     std::mutex _srcLock;
     std::unordered_map<std::string, int> _attributeLocations;
     std::unordered_map<int, std::string> _shaderSources;
-    std::vector<std::weak_ptr<Texture2D>> _textures;
+    std::vector<TextureInfo> _textures;
     std::unordered_map<int, std::string> _fileNameMap;
 };
 
@@ -345,6 +350,7 @@ public:
         RGB8,
         RGBA,
         RGBA8,
+        RGB16F,
         RGBA16F,
         DEPTH,
         DEPTH16,
