@@ -38,7 +38,7 @@ SpotLightRenderer::SpotLightRenderer(const SpotLightPtr l)
 
     setTransformation(l->getWorldTransformation());
 
-    setFillColor(glm::vec4(1, 1, 0, .5));
+    setFillColor(glm::vec4(1, 1, 0, 1));
     setBorderColor(glm::vec4(1, 1, 0, 1));
     setBorderWidth(2);
     setFixedScreenSize(true);
