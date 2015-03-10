@@ -11,6 +11,7 @@ set(RENDER_SRC
     polygon_renderer.cpp
     primitive_renderer.cpp
     render.cpp
+    render_block.cpp
     render_setup.cpp
     renderpass.cpp
     rendertree.cpp
