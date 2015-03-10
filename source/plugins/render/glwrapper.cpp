@@ -12,7 +12,7 @@
 using namespace MindTree::GL;
 
 //#define DEBUG_GL_WRAPPER
-//#define DEBUG_GL_WRAPPER1
+#define DEBUG_GL_WRAPPER1
 
 bool MindTree::GL::getGLFramebufferError(std::string location)
 {
@@ -1098,12 +1098,12 @@ void Texture::init()
     MTGLERROR;
 }
 
-GLuint Texture::getID()    
+GLuint Texture::getID() const
 {
     return _id; 
 }
 
-Texture::Format Texture::getFormat()
+Texture::Format Texture::getFormat() const
 {
     return _format;
 }
@@ -1111,6 +1111,108 @@ Texture::Format Texture::getFormat()
 void Texture::setFormat(Texture::Format format)
 {
     _format = format;
+}
+
+GLenum Texture::getGLFormat() const
+{
+    switch(getFormat()) {
+        case R:
+        case R8:
+        case R16:
+        case R16F:
+        case R32F:
+            return GL_RED;
+        case RG:
+        case RG8:
+        case RG16:
+        case RG16F:
+        case RG32F:
+            return GL_RG;
+        case RGB:
+        case RGB8:
+        case RGB16F:
+            return GL_RGB;
+        case RGBA:
+        case RGBA8:
+        case RGBA16F:
+            return GL_RGBA;
+        case DEPTH:
+        case DEPTH16:
+        case DEPTH32F:
+            return GL_DEPTH_COMPONENT;
+    }
+}
+
+GLenum Texture::getGLDataType() const
+{
+    switch(getFormat()) {
+        case R:
+        case R8:
+        case RGB:
+        case RGB8:
+        case RGBA:
+        case RGBA8:
+        case RG:
+        case RG8:
+        case DEPTH:
+        case DEPTH16:
+            return GL_UNSIGNED_BYTE;
+        case R16:
+        case RG16:
+            return GL_INT;
+        case R16F:
+        case R32F:
+        case RG16F:
+        case RG32F:
+        case RGB16F:
+        case RGBA16F:
+        case DEPTH32F:
+            return GL_FLOAT;
+    }
+}
+
+GLenum Texture::getGLInternalFormat() const
+{
+    switch(getFormat()) {
+        case R:
+            return GL_RED;
+        case R8:
+            return GL_R8;
+        case R16:
+            return GL_R16;
+        case R16F:
+            return GL_R16F;
+        case R32F:
+            return GL_R32F;
+        case RG:
+            return GL_RG;
+        case RG8:
+            return GL_RG8;
+        case RG16:
+            return GL_RG16;
+        case RG16F:
+            return GL_RG16F;
+        case RG32F:
+            return GL_RG32F;
+        case RGB:
+            return GL_RGB;
+        case RGB8:
+            return GL_RGB8;
+        case RGBA:
+            return GL_RGBA;
+        case RGBA8:
+            return GL_RGBA8;
+        case RGB16F:
+            return GL_RGB16F;
+        case RGBA16F:
+            return GL_RGBA16F;
+        case DEPTH:
+            return GL_DEPTH_COMPONENT;
+        case DEPTH16:
+            return GL_DEPTH_COMPONENT16;
+        case DEPTH32F:
+            return GL_DEPTH_COMPONENT32F;
+    }
 }
 
 Texture2D::Texture2D(std::string name, Texture::Format format, int width, int height)
@@ -1132,61 +1234,40 @@ void Texture2D::setHeight(int h)
     _height = h;
 }
 
+void Texture2D::initFromData(std::vector<glm::vec2> data)
+{
+    Texture::init();
+
+    GLenum format = getGLFormat();
+    GLenum internalFormat = getGLInternalFormat();
+    GLenum type = getGLDataType();
+
+    glBindTexture(GL_TEXTURE_2D, getID());
+    MTGLERROR;
+
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 internalFormat,
+                 _width,
+                 _height,
+                 0,
+                 format,
+                 type,
+                 reinterpret_cast<GLvoid*>(&data[0]));
+    MTGLERROR;
+}
+
 void Texture2D::init()
 {
     Texture::init();
 
-    GLenum format, internalFormat, type;
-    switch(getFormat()) {
-        case RGB:
-            format = GL_RGB;
-            internalFormat = GL_RGB;
-            type = GL_UNSIGNED_BYTE;
-            break;
-        case RGB8:
-            format = GL_RGB;
-            internalFormat = GL_RGB8;
-            type = GL_UNSIGNED_BYTE;
-            break;
-        case RGBA:
-            format = GL_RGBA;
-            internalFormat = GL_RGBA;
-            type = GL_UNSIGNED_BYTE;
-            break;
-        case RGBA8:
-            format = GL_RGBA;
-            internalFormat = GL_RGBA8;
-            type = GL_UNSIGNED_BYTE;
-            break;
-        case RGB16F:
-            format = GL_RGBA;
-            internalFormat = GL_RGB16F;
-            type = GL_FLOAT;
-            break;
-        case RGBA16F:
-            format = GL_RGBA;
-            internalFormat = GL_RGBA16F;
-            type = GL_FLOAT;
-            break;
-        case DEPTH:
-            format = GL_DEPTH_COMPONENT;
-            internalFormat = GL_DEPTH_COMPONENT;
-            type = GL_UNSIGNED_BYTE;
-            break;
-        case DEPTH16:
-            format = GL_DEPTH_COMPONENT;
-            internalFormat = GL_DEPTH_COMPONENT16;
-            type = GL_UNSIGNED_BYTE;
-            break;
-        case DEPTH32F:
-            format = GL_DEPTH_COMPONENT;
-            internalFormat = GL_DEPTH_COMPONENT32F;
-            type = GL_FLOAT;
-            break;
-    }
+    GLenum format = getGLFormat();
+    GLenum internalFormat = getGLInternalFormat();
+    GLenum type = getGLDataType();
 
     glBindTexture(GL_TEXTURE_2D, getID());
     MTGLERROR;
+
     glTexImage2D(GL_TEXTURE_2D,
                  0,
                  internalFormat,

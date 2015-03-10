@@ -346,6 +346,16 @@ class Texture
 {
 public:
     enum Format {
+        R,
+        R8,
+        R16,
+        R16F,
+        R32F,
+        RG,
+        RG8,
+        RG16,
+        RG16F,
+        RG32F,
         RGB,
         RGB8,
         RGBA,
@@ -368,14 +378,21 @@ public:
     void setName(std::string name);
     virtual void bind();
     virtual void release();
-    GLuint getID();
+    GLuint getID() const;
     void setFormat(Texture::Format format);
-    Format getFormat();
+    Format getFormat() const;
+    GLenum getGLFormat() const;
+    GLenum getGLDataType() const;
+    GLenum getGLInternalFormat() const;
 
     GLenum getGLSize();
 
     virtual void init();
+    void initFromData(std::vector<glm::vec2> data);
     bool isInitialized() const;
+
+protected:
+    GLenum getInternalFormat() const;
 
 private:
     GLenum getGLTarget();
@@ -392,7 +409,7 @@ class Texture2D : public Texture
 {
 public:
     Texture2D(std::string name, 
-              Texture::Format format = RGBA, 
+              Texture::Format format = RGBA,
               int width = 1, 
               int height = 1);
     ~Texture2D();
@@ -404,6 +421,7 @@ public:
 
     void bind();
     void init();
+    void initFromData(std::vector<glm::vec2> data);
 
 protected:
 
