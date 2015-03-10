@@ -21,6 +21,7 @@ class RenderPass;
 class RenderTree;
 class ShaderProgram;
 class ShaderRenderNode;
+class RenderBlock;
 
 class RenderConfigurator
 {
@@ -38,6 +39,9 @@ public:
 
     void setRenderersFromGroup(std::shared_ptr<Group> group);
     void addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group);
+
+    virtual void setOverrideOutput(std::string output);
+    virtual void clearOverrideOutput();
 
 protected:
     virtual void addRendererFromTransformable(std::shared_ptr<AbstractTransformable> transformable);

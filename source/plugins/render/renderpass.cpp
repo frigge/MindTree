@@ -4,6 +4,7 @@
 #include "rendertree.h"
 #include "data/debuglog.h"
 #include "shader_render_node.h"
+#include "rendertree.h"
 #include "renderpass.h"
 
 using namespace MindTree;
@@ -16,7 +17,8 @@ RenderPass::RenderPass() :
     _depthOutput(NONE),
     _blending(true),
     _bgColor(0),
-    _depth(1)
+    _depth(1),
+    _tree(nullptr)
 {
 }
 
@@ -58,6 +60,11 @@ void RenderPass::setOverrideProgram(std::shared_ptr<ShaderProgram> program)
 {
     std::lock_guard<std::mutex> lock(_overrideProgramLock);
     _overrideProgram = program;
+}
+
+void RenderPass::setTree(RenderTree *tree)
+{
+    _tree = tree;
 }
 
 void RenderPass::init()
@@ -160,6 +167,54 @@ void RenderPass::init()
                 }
             default:
                 break;
+        }
+    }
+}
+
+void RenderPass::setDirty()
+{
+    _initialized = false;
+}
+
+void RenderPass::setCustomTextureNameMapping(std::string realname, std::string newname)
+{
+    {
+        std::lock_guard<std::mutex> lock(_textureNameMappingLock);
+        _textureNameMappings[realname] = newname;
+    }
+    _tree->setDirty();
+}
+
+std::string RenderPass::getTextureName(std::shared_ptr<Texture2D> tex) const
+{
+    std::lock_guard<std::mutex> lock(_textureNameMappingLock);
+    std::string realName = tex->getName();
+    if(_textureNameMappings.find(realName) != end(_textureNameMappings))
+        return _textureNameMappings.at(realName);
+    else
+        return realName;
+}
+
+void RenderPass::clearCustomTextureNameMapping()
+{
+    {
+        std::lock_guard<std::mutex> lock(_textureNameMappingLock);
+        _textureNameMappings.clear();
+    }
+    _tree->setDirty();
+}
+
+void RenderPass::setTextures(std::vector<std::shared_ptr<Texture2D>> textures)
+{
+    for (auto shadernode : _shadernodes) {
+        std::vector<std::string> boundTextures;
+        for(auto texture : textures) {
+            std::string name = getTextureName(texture);
+            if(std::find(begin(boundTextures), 
+                         end(boundTextures), name) == end(boundTextures)) {
+                boundTextures.push_back(name);
+                shadernode->program()->setTexture(texture, name);
+            }
         }
     }
 }

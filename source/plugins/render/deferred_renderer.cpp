@@ -104,7 +104,6 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _deferredPass.lock()
         ->addOutput(std::make_shared<Texture2D>("shading_out",
                                                 Texture::RGB16F));
-
     _deferredPass.lock()->setCamera(camera);
     _deferredRenderer = new LightAccumulationPlane();
     _deferredPass.lock()->addRenderer(_deferredRenderer);
@@ -132,6 +131,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     pixelPass->addOutput(std::make_shared<Texture2D>("final_out"));
 
     auto finalPass = std::make_shared<RenderPass>();
+    _finalPass = finalPass;
     finalPass->setCamera(camera);
     manager->addPass(finalPass);
     pplane = new PixelPlane();
@@ -141,6 +141,16 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     setupDefaultLights();
     setupGBuffer();
     setupShadowPasses();
+}
+
+void DeferredRenderer::setOverrideOutput(std::string output)
+{
+    _finalPass.lock()->setCustomTextureNameMapping(output, "final_out");
+}
+
+void DeferredRenderer::clearOverrideOutput()
+{
+    _finalPass.lock()->clearCustomTextureNameMapping();
 }
 
 void DeferredRenderer::setCamera(std::shared_ptr<Camera> cam)

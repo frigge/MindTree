@@ -41,6 +41,14 @@ RenderTree* RenderConfigurator::getManager()
     return _rendertree.get();
 }
 
+void RenderConfigurator::setOverrideOutput(std::string output)
+{
+}
+
+void RenderConfigurator::clearOverrideOutput()
+{
+}
+
 void RenderConfigurator::setRenderersFromGroup(std::shared_ptr<Group> group)
 {
     _geometryPass.lock()->clearRenderers();

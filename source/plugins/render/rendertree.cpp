@@ -128,33 +128,6 @@ void RenderTree::setDirty()
     _initialized = false;
 }
 
-void RenderTree::setCustomTextureNameMapping(std::string realname, std::string newname)
-{
-    {
-        std::lock_guard<std::mutex> lock(_managerLock);
-        _textureNameMappings[realname] = newname;
-    }
-    setDirty();
-}
-
-std::string RenderTree::getTextureName(std::shared_ptr<Texture> tex) const
-{
-    std::string realName = tex->getName();
-    if(_textureNameMappings.find(realName) != end(_textureNameMappings))
-        return _textureNameMappings.at(realName);
-    else
-        return realName;
-}
-
-void RenderTree::clearCustomTextureNameMapping()
-{
-    {
-        std::lock_guard<std::mutex> lock(_managerLock);
-        _textureNameMappings.clear();
-    }
-    setDirty();
-}
-
 void RenderTree::init()
 {
     RenderThread::asrt();
@@ -175,15 +148,10 @@ void RenderTree::init()
             for (uint j = 0; j < i; ++j){
                 auto lastPass = passes[j];
                 auto textures = lastPass->getOutputTextures();
+                if(lastPass->_depthOutput == RenderPass::TEXTURE)
+                    textures.push_back(lastPass->_depthTexture);
+                pass->setTextures(textures);
 
-                auto shadernodes = pass->getShaderNodes();
-                for (auto shadernode : shadernodes) {
-                    for(auto texture : textures) {
-                        shadernode->program()->setTexture(texture, getTextureName(texture));
-                    }
-                    if(lastPass->_depthOutput == RenderPass::TEXTURE)
-                        shadernode->program()->setTexture(lastPass->getOutDepthTexture());
-                }
             }
         }
         ++i;
@@ -217,6 +185,7 @@ RenderConfig RenderTree::getConfig()
 void RenderTree::addPass(std::shared_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
+    pass->setTree(this);
     _initialized = false;
     passes.push_back(pass);
 }
@@ -224,6 +193,7 @@ void RenderTree::addPass(std::shared_ptr<RenderPass> pass)
 void RenderTree::insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
+    pass->setTree(this);
     _initialized = false;
     auto it = std::find(begin(passes), end(passes), ref_pass.lock());
     passes.insert(it, pass);
@@ -232,6 +202,7 @@ void RenderTree::insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::share
 void RenderTree::insertPassAfter(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
+    pass->setTree(this);
     _initialized = false;
     auto it = std::find(begin(passes), end(passes), ref_pass.lock());
     ++it;

@@ -172,14 +172,15 @@ void ViewportWidget::setCamera(QString cam)
 void ViewportWidget::setOverrideOutput(bool value)
 {
     _outputBox->setEnabled(value);
-    if(!value)
-        _viewport->getRenderTree()->clearCustomTextureNameMapping();
+    if(!value) {
+        _viewport->clearOverrideOutput();
+    }
 }
 
 void ViewportWidget::setOutput(QString out)
 {
-    _viewport->getRenderTree()->clearCustomTextureNameMapping();
-    _viewport->getRenderTree()->setCustomTextureNameMapping(out.toStdString(), "final_out");
+    _viewport->clearOverrideOutput();
+    _viewport->setOverride(out.toStdString());
 }
 
 void ViewportWidget::toggleDefaultLighting(bool value)

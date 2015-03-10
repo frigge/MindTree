@@ -63,8 +63,6 @@ public:
     RenderTree(QGLContext *context);
     virtual ~RenderTree();
 
-    void setCustomTextureNameMapping(std::string realname, std::string newname);
-    void clearCustomTextureNameMapping();
     std::vector<std::string> getAllOutputs() const;
 
     void addPass(std::shared_ptr<RenderPass> pass);
@@ -83,11 +81,9 @@ public:
 private:
     void init();
     void draw();
-    std::string getTextureName(std::shared_ptr<Texture> tex) const;
     friend class RenderThread;
 
     std::mutex _managerLock;
-    std::unordered_map<std::string, std::string> _textureNameMappings;
 
     glm::vec4 backgroundColor;
     std::vector<std::shared_ptr<RenderPass>> passes;

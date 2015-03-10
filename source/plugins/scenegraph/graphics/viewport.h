@@ -55,6 +55,9 @@ public:
 
     std::vector<std::string> getCameras() const;
 
+    void setOverride(std::string name);
+    void clearOverrideOutput();
+
 //SLOTS:
     Q_SLOT void setShowPoints(bool b);
     Q_SLOT void setShowEdges(bool b);

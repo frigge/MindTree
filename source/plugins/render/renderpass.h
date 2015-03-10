@@ -24,6 +24,7 @@ class FBO;
 class Renderbuffer;
 class RenderConfig;
 class ShaderProgram;
+class RenderTree;
 
 class RenderPass : public Object
 {
@@ -73,12 +74,18 @@ public:
 
     void clearRenderers();
     void clearUnusedShaderNodes();
+    void setTextures(std::vector<std::shared_ptr<Texture2D>> textures);
+    void setCustomTextureNameMapping(std::string realname, std::string newname);
+    void clearCustomTextureNameMapping();
+    void setTree(RenderTree *tree);
 
 private:
     void init();
     void render(const RenderConfig &config);
+    void setDirty();
 
     void processPixelRequests();
+    std::string getTextureName(std::shared_ptr<Texture2D> tex) const;
 
     std::vector<glm::vec4> _requestedPixels;
     std::queue<std::pair<std::string, glm::ivec2>> _pixelRequests;
@@ -86,7 +93,7 @@ private:
 
     friend class RenderTree;
 
-    bool _initialized;
+    std::atomic<bool> _initialized;
     std::shared_ptr<Camera> _camera;
     std::shared_ptr<FBO> _target;
 
@@ -118,6 +125,11 @@ private:
     std::shared_ptr<ShaderProgram> _overrideProgram;
 
     int _currentWidth, _currentHeight;
+
+    mutable std::mutex _textureNameMappingLock;
+    std::unordered_map<std::string, std::string> _textureNameMappings;
+
+    RenderTree *_tree;
 };
 
 }

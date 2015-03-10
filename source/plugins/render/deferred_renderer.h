@@ -18,6 +18,9 @@ public:
     void setGeometry(std::shared_ptr<Group> grp);
     void setCamera(std::shared_ptr<Camera> cam);
 
+void setOverrideOutput(std::string output) override;
+void clearOverrideOutput() override;
+
 protected:
     void addRendererFromObject(std::shared_ptr<GeoObject> obj) override;
     void addRendererFromLight(std::shared_ptr<Light> obj) override;
@@ -29,12 +32,16 @@ private:
     void setupShadowPasses();
     void createShadowPass(std::shared_ptr<SpotLight> spot);
 
+    std::vector<std::shared_ptr<RenderBlock>> _renderBlocks;
+
     std::shared_ptr<ShaderRenderNode> _gbufferNode;
     std::shared_ptr<ShaderRenderNode> _shadowNode;
     LightAccumulationPlane *_deferredRenderer;
     std::weak_ptr<RenderPass> _deferredPass;
     std::weak_ptr<RenderPass> _pixelPass;
     std::weak_ptr<RenderPass> _overlayPass;
+    std::weak_ptr<RenderPass> _finalPass;
+    std::weak_ptr<RenderPass> _rsmIndirectPass;
     std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> _shadowPasses;
 };
 

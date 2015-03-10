@@ -76,6 +76,16 @@ Viewport::~Viewport()
     _viewports.erase(std::find(begin(_viewports), end(_viewports), this));
 }
 
+void Viewport::setOverride(std::string name)
+{
+    _renderConfigurator->setOverrideOutput(name);
+}
+
+void Viewport::clearOverrideOutput()
+{
+    _renderConfigurator->clearOverrideOutput();
+}
+
 GL::RenderTree* Viewport::getRenderTree()
 {
     return _renderConfigurator->getManager();
