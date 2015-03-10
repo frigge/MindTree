@@ -5,8 +5,6 @@
 using namespace MindTree;
 using namespace GL;
 
-std::weak_ptr<ShaderProgram> LightAccumulationPlane::_defaultProgram;
-
 struct LightAccumProvider : public PixelPlane::ShaderProvider {
     std::shared_ptr<ShaderProgram> provideProgram() {
         auto prog = std::make_shared<ShaderProgram>();
@@ -28,14 +26,6 @@ LightAccumulationPlane::LightAccumulationPlane()
 
 LightAccumulationPlane::~LightAccumulationPlane()
 {
-}
-
-std::shared_ptr<ShaderProgram> LightAccumulationPlane::getProgram()
-{
-    std::shared_ptr<ShaderProgram> prog = PixelPlane::getProgram();
-    _defaultProgram = prog;
-
-    return _defaultProgram.lock();
 }
 
 void LightAccumulationPlane::setLights(std::vector<std::shared_ptr<Light>> lights)

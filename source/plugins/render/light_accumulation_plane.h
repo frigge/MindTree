@@ -23,7 +23,6 @@ protected:
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
 private:
-    static std::weak_ptr<ShaderProgram> _defaultProgram;
     std::mutex _shadowPassesLock;
     std::mutex _lightsLock;
     std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> _shadowPasses;
