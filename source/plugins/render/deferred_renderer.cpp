@@ -15,6 +15,7 @@
 #include "camera_renderer.h"
 #include "empty_renderer.h"
 #include "shader_render_node.h"
+#include "rsm_computation_plane.h"
 
 #include "deferred_renderer.h"
 
@@ -108,6 +109,16 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _deferredRenderer = new LightAccumulationPlane();
     _deferredPass.lock()->addRenderer(_deferredRenderer);
     _deferredPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
+
+    auto rsmIndirectPass = std::make_shared<RenderPass>();
+    _rsmIndirectPass = rsmIndirectPass;
+    manager->addPass(rsmIndirectPass);
+    rsmIndirectPass ->addOutput(std::make_shared<Texture2D>("indirect_out",
+                                                Texture::RGB16F));
+    rsmIndirectPass->setCamera(camera);
+    auto rsmIndirectPlane = new RSMIndirectPlane();
+    rsmIndirectPass->addRenderer(rsmIndirectPlane);
+    rsmIndirectPass->setBlendFunc(GL_ONE, GL_ONE);
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
 

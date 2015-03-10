@@ -5,13 +5,16 @@
 namespace MindTree {
 namespace GL {
 
-class RSMAccumulationPlane : public LightAccumulationPlane
+class RSMIndirectPlane : public LightAccumulationPlane
 {
 public:
-    std::shared_ptr<ShaderProgram> getProgram();
+    RSMIndirectPlane();
+
+protected:
+    void init(std::shared_ptr<ShaderProgram> program);
 
 private:
-    static std::weak_ptr<ShaderProgram> _defaultProgram;
+    std::shared_ptr<Texture2D> _samplingPattern;
 };
 
 }
