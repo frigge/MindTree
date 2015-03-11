@@ -3,6 +3,19 @@ uniform sampler2D shadow_normal;
 uniform sampler2D shadow_flux;
 uniform sampler2D samplingPattern;
 
+struct Light {
+    vec4 color;
+    float intensity;
+    float coneangle;
+    vec4 pos;
+    vec3 dir;
+    mat4 shadowmvp;
+    int shadow;
+};
+
+vec4 shadowP;
+
+uniform Light light;
 uniform int searchradius;
 
 out vec4 rsm_indirect_out;
@@ -16,6 +29,11 @@ void main()
             float polar = 2 * PI * samplePosPolar.y;
             vec2 samplePos = vec2(sin(polar) * samplePosPolar.x, cos(polar) * samplePosPolar.x);
         }
+
+    shadowP = (light.shadowmvp * vec4(pos, 1));
+    shadowP /= shadowP.w;
+    shadowP += 1;
+    shadowP *= 0.5;
 
     rsm_indirect_out = vec4(1, 0, 0, 1);
 }
