@@ -12,7 +12,7 @@
 using namespace MindTree::GL;
 
 //#define DEBUG_GL_WRAPPER
-#define DEBUG_GL_WRAPPER1
+//#define DEBUG_GL_WRAPPER1
 
 bool MindTree::GL::getGLFramebufferError(std::string location)
 {
@@ -480,6 +480,14 @@ void ShaderProgram::bind()
     if(!_id) return;
     glUseProgram(_id);
     _isBound  = !MTGLERROR;
+
+    for (size_t i = 0; i < _textures.size(); ++i) {
+        auto tx = _textures[i].texture;
+        if(!tx.expired()) {
+            glActiveTexture(GL_TEXTURE0 + i);
+            tx.lock()->bind();
+        }
+    }
 }
 
 void ShaderProgram::release()
@@ -859,7 +867,7 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string n
         dbout(textureSlot);
 
 #ifdef DEBUG_GL_WRAPPER1
-    dbout("attaching texture: " << n << " to textureSlot: " << textureSlot);
+    dbout("shader " << _id << ": attaching texture: " << n << " to textureSlot: " << textureSlot);
 #endif
 
     texture->bind();
