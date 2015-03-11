@@ -25,7 +25,7 @@ vec3 pos;
 vec3 Nn;
 
 uniform Light light;
-uniform int searchradius;
+const int searchradius = 10;
 
 out vec4 rsm_indirect_out;
 
@@ -44,13 +44,14 @@ void main()
     shadowP *= 0.5;
 
     vec3 indirect = vec3(0);
-    for(int i = 0; i < 20; ++i)
-        for(int j = 0; j < 20; j++) {
+    for(int i = 1; i <= 20; ++i)
+        for(int j = 1; j < 20; j++) {
             vec2 samplePosPolar = texelFetch(samplingPattern, ivec2(i, j), 0).rg;
 
             float polar = 2 * PI * samplePosPolar.y;
             vec2 sampleOffset = vec2(sin(polar) * samplePosPolar.x, cos(polar) * samplePosPolar.x);
             sampleOffset *= searchradius;
+            sampleOffset /= resolution;
 
             vec2 samplePosition = shadowP.xy + sampleOffset;
 
@@ -59,7 +60,7 @@ void main()
             n = normalize(n);
             vec3 p = texture(shadow_position, samplePosition).xyz;
 
-            vec3 lvec = p - pos;
+            vec3 lvec = pos - p;
             float lightAngleCos = clamp(dot(lvec, normalize(n)), 0, 1);
 
             float lightLambert = clamp(dot(Nn, normalize(-lvec)), 0, 1);

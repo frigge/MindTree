@@ -52,8 +52,8 @@ void RSMIndirectPlane::drawLight(const LightPtr light, std::shared_ptr<ShaderPro
         return;
 
     program->setTexture(_samplingPattern);
-    UniformStateManager manager(program);
-    manager.addState("searchradius", 4);
+    //UniformStateManager manager(program);
+    //manager.addState("searchradius", 4);
 
     LightAccumulationPlane::drawLight(light, program);
 }

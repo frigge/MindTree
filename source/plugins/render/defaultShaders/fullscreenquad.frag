@@ -37,6 +37,4 @@ void main(){
     final_color = mix(bgcolor, shading, shading.a);
     final_color = mix(shading, col, col.a);
     final_color = mix(final_color, over, over.a);
-
-    final_color = vec4(rsm_indirect.rgb, 1);
 };
