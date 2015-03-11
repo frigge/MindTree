@@ -37,6 +37,7 @@ private:
     std::shared_ptr<ShaderRenderNode> _gbufferNode;
     std::shared_ptr<ShaderRenderNode> _shadowNode;
     LightAccumulationPlane *_deferredRenderer;
+    LightAccumulationPlane *_rsmIndirectPlane;
     std::weak_ptr<RenderPass> _deferredPass;
     std::weak_ptr<RenderPass> _pixelPass;
     std::weak_ptr<RenderPass> _overlayPass;

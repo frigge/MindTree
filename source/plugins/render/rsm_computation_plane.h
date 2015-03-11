@@ -12,6 +12,8 @@ public:
 
 protected:
     void init(std::shared_ptr<ShaderProgram> program);
+    void drawLight(const LightPtr light, 
+                   std::shared_ptr<ShaderProgram> program) const;
 
 private:
     std::shared_ptr<Texture2D> _samplingPattern;

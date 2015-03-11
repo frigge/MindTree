@@ -43,4 +43,17 @@ void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
     _samplingPattern->setWidth(20);
     _samplingPattern->setWidth(20);
     _samplingPattern->initFromData(samples);
+    _samplingPattern->init();
+}
+
+void RSMIndirectPlane::drawLight(const LightPtr light, std::shared_ptr<ShaderProgram> program) const
+{
+    if(light->getLightType() != Light::SPOT)
+        return;
+
+    program->setTexture(_samplingPattern);
+    UniformStateManager manager(program);
+    manager.addState("searchradius", 4);
+
+    LightAccumulationPlane::drawLight(light, program);
 }

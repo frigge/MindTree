@@ -112,11 +112,11 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     auto rsmIndirectPass = std::make_shared<RenderPass>();
     _rsmIndirectPass = rsmIndirectPass;
     manager->addPass(rsmIndirectPass);
-    rsmIndirectPass ->addOutput(std::make_shared<Texture2D>("indirect_out",
+    rsmIndirectPass ->addOutput(std::make_shared<Texture2D>("rsm_indirect_out",
                                                 Texture::RGB16F));
     rsmIndirectPass->setCamera(camera);
-    auto rsmIndirectPlane = new RSMIndirectPlane();
-    rsmIndirectPass->addRenderer(rsmIndirectPlane);
+    _rsmIndirectPlane = new RSMIndirectPlane();
+    rsmIndirectPass->addRenderer(_rsmIndirectPlane);
     rsmIndirectPass->setBlendFunc(GL_ONE, GL_ONE);
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
@@ -159,6 +159,7 @@ void DeferredRenderer::setCamera(std::shared_ptr<Camera> cam)
     _overlayPass.lock()->setCamera(cam);
     _pixelPass.lock()->setCamera(cam);
     _deferredPass.lock()->setCamera(cam);
+    _rsmIndirectPass.lock()->setCamera(cam);
     RenderConfigurator::setCamera(cam);
 }
 
@@ -193,9 +194,11 @@ void DeferredRenderer::setGeometry(std::shared_ptr<Group> grp)
     }
     else {
         _deferredRenderer->setLights(grp->getLights());
+        _rsmIndirectPlane->setLights(grp->getLights());
     }
     setRenderersFromGroup(grp);
     _deferredRenderer->setShadowPasses(_shadowPasses);
+    _rsmIndirectPlane->setShadowPasses(_shadowPasses);
 }
 
 void DeferredRenderer::setupShadowPasses()
