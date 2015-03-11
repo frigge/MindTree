@@ -34,10 +34,60 @@ void LightAccumulationPlane::setLights(std::vector<std::shared_ptr<Light>> light
     _lights = lights;
 }
 
-void LightAccumulationPlane::setShadowPasses(std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> shadowPasses)
+std::vector<LightPtr> LightAccumulationPlane::getLight() const
+{
+    std::lock_guard<std::mutex> lock(_lightsLock);
+    return _lights;
+}
+void LightAccumulationPlane::setShadowPasses(std::unordered_map<std::shared_ptr<Light>, 
+                                             std::weak_ptr<RenderPass>> shadowPasses)
 {
     std::lock_guard<std::mutex> lock(_shadowPassesLock);
     _shadowPasses = shadowPasses;
+}
+
+std::unordered_map<LightPtr, std::weak_ptr<RenderPass>> LightAccumulationPlane::getShadowPases() const
+{
+    return _shadowPasses;
+}
+
+
+void LightAccumulationPlane::drawLight(const LightPtr light, 
+                                       std::shared_ptr<ShaderProgram> program) const
+{
+    std::lock_guard<std::mutex> lock2(_shadowPassesLock);
+    static const float PI = 3.14159265359;
+    UniformStateManager states(program);
+    states.addState("light.shadow", static_cast<int>(light->getShadowInfo()._enabled));
+    if(_shadowPasses.find(light) != _shadowPasses.end()) {
+        auto shadowPass = _shadowPasses.at(light).lock();
+        auto shadowmap = shadowPass->getOutDepthTexture();
+        program->setTexture(shadowmap);
+        auto shadowcam = shadowPass->getCamera();
+        glm::mat4 mvp = shadowcam->getProjection() 
+            * shadowcam->getViewMatrix();
+        states.addState("light.shadowmvp", mvp);
+    }
+    double coneangle = 360;
+    if(light->getLightType() == Light::SPOT)
+        coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
+
+    states.addState("light.pos",
+                    glm::vec4(light->getPosition(),
+                              light->getLightType() == Light::DISTANT ? 0 : 1));
+
+    glm::vec3 dir(0);
+    if (light->getLightType() == Light::DISTANT
+        || light->getLightType() == Light::SPOT){
+        dir = light->getTransformation()[2].xyz();
+    }
+
+    states.addState("light.dir", dir);
+    states.addState("light.color", light->getColor());
+    states.addState("light.intensity", light->getIntensity());
+    states.addState("light.coneangle", coneangle * PI /180);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    MTGLERROR;
 }
 
 void LightAccumulationPlane::draw(const CameraPtr /* camera */, 
@@ -45,40 +95,9 @@ void LightAccumulationPlane::draw(const CameraPtr /* camera */,
                                   std::shared_ptr<ShaderProgram> program)
 {
     glBlendEquation(GL_FUNC_ADD);
-    UniformStateManager states(program);
     std::lock_guard<std::mutex> lock(_lightsLock);
-    std::lock_guard<std::mutex> lock2(_shadowPassesLock);
-    static const float PI = 3.14159265359;
     for (const LightPtr light : _lights) {
-        states.addState("light.shadow", static_cast<int>(light->getShadowInfo()._enabled));
-        if(_shadowPasses.find(light) != _shadowPasses.end()) {
-            auto shadowmap = _shadowPasses[light].lock()->getOutDepthTexture();
-            program->setTexture(shadowmap, "shadow");
-            auto shadowcam = _shadowPasses[light].lock()->getCamera();
-            glm::mat4 mvp = shadowcam->getProjection() 
-                * shadowcam->getViewMatrix();
-            states.addState("light.shadowmvp", mvp);
-        }
-        double coneangle = 360;
-        if(light->getLightType() == Light::SPOT)
-            coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
-
-        states.addState("light.pos",
-                        glm::vec4(light->getPosition(),
-                                  light->getLightType() == Light::DISTANT ? 0 : 1));
-
-        glm::vec3 dir(0);
-        if (light->getLightType() == Light::DISTANT
-            || light->getLightType() == Light::SPOT){
-            dir = light->getTransformation()[2].xyz();
-        }
-
-        states.addState("light.dir", dir);
-        states.addState("light.color", light->getColor());
-        states.addState("light.intensity", light->getIntensity());
-        states.addState("light.coneangle", coneangle * PI /180);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        MTGLERROR;
+        drawLight(light, program);
     }
 }
 
