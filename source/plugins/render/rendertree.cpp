@@ -258,9 +258,19 @@ void RenderTree::draw()
 
     glFinish();
 
+    static int drawCount{0};
+    static double renderTime{0};
+
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
-    renderTime = duration.count() / 1000000000.0;
-    //std::cout << "Rendering took " << seconds << "s"
-    //    << " ==> " << 1.0 / seconds << "fps" << std::endl;
+    renderTime += duration.count() / 1000000000.0;
+    if(drawCount == 10) {
+        renderTime /= drawCount;
+        std::cout << "Rendering took " << renderTime << "s"
+            << " ==> " << 1.0 / renderTime << "fps" << std::endl;
+
+        drawCount = 0;
+        renderTime = 0;
+    }
+    ++drawCount;
 }
