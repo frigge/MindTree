@@ -101,6 +101,8 @@ public:
     void removeChild(AbstractTransformable *child);
     std::vector<std::shared_ptr<AbstractTransformable>> getChildren();
 
+    void setProperty(std::string name, MindTree::Property prop);
+
 protected:
     AbstractTransformable(const AbstractTransformable &other);
 
@@ -206,6 +208,7 @@ public:
     std::vector<std::shared_ptr<Camera>> getCameras();
     std::vector<std::shared_ptr<GeoObject>> getGeometry();
     std::vector<std::shared_ptr<Light>> getLights();
+    void setProperty(std::string name, MindTree::Property prop);
 
 private:
     std::vector<std::shared_ptr<AbstractTransformable>> members;

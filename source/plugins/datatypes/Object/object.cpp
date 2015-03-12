@@ -243,6 +243,15 @@ glm::mat4 AbstractTransformable::getWorldTransformation()
         return _parent->getWorldTransformation() * trans;
 }
 
+void AbstractTransformable::setProperty(std::string name, Property prop)
+{
+    MindTree::Object::setProperty(name, prop);
+
+    for(auto child : _children) {
+        child->setProperty(name, prop);
+    }
+}
+
 ObjectData::ObjectData(ObjectData::eDataType t)
     : type(t)
 {
@@ -435,6 +444,14 @@ std::vector<std::shared_ptr<Light>> Group::getLights()
         if(obj->getType() == AbstractTransformable::LIGHT)
             lights.push_back(std::static_pointer_cast<Light>(obj));
     return lights;
+}
+
+void Group::setProperty(std::string name, Property prop)
+{
+    MindTree::Object::setProperty(name, prop);
+    for(auto member : members) {
+        member->setProperty(name, prop);
+    }
 }
 
 Camera::Camera()

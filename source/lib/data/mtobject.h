@@ -20,7 +20,7 @@ public:
     Property operator[](std::string name) const;
 
     PropertyMap getProperties()const;
-    void setProperty(std::string, Property value);
+    virtual void setProperty(std::string, Property value);
     void rmProperty(std::string name);
     bool hasProperty(std::string name) const;
 
