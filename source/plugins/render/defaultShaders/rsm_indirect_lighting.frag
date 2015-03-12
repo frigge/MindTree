@@ -35,6 +35,10 @@ void main()
 {
     ivec2 p = ivec2(st.x * resolution.x, st.y * resolution.y);
     vec4 _pos = texelFetch(outposition, p, 0);
+
+    if (_pos.a < 0.5)
+        discard;
+
     pos = _pos.xyz;
     Nn = normalize(texelFetch(outnormal, p, 0).xyz);
 
