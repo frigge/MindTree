@@ -25,7 +25,8 @@ vec3 pos;
 vec3 Nn;
 
 uniform Light light;
-const float searchradius = .7;
+uniform float searchradius;
+uniform float intensity;
 
 out vec4 rsm_indirect_out;
 
@@ -76,5 +77,5 @@ void main()
 
     indirect /= 400;
 
-    rsm_indirect_out = vec4(indirect, 1);
+    rsm_indirect_out = vec4(indirect, 1) * intensity;
 }

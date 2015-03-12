@@ -199,6 +199,13 @@ void DeferredRenderer::setGeometry(std::shared_ptr<Group> grp)
     setRenderersFromGroup(grp);
     _deferredRenderer->setShadowPasses(_shadowPasses);
     _rsmIndirectPlane->setShadowPasses(_shadowPasses);
+
+    if (grp->hasProperty("RSM:searchRadius")) {
+        _rsmIndirectPlane->setSearchRadius(grp->getProperty("RSM:searchRadius").getData<double>());
+    }
+    if (grp->hasProperty("RSM:intensity")) {
+        _rsmIndirectPlane->setIntensity(grp->getProperty("RSM:intensity").getData<double>());
+    }
 }
 
 void DeferredRenderer::setupShadowPasses()

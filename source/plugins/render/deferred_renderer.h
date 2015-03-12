@@ -9,6 +9,7 @@ namespace MindTree {
 namespace GL {
 
 class LightAccumulationPlane;
+class RSMIndirectPlane;
 
 class  DeferredRenderer : public RenderConfigurator
 {
@@ -37,7 +38,7 @@ private:
     std::shared_ptr<ShaderRenderNode> _gbufferNode;
     std::shared_ptr<ShaderRenderNode> _shadowNode;
     LightAccumulationPlane *_deferredRenderer;
-    LightAccumulationPlane *_rsmIndirectPlane;
+    RSMIndirectPlane *_rsmIndirectPlane;
     std::weak_ptr<RenderPass> _deferredPass;
     std::weak_ptr<RenderPass> _pixelPass;
     std::weak_ptr<RenderPass> _overlayPass;

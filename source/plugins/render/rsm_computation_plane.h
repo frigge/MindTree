@@ -10,6 +10,9 @@ class RSMIndirectPlane : public LightAccumulationPlane
 public:
     RSMIndirectPlane();
 
+    void setSearchRadius(double radius);
+    void setIntensity(double intensity);
+
 protected:
     void init(std::shared_ptr<ShaderProgram> program);
     void drawLight(const LightPtr light, 
@@ -17,6 +20,8 @@ protected:
 
 private:
     std::shared_ptr<Texture2D> _samplingPattern;
+    std::atomic<double> _searchRadius;
+    std::atomic<double> _intensity;
 };
 
 }

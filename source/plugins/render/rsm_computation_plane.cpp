@@ -23,7 +23,9 @@ struct RSMProgram : public PixelPlane::ShaderProvider {
 
 };
 
-RSMIndirectPlane::RSMIndirectPlane()
+RSMIndirectPlane::RSMIndirectPlane() :
+    _intensity(1.f),
+    _searchRadius(.5f)
 {
     setProvider<RSMProgram>();
 }
@@ -32,21 +34,19 @@ void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
 {
     PixelPlane::init(program);
 
-    _samplingPattern = std::make_shared<Texture2D>("samplingPattern", Texture::RG16F);
+    _samplingPattern = std::make_shared<Texture2D>("samplingPattern", Texture::RG);
     
-    std::vector<glm::vec2> samples(400);
+    std::vector<unsigned char> samples(800);
     std::mt19937 engine;
-    std::normal_distribution<float> gauss_distribution(0, 1 / sqrt(2));
     std::uniform_real_distribution<float> uniform_distribution;
-    for(int i = 0; i< 400; i++) {
-        float gauss = gauss_distribution(engine);
-        samples[i] = glm::vec2(uniform_distribution(engine), std::abs(gauss_distribution(engine)));
+    for(int i = 0; i< 800; i += 2) {
+        samples[i] = uniform_distribution(engine) * 255;
+        samples[i + 1] = uniform_distribution(engine) * 255;
     }
 
     _samplingPattern->setWidth(20);
     _samplingPattern->setWidth(20);
     _samplingPattern->initFromData(samples);
-    _samplingPattern->init();
 }
 
 void RSMIndirectPlane::drawLight(const LightPtr light, std::shared_ptr<ShaderProgram> program) const
@@ -55,8 +55,20 @@ void RSMIndirectPlane::drawLight(const LightPtr light, std::shared_ptr<ShaderPro
         return;
 
     program->setTexture(_samplingPattern);
-    //UniformStateManager manager(program);
-    //manager.addState("searchradius", 4);
+    UniformStateManager manager(program);
+
+    manager.addState("searchradius", _searchRadius.load());
+    manager.addState("intensity", _intensity.load());
 
     LightAccumulationPlane::drawLight(light, program);
+}
+
+void RSMIndirectPlane::setSearchRadius(double radius)
+{
+    _searchRadius = radius;
+}
+
+void RSMIndirectPlane::setIntensity(double intensity)
+{
+    _intensity = intensity;
 }
