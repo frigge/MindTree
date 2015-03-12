@@ -431,6 +431,7 @@ public:
     void bind();
     void init();
     void initFromData(std::vector<glm::vec2> data);
+    void initFromData(std::vector<unsigned char> data);
 
 protected:
 

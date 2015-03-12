@@ -1274,6 +1274,8 @@ void Texture2D::initFromData(std::vector<glm::vec2> data)
     glBindTexture(GL_TEXTURE_2D, getID());
     MTGLERROR;
 
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
     glTexImage2D(GL_TEXTURE_2D,
                  0,
                  internalFormat,
@@ -1282,7 +1284,32 @@ void Texture2D::initFromData(std::vector<glm::vec2> data)
                  0,
                  format,
                  type,
-                 reinterpret_cast<GLvoid*>(&data[0]));
+                 &data[0]);
+    MTGLERROR;
+}
+
+void Texture2D::initFromData(std::vector<unsigned char> data)
+{
+    Texture::init();
+
+    GLenum format = getGLFormat();
+    GLenum internalFormat = getGLInternalFormat();
+    GLenum type = getGLDataType();
+
+    glBindTexture(GL_TEXTURE_2D, getID());
+    MTGLERROR;
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 internalFormat,
+                 _width,
+                 _height,
+                 0,
+                 format,
+                 type,
+                 &data[0]);
     MTGLERROR;
 }
 
