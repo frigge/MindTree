@@ -61,7 +61,9 @@ public:
     Q_SLOT static QWidget* addConsole();
 
     Q_SLOT void setupStyle();
+#ifdef QT_DEBUG
     Q_SLOT void lookupStyle();
+#endif
 
     Q_SLOT void showDock(QDockWidget* widget);
 
