@@ -1047,7 +1047,8 @@ Texture::Texture(std::string name, Texture::Format format, Target target)
     _initialized(false), 
     _target(target), 
     _name(name), 
-    _id(0)
+    _id(0),
+    _wrapMode(CLAMP_TO_EDGE)
 {
 }
 
@@ -1223,6 +1224,26 @@ GLenum Texture::getGLInternalFormat() const
     }
 }
 
+GLenum Texture::getGLWrapMode() const
+{
+    switch(_wrapMode) {
+        case CLAMP_TO_EDGE:
+            return GL_CLAMP_TO_EDGE;
+        case REPEAT:
+            return GL_REPEAT;
+    }
+}
+
+void Texture::setWrapMode(WrapMode wrap)
+{
+    _wrapMode = wrap;
+}
+
+Texture::WrapMode Texture::getWrapMode() const
+{
+    return _wrapMode;
+}
+
 Texture2D::Texture2D(std::string name, Texture::Format format, int width, int height)
     : Texture(name, format, TEXTURE2D), _width(width), _height(height)
 {
@@ -1307,11 +1328,10 @@ int Texture2D::height()
 void Texture2D::bind()    
 {
     Texture::bind();
-    GLenum wrap = GL_REPEAT;
+    GLenum wrap = getGLWrapMode();
     GLenum filter = GL_NEAREST;
-    if(getFormat() == DEPTH || getFormat() == DEPTH16 || getFormat() == DEPTH32F) {
+    if(isDepthTexture(getFormat())) {
         glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
-        wrap = GL_CLAMP_TO_EDGE;
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
         filter = GL_LINEAR;

@@ -371,6 +371,11 @@ public:
         TEXTURE2D
     };
 
+    enum WrapMode {
+        REPEAT,
+        CLAMP_TO_EDGE
+    };
+
     Texture(std::string name, Texture::Format format, Target target);
     virtual ~Texture();
 
@@ -380,10 +385,13 @@ public:
     virtual void release();
     GLuint getID() const;
     void setFormat(Texture::Format format);
+    void setWrapMode(Texture::WrapMode wrap);
+    Texture::WrapMode getWrapMode() const;
     Format getFormat() const;
     GLenum getGLFormat() const;
     GLenum getGLDataType() const;
     GLenum getGLInternalFormat() const;
+    GLenum getGLWrapMode() const;
 
     GLenum getGLSize();
 
@@ -400,6 +408,7 @@ private:
     GLuint _id;
     Format _format;
     Target _target;
+    WrapMode _wrapMode;
 
     bool _initialized;
     std::string _name;
