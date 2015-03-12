@@ -112,7 +112,7 @@ public:
     {
         {
             std::lock_guard<std::mutex> lock(_id_map_mutex);
-            if(name == "") return -1;
+            if(name.empty()) return -1;
             int i = 0;
             for(auto s = id_map.begin(); s != id_map.end(); s++, i++){
                 if(name == *s) return i;
