@@ -1,4 +1,5 @@
 #include "random"
+#include "glm/gtx/string_cast.hpp"
 #include "rsm_computation_plane.h"
 
 using namespace MindTree;
@@ -35,10 +36,12 @@ void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
     
     std::vector<glm::vec2> samples(400);
     std::mt19937 engine;
-    std::normal_distribution<float> gauss_distribution;
+    std::normal_distribution<float> gauss_distribution(0, 1 / sqrt(2));
     std::uniform_real_distribution<float> uniform_distribution;
-    for(int i = 0; i< 400; i++)
-        samples[i] = glm::vec2(uniform_distribution(engine), gauss_distribution(engine));
+    for(int i = 0; i< 400; i++) {
+        float gauss = gauss_distribution(engine);
+        samples[i] = glm::vec2(uniform_distribution(engine), std::abs(gauss_distribution(engine)));
+    }
 
     _samplingPattern->setWidth(20);
     _samplingPattern->setWidth(20);
