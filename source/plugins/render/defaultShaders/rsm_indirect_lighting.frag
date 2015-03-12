@@ -53,10 +53,11 @@ void main()
         for(int j = 1; j <= 20; j++) {
             //vec2 samplePosPolar = texelFetch(samplingPattern, ivec2(i, j), 0).rg;
             vec2 samplePosPolar = vec2(float(i) / 20, float(j) / 20);
-            float gauss = min(samplePosPolar.y, 1);
+            float radius = samplePosPolar.y;
 
+            float radius_squared = radius * radius;
             float polar = 2 * PI * samplePosPolar.x;
-            vec2 sampleOffset = vec2(sin(polar), cos(polar)) * gauss;
+            vec2 sampleOffset = vec2(sin(polar), cos(polar)) * radius;
             sampleOffset *= searchradius;
 
             vec2 samplePosition = shadowP.xy + sampleOffset;
@@ -72,7 +73,7 @@ void main()
 
             float lightLambert = clamp(dot(Nn, -lvec), 0, 1);
 
-            indirect += flux * lightLambert * lightAngleCos;
+            indirect += flux * lightLambert * lightAngleCos * radius_squared;
         }
 
     indirect /= 400;
