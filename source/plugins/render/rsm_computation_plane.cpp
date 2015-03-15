@@ -34,19 +34,26 @@ void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
 {
     PixelPlane::init(program);
 
-    _samplingPattern = std::make_shared<Texture2D>("samplingPattern", Texture::RG);
+    _samplingPattern = std::make_shared<Texture2D>("samplingPattern", Texture::RG8);
+
+    static const int sampleSize = 200;
+    static const int components = 2;
     
-    std::vector<unsigned char> samples(800);
+    size_t dataSize = sampleSize * components;
+    std::vector<unsigned char> samples;
     std::mt19937 engine;
     std::uniform_real_distribution<float> uniform_distribution;
-    for(int i = 0; i< 800; i += 2) {
-        samples[i] = uniform_distribution(engine) * 255;
-        samples[i + 1] = uniform_distribution(engine) * 255;
+    for(int i = 0; i< dataSize; i += components) {
+        //samples[i] = uniform_distribution(engine) * 255;
+        //samples[i + 1] = uniform_distribution(engine) * 255;
+        int value = i > (dataSize / 2) ? 255 : 0;
+        samples.push_back(value);
+        samples.push_back(255);
     }
 
     _samplingPattern->setWidth(20);
     _samplingPattern->setWidth(20);
-    _samplingPattern->initFromData(samples);
+    _samplingPattern->init(samples);
 }
 
 void RSMIndirectPlane::drawLight(const LightPtr light, std::shared_ptr<ShaderProgram> program) const
