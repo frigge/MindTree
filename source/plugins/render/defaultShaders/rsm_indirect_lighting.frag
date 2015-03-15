@@ -79,4 +79,10 @@ void main()
     indirect /= 400;
 
     rsm_indirect_out = vec4(indirect, 1) * intensity;
+
+    vec2 myst = ((st * resolution) / 40);
+    myst.x = mod(myst.x, 1);
+    myst.y = mod(myst.y, 1);
+    rsm_indirect_out = vec4(texture(samplingPattern, myst));
+    //rsm_indirect_out = vec4(myst, 0, 1);
 }
