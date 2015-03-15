@@ -222,7 +222,7 @@ void Viewport::setOption(const std::string &key, Property value)
 
 void Viewport::setShowGrid(bool b)
 {
-    //grid->setVisible(b);
+    _renderConfigurator->setProperty("GL:showgrid", b);
 }
 
 void Viewport::initializeGL()

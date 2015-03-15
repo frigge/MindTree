@@ -60,13 +60,13 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
 
-    auto grid = new GL::GridRenderer(100, 100, 100, 100);
+    _grid = new GridRenderer(100, 100, 100, 100);
     auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
 
-    grid->setTransformation(trans);
-    grid->setBorderColor(glm::vec4(.3, .3, .3, 1.0));
-    grid->setAlternatingColor(glm::vec4(.7, .7, .7, 1.0));
-    grid->setBorderWidth(2.);
+    _grid->setTransformation(trans);
+    _grid->setBorderColor(glm::vec4(.3, .3, .3, 1.0));
+    _grid->setAlternatingColor(glm::vec4(.7, .7, .7, 1.0));
+    _grid->setBorderWidth(2.);
 
     auto geometryPass = std::make_shared<RenderPass>();
     _geometryPass = geometryPass;
@@ -86,7 +86,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
                                                    Texture::RGBA16F));
     geopass->addOutput(std::make_shared<Texture2D>("outposition", 
                                                    Texture::RGBA16F));
-    geopass->addRenderer(grid);
+    geopass->addRenderer(_grid);
 
     auto overlayPass = std::make_shared<RenderPass>();
     _overlayPass = overlayPass;
@@ -141,6 +141,16 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     setupDefaultLights();
     setupGBuffer();
     setupShadowPasses();
+}
+
+void DeferredRenderer::setProperty(std::string name, Property prop)
+{
+    Object::setProperty(name, prop);
+    
+    if (name == "GL:showgrid") {
+        bool value = prop.getData<bool>();
+        _grid->setVisible(value);
+    }
 }
 
 void DeferredRenderer::setOverrideOutput(std::string output)

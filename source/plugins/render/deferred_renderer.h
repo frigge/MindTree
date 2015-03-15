@@ -8,6 +8,7 @@ class SpotLight;
 namespace MindTree {
 namespace GL {
 
+class GridRenderer;
 class LightAccumulationPlane;
 class RSMIndirectPlane;
 
@@ -19,8 +20,10 @@ public:
     void setGeometry(std::shared_ptr<Group> grp);
     void setCamera(std::shared_ptr<Camera> cam);
 
-void setOverrideOutput(std::string output) override;
-void clearOverrideOutput() override;
+    void setOverrideOutput(std::string output) override;
+    void clearOverrideOutput() override;
+
+    void setProperty(std::string name, Property prop) override;
 
 protected:
     void addRendererFromObject(std::shared_ptr<GeoObject> obj) override;
@@ -45,6 +48,8 @@ private:
     std::weak_ptr<RenderPass> _finalPass;
     std::weak_ptr<RenderPass> _rsmIndirectPass;
     std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> _shadowPasses;
+
+    GridRenderer* _grid;
 };
 
 }

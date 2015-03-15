@@ -4,6 +4,8 @@
 #include "memory"
 #include "vector"
 
+#include "data/mtobject.h"
+
 class Widget3DManager;
 class QGLContext;
 
@@ -23,7 +25,7 @@ class ShaderProgram;
 class ShaderRenderNode;
 class RenderBlock;
 
-class RenderConfigurator
+class RenderConfigurator : public Object
 {
 public:
     RenderConfigurator(QGLContext *context, std::shared_ptr<Camera> camera);
