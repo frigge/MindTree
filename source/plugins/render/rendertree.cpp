@@ -256,7 +256,7 @@ void RenderTree::draw()
     glDisable(GL_POLYGON_OFFSET_POINT);
     _context->swapBuffers();
 
-    glFinish();
+    //glFinish();
 
     static int drawCount{0};
     static double renderTime{0};
@@ -264,7 +264,7 @@ void RenderTree::draw()
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
     renderTime += duration.count() / 1000000000.0;
-    if(drawCount == 10) {
+    if(drawCount == 25) {
         renderTime /= drawCount;
         std::cout << "Rendering took " << renderTime << "s"
             << " ==> " << 1.0 / renderTime << "fps" << std::endl;
