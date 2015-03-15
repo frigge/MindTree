@@ -1048,7 +1048,8 @@ Texture::Texture(std::string name, Texture::Format format, Target target)
     _target(target), 
     _name(name), 
     _id(0),
-    _wrapMode(CLAMP_TO_EDGE)
+    _wrapMode(CLAMP_TO_EDGE),
+    _width(0)
 {
 }
 
@@ -1087,6 +1088,8 @@ GLenum Texture::getGLTarget()
     switch(_target) {
         case TEXTURE2D:
             return GL_TEXTURE_2D;
+        case TEXTURE1D:
+            return GL_TEXTURE_1D;
     }
 }
 
@@ -1244,8 +1247,41 @@ Texture::WrapMode Texture::getWrapMode() const
     return _wrapMode;
 }
 
-Texture2D::Texture2D(std::string name, Texture::Format format, int width, int height)
-    : Texture(name, format, TEXTURE2D), _width(width), _height(height)
+void Texture::init(std::vector<unsigned char> data)
+{
+    Texture::init();
+
+    GLenum format = getGLFormat();
+    GLenum internalFormat = getGLInternalFormat();
+    GLenum type = getGLDataType();
+
+    bind();
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glTexImage1D(GL_TEXTURE_1D,
+                 0,
+                 internalFormat,
+                 width(),
+                 0,
+                 format,
+                 type,
+                 data.data());
+    MTGLERROR;
+}
+
+void Texture::setWidth(int width)
+{
+    _width = width;
+}
+
+int Texture::width()
+{
+    return _width;
+}
+
+Texture2D::Texture2D(std::string name, Texture::Format format)
+    : Texture(name, format, TEXTURE2D), _height(0)
 {
 }
 
@@ -1253,17 +1289,12 @@ Texture2D::~Texture2D()
 {
 }
 
-void Texture2D::setWidth(int w)
-{
-    _width = w;
-}
-
 void Texture2D::setHeight(int h)
 {
     _height = h;
 }
 
-void Texture2D::initFromData(std::vector<glm::vec2> data)
+void Texture2D::init(std::vector<glm::vec2> data)
 {
     Texture::init();
 
@@ -1271,16 +1302,15 @@ void Texture2D::initFromData(std::vector<glm::vec2> data)
     GLenum internalFormat = getGLInternalFormat();
     GLenum type = getGLDataType();
 
-    glBindTexture(GL_TEXTURE_2D, getID());
-    MTGLERROR;
+    bind();
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glTexImage2D(GL_TEXTURE_2D,
                  0,
                  internalFormat,
-                 _width,
-                 _height,
+                 width(),
+                 height(),
                  0,
                  format,
                  type,
@@ -1288,7 +1318,7 @@ void Texture2D::initFromData(std::vector<glm::vec2> data)
     MTGLERROR;
 }
 
-void Texture2D::initFromData(std::vector<unsigned char> data)
+void Texture2D::init(std::vector<unsigned char> data)
 {
     Texture::init();
 
@@ -1296,20 +1326,19 @@ void Texture2D::initFromData(std::vector<unsigned char> data)
     GLenum internalFormat = getGLInternalFormat();
     GLenum type = getGLDataType();
 
-    glBindTexture(GL_TEXTURE_2D, getID());
-    MTGLERROR;
+    bind();
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glTexImage2D(GL_TEXTURE_2D,
                  0,
                  internalFormat,
-                 _width,
-                 _height,
+                 width(),
+                 height(),
                  0,
                  format,
                  type,
-                 &data[0]);
+                 data.data());
     MTGLERROR;
 }
 
@@ -1321,24 +1350,18 @@ void Texture2D::init()
     GLenum internalFormat = getGLInternalFormat();
     GLenum type = getGLDataType();
 
-    glBindTexture(GL_TEXTURE_2D, getID());
-    MTGLERROR;
+    bind();
 
     glTexImage2D(GL_TEXTURE_2D,
                  0,
                  internalFormat,
-                 _width,
-                 _height,
+                 width(),
+                 height(),
                  0,
                  format,
                  type,
                  nullptr);
     MTGLERROR;
-}
-
-int Texture2D::width()
-{
-    return _width;
 }
 
 namespace {

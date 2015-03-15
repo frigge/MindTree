@@ -368,6 +368,7 @@ public:
     };
 
     enum Target {
+        TEXTURE1D,
         TEXTURE2D
     };
 
@@ -376,13 +377,16 @@ public:
         CLAMP_TO_EDGE
     };
 
-    Texture(std::string name, Texture::Format format, Target target);
+    Texture(std::string name, Texture::Format format, Target target=TEXTURE1D);
     virtual ~Texture();
+
+    int width();
 
     std::string getName();
     void setName(std::string name);
     virtual void bind();
     virtual void release();
+    virtual void init();
     GLuint getID() const;
     void setFormat(Texture::Format format);
     void setWrapMode(Texture::WrapMode wrap);
@@ -393,11 +397,12 @@ public:
     GLenum getGLInternalFormat() const;
     GLenum getGLWrapMode() const;
 
+    void setWidth(int w);
+
     GLenum getGLSize();
 
-    virtual void init();
-    void initFromData(std::vector<glm::vec2> data);
     bool isInitialized() const;
+    void init(std::vector<unsigned char> data);
 
 protected:
     GLenum getInternalFormat() const;
@@ -412,31 +417,28 @@ private:
 
     bool _initialized;
     std::string _name;
+    int _width;
 };
 
 class Texture2D : public Texture
 {
 public:
     Texture2D(std::string name, 
-              Texture::Format format = RGBA,
-              int width = 1, 
-              int height = 1);
+              Texture::Format format = RGBA);
     ~Texture2D();
 
-    int width();
     int height();
-    void setWidth(int w);
     void setHeight(int h);
 
     void bind();
     void init();
-    void initFromData(std::vector<glm::vec2> data);
-    void initFromData(std::vector<unsigned char> data);
+    void init(std::vector<glm::vec2> data);
+    void init(std::vector<unsigned char> data);
 
 protected:
 
 private:
-    int _width, _height;
+    int _height;
 };
 
 class AbstractResource
