@@ -830,7 +830,7 @@ void ShaderProgram::setUniforms(PropertyMap map)
     }
 }
 
-void ShaderProgram::setTexture(std::shared_ptr<Texture2D> texture, std::string name)
+void ShaderProgram::setTexture(std::shared_ptr<Texture> texture, std::string name)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
 

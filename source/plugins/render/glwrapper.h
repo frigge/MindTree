@@ -222,6 +222,7 @@ private:
     bool _initialized;
 };
 
+class Texture;
 class ShaderProgram
 {
 public:
@@ -270,7 +271,7 @@ public:
 
     void setUniforms(PropertyMap map);
 
-    void setTexture(std::shared_ptr<Texture2D> texture, std::string name="");
+    void setTexture(std::shared_ptr<Texture> texture, std::string name="");
 
     void bindAttributeLocation(std::shared_ptr<VBO> vbo);
     void bindFragmentLocation(unsigned int index, std::string name);
@@ -292,7 +293,7 @@ public:
 
 private:
     struct TextureInfo {
-        std::weak_ptr<Texture2D> texture;
+        std::weak_ptr<Texture> texture;
         std::string name;
     };
 
