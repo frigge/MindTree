@@ -19,7 +19,7 @@ protected:
                    std::shared_ptr<ShaderProgram> program) const;
 
 private:
-    std::shared_ptr<Texture2D> _samplingPattern;
+    std::shared_ptr<Texture> _samplingPattern;
     std::atomic<double> _searchRadius;
     std::atomic<double> _intensity;
 };

@@ -34,7 +34,7 @@ void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
 {
     PixelPlane::init(program);
 
-    _samplingPattern = std::make_shared<Texture2D>("samplingPattern", Texture::RG8);
+    _samplingPattern = std::make_shared<Texture>("samplingPattern", Texture::R8);
 
     static const int sampleSize = 200;
     static const int components = 2;
@@ -51,7 +51,6 @@ void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
         samples.push_back(255);
     }
 
-    _samplingPattern->setWidth(20);
     _samplingPattern->setWidth(20);
     _samplingPattern->init(samples);
 }
