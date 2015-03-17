@@ -12,6 +12,8 @@ class StringEditor(QWidget):
         if socket.value != None:
             self.widget.setText(socket.value)
         self.layout().addWidget(self.widget)
+        self.layout().setSpacing(0)
+        self.layout().setMargin(0)
         self.widget.textChanged.connect(lambda x: setattr(self.socket, "value", str(x)))
 
 class DirEditor(QWidget):
@@ -25,6 +27,8 @@ class DirEditor(QWidget):
         self.layout().addWidget(self.widget)
         self.browsebutton = QPushButton("...")
         self.layout().addWidget(self.browsebutton)
+        self.layout().setSpacing(0)
+        self.layout().setMargin(0)
         self.browsebutton.pressed.connect(self.browseFilePath)
         self.widget.textChanged.connect(lambda x: setattr(self.socket, "value", str(x)))
         
@@ -42,6 +46,8 @@ class FloatEditor(QWidget):
         self.widget = SpinBox(0.0)
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
+        self.layout().setSpacing(0)
+        self.layout().setMargin(0)
 
         if socket.value != None:
             self.widget.setValue(socket.value)
@@ -57,6 +63,15 @@ class IntEditor(QWidget):
 
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
+        self.layout().setSpacing(0)
+        self.layout().setMargin(0)
+        if socket.value != None:
+            self.widget.setValue(socket.value)
+        self.widget.valueChanged.connect(lambda x: setattr(self.socket, "value", x))
+
+class BoolEditor(QWidget):
+    def __init__(self, socket):
+        QWidget.__init__(self)
         if socket.value != None:
             self.widget.setValue(socket.value)
         self.widget.valueChanged.connect(lambda x: setattr(self.socket, "value", x))
@@ -68,6 +83,8 @@ class BoolEditor(QWidget):
         self.widget = QCheckBox()
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
+        self.layout().setSpacing(0)
+        self.layout().setMargin(0)
         if socket.value != None:
             self.widget.setCheckState(Qt.Checked if socket.value else Qt.Unchecked)
         self.widget.stateChanged.connect(self.setChecked)
@@ -107,6 +124,8 @@ class ColorEditor(QWidget):
         self.widget = ColorButton()
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
+        self.layout().setSpacing(0)
+        self.layout().setMargin(0)
         if socket.value != None:
             value = socket.value
             col = QColor(value[0]*255, value[1]*255, value[2]*255, value[3]*255)
@@ -237,6 +256,8 @@ class Editor(QWidget):
         self.layout().removeWidget(self.widget)
         self.widget = QWidget()
         self.widget.setLayout(QFormLayout())
+        self.widget.layout().setMargin(0)
+        self.widget.layout().setSpacing(1)
         self.layout().addWidget(self.widget)
         for s in node.insockets:
             if s.connected == None:
