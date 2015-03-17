@@ -136,16 +136,8 @@ glm::vec3 AbstractTransformable::getCenter()
 
 void AbstractTransformable::setCenter(glm::vec3 c)    
 {
-    {
-        std::lock_guard<std::mutex> lock(_centerLock);
-        center = c;
-    }
-    glm::mat4 trans;
-    trans = glm::lookAt(getPosition(), c, glm::vec3(0, 1, 0));
-    {
-        std::lock_guard<std::mutex> lock(_transformationLock);
-        transformation = glm::inverse(trans);
-    }
+    std::lock_guard<std::mutex> lock(_centerLock);
+    center = c;
 }
 
 void AbstractTransformable::setCenter(double x, double y, double z)    
@@ -163,10 +155,6 @@ glm::vec3 AbstractTransformable::getPosition()
 void AbstractTransformable::setPosition(glm::vec3 pos)    
 {
     glm::vec3 dist = pos - getPosition();
-    {
-        std::lock_guard<std::mutex> lock(_centerLock);
-        center += dist;
-    }
     {
         std::lock_guard<std::mutex> lock(_transformationLock);
         transformation = glm::translate(transformation, dist);
@@ -203,14 +191,17 @@ void AbstractTransformable::posAroundCenter(glm::vec3 newPos)
 
 void AbstractTransformable::moveToCenter(double fac)    
 {
-    double dist;
+    glm::vec3 dist;
     {
         std::lock_guard<std::mutex> lock(_centerLock);
-        dist = glm::vec3(center - getPosition()).length();
+        dist = center - getPosition();
     }
+
+    dist *= fac;
+    glm::mat4 translation = glm::translate(glm::mat4(), dist);
     {
         std::lock_guard<std::mutex> lock(_transformationLock);
-        transformation = glm::translate(transformation, glm::vec3(0, 0, dist*fac));
+        transformation = translation * transformation;
     }
 }
 
@@ -458,8 +449,7 @@ Camera::Camera()
     : AbstractTransformable(CAMERA), _fov(45),
     _near(.1), _far(10000), _width(0), _height(0), _aspect(1)
 {
-    setPosition(0, 10, -10);
-    setCenter(0, 0, 0);
+    setTransformation(glm::inverse(glm::lookAt(glm::vec3(0, 10, -10), glm::vec3(0), glm::vec3(0, 1, 0))));
 }
 
 Camera::Camera(const Camera &other) :
