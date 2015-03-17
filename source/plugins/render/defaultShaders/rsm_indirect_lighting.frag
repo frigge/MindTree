@@ -4,7 +4,7 @@ uniform sampler2D outposition;
 uniform sampler2D shadow_position;
 uniform sampler2D shadow_normal;
 uniform sampler2D shadow_flux;
-uniform sampler2D samplingPattern;
+uniform sampler1D samplingPattern;
 
 struct Light {
     vec4 color;
@@ -52,7 +52,7 @@ void main()
     for(int i = 1; i <= 20; ++i)
         for(int j = 1; j <= 20; j++) {
             //vec2 samplePosPolar = texelFetch(samplingPattern, ivec2(i, j), 0).rg;
-            vec2 samplePosPolar = vec2(float(i) / 20, float(j) / 20);
+            vec2 samplePosPolar = vec2(float(i) / 50, float(j) / 50);
             float radius = samplePosPolar.y;
 
             float radius_squared = radius * radius;
@@ -80,9 +80,8 @@ void main()
 
     rsm_indirect_out = vec4(indirect, 1) * intensity;
 
-    vec2 myst = ((st * resolution) / 40);
-    myst.x = mod(myst.x, 1);
-    myst.y = mod(myst.y, 1);
-    rsm_indirect_out = vec4(texture(samplingPattern, myst));
+    //vec2 myst = ((st * resolution) / 40);
+    //myst.x = mod(myst.x, 1);
+    //rsm_indirect_out = vec4(texture(samplingPattern, myst.x));
     //rsm_indirect_out = vec4(myst, 0, 1);
 }
