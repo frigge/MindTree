@@ -327,7 +327,7 @@ void RenderPass::processPixelRequests()
         else if(format == GL_RGBA && datasize == GL_FLOAT)
             data = new GLfloat[4];
 
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
         MTGLERROR;
         glReadPixels(pos.x, pos.y, 1, 1, format, datasize, data);
         MTGLERROR;
