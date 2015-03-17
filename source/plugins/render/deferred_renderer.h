@@ -22,6 +22,7 @@ public:
 
     void setOverrideOutput(std::string output) override;
     void clearOverrideOutput() override;
+    glm::vec4 getPosition(glm::vec2 pixel) const;
 
     void setProperty(std::string name, Property prop) override;
 

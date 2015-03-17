@@ -44,6 +44,7 @@ public:
 
     virtual void setOverrideOutput(std::string output);
     virtual void clearOverrideOutput();
+    virtual glm::vec4 getPosition(glm::vec2 pixel) const;
 
 protected:
     virtual void addRendererFromTransformable(std::shared_ptr<AbstractTransformable> transformable);

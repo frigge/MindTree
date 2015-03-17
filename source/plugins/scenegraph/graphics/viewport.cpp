@@ -19,6 +19,7 @@
 #define GLM_SWIZZLE
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/string_cast.hpp"
 
 #include "QApplication"
 #include "QMenu"
@@ -240,7 +241,7 @@ void Viewport::paintGL()
 void Viewport::mousePressEvent(QMouseEvent *event)    
 {
     glm::ivec2 pos;
-    pos.x = event->pos().x();
+    pos.x = width() - event->pos().x();
     pos.y = height() - event->pos().y();
 
     auto viewportSize = glm::ivec2(width(), height());
@@ -248,6 +249,10 @@ void Viewport::mousePressEvent(QMouseEvent *event)
         return;
 
     lastpos = event->posF();
+    glm::vec4 center = _renderConfigurator->getPosition(pos);
+    dbout(glm::to_string(center));
+    if(center.a > 0)
+        activeCamera->setCenter(center.xyz());
     if(event->modifiers() & Qt::ControlModifier)
         zoom = true;
     else if (event->modifiers() & Qt::ShiftModifier)

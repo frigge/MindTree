@@ -36,6 +36,11 @@ void RenderConfigurator::stopRendering()
     MindTree::GL::RenderThread::removeManager(_rendertree.get());
 }
 
+glm::vec4 RenderConfigurator::getPosition(glm::vec2 pixel) const
+{
+    return glm::vec4(0);
+}
+
 RenderTree* RenderConfigurator::getManager()
 {
     return _rendertree.get();

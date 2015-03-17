@@ -128,6 +128,8 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     auto pplane = new PixelPlane();
     pplane->setProvider<Compositor>();
     pixelPass->addRenderer(pplane);
+    float value = 70.0 / 255;
+    pixelPass->setBackgroundColor(glm::vec4(value, value, value, 1.));
     pixelPass->addOutput(std::make_shared<Texture2D>("final_out"));
 
     auto finalPass = std::make_shared<RenderPass>();
@@ -141,6 +143,12 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     setupDefaultLights();
     setupGBuffer();
     setupShadowPasses();
+}
+
+glm::vec4 DeferredRenderer::getPosition(glm::vec2 pixel) const
+{
+    std::vector<std::string> values = {"outposition"};
+    return _geometryPass.lock()->readPixel(values, pixel)[0];
 }
 
 void DeferredRenderer::setProperty(std::string name, Property prop)
