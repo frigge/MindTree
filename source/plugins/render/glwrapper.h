@@ -431,7 +431,6 @@ public:
     int height();
     void setHeight(int h);
 
-    void bind();
     void init();
     void init(std::vector<glm::vec2> data);
     void init(std::vector<unsigned char> data);

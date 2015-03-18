@@ -1072,10 +1072,31 @@ void Texture::setName(std::string name)
     _name = name;
 }
 
+namespace {
+    bool isDepthTexture(Texture::Format fm)
+    {
+        return fm >= Texture::DEPTH;
+    }
+}
+
 void Texture::bind()
 {
     assert(_initialized);
-    glBindTexture(getGLTarget(), _id);
+    GLenum target = getGLTarget();
+    glBindTexture(target, _id);
+    GLenum wrap = getGLWrapMode();
+    GLenum filter = GL_NEAREST;
+    if(isDepthTexture(getFormat())) {
+        glTexParameteri(target, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+        glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+        glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+        filter = GL_LINEAR;
+    }
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, filter);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filter);
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap);
+    glTexParameteri(target, GL_TEXTURE_WRAP_R, wrap);
 }
 
 void Texture::release()
@@ -1364,32 +1385,9 @@ void Texture2D::init()
     MTGLERROR;
 }
 
-namespace {
-    bool isDepthTexture(Texture::Format fm)
-    {
-        return fm >= Texture::DEPTH;
-    }
-}
 int Texture2D::height()
 {
     return _height;
-}
-
-void Texture2D::bind()    
-{
-    Texture::bind();
-    GLenum wrap = getGLWrapMode();
-    GLenum filter = GL_NEAREST;
-    if(isDepthTexture(getFormat())) {
-        glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-        filter = GL_LINEAR;
-    }
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 }
 
 AbstractResource::AbstractResource(std::string name)
