@@ -25,7 +25,8 @@ struct RSMProgram : public PixelPlane::ShaderProvider {
 
 RSMIndirectPlane::RSMIndirectPlane() :
     _intensity(1.f),
-    _searchRadius(.5f)
+    _searchRadius(.5f),
+    _numSamples(400)
 {
     setProvider<RSMProgram>();
 }
@@ -34,24 +35,20 @@ void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
 {
     PixelPlane::init(program);
 
-    _samplingPattern = std::make_shared<Texture>("samplingPattern", Texture::R8);
+    _samplingPattern = std::make_shared<Texture>("samplingPattern", Texture::RG8);
 
-    static const int sampleSize = 200;
     static const int components = 2;
     
-    size_t dataSize = sampleSize * components;
+    size_t dataSize = _numSamples.load() * components;
     std::vector<unsigned char> samples;
     std::mt19937 engine;
     std::uniform_real_distribution<float> uniform_distribution;
     for(int i = 0; i< dataSize; i += components) {
-        //samples[i] = uniform_distribution(engine) * 255;
-        //samples[i + 1] = uniform_distribution(engine) * 255;
-        int value = i > (dataSize / 2) ? 255 : 0;
-        samples.push_back(value);
-        samples.push_back(255);
+        samples[i] = uniform_distribution(engine) * 255;
+        samples[i + 1] = uniform_distribution(engine) * 255;
     }
 
-    _samplingPattern->setWidth(20);
+    _samplingPattern->setWidth(_numSamples.load());
     _samplingPattern->init(samples);
 }
 
@@ -65,6 +62,7 @@ void RSMIndirectPlane::drawLight(const LightPtr light, std::shared_ptr<ShaderPro
 
     manager.addState("searchradius", _searchRadius.load());
     manager.addState("intensity", _intensity.load());
+    manager.addState("numSamples", _numSamples.load());
 
     LightAccumulationPlane::drawLight(light, program);
 }
@@ -77,4 +75,8 @@ void RSMIndirectPlane::setSearchRadius(double radius)
 void RSMIndirectPlane::setIntensity(double intensity)
 {
     _intensity = intensity;
+}
+void RSMIndirectPlane::setSamples(int samples)
+{
+    _numSamples = samples;
 }

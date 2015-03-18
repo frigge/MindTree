@@ -12,6 +12,7 @@ public:
 
     void setSearchRadius(double radius);
     void setIntensity(double intensity);
+    void setSamples(int samples);
 
 protected:
     void init(std::shared_ptr<ShaderProgram> program);
@@ -22,6 +23,7 @@ private:
     std::shared_ptr<Texture> _samplingPattern;
     std::atomic<double> _searchRadius;
     std::atomic<double> _intensity;
+    std::atomic<int> _numSamples;
 };
 
 }

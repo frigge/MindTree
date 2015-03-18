@@ -224,6 +224,9 @@ void DeferredRenderer::setGeometry(std::shared_ptr<Group> grp)
     if (grp->hasProperty("RSM:intensity")) {
         _rsmIndirectPlane->setIntensity(grp->getProperty("RSM:intensity").getData<double>());
     }
+    if (grp->hasProperty("RSM:samples")) {
+        _rsmIndirectPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
+    }
 }
 
 void DeferredRenderer::setupShadowPasses()

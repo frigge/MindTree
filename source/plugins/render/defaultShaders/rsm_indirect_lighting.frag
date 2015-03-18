@@ -28,6 +28,8 @@ uniform Light light;
 uniform float searchradius;
 uniform float intensity;
 
+uniform int numSamples = 400;
+
 out vec4 rsm_indirect_out;
 
 const float PI = 3.14159265359;
@@ -49,39 +51,32 @@ void main()
     shadowP *= 0.5;
 
     vec3 indirect = vec3(0);
-    for(int i = 1; i <= 20; ++i)
-        for(int j = 1; j <= 20; j++) {
-            //vec2 samplePosPolar = texelFetch(samplingPattern, ivec2(i, j), 0).rg;
-            vec2 samplePosPolar = vec2(float(i) / 50, float(j) / 50);
-            float radius = samplePosPolar.y;
+    for(int i = 1; i <= numSamples; ++i) {
+        vec2 samplePosPolar = texelFetch(samplingPattern, i, 0).rg;
+        float radius = samplePosPolar.y;
 
-            float radius_squared = radius * radius;
-            float polar = 2 * PI * samplePosPolar.x;
-            vec2 sampleOffset = vec2(sin(polar), cos(polar)) * radius;
-            sampleOffset *= searchradius;
+        float radius_squared = radius * radius;
+        float polar = 2 * PI * samplePosPolar.x;
+        vec2 sampleOffset = vec2(sin(polar), cos(polar)) * radius;
+        sampleOffset *= searchradius;
 
-            vec2 samplePosition = shadowP.xy + sampleOffset;
+        vec2 samplePosition = shadowP.xy + sampleOffset;
 
-            vec3 flux = texture(shadow_flux, samplePosition).rgb;
-            vec3 n = texture(shadow_normal, samplePosition).xyz;
-            n = normalize(n);
-            vec3 p = texture(shadow_position, samplePosition).xyz;
-            p -= n * 0.05;
+        vec3 flux = texture(shadow_flux, samplePosition).rgb;
+        vec3 n = texture(shadow_normal, samplePosition).xyz;
+        n = normalize(n);
+        vec3 p = texture(shadow_position, samplePosition).xyz;
+        p -= n * 0.05;
 
-            vec3 lvec = normalize(pos - p);
-            float lightAngleCos = clamp(dot(lvec, normalize(n)), 0, 1);
+        vec3 lvec = normalize(pos - p);
+        float lightAngleCos = clamp(dot(lvec, normalize(n)), 0, 1);
 
-            float lightLambert = clamp(dot(Nn, -lvec), 0, 1);
+        float lightLambert = clamp(dot(Nn, -lvec), 0, 1);
 
-            indirect += flux * lightLambert * lightAngleCos * radius_squared;
-        }
+        indirect += flux * lightLambert * lightAngleCos * radius_squared;
+    }
 
-    indirect /= 400;
+    indirect /= numSamples;
 
     rsm_indirect_out = vec4(indirect, 1) * intensity;
-
-    //vec2 myst = ((st * resolution) / 40);
-    //myst.x = mod(myst.x, 1);
-    //rsm_indirect_out = vec4(texture(samplingPattern, myst.x));
-    //rsm_indirect_out = vec4(myst, 0, 1);
 }
