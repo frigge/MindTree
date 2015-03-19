@@ -44,8 +44,8 @@ void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
     std::mt19937 engine;
     std::uniform_real_distribution<float> uniform_distribution;
     for(int i = 0; i< dataSize; i += components) {
-        samples[i] = uniform_distribution(engine) * 255;
-        samples[i + 1] = uniform_distribution(engine) * 255;
+        samples.push_back(uniform_distribution(engine) * 255);
+        samples.push_back(uniform_distribution(engine) * 255);
     }
 
     _samplingPattern->setWidth(_numSamples.load());
