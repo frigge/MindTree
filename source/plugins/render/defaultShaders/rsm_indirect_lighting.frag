@@ -68,12 +68,13 @@ void main()
         vec3 p = texture(shadow_position, samplePosition).xyz;
         p -= n * 0.05;
 
-        vec3 lvec = normalize(pos - p);
-        float lightAngleCos = clamp(dot(lvec, normalize(n)), 0, 1);
+        vec3 lvec = pos - p;
+        vec3 nlvec = normalize(lvec);
+        float lightAngleCos = clamp(dot(nlvec, normalize(n)), 0, 1);
 
-        float lightLambert = clamp(dot(Nn, -lvec), 0, 1);
+        float lightLambert = clamp(dot(Nn, -nlvec), 0, 1);
 
-        indirect += flux * lightLambert * lightAngleCos * radius_squared;
+        indirect += flux * lightLambert * lightAngleCos * radius_squared * 1/dot(lvec, lvec);
     }
 
     indirect /= numSamples;
