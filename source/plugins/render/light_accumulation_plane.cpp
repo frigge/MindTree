@@ -59,7 +59,7 @@ void LightAccumulationPlane::drawLight(const LightPtr light,
     static const float PI = 3.14159265359;
     UniformStateManager states(program);
     states.addState("light.shadow", static_cast<int>(light->getShadowInfo()._enabled));
-    if(_shadowPasses.find(light) != _shadowPasses.end()) {
+    if(_shadowPasses.find(light) != _shadowPasses.end() && !_shadowPasses.at(light).expired()) {
         auto shadowPass = _shadowPasses.at(light).lock();
         auto shadowmap = shadowPass->getOutDepthTexture();
         program->setTexture(shadowmap);
