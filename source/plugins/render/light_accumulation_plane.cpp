@@ -53,7 +53,7 @@ std::unordered_map<LightPtr, std::weak_ptr<RenderPass>> LightAccumulationPlane::
 
 
 void LightAccumulationPlane::drawLight(const LightPtr light, 
-                                       std::shared_ptr<ShaderProgram> program) const
+                                       std::shared_ptr<ShaderProgram> program)
 {
     std::lock_guard<std::mutex> lock2(_shadowPassesLock);
     static const float PI = 3.14159265359;
