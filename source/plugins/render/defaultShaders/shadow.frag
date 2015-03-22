@@ -6,6 +6,7 @@ in vec3 cameraPos;
 uniform vec4 diffuse_color = vec4(1);
 uniform mat4 modelView;
 uniform float coneangle;
+uniform float intensity;
 uniform mat4 view;
 
 //layout (location = 0) out float shadow;
@@ -29,6 +30,6 @@ void main()
     float flux_atten = dot(dir, vec3(0, 0, 1));
     float lightangle = acos(flux_atten);
     float angleMask = smoothstep(coneangle, coneangle - 0.1, lightangle);
-    output *= flux_atten * angleMask;
+    output *= flux_atten * angleMask * intensity;
     shadow_flux = vec4(output, 1);
 }
