@@ -140,6 +140,8 @@ void RenderTree::init()
     _initialized = true;
     glClearColor( 0., 0., 0., 0. );
 
+    glEnable(GL_CULL_FACE);
+
     //connect output textures to all following passes
     uint i=0;
     for(auto &pass : passes){
