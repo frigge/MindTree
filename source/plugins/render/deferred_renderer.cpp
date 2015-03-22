@@ -357,11 +357,17 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
     shadowPass
         ->setDepthOutput(std::make_shared<Texture2D>("shadow",
                                                      Texture::DEPTH32F));
-    shadowPass->addOutput(std::make_shared<Texture2D>("shadow_position",
-                                                             Texture::RGBA16F));
-    shadowPass->addOutput(std::make_shared<Texture2D>("shadow_normal",
-                                                             Texture::RGBA16F));
-    shadowPass->addOutput(std::make_shared<Texture2D>("shadow_flux", Texture::RGBA16F));
+    auto pos = std::make_shared<Texture2D>("shadow_position",
+                                                             Texture::RGBA16F);
+    pos->setWrapMode(Texture::REPEAT);
+    shadowPass->addOutput(pos);
+    auto normal = std::make_shared<Texture2D>("shadow_normal",
+                                                             Texture::RGBA16F);
+    normal->setWrapMode(Texture::REPEAT);
+    shadowPass->addOutput(normal);
+    auto flux = std::make_shared<Texture2D>("shadow_flux", Texture::RGBA16F);
+    shadowPass->addOutput(flux);
+    flux->setWrapMode(Texture::REPEAT);
 
     shadowPass->addGeometryShaderNode(_shadowNode);
     shadowPass->setClearDepth(1.);
