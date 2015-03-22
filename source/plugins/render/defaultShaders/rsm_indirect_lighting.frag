@@ -4,7 +4,13 @@ uniform sampler2D outposition;
 uniform sampler2D shadow_position;
 uniform sampler2D shadow_normal;
 uniform sampler2D shadow_flux;
+uniform sampler2D rsm_indirect_out_interpolated;
+uniform sampler2D outdiffusecolor;
+uniform sampler2D outdiffuseintensity;
+
 uniform sampler1D samplingPattern;
+
+uniform bool highres = false;
 
 struct Light {
     vec4 color;
@@ -19,7 +25,6 @@ struct Light {
 vec4 shadowP;
 
 in vec2 st;
-uniform ivec2 resolution;
 
 vec3 pos;
 vec3 Nn;
@@ -36,14 +41,19 @@ const float PI = 3.14159265359;
 
 void main()
 {
-    ivec2 p = ivec2(st.x * resolution.x, st.y * resolution.y);
-    vec4 _pos = texelFetch(outposition, p, 0);
+    if(highres) {
+        vec4 interpolated = texture(rsm_indirect_out_interpolated, st);
+        if(interpolated.a > 0.5) {
+            discard;
+        }
+    }
+    vec4 _pos = texture(outposition, st, 0);
 
     if (_pos.a < 0.5)
         discard;
 
     pos = _pos.xyz;
-    Nn = normalize(texelFetch(outnormal, p, 0).xyz);
+    Nn = normalize(texture(outnormal, st, 0).xyz);
 
     shadowP = (light.shadowmvp * vec4(pos, 1));
     shadowP /= shadowP.w;
@@ -51,14 +61,14 @@ void main()
     shadowP *= 0.5;
 
     vec3 indirect = vec3(0);
-    for(int i = 1; i <= numSamples; ++i) {
+    for(int i = 0; i < numSamples; ++i) {
         vec2 samplePosPolar = texelFetch(samplingPattern, i, 0).rg;
         float radius = samplePosPolar.y;
 
         float radius_squared = radius * radius;
         float polar = 2 * PI * samplePosPolar.x;
         vec2 sampleOffset = vec2(sin(polar), cos(polar)) * radius;
-        sampleOffset *= searchradius;
+        sampleOffset *= searchradius * 0.5;
 
         vec2 samplePosition = shadowP.xy + sampleOffset;
 
@@ -73,11 +83,15 @@ void main()
         float lightAngleCos = clamp(dot(nlvec, normalize(n)), 0, 1);
 
         float lightLambert = clamp(dot(Nn, -nlvec), 0, 1);
+        float atten = clamp(1 / dot(lvec, lvec), 0, 1);
 
-        indirect += flux * lightLambert * lightAngleCos * radius_squared * 1/dot(lvec, lvec);
+        indirect += flux * lightLambert * lightAngleCos * radius_squared * atten;
+        //indirect += flux * lightLambert * lightAngleCos * radius_squared;
     }
 
     indirect /= numSamples;
 
+    //indirect *= texture(outdiffusecolor, st).rgb;
+    //indirect *= texture(outdiffuseintensity, st).rgb;
     rsm_indirect_out = vec4(indirect, 1) * intensity;
 }

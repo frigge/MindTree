@@ -52,6 +52,43 @@ struct FinalOut : public PixelPlane::ShaderProvider {
     }
 };
 
+struct RSMInterpolateProvider : public PixelPlane::ShaderProvider {
+    std::shared_ptr<ShaderProgram> provideProgram()
+    {
+        std::shared_ptr<ShaderProgram> prog;
+        prog = std::make_shared<ShaderProgram>();
+
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/rsm_interpolate.frag", 
+                                ShaderProgram::FRAGMENT);
+
+        return prog;
+    }
+
+};
+
+
+struct RSMFinalProvider : public PixelPlane::ShaderProvider {
+    std::shared_ptr<ShaderProgram> provideProgram()
+    {
+        std::shared_ptr<ShaderProgram> prog;
+        prog = std::make_shared<ShaderProgram>();
+
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
+                                ShaderProgram::VERTEX);
+        prog
+            ->addShaderFromFile("../plugins/render/defaultShaders/rsm_final.frag", 
+                                ShaderProgram::FRAGMENT);
+
+        return prog;
+    }
+
+};
+
 DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
     RenderConfigurator(context, camera)
 {
@@ -109,15 +146,51 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _deferredPass.lock()->addRenderer(_deferredRenderer);
     _deferredPass.lock()->setBlendFunc(GL_ONE, GL_ONE);
 
-    auto rsmIndirectPass = std::make_shared<RenderPass>();
-    _rsmIndirectPass = rsmIndirectPass;
-    manager->addPass(rsmIndirectPass);
-    rsmIndirectPass ->addOutput(std::make_shared<Texture2D>("rsm_indirect_out",
+    auto rsmIndirectLowResPass = std::make_shared<RenderPass>();
+    manager->addPass(rsmIndirectLowResPass);
+    _rsmIndirectLowResPass = rsmIndirectLowResPass;
+    manager->addPass(rsmIndirectLowResPass);
+    rsmIndirectLowResPass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_lowres",
                                                 Texture::RGB16F));
-    rsmIndirectPass->setCamera(camera);
-    _rsmIndirectPlane = new RSMIndirectPlane();
-    rsmIndirectPass->addRenderer(_rsmIndirectPlane);
-    rsmIndirectPass->setBlendFunc(GL_ONE, GL_ONE);
+    rsmIndirectLowResPass->setCustomFragmentNameMapping("rsm_indirect_out_lowres", "rsm_indirect_out");
+    CameraPtr lowResCamera = std::dynamic_pointer_cast<Camera>(camera->clone());
+
+    int w = camera->getWidth() / 16;
+    int h = camera->getHeight() / 16;
+    lowResCamera->setResolution(w, h);
+    rsmIndirectLowResPass->setCamera(lowResCamera);
+    _rsmIndirectLowResPlane = new RSMIndirectPlane();
+    rsmIndirectLowResPass->addRenderer(_rsmIndirectLowResPlane);
+    rsmIndirectLowResPass->setBlendFunc(GL_ONE, GL_ONE);
+
+    auto rsmInterpolatePass = std::make_shared<RenderPass>();
+    rsmInterpolatePass->setCamera(camera);
+    rsmInterpolatePass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_interpolated", Texture::RGB16F));
+    manager->addPass(rsmInterpolatePass);
+    auto rsmInterpolatePlane = new PixelPlane();
+    rsmInterpolatePlane->setProvider<RSMInterpolateProvider>();
+    rsmInterpolatePass->addRenderer(rsmInterpolatePlane);
+
+    auto rsmIndirectHighResPass = std::make_shared<RenderPass>();
+    _rsmIndirectPass = rsmIndirectHighResPass;
+    manager->addPass(rsmIndirectHighResPass);
+    rsmIndirectHighResPass ->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_highres",
+                                                Texture::RGB16F));
+    rsmIndirectHighResPass->setCustomFragmentNameMapping("rsm_indirect_out_highres", "rsm_indirect_out");
+    rsmIndirectHighResPass->setProperty("highres", true);
+
+    rsmIndirectHighResPass->setCamera(camera);
+    _rsmIndirectHighResPlane = new RSMIndirectPlane();
+    rsmIndirectHighResPass->addRenderer(_rsmIndirectHighResPlane);
+    rsmIndirectHighResPass->setBlendFunc(GL_ONE, GL_ONE);
+
+    auto rsmFinalPass = std::make_shared<RenderPass>();
+    rsmFinalPass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out", Texture::RGB16F));
+    rsmFinalPass->setCamera(camera);
+    auto rsmFinalPlane = new PixelPlane();
+    rsmFinalPlane->setProvider<RSMFinalProvider>();
+    rsmFinalPass->addRenderer(rsmFinalPlane);
+    manager->addPass(rsmFinalPass);
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
 
@@ -178,6 +251,11 @@ void DeferredRenderer::setCamera(std::shared_ptr<Camera> cam)
     _pixelPass.lock()->setCamera(cam);
     _deferredPass.lock()->setCamera(cam);
     _rsmIndirectPass.lock()->setCamera(cam);
+    auto lowrescam = std::dynamic_pointer_cast<Camera>(cam->clone());
+    int w = cam->getWidth() / 16;
+    int h = cam->getHeight() / 16;
+    lowrescam->setResolution(w, h);
+    _rsmIndirectLowResPass.lock()->setCamera(lowrescam);
     RenderConfigurator::setCamera(cam);
 }
 
@@ -212,20 +290,25 @@ void DeferredRenderer::setGeometry(std::shared_ptr<Group> grp)
     }
     else {
         _deferredRenderer->setLights(grp->getLights());
-        _rsmIndirectPlane->setLights(grp->getLights());
+        _rsmIndirectHighResPlane->setLights(grp->getLights());
+        _rsmIndirectLowResPlane->setLights(grp->getLights());
     }
     setRenderersFromGroup(grp);
     _deferredRenderer->setShadowPasses(_shadowPasses);
-    _rsmIndirectPlane->setShadowPasses(_shadowPasses);
+    _rsmIndirectHighResPlane->setShadowPasses(_shadowPasses);
+    _rsmIndirectLowResPlane->setShadowPasses(_shadowPasses);
 
     if (grp->hasProperty("RSM:searchRadius")) {
-        _rsmIndirectPlane->setSearchRadius(grp->getProperty("RSM:searchRadius").getData<double>());
+        _rsmIndirectHighResPlane->setSearchRadius(grp->getProperty("RSM:searchRadius").getData<double>());
+        _rsmIndirectLowResPlane->setSearchRadius(grp->getProperty("RSM:searchRadius").getData<double>());
     }
     if (grp->hasProperty("RSM:intensity")) {
-        _rsmIndirectPlane->setIntensity(grp->getProperty("RSM:intensity").getData<double>());
+        _rsmIndirectHighResPlane->setIntensity(grp->getProperty("RSM:intensity").getData<double>());
+        _rsmIndirectLowResPlane->setIntensity(grp->getProperty("RSM:intensity").getData<double>());
     }
     if (grp->hasProperty("RSM:samples")) {
-        _rsmIndirectPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
+        _rsmIndirectHighResPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
+        _rsmIndirectLowResPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
     }
 }
 
@@ -278,12 +361,13 @@ void DeferredRenderer::createShadowPass(SpotLightPtr spot)
                                                              Texture::RGBA16F));
     shadowPass->addOutput(std::make_shared<Texture2D>("shadow_normal",
                                                              Texture::RGBA16F));
-    shadowPass->addOutput(std::make_shared<Texture2D>("shadow_flux"));
+    shadowPass->addOutput(std::make_shared<Texture2D>("shadow_flux", Texture::RGBA16F));
 
     shadowPass->addGeometryShaderNode(_shadowNode);
     shadowPass->setClearDepth(1.);
     static const float PI = 3.14159265359;
     shadowPass->setProperty("coneangle", spot->getConeAngle() * PI /180);
+    shadowPass->setProperty("intensity", spot->getIntensity());
 
     getManager()->insertPassAfter(_geometryPass, shadowPass);
 }

@@ -42,12 +42,14 @@ private:
     std::shared_ptr<ShaderRenderNode> _gbufferNode;
     std::shared_ptr<ShaderRenderNode> _shadowNode;
     LightAccumulationPlane *_deferredRenderer;
-    RSMIndirectPlane *_rsmIndirectPlane;
+    RSMIndirectPlane *_rsmIndirectHighResPlane;
+    RSMIndirectPlane *_rsmIndirectLowResPlane;
     std::weak_ptr<RenderPass> _deferredPass;
     std::weak_ptr<RenderPass> _pixelPass;
     std::weak_ptr<RenderPass> _overlayPass;
     std::weak_ptr<RenderPass> _finalPass;
     std::weak_ptr<RenderPass> _rsmIndirectPass;
+    std::weak_ptr<RenderPass> _rsmIndirectLowResPass;
     std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> _shadowPasses;
 
     GridRenderer* _grid;
