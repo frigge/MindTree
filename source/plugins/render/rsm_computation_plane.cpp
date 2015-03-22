@@ -26,7 +26,8 @@ struct RSMProgram : public PixelPlane::ShaderProvider {
 RSMIndirectPlane::RSMIndirectPlane() :
     _intensity(1.f),
     _searchRadius(.5f),
-    _numSamples(400)
+    _numSamples(400),
+    _samplesChanged(false)
 {
     setProvider<RSMProgram>();
 }
@@ -34,7 +35,11 @@ RSMIndirectPlane::RSMIndirectPlane() :
 void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
 {
     PixelPlane::init(program);
+    initSamplingTexture();
+}
 
+void RSMIndirectPlane::initSamplingTexture()
+{
     _samplingPattern = std::make_shared<Texture>("samplingPattern", Texture::RG8);
 
     static const int components = 2;
@@ -50,12 +55,16 @@ void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
 
     _samplingPattern->setWidth(_numSamples.load());
     _samplingPattern->init(samples);
+    _samplesChanged = false;
 }
 
-void RSMIndirectPlane::drawLight(const LightPtr light, std::shared_ptr<ShaderProgram> program) const
+void RSMIndirectPlane::drawLight(const LightPtr light, std::shared_ptr<ShaderProgram> program)
 {
     if(light->getLightType() != Light::SPOT)
         return;
+
+    if(_samplesChanged)
+        initSamplingTexture();
 
     program->setTexture(_samplingPattern);
     UniformStateManager manager(program);
@@ -78,5 +87,9 @@ void RSMIndirectPlane::setIntensity(double intensity)
 }
 void RSMIndirectPlane::setSamples(int samples)
 {
+    if(samples == _numSamples)
+        return;
+
     _numSamples = samples;
+    _samplesChanged = true;
 }

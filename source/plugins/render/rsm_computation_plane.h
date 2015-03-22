@@ -17,13 +17,17 @@ public:
 protected:
     void init(std::shared_ptr<ShaderProgram> program);
     void drawLight(const LightPtr light, 
-                   std::shared_ptr<ShaderProgram> program) const;
+                   std::shared_ptr<ShaderProgram> program);
 
 private:
+    void initSamplingTexture();
+
     std::shared_ptr<Texture> _samplingPattern;
     std::atomic<double> _searchRadius;
     std::atomic<double> _intensity;
     std::atomic<int> _numSamples;
+
+    std::atomic<bool> _samplesChanged;
 };
 
 }
