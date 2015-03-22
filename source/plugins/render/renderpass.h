@@ -77,6 +77,10 @@ public:
     void setTextures(std::vector<std::shared_ptr<Texture2D>> textures);
     void setCustomTextureNameMapping(std::string realname, std::string newname);
     void clearCustomTextureNameMapping();
+    void setCustomFragmentNameMapping(std::string realname, std::string newname);
+    std::string getFragmentName(std::shared_ptr<Texture2D> tex) const;
+    void clearCustomFragmentNameMapping();
+
     void setTree(RenderTree *tree);
 
 private:
@@ -128,6 +132,9 @@ private:
 
     mutable std::mutex _textureNameMappingLock;
     std::unordered_map<std::string, std::string> _textureNameMappings;
+
+    mutable std::mutex _fragmentNameMappingLock;
+    std::unordered_map<std::string, std::string> _fragmentNameMappings;
 
     RenderTree *_tree;
 };

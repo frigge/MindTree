@@ -113,10 +113,10 @@ void RenderPass::init()
 
                 //init shader programs
                 for(auto shadernode : _shadernodes) {
-                    shadernode->program()->bindFragmentLocation(i, texture->getName());
+                    shadernode->program()->bindFragmentLocation(i, getFragmentName(texture));
                 }
                 for(auto shadernode : _geometryShaderNodes) {
-                    shadernode->program()->bindFragmentLocation(i, texture->getName());
+                    shadernode->program()->bindFragmentLocation(i, getFragmentName(texture));
                 }
             }
             ++i;
@@ -185,6 +185,15 @@ void RenderPass::setCustomTextureNameMapping(std::string realname, std::string n
     _tree->setDirty();
 }
 
+void RenderPass::setCustomFragmentNameMapping(std::string realname, std::string newname)
+{
+    {
+        std::lock_guard<std::mutex> lock(_fragmentNameMappingLock);
+        _fragmentNameMappings[realname] = newname;
+    }
+    _tree->setDirty();
+}
+
 std::string RenderPass::getTextureName(std::shared_ptr<Texture2D> tex) const
 {
     std::lock_guard<std::mutex> lock(_textureNameMappingLock);
@@ -195,7 +204,26 @@ std::string RenderPass::getTextureName(std::shared_ptr<Texture2D> tex) const
         return realName;
 }
 
+std::string RenderPass::getFragmentName(std::shared_ptr<Texture2D> tex) const
+{
+    std::lock_guard<std::mutex> lock(_fragmentNameMappingLock);
+    std::string realName = tex->getName();
+    if(_fragmentNameMappings.find(realName) != end(_fragmentNameMappings))
+        return _fragmentNameMappings.at(realName);
+    else
+        return realName;
+}
+
 void RenderPass::clearCustomTextureNameMapping()
+{
+    {
+        std::lock_guard<std::mutex> lock(_textureNameMappingLock);
+        _textureNameMappings.clear();
+    }
+    _tree->setDirty();
+}
+
+void RenderPass::clearCustomFragmentNameMapping()
 {
     {
         std::lock_guard<std::mutex> lock(_textureNameMappingLock);
@@ -500,6 +528,7 @@ std::vector<std::shared_ptr<ShaderRenderNode>> RenderPass::getShaderNodes()
 
 CameraPtr RenderPass::getCamera()
 {
+    assert(_camera);
     return _camera;
 }
 
