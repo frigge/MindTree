@@ -1085,12 +1085,12 @@ void Texture::bind()
     GLenum target = getGLTarget();
     glBindTexture(target, _id);
     GLenum wrap = getGLWrapMode();
-    GLenum filter = GL_NEAREST;
+    GLenum filter = GL_LINEAR;
     if(isDepthTexture(getFormat())) {
         glTexParameteri(target, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
         glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
         glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-        filter = GL_LINEAR;
+        filter = GL_NEAREST;
     }
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, filter);
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filter);
