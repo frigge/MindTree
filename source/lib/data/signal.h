@@ -8,6 +8,7 @@
 #include "iostream"
 #include "list"
 #include "map"
+#include "mutex"
 #include "memory"
 #include "string"
 #include "vector"
@@ -313,7 +314,11 @@ class SignalCollector
     typedef Signal<Args...> Signal_t;
     typedef std::shared_ptr<Signal_t> SignalPtr_t;
 public:
+    SignalCollector() {}
+    SignalCollector(const SignalCollector<Args...> &other) : sigs(other.sigs) {}
+
     CallbackHandler connect(std::string sigEmitter, std::function<void(Args...)> fun) {
+        std::lock_guard<std::mutex> lock(_sigsLock);
         if(!sigs.count(sigEmitter)) 
             sigs[sigEmitter] = std::make_shared<Signal_t>();
         auto handler = sigs[sigEmitter]->connect(fun); 
@@ -324,6 +329,7 @@ public:
 
     void operator()(std::string sigEmitter, Args... args)
     {
+        std::lock_guard<std::mutex> lock(_sigsLock);
         if(sigs.count(sigEmitter))
             (*sigs[sigEmitter])(args...);
 
@@ -332,6 +338,7 @@ public:
     }
 
 private:
+    std::mutex _sigsLock;
     std::map<std::string, SignalPtr_t> sigs;
 };
 
@@ -341,7 +348,11 @@ class SignalCollector<>
     typedef Signal<> Signal_t;
     typedef std::shared_ptr<Signal_t> SignalPtr_t;
 public:
+    SignalCollector() {}
+    SignalCollector(const SignalCollector<> &other) : sigs(other.sigs) {}
+
     CallbackHandler connect(std::string sigEmitter, std::function<void()> fun) {
+        std::lock_guard<std::mutex> lock(_sigsLock);
         if(!sigs.count(sigEmitter)) 
             sigs[sigEmitter] = std::make_shared<Signal_t>();
         auto handler = sigs[sigEmitter]->connect(fun); 
@@ -352,6 +363,7 @@ public:
 
     void operator()(std::string sigEmitter)
     {
+        std::lock_guard<std::mutex> lock(_sigsLock);
         if(sigs.count(sigEmitter))
             (*sigs[sigEmitter])();
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
@@ -359,6 +371,7 @@ public:
     }
 
 private:
+    std::mutex _sigsLock;
     std::unordered_map<std::string, SignalPtr_t> sigs;
 };
 
@@ -368,8 +381,12 @@ class SignalCollector<BPy::object>
     typedef Signal<BPy::object> Signal_t;
     typedef std::shared_ptr<Signal_t> SignalPtr_t;
 public:
+    SignalCollector() {}
+    SignalCollector(const SignalCollector<BPy::object> &other) : sigs(other.sigs) {}
+
     CallbackHandler connect(std::string sigEmitter, BPy::object fun) 
     {
+        std::lock_guard<std::mutex> lock(_sigsLock);
         if(sigs.find(sigEmitter) == sigs.end()) {
             sigs.insert({sigEmitter, std::make_shared<Signal_t>()});
         }
@@ -384,6 +401,7 @@ public:
     template<typename...Args>
     void operator()(std::string sigEmitter, Args... args)
     {
+        std::lock_guard<std::mutex> lock(_sigsLock);
         if(sigs.find(sigEmitter) != sigs.end())
             (*sigs[sigEmitter])(args...);
 
@@ -392,6 +410,7 @@ public:
     }
 
 private:
+    std::mutex _sigsLock;
     std::unordered_map<std::string, SignalPtr_t> sigs;
 };
 
@@ -434,8 +453,10 @@ void callBoundHandler(LiveTimeTracker* tracker, std::string sig, Args... args)
     auto end = BoundSignalHandler<Args...>::handlers.end();
     if (BoundSignalHandler<Args...>::handlers.find(tracker->boundObject) != end)
         BoundSignalHandler<Args...>::handlers[tracker->boundObject](sig, args ...);
-    else
-        BoundSignalHandler<Args...>::handlers.insert({tracker->boundObject, SignalCollector<Args...>()});
+    else {
+        SignalCollector<Args...> sc;
+        BoundSignalHandler<Args...>::handlers.insert({tracker->boundObject, std::move(sc)});
+    }
     
     //The Python Signal only registers one tuple as an argument so the
     //signature is different.
@@ -444,8 +465,10 @@ void callBoundHandler(LiveTimeTracker* tracker, std::string sig, Args... args)
         auto &handler = BoundSignalHandler<BPy::object>::handlers.at(tracker->boundObject);
         handler(sig, args...);
     }
-    else
-        BoundSignalHandler<BPy::object>::handlers.insert({tracker->boundObject, SignalCollector<BPy::object>()});
+    else {
+        SignalCollector<BPy::object> sc;
+        BoundSignalHandler<BPy::object>::handlers.insert({tracker->boundObject, std::move(sc)});
+    }
 }
 
 template<typename ...Args>
