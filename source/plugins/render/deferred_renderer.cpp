@@ -152,6 +152,10 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     manager->addPass(rsmIndirectLowResPass);
     rsmIndirectLowResPass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_lowres",
                                                 Texture::RGB16F));
+    rsmIndirectLowResPass->addOutput(std::make_shared<Texture2D>("normal_lowres",
+                                                Texture::RGB16F));
+    rsmIndirectLowResPass->addOutput(std::make_shared<Texture2D>("position_lowres",
+                                                Texture::RGB16F));
     rsmIndirectLowResPass->setCustomFragmentNameMapping("rsm_indirect_out_lowres", "rsm_indirect_out");
     CameraPtr lowResCamera = std::dynamic_pointer_cast<Camera>(camera->clone());
 

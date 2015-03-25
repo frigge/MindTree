@@ -46,6 +46,8 @@ public:
     virtual void clearOverrideOutput();
     virtual glm::vec4 getPosition(glm::vec2 pixel) const;
 
+    void addRenderBlock(std::shared_ptr<RenderBlock> block);
+
 protected:
     virtual void addRendererFromTransformable(std::shared_ptr<AbstractTransformable> transformable);
     virtual void addRendererFromObject(std::shared_ptr<GeoObject> obj);
@@ -56,21 +58,9 @@ protected:
     std::weak_ptr<RenderPass> _geometryPass;
 
 private:
-    std::unique_ptr<MindTree::GL::RenderTree> _rendertree;
+    std::unique_ptr<RenderTree> _rendertree;
+    std::vector<std::shared_ptr<RenderBlock>> _renderBlocks;
     std::shared_ptr<Camera> _camera;
-};
-
-class ForwardRenderer : public RenderConfigurator
-{
-public:
-    ForwardRenderer(QGLContext *context, std::shared_ptr<Camera> camera, Widget3DManager *manager=nullptr);
-
-    void setGeometry(std::shared_ptr<Group> grp) override;
-
-private:
-    void setupDefaultLights();
-
-    uint _maxLightCount;
 };
 
 }
