@@ -16,7 +16,7 @@ namespace GL{
 class RenderPass;
 class RenderTree;
 
-class RenderBlock
+class RenderBlock : public Object
 {
 public:
     RenderBlock();
@@ -34,15 +34,6 @@ private:
     std::vector<std::weak_ptr<RenderPass>> _passes;
 };
 
-
-class GridBlock
-{
-public:
-    GridBlock(RenderTree *tree);
-
-private:
-    RenderTree *_tree;
-};
 }
 }
 

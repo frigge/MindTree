@@ -44,15 +44,3 @@ void RenderBlock::addRendererFromEmpty(std::shared_ptr<Empty> obj)
 {
 
 }
-
-GridBlock::GridBlock(RenderTree *tree)
-    : _tree(tree)
-{
-    auto grid = new GL::GridRenderer(100, 100, 100, 100);
-    auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
-
-    grid->setTransformation(trans);
-    grid->setBorderColor(glm::vec4(.3, .3, .3, 1.0));
-    grid->setAlternatingColor(glm::vec4(.7, .7, .7, 1.0));
-    grid->setBorderWidth(2.);
-}
