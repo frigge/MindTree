@@ -3,7 +3,7 @@
 using namespace MindTree;
 
 std::vector<std::string> Signal::emitterIDs;
-int Signal::CallbackHandler::sigCounter = 0;
+std::atomic<int> Signal::CallbackHandler::sigCounter{0};
 
 Signal::CallbackHandler::CallbackHandler()
     : detached(false)
@@ -11,7 +11,7 @@ Signal::CallbackHandler::CallbackHandler()
 }
 
 Signal::CallbackHandler::CallbackHandler(const CallbackHandler &other) noexcept 
-:    detached(other.detached),
+:    detached(other.detached.load()),
      destructor(other.destructor),
      detacher(other.detacher),
      copyNotifier(other.copyNotifier)
@@ -31,7 +31,7 @@ Signal::CallbackHandler& Signal::CallbackHandler::operator=(const CallbackHandle
     if(destructor != nullptr) destructor();
 
     destructor = other.destructor;
-    detached = other.detached;
+    detached = other.detached.load();
     copyNotifier = other.copyNotifier;
     detacher = other.detacher;
     if(detacher != nullptr) detacher(const_cast<CallbackHandler*>(&other));

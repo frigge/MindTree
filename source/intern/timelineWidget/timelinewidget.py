@@ -129,8 +129,16 @@ class TimelineWidget(QWidget):
         self.playbutton.setText("Play")
 
     def setFrame(self, frame):
+        if(self.frame == frame):
+            return
+
         self.frame = frame
         mttimeline.setFrame(int(frame))
+
+        QMetaObject.invokeMethod(self, "updateGui",  Qt.QueuedConnection, Q_ARG(int, frame))
+
+    @pyqtSlot(int)
+    def updateGui(self, frame):
         self.scrubwidget.setValue(frame)
         self.frameBox.blockSignals(True)
         self.frameBox.setValue(frame)

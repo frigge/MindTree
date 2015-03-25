@@ -50,11 +50,11 @@ public:
     void destruct() noexcept;
 
 private:
-    bool detached;
+    std::atomic<bool> detached;
     std::function<void()> destructor;
     std::function<void(CallbackHandler*)> detacher;
     std::function<void(CallbackHandler*)> copyNotifier;
-    static int sigCounter;
+    static std::atomic<int> sigCounter;
     template<typename... Args> friend class Callback;
     template<typename... Args> friend class Signal;
 };
@@ -136,6 +136,7 @@ template<typename ... Args>
 class Signal
 {
 public:
+    Signal() {}
     ~Signal()
     {
         for (auto *cbh : handlers) {
@@ -199,6 +200,7 @@ template<>
 class Signal<>
 {
 public:
+    Signal() {}
     ~Signal()
     {
         for (auto *cbh : handlers) {
@@ -256,6 +258,7 @@ template<>
 class Signal<BPy::object>
 {
 public:
+    Signal() {}
     ~Signal()
     {
         for (auto *cbh : handlers) {
@@ -318,20 +321,27 @@ public:
     SignalCollector(const SignalCollector<Args...> &other) : sigs(other.sigs) {}
 
     CallbackHandler connect(std::string sigEmitter, std::function<void(Args...)> fun) {
-        std::lock_guard<std::mutex> lock(_sigsLock);
-        if(!sigs.count(sigEmitter)) 
-            sigs[sigEmitter] = std::make_shared<Signal_t>();
-        auto handler = sigs[sigEmitter]->connect(fun); 
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
-        return handler;
+
+        {
+            std::lock_guard<std::mutex> lock(_sigsLock);
+            if(!sigs.count(sigEmitter)) 
+                sigs[sigEmitter] = std::make_shared<Signal_t>();
+            auto handler = sigs[sigEmitter]->connect(fun); 
+            return handler;
+        }
     }
 
     void operator()(std::string sigEmitter, Args... args)
     {
-        std::lock_guard<std::mutex> lock(_sigsLock);
-        if(sigs.count(sigEmitter))
-            (*sigs[sigEmitter])(args...);
+        SignalPtr_t signal;
+        {
+            std::lock_guard<std::mutex> lock(_sigsLock);
+            if(sigs.count(sigEmitter))
+                signal = sigs[sigEmitter];
+        }
+        if(signal) (*signal)(args...);
 
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
@@ -352,20 +362,28 @@ public:
     SignalCollector(const SignalCollector<> &other) : sigs(other.sigs) {}
 
     CallbackHandler connect(std::string sigEmitter, std::function<void()> fun) {
-        std::lock_guard<std::mutex> lock(_sigsLock);
-        if(!sigs.count(sigEmitter)) 
-            sigs[sigEmitter] = std::make_shared<Signal_t>();
-        auto handler = sigs[sigEmitter]->connect(fun); 
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
-        return handler;
+
+        {
+            std::lock_guard<std::mutex> lock(_sigsLock);
+            if(!sigs.count(sigEmitter)) 
+                sigs[sigEmitter] = std::make_shared<Signal_t>();
+            auto handler = sigs[sigEmitter]->connect(fun); 
+            return handler;
+        }
     }
 
     void operator()(std::string sigEmitter)
     {
-        std::lock_guard<std::mutex> lock(_sigsLock);
-        if(sigs.count(sigEmitter))
-            (*sigs[sigEmitter])();
+        SignalPtr_t signal;
+        {
+            std::lock_guard<std::mutex> lock(_sigsLock);
+            if(sigs.count(sigEmitter))
+                signal = sigs[sigEmitter];
+        }
+        if(signal) (*signal)();
+
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
     }
@@ -386,24 +404,30 @@ public:
 
     CallbackHandler connect(std::string sigEmitter, BPy::object fun) 
     {
-        std::lock_guard<std::mutex> lock(_sigsLock);
-        if(sigs.find(sigEmitter) == sigs.end()) {
-            sigs.insert({sigEmitter, std::make_shared<Signal_t>()});
-        }
-
-        auto handler = sigs[sigEmitter]->connect(fun); 
-
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);
-        return handler;
+
+        {
+            std::lock_guard<std::mutex> lock(_sigsLock);
+            if(sigs.find(sigEmitter) == sigs.end()) {
+                sigs.insert({sigEmitter, std::make_shared<Signal_t>()});
+            }
+
+            auto handler = sigs[sigEmitter]->connect(fun); 
+            return handler;
+        }
     }
 
     template<typename...Args>
     void operator()(std::string sigEmitter, Args... args)
     {
-        std::lock_guard<std::mutex> lock(_sigsLock);
-        if(sigs.find(sigEmitter) != sigs.end())
-            (*sigs[sigEmitter])(args...);
+        SignalPtr_t signal;
+        {
+            std::lock_guard<std::mutex> lock(_sigsLock);
+            if(sigs.find(sigEmitter) != sigs.end())
+                signal = sigs[sigEmitter];
+        }
+        if(signal) (*signal)(args...);
 
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
             emitterIDs.push_back(sigEmitter);

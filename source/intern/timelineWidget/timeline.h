@@ -47,7 +47,7 @@ public:
     static bool isPlaying();
 
 private:
-    static int _frame, _start, _end, _fps;
+    static std::atomic<int> _frame, _start, _end, _fps;
     static Timer _timer;
 };
 

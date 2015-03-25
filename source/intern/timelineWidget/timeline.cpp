@@ -3,6 +3,7 @@
 #include "data/python/pyutils.h"
 #include "data/nodes/node_db.h"
 #include "data/cache_main.h"
+#include "data/debuglog.h"
 #include "timeline.h"
 
 Timer::Timer(int interval)
@@ -58,10 +59,10 @@ void Timer::stop()
         _thread.join();
 }
 
-int Timeline::_frame = 1;
-int Timeline::_start = 1;
-int Timeline::_end = 100;
-int Timeline::_fps = 25;
+std::atomic<int> Timeline::_frame{1};
+std::atomic<int> Timeline::_start{1};
+std::atomic<int> Timeline::_end{100};
+std::atomic<int> Timeline::_fps{25};
 Timer Timeline::_timer(1000/25);
 
 namespace BPy = boost::python;
@@ -74,23 +75,24 @@ void Timeline::init()
 
 void Timeline::setFrame(int frame)
 {
+    dbout("frame: " << frame << " _frame: " << _frame);
     if (frame < _start || frame > _end || frame == _frame) return;
     _frame = frame;
-    MT_CUSTOM_SIGNAL_EMITTER("frameChanged", _frame);
+    MT_CUSTOM_SIGNAL_EMITTER("frameChanged", _frame.load());
 }
 
 void Timeline::incFrame()
 {
     _frame++;
-    if (_frame > _end) _frame = _start;
-    MT_CUSTOM_SIGNAL_EMITTER("frameChanged", _frame);
+    if (_frame > _end) _frame = _start.load();
+    MT_CUSTOM_SIGNAL_EMITTER("frameChanged", _frame.load());
 }
 
 void Timeline::decFrame()
 {
     _frame--;
-    if (_frame < _start) _frame = _end;
-    MT_CUSTOM_SIGNAL_EMITTER("frameChanged", _frame);
+    if (_frame < _start) _frame = _end.load();
+    MT_CUSTOM_SIGNAL_EMITTER("frameChanged", _frame.load());
 }
 
 void Timeline::setStart(int start)
