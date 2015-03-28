@@ -75,7 +75,6 @@ void Timeline::init()
 
 void Timeline::setFrame(int frame)
 {
-    dbout("frame: " << frame << " _frame: " << _frame);
     if (frame < _start || frame > _end || frame == _frame) return;
     _frame = frame;
     MT_CUSTOM_SIGNAL_EMITTER("frameChanged", _frame.load());
