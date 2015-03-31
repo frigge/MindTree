@@ -24,6 +24,7 @@ class RenderTree;
 class ShaderProgram;
 class ShaderRenderNode;
 class RenderBlock;
+class GridRenderer;
 
 class RenderConfigurator : public Object
 {
@@ -39,26 +40,21 @@ public:
 
     virtual void setGeometry(std::shared_ptr<Group> grp);
 
-    void setRenderersFromGroup(std::shared_ptr<Group> group);
-    void addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group);
-
     virtual void setOverrideOutput(std::string output);
     virtual void clearOverrideOutput();
     virtual glm::vec4 getPosition(glm::vec2 pixel) const;
 
     void addRenderBlock(std::shared_ptr<RenderBlock> block);
 
-protected:
-    virtual void addRendererFromTransformable(std::shared_ptr<AbstractTransformable> transformable);
-    virtual void addRendererFromObject(std::shared_ptr<GeoObject> obj);
-    virtual void addRendererFromLight(std::shared_ptr<Light> obj);
-    virtual void addRendererFromCamera(std::shared_ptr<Camera> obj);
-    virtual void addRendererFromEmpty(std::shared_ptr<Empty> obj);
+    void setProperty(std::string name, Property prop);
 
+protected:
     std::weak_ptr<RenderPass> _geometryPass;
+    GridRenderer* _grid;
 
 private:
-    std::unique_ptr<RenderTree> _rendertree;
+
+    std::shared_ptr<RenderTree> _rendertree;
     std::vector<std::shared_ptr<RenderBlock>> _renderBlocks;
     std::shared_ptr<Camera> _camera;
 };

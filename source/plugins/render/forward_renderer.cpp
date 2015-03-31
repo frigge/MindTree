@@ -27,20 +27,6 @@ ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3D
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
 
-    auto geometryPass = std::make_shared<RenderPass>();
-    _geometryPass = geometryPass;
-    manager->addPass(geometryPass);
-    _geometryPass.lock()->setCamera(camera);
-
-    auto grid = new GL::GridRenderer(100, 100, 100, 100);
-    auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
-
-    grid->setTransformation(trans);
-    grid->setBorderColor(glm::vec4(.5, .5, .5, .5));
-    grid->setAlternatingColor(glm::vec4(.8, .8, .8, .8));
-    grid->setBorderWidth(2.);
-
-    _geometryPass.lock()->addRenderer(grid);
     _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(_geometryPass.lock());
 
@@ -88,48 +74,48 @@ void ForwardRenderer::setupDefaultLights()
 
 void ForwardRenderer::setGeometry(std::shared_ptr<Group> grp)
 {
-    auto config = getManager()->getConfig();
-    if(config.hasProperty("defaultLighting") &&
-       config["defaultLighting"].getData<bool>()) {
-        setupDefaultLights();
-    }
-    else {
-        std::vector<LightPtr> lights = grp->getLights();
-        for(size_t i = 0; i < _maxLightCount; ++i) {
-            std::string lightName = "light";
-            lightName += std::to_string(i);
-            if (i < lights.size()) {
-                LightPtr light = lights[i];
-                _geometryPass.lock()->setProperty(lightName + ".intensity", light->getIntensity());
-                _geometryPass.lock()->setProperty(lightName + ".color", light->getColor());
-                glm::vec4 pos;
-                float coneangle = 2 * 3.14159265359;
-                bool directional = false;
-                switch(light->getLightType()) {
-                    case Light::POINT:
-                        pos = glm::vec4(light->getPosition(), 1.);
-                        break;
-                    case Light::SPOT:
-                        pos = glm::vec4(light->getPosition(), 1.);
-                        coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
-                        break;
-                    case Light::DISTANT:
-                        pos = glm::vec4(light->getPosition(), 0.);
-                        directional = true;
-                        break;
-                }
-                _geometryPass.lock()->setProperty(lightName + ".pos", pos);
-                _geometryPass.lock()->setProperty(lightName + ".coneangle", coneangle);
-                _geometryPass.lock()->setProperty(lightName + ".directional", directional);
-            }
-            else {
-                _geometryPass.lock()->setProperty(lightName + ".intensity", 0.0);
-                _geometryPass.lock()->setProperty(lightName + ".color", glm::vec4(1));
-                _geometryPass.lock()->setProperty(lightName + ".pos", glm::vec4(0, 0, 0, 1));
-                _geometryPass.lock()->setProperty(lightName + ".coneangle", 2 * 3.14156);
-            }
-        }
-    }
-    setRenderersFromGroup(grp);
+//    auto config = getManager()->getConfig();
+//    if(config.hasProperty("defaultLighting") &&
+//       config["defaultLighting"].getData<bool>()) {
+//        setupDefaultLights();
+//    }
+//    else {
+//        std::vector<LightPtr> lights = grp->getLights();
+//        for(size_t i = 0; i < _maxLightCount; ++i) {
+//            std::string lightName = "light";
+//            lightName += std::to_string(i);
+//            if (i < lights.size()) {
+//                LightPtr light = lights[i];
+//                _geometryPass.lock()->setProperty(lightName + ".intensity", light->getIntensity());
+//                _geometryPass.lock()->setProperty(lightName + ".color", light->getColor());
+//                glm::vec4 pos;
+//                float coneangle = 2 * 3.14159265359;
+//                bool directional = false;
+//                switch(light->getLightType()) {
+//                    case Light::POINT:
+//                        pos = glm::vec4(light->getPosition(), 1.);
+//                        break;
+//                    case Light::SPOT:
+//                        pos = glm::vec4(light->getPosition(), 1.);
+//                        coneangle = std::static_pointer_cast<SpotLight>(light)->getConeAngle();
+//                        break;
+//                    case Light::DISTANT:
+//                        pos = glm::vec4(light->getPosition(), 0.);
+//                        directional = true;
+//                        break;
+//                }
+//                _geometryPass.lock()->setProperty(lightName + ".pos", pos);
+//                _geometryPass.lock()->setProperty(lightName + ".coneangle", coneangle);
+//                _geometryPass.lock()->setProperty(lightName + ".directional", directional);
+//            }
+//            else {
+//                _geometryPass.lock()->setProperty(lightName + ".intensity", 0.0);
+//                _geometryPass.lock()->setProperty(lightName + ".color", glm::vec4(1));
+//                _geometryPass.lock()->setProperty(lightName + ".pos", glm::vec4(0, 0, 0, 1));
+//                _geometryPass.lock()->setProperty(lightName + ".coneangle", 2 * 3.14156);
+//            }
+//        }
+//    }
+//    setRenderersFromGroup(grp);
 }
 
