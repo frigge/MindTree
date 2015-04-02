@@ -20,6 +20,7 @@
 #include "shader_render_node.h"
 #include "rsm_computation_plane.h"
 #include "benchmark.h"
+#include "ambient_occlusion.h"
 
 #include "deferred_renderer.h"
 
@@ -80,6 +81,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     addRenderBlock(rsmGenerationBlock);
     addRenderBlock(std::make_shared<DeferredLightingRenderBlock>(rsmGenerationBlock.get()));
     addRenderBlock(std::make_shared<RSMEvaluationBlock>(rsmGenerationBlock.get()));
+    addRenderBlock(std::make_shared<AmbientOcclusionBlock>());
 
     auto overlayPass = std::make_shared<RenderPass>();
     _overlayPass = overlayPass;

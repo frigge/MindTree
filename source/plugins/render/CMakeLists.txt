@@ -1,6 +1,7 @@
 project(render)
 set(RENDER_SRC
     benchmark.cpp
+    ambient_occlusion.cpp
     camera_renderer.cpp
     deferred_renderer.cpp
     empty_renderer.cpp
