@@ -9,6 +9,8 @@ uniform int numSamples = 400;
 
 uniform sampler2D outnormal;
 uniform sampler2D outposition;
+uniform sampler2D outcolor;
+uniform sampler2D outdiffusecolor;
 
 uniform sampler1D samplingPattern;
 uniform vec4 ambient_color = vec4(0.5, 0.5, 0.5, 1.);
@@ -22,6 +24,7 @@ void main()
 {
     vec3 Nn = normalize(texture(outnormal, st).xyz);
     vec3 P = texture(outposition, st).xyz;
+    vec3 col = texture(outdiffusecolor, st).rgb;
 
     float occlusion = 0;
 
@@ -43,5 +46,5 @@ void main()
 
     occlusion /= numSamples;
 
-    ambient_occlusion = vec4(((1 - occlusion) * ambient_color).rgb, 1);
+    ambient_occlusion = vec4(((1 - occlusion) * ambient_color).rgb * col, 1);
 }
