@@ -50,10 +50,16 @@ void RenderConfigurator::stopRendering()
     MindTree::GL::RenderThread::removeManager(_rendertree.get());
 }
 
+std::weak_ptr<RenderPass> RenderConfigurator::getGeometryPass() const
+{
+    return _geometryPass;
+}
+
 void RenderConfigurator::addRenderBlock(std::shared_ptr<RenderBlock> block)
 {
     block->_config = this;
     block->init();
+    block->setCamera(_camera);
     _renderBlocks.push_back(block);
 }
 

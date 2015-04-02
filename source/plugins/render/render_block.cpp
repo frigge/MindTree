@@ -26,6 +26,55 @@ void RenderBlock::setCamera(std::shared_ptr<Camera> camera)
 
 void RenderBlock::setGeometry(std::shared_ptr<Group> grp)
 {
+    setRenderersFromGroup(grp);
+}
+
+void RenderBlock::setRenderersFromGroup(std::shared_ptr<Group> group)
+{
+    addRenderersFromGroup(group->getMembers());
+}
+
+void RenderBlock::addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group)
+{
+    for(const auto &transformable : group) {
+        addRendererFromTransformable(transformable);
+    }
+}
+
+void RenderBlock::addRendererFromTransformable(AbstractTransformablePtr transformable)
+{
+    assert(transformable);
+    switch(transformable->getType()) {
+        case AbstractTransformable::GEO:
+            addRendererFromObject(std::dynamic_pointer_cast<GeoObject>(transformable));
+            break;
+        case AbstractTransformable::LIGHT:
+            addRendererFromLight(std::dynamic_pointer_cast<Light>(transformable));
+            break;
+        case AbstractTransformable::CAMERA:
+            addRendererFromCamera(std::dynamic_pointer_cast<Camera>(transformable));
+            break;
+        case AbstractTransformable::EMPTY:
+            addRendererFromEmpty(std::dynamic_pointer_cast<Empty>(transformable));
+            break;
+    }
+    addRenderersFromGroup(transformable->getChildren());
+}
+
+void RenderBlock::addRendererFromObject(GeoObjectPtr obj)
+{
+}
+
+void RenderBlock::addRendererFromLight(LightPtr obj)
+{
+}
+
+void RenderBlock::addRendererFromCamera(CameraPtr obj)
+{
+}
+
+void RenderBlock::addRendererFromEmpty(EmptyPtr obj)
+{
 }
 
 std::shared_ptr<RenderPass> RenderBlock::addPass()

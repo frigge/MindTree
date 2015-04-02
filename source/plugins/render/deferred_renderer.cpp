@@ -7,11 +7,11 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "data/debuglog.h"
-#include "polygon_renderer.h"
 #include "light_renderer.h"
 #include "light_accumulation_plane.h"
 #include "pixel_plane.h"
 #include "../datatypes/Object/lights.h"
+#include "polygon_renderer.h"
 #include "camera_renderer.h"
 #include "empty_renderer.h"
 #include "shader_render_node.h"
@@ -52,43 +52,6 @@ struct FinalOut : public PixelPlane::ShaderProvider {
     }
 };
 
-struct RSMInterpolateProvider : public PixelPlane::ShaderProvider {
-    std::shared_ptr<ShaderProgram> provideProgram()
-    {
-        std::shared_ptr<ShaderProgram> prog;
-        prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/rsm_interpolate.frag", 
-                                ShaderProgram::FRAGMENT);
-
-        return prog;
-    }
-
-};
-
-
-struct RSMFinalProvider : public PixelPlane::ShaderProvider {
-    std::shared_ptr<ShaderProgram> provideProgram()
-    {
-        std::shared_ptr<ShaderProgram> prog;
-        prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/rsm_final.frag", 
-                                ShaderProgram::FRAGMENT);
-
-        return prog;
-    }
-
-};
-
 DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
     RenderConfigurator(context, camera)
 {
@@ -97,8 +60,11 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
 
-    auto deferredBlock = std::make_shared<DeferredRenderBlock>(_geometryPass);
-    addRenderBlock(deferredBlock);
+    addRenderBlock(std::make_shared<GBufferRenderBlock>(_geometryPass));
+    auto rsmGenerationBlock = std::make_shared<RSMGenerationBlock>();
+    addRenderBlock(rsmGenerationBlock);
+    addRenderBlock(std::make_shared<DeferredLightingRenderBlock>(rsmGenerationBlock.get()));
+    addRenderBlock(std::make_shared<RSMEvaluationBlock>(rsmGenerationBlock.get()));
 
     auto overlayPass = std::make_shared<RenderPass>();
     _overlayPass = overlayPass;
@@ -167,29 +133,16 @@ void DeferredRenderer::clearOverrideOutput()
     _finalPass.lock()->clearCustomTextureNameMapping();
 }
 
-DeferredRenderBlock::DeferredRenderBlock(std::weak_ptr<RenderPass> geopass)
+GBufferRenderBlock::GBufferRenderBlock(std::weak_ptr<RenderPass> geopass)
     : GeometryRenderBlock(geopass)
 {
 }
 
-DeferredRenderBlock::~DeferredRenderBlock()
+GBufferRenderBlock::~GBufferRenderBlock()
 {
 }
 
-void DeferredRenderBlock::setCamera(std::shared_ptr<Camera> cam)
-{
-    GeometryRenderBlock::setCamera(cam);
-    _geometryPass.lock()->setCamera(cam);
-    _deferredPass.lock()->setCamera(cam);
-    _rsmIndirectPass.lock()->setCamera(cam);
-    auto lowrescam = std::dynamic_pointer_cast<Camera>(cam->clone());
-    int w = cam->getWidth() / 16;
-    int h = cam->getHeight() / 16;
-    lowrescam->setResolution(w, h);
-    _rsmIndirectLowResPass.lock()->setCamera(lowrescam);
-}
-
-void DeferredRenderBlock::init()
+void GBufferRenderBlock::init()
 {
     auto geopass = _geometryPass.lock();
 
@@ -206,58 +159,10 @@ void DeferredRenderBlock::init()
     geopass->addOutput(std::make_shared<Texture2D>("outposition", 
                                                    Texture::RGBA16F));
 
-    auto deferredPass = addPass();
-    _deferredPass = deferredPass;
-    deferredPass
-        ->addOutput(std::make_shared<Texture2D>("shading_out",
-                                                Texture::RGB16F));
-    _deferredRenderer = new LightAccumulationPlane();
-    deferredPass->addRenderer(_deferredRenderer);
-    deferredPass->setBlendFunc(GL_ONE, GL_ONE);
-
-    auto rsmIndirectLowResPass = addPass();
-    _rsmIndirectLowResPass = rsmIndirectLowResPass;
-    rsmIndirectLowResPass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_lowres",
-                                                Texture::RGB16F));
-    rsmIndirectLowResPass->addOutput(std::make_shared<Texture2D>("normal_lowres",
-                                                Texture::RGB16F));
-    rsmIndirectLowResPass->addOutput(std::make_shared<Texture2D>("position_lowres",
-                                                Texture::RGB16F));
-    rsmIndirectLowResPass->setCustomFragmentNameMapping("rsm_indirect_out_lowres", "rsm_indirect_out");
-
-    _rsmIndirectLowResPlane = new RSMIndirectPlane();
-    rsmIndirectLowResPass->addRenderer(_rsmIndirectLowResPlane);
-    rsmIndirectLowResPass->setBlendFunc(GL_ONE, GL_ONE);
-
-    auto rsmInterpolatePass = addPass();
-    rsmInterpolatePass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_interpolated", Texture::RGB16F));
-    auto rsmInterpolatePlane = new PixelPlane();
-    rsmInterpolatePlane->setProvider<RSMInterpolateProvider>();
-    rsmInterpolatePass->addRenderer(rsmInterpolatePlane);
-
-    auto rsmIndirectHighResPass = addPass();
-    _rsmIndirectPass = rsmIndirectHighResPass;
-    rsmIndirectHighResPass ->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_highres",
-                                                Texture::RGB16F));
-    rsmIndirectHighResPass->setCustomFragmentNameMapping("rsm_indirect_out_highres", "rsm_indirect_out");
-    rsmIndirectHighResPass->setProperty("highres", true);
-
-    _rsmIndirectHighResPlane = new RSMIndirectPlane();
-    rsmIndirectHighResPass->addRenderer(_rsmIndirectHighResPlane);
-    rsmIndirectHighResPass->setBlendFunc(GL_ONE, GL_ONE);
-
-    auto rsmFinalPass = addPass();
-    rsmFinalPass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out", Texture::RGB16F));
-    auto rsmFinalPlane = new PixelPlane();
-    rsmFinalPlane->setProvider<RSMFinalProvider>();
-    rsmFinalPass->addRenderer(rsmFinalPlane);
-
-    setupDefaultLights();
     setupGBuffer();
-    setupShadowPasses();
 }
 
-void DeferredRenderBlock::setupGBuffer()
+void GBufferRenderBlock::setupGBuffer()
 {
     auto gbufferShader = std::make_shared<ShaderProgram>();
     gbufferShader
@@ -272,15 +177,25 @@ void DeferredRenderBlock::setupGBuffer()
     _geometryPass.lock()->addGeometryShaderNode(gbufferNode);
 }
 
-void DeferredRenderBlock::setGeometry(std::shared_ptr<Group> grp)
+void GBufferRenderBlock::addRendererFromObject(std::shared_ptr<GeoObject> obj)
 {
-    //clear shadow passes
-    for(auto p : _shadowPasses) {
-        _config->getManager()->removePass(p.second);
+    auto data = obj->getData();
+    switch(data->getType()){
+        case ObjectData::MESH:
+            _gbufferNode->addRenderer(new PolygonRenderer(obj));
+            _geometryPass.lock()->addGeometryRenderer(new EdgeRenderer(obj));
+            _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
+            break;
     }
-    _shadowNode->clear();
-    _shadowPasses.clear();
+}
 
+DeferredLightingRenderBlock::DeferredLightingRenderBlock(ShadowMappingRenderBlock *shadowBlock) :
+   _shadowBlock(shadowBlock)
+{
+}
+
+void DeferredLightingRenderBlock::setGeometry(std::shared_ptr<Group> grp)
+{
     auto config = _config->getManager()->getConfig();
     if(config.hasProperty("defaultLighting") &&
        config["defaultLighting"].getData<bool>()) {
@@ -288,105 +203,10 @@ void DeferredRenderBlock::setGeometry(std::shared_ptr<Group> grp)
     }
     else {
         _deferredRenderer->setLights(grp->getLights());
-        _rsmIndirectHighResPlane->setLights(grp->getLights());
-        _rsmIndirectLowResPlane->setLights(grp->getLights());
     }
     setRenderersFromGroup(grp);
-    _deferredRenderer->setShadowPasses(_shadowPasses);
-    _rsmIndirectHighResPlane->setShadowPasses(_shadowPasses);
-    _rsmIndirectLowResPlane->setShadowPasses(_shadowPasses);
-
-    if (grp->hasProperty("RSM:searchRadius")) {
-        _rsmIndirectHighResPlane->setSearchRadius(grp->getProperty("RSM:searchRadius").getData<double>());
-        _rsmIndirectLowResPlane->setSearchRadius(grp->getProperty("RSM:searchRadius").getData<double>());
-    }
-    if (grp->hasProperty("RSM:intensity")) {
-        _rsmIndirectHighResPlane->setIntensity(grp->getProperty("RSM:intensity").getData<double>());
-        _rsmIndirectLowResPlane->setIntensity(grp->getProperty("RSM:intensity").getData<double>());
-    }
-    if (grp->hasProperty("RSM:samples")) {
-        _rsmIndirectHighResPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
-        _rsmIndirectLowResPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
-    }
-}
-
-void DeferredRenderBlock::setupShadowPasses()
-{
-    auto shadowShader = std::make_shared<ShaderProgram>();
-    _shadowNode = std::make_shared<ShaderRenderNode>(shadowShader);
-    shadowShader
-        ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
-                            ShaderProgram::VERTEX);
-    shadowShader
-        ->addShaderFromFile("../plugins/render/defaultShaders/shadow.frag", 
-                            ShaderProgram::FRAGMENT);
-}
-
-void DeferredRenderBlock::addRendererFromObject(std::shared_ptr<GeoObject> obj)
-{
-    auto data = obj->getData();
-    switch(data->getType()){
-        case ObjectData::MESH:
-            _gbufferNode->addRenderer(new PolygonRenderer(obj));
-            _shadowNode->addRenderer(new PolygonRenderer(obj));
-            _geometryPass.lock()->addGeometryRenderer(new EdgeRenderer(obj));
-            _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
-            break;
-    }
-}
-
-void DeferredRenderBlock::createShadowPass(SpotLightPtr spot)
-{
-    Light::ShadowInfo info = spot->getShadowInfo();
-    if(!info._enabled) return;
-
-    auto shadowPass = std::make_shared<RenderPass>();
-    size_t shadowCount = _shadowPasses.size();
-
-    _shadowPasses[spot] = shadowPass;
-
-    auto camera = std::make_shared<Camera>();
-    camera->setResolution(info._size.x, info._size.y);
-    camera->setTransformation(spot->getWorldTransformation());
-    camera->setFov(spot->getConeAngle() * 2);
-    camera->setNear(info._near);
-    camera->setFar(info._far);
-    shadowPass->setCamera(camera);
-    shadowPass
-        ->setDepthOutput(std::make_shared<Texture2D>("shadow",
-                                                     Texture::DEPTH32F));
-    auto pos = std::make_shared<Texture2D>("shadow_position",
-                                                             Texture::RGBA16F);
-    pos->setWrapMode(Texture::REPEAT);
-    shadowPass->addOutput(pos);
-    auto normal = std::make_shared<Texture2D>("shadow_normal",
-                                                             Texture::RGBA16F);
-    normal->setWrapMode(Texture::REPEAT);
-    shadowPass->addOutput(normal);
-    auto flux = std::make_shared<Texture2D>("shadow_flux", Texture::RGBA16F);
-    shadowPass->addOutput(flux);
-    flux->setWrapMode(Texture::REPEAT);
-
-    shadowPass->addGeometryShaderNode(_shadowNode);
-    shadowPass->setClearDepth(1.);
-    static const float PI = 3.14159265359;
-    shadowPass->setProperty("coneangle", spot->getConeAngle() * PI /180);
-    shadowPass->setProperty("intensity", spot->getIntensity());
-
-    _config->getManager()->insertPassAfter(_geometryPass, shadowPass);
-}
-
-void DeferredRenderBlock::addRendererFromLight(LightPtr obj)
-{
-    GeometryRenderBlock::addRendererFromLight(obj);
-
-    switch(obj->getLightType()) {
-        case Light::POINT:
-        case Light::DISTANT:
-            break;
-        case Light::SPOT:
-           createShadowPass(std::dynamic_pointer_cast<SpotLight>(obj));
-    }
+    if(_shadowBlock)
+        _deferredRenderer->setShadowPasses(_shadowBlock->getShadowPasses());
 }
 
 glm::mat4 createTransFromZVec(glm::vec3 z)
@@ -403,7 +223,21 @@ glm::mat4 createTransFromZVec(glm::vec3 z)
     return trans;
 }
 
-void DeferredRenderBlock::setupDefaultLights()
+void DeferredLightingRenderBlock::init()
+{
+    auto deferredPass = addPass();
+    _deferredPass = deferredPass;
+    deferredPass
+        ->addOutput(std::make_shared<Texture2D>("shading_out",
+                                                Texture::RGB16F));
+    _deferredRenderer = new LightAccumulationPlane();
+    deferredPass->addRenderer(_deferredRenderer);
+    deferredPass->setBlendFunc(GL_ONE, GL_ONE);
+
+    setupDefaultLights();
+}
+
+void DeferredLightingRenderBlock::setupDefaultLights()
 {
     static const double coneangle = 2 * 3.14159265359;
     auto light1 = std::make_shared<DistantLight>(.8, glm::vec4(1));

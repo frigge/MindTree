@@ -48,6 +48,8 @@ public:
 
     void setProperty(std::string name, Property prop);
 
+    std::weak_ptr<RenderPass> getGeometryPass() const;
+
 protected:
     std::weak_ptr<RenderPass> _geometryPass;
     GridRenderer* _grid;

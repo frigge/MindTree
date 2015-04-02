@@ -4,11 +4,14 @@
 #include "memory"
 #include "vector"
 
+#include "data/mtobject.h"
+
 class Camera;
 class AbstractTransformable;
 class GeoObject;
 class Light;
 class Empty;
+class Group;
 
 namespace MindTree {
 namespace GL{
@@ -27,6 +30,14 @@ public:
     std::shared_ptr<RenderPass> addPass();
 
 protected:
+    virtual void setRenderersFromGroup(std::shared_ptr<Group> group);
+    void addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group);
+    virtual void addRendererFromTransformable(std::shared_ptr<AbstractTransformable> transformable);
+    virtual void addRendererFromObject(std::shared_ptr<GeoObject> obj);
+    virtual void addRendererFromLight(std::shared_ptr<Light> obj);
+    virtual void addRendererFromCamera(std::shared_ptr<Camera> obj);
+    virtual void addRendererFromEmpty(std::shared_ptr<Empty> obj);
+
     RenderConfigurator* _config;
 
 private:

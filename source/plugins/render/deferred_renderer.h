@@ -12,38 +12,37 @@ namespace GL {
 class LightAccumulationPlane;
 class RSMIndirectPlane;
 
-class DeferredRenderBlock : public GeometryRenderBlock
+class GBufferRenderBlock : public GeometryRenderBlock
 {
 public:
-    DeferredRenderBlock(std::weak_ptr<RenderPass> geopass);
-    ~DeferredRenderBlock();
+    GBufferRenderBlock(std::weak_ptr<RenderPass> geopass);
+    ~GBufferRenderBlock();
     void init();
-
-    void setGeometry(std::shared_ptr<Group> grp);
-    void setCamera(std::shared_ptr<Camera> cam);
 
 protected:
     void addRendererFromObject(std::shared_ptr<GeoObject> obj) override;
-    void addRendererFromLight(std::shared_ptr<Light> obj) override;
 
 private:
-    std::weak_ptr<RenderPass> setupShadowPass();
-    void setupDefaultLights();
     void setupGBuffer();
-    void setupShadowPasses();
-    void createShadowPass(std::shared_ptr<SpotLight> spot);
-
-    RSMIndirectPlane *_rsmIndirectHighResPlane;
-    RSMIndirectPlane *_rsmIndirectLowResPlane;
 
     std::shared_ptr<ShaderRenderNode> _gbufferNode;
-    std::shared_ptr<ShaderRenderNode> _shadowNode;
+};
+
+class ShadowMappingRenderBlock;
+class DeferredLightingRenderBlock : public RenderBlock
+{
+public:
+    DeferredLightingRenderBlock(ShadowMappingRenderBlock *shadowBlock=nullptr);
+    void init();
+
+    void setGeometry(std::shared_ptr<Group> grp);
+
+private:
+    void setupDefaultLights();
     LightAccumulationPlane *_deferredRenderer;
     std::weak_ptr<RenderPass> _deferredPass;
 
-    std::weak_ptr<RenderPass> _rsmIndirectPass;
-    std::weak_ptr<RenderPass> _rsmIndirectLowResPass;
-    std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> _shadowPasses;
+    ShadowMappingRenderBlock *_shadowBlock;
 };
 
 class  DeferredRenderer : public RenderConfigurator

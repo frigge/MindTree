@@ -18,6 +18,7 @@ set(RENDER_SRC
     rendertree.cpp
     rsm_computation_plane.cpp
     shader_render_node.cpp
+    shadow_mapping.cpp
 )
 
 find_package(OpenGL REQUIRED)

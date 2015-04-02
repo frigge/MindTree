@@ -2,6 +2,8 @@
 #define RSM_COMPUTATION_PLANE_H
 
 #include "light_accumulation_plane.h"
+#include "shadow_mapping.h"
+
 namespace MindTree {
 namespace GL {
 
@@ -28,6 +30,38 @@ private:
     std::atomic<int> _numSamples;
 
     std::atomic<bool> _samplesChanged;
+};
+
+class RSMGenerationBlock : public ShadowMappingRenderBlock
+{
+public:
+    RSMGenerationBlock();
+
+protected:
+    virtual std::weak_ptr<RenderPass> createShadowPass(std::shared_ptr<SpotLight> spot);
+
+private:
+};
+
+class RSMEvaluationBlock : public RenderBlock
+{
+public:
+    RSMEvaluationBlock(RSMGenerationBlock *shadowBlock);
+    void init();
+
+    void setCamera(std::shared_ptr<Camera> cam);
+
+protected:
+    void setGeometry(std::shared_ptr<Group> grp);
+
+private:
+    RSMIndirectPlane *_rsmIndirectHighResPlane;
+    RSMIndirectPlane *_rsmIndirectLowResPlane;
+
+    std::weak_ptr<RenderPass> _rsmIndirectPass;
+    std::weak_ptr<RenderPass> _rsmIndirectLowResPass;
+
+    RSMGenerationBlock *_shadowBlock;
 };
 
 }
