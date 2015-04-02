@@ -7,60 +7,95 @@ in vec2 st;
 uniform ivec2 resolution;
 
 uniform float cosAngleTolerance = 0.3;
-uniform float distanceTolerance = 0.1;
+uniform float distanceTolerance = 0.9;
 
 out vec4 rsm_indirect_out_interpolated;
 
-int checkDistance(vec3 ref, vec3 other)
+int checkDistance(vec3 ref, vec4 other)
 {
-    return length(ref - other) < distanceTolerance ? 1 : 0;
+    if(other.a < 0.5) return 0;
+    return distance(ref, other.xyz) < distanceTolerance ? 1 : 0;
 }
 
-int checkAngle(vec3 ref, vec3 other)
+int checkAngle(vec3 ref, vec4 other)
 {
-    return abs(dot(ref, other)) > cosAngleTolerance ? 1 : 0;
+    if(other.a < 0.5) return 0;
+    return abs(dot(ref, other.xyz)) > cosAngleTolerance ? 1 : 0;
 }
 
 void main()
 {
-    ivec2 pixel = ivec2(st * resolution);
+    ivec2 lowres = textureSize(rsm_indirect_out_lowres, 0);
+    vec2 fp = vec2(st * lowres);
+    //fp = clamp(vec2(0), lowres, fp);
 
-    ivec2 px1 = pixel + ivec2(-1, 0);
-    ivec2 px2 = pixel + ivec2(1, 0);
-    ivec2 py1 = pixel + ivec2(0, -1);
-    ivec2 py2 = pixel + ivec2(0, 1);
+    vec2 remain = mod(fp, vec2(1));
 
-    int distance_similar = 0;
-    vec3 pos = texelFetch(outposition, pixel, 0).xyz;
-    vec3 pos_x1 = texelFetch(outposition, px1, 0).xyz;
-    vec3 pos_x2 = texelFetch(outposition, px2, 0).xyz;
-    vec3 pos_y1 = texelFetch(outposition, py1, 0).xyz;
-    vec3 pos_y2 = texelFetch(outposition, py2, 0).xyz;
+    vec2 resFac = resolution / lowres;
+    float lx = floor(fp.x);
+    float ly = floor(fp.y);
+    float hx = ceil(fp.x);
+    float hy = ceil(fp.y);
 
-    distance_similar += checkDistance(pos, pos_x1);
-    distance_similar += checkDistance(pos, pos_x2);
-    distance_similar += checkDistance(pos, pos_y1);
-    distance_similar += checkDistance(pos, pos_y2);
+    ivec2 px1 = ivec2(lx, ly);
+    ivec2 px2 = ivec2(hx, ly);
+    ivec2 px3 = ivec2(lx, hy);
+    ivec2 px4 = ivec2(hx, hy);
 
-    int cosAngle_similar = 0;
-    vec3 Nn = normalize(texelFetch(outnormal, pixel, 0).xyz);
-    vec3 Nn_x1 = normalize(texelFetch(outnormal, px1, 0).xyz);
-    vec3 Nn_x2 = normalize(texelFetch(outnormal, px2, 0).xyz);
-    vec3 Nn_y1 = normalize(texelFetch(outnormal, py1, 0).xyz);
-    vec3 Nn_y2 = normalize(texelFetch(outnormal, py2, 0).xyz);
+    ivec2 px1h = ivec2(round(px1 * resFac));
+    ivec2 px2h = ivec2(round(px3 * resFac));
+    ivec2 px3h = ivec2(round(px3 * resFac));
+    ivec2 px4h = ivec2(round(px4 * resFac));
 
-    cosAngle_similar += checkAngle(Nn, Nn_x1);
-    cosAngle_similar += checkAngle(Nn, Nn_x2);
-    cosAngle_similar += checkAngle(Nn, Nn_y1);
-    cosAngle_similar += checkAngle(Nn, Nn_y2);
+    vec3 N = normalize(texture(outnormal, st)).xyz;
+    vec3 P = normalize(texture(outposition, st)).xyz;
 
-    if (distance_similar < 3 || cosAngle_similar < 3) {
+    int simCnt = 0;
+    ivec4 isSimilar = ivec4(0);
+
+    vec4 p1 = texelFetch(outposition, px1h, 0);
+    vec4 p2 = texelFetch(outposition, px2h, 0);
+    vec4 p3 = texelFetch(outposition, px3h, 0);
+    vec4 p4 = texelFetch(outposition, px4h, 0);
+
+    vec4 n1 = normalize(texelFetch(outnormal, px1h, 0));
+    vec4 n2 = normalize(texelFetch(outnormal, px2h, 0));
+    vec4 n3 = normalize(texelFetch(outnormal, px3h, 0));
+    vec4 n4 = normalize(texelFetch(outnormal, px4h, 0));
+
+    isSimilar[0] += checkAngle(N, n1);
+    isSimilar[1] += checkAngle(N, n2);
+    isSimilar[2] += checkAngle(N, n3);
+    isSimilar[3] += checkAngle(N, n4);
+
+    isSimilar[0] *= checkDistance(P, p1);
+    isSimilar[1] *= checkDistance(P, p2);
+    isSimilar[2] *= checkDistance(P, p3);
+    isSimilar[3] *= checkDistance(P, p4);
+
+    simCnt += isSimilar[0];
+    simCnt += isSimilar[1];
+    simCnt += isSimilar[2];
+    simCnt += isSimilar[3];
+
+    if (simCnt < 3) {
         discard;
     }
 
-    ivec2 res = textureSize(rsm_indirect_out_lowres, 0);
-    vec2 lp = res * st;
-    vec2 samplepos = mod(lp, ivec2(1));
-    vec3 output = texture(rsm_indirect_out_lowres, st).xyz;
-    rsm_indirect_out_interpolated = vec4(output, 1);
+    float wx1 = (1 - remain.x) * (1 - remain.y) * isSimilar[0];
+    float wx2 = remain.x * (1 - remain.y) * isSimilar[1];
+    float wy1 = (1 - remain.x) * remain.y * isSimilar[2];
+    float wy2 =  remain.x * remain.y * isSimilar[3];
+
+    float weightSum = wx1 + wx2 + wy1 + wy2;
+
+    vec3 gi1 = texelFetch(rsm_indirect_out_lowres, px1, 0).xyz * wx1;
+    vec3 gi2 = texelFetch(rsm_indirect_out_lowres, px2, 0).xyz * wx2;
+    vec3 gi3 = texelFetch(rsm_indirect_out_lowres, px3, 0).xyz * wy1;
+    vec3 gi4 = texelFetch(rsm_indirect_out_lowres, px4, 0).xyz * wy2;
+
+    vec3 gi = gi1 + gi2 + gi3 + gi4;
+    gi /= weightSum;
+
+    rsm_indirect_out_interpolated = vec4(gi, 1);
 }
