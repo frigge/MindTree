@@ -71,10 +71,10 @@ void main()
     isSimilar[2] += checkAngle(N, n3);
     isSimilar[3] += checkAngle(N, n4);
 
-    isSimilar[0] *= checkDistance(P, p1);
-    isSimilar[1] *= checkDistance(P, p2);
-    isSimilar[2] *= checkDistance(P, p3);
-    isSimilar[3] *= checkDistance(P, p4);
+    //isSimilar[0] *= checkDistance(P, p1);
+    //isSimilar[1] *= checkDistance(P, p2);
+    //isSimilar[2] *= checkDistance(P, p3);
+    //isSimilar[3] *= checkDistance(P, p4);
 
     simCnt += isSimilar[0];
     simCnt += isSimilar[1];

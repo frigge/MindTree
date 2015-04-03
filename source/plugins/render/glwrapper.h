@@ -418,7 +418,10 @@ public:
     GLenum getGLSize();
 
     bool isInitialized() const;
+<<<<<<< HEAD
     void generateMipmaps();
+=======
+>>>>>>> temporarily disabled ao
 
 protected:
     GLenum getInternalFormat() const;

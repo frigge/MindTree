@@ -22,17 +22,15 @@ void AmbientOcclusionPlane::init(std::shared_ptr<ShaderProgram> prog)
 
 void AmbientOcclusionPlane::initSamplingTexture()
 {
-    _samplingPattern = std::make_shared<Texture>("samplingPattern", Texture::RG8);
+    _samplingPattern = std::make_shared<Texture>("samplingPattern", Texture::RG32F);
 
-    static const int components = 2;
-    
-    size_t dataSize = _numSamples.load() * components;
-    std::vector<unsigned char> samples;
+    size_t dataSize = _numSamples.load();
+    std::vector<glm::vec2> samples;
     std::mt19937 engine;
     std::uniform_real_distribution<float> uniform_distribution;
-    for(int i = 0; i< dataSize; i += components) {
-        samples.push_back(uniform_distribution(engine) * 255);
-        samples.push_back(uniform_distribution(engine) * 255);
+    for(int i = 0; i< dataSize; ++i) {
+        samples.emplace_back(uniform_distribution(engine),
+                             uniform_distribution(engine));
     }
 
     _samplingPattern->setWidth(_numSamples.load());
