@@ -241,18 +241,23 @@ void Viewport::paintGL()
 void Viewport::mousePressEvent(QMouseEvent *event)    
 {
     glm::ivec2 pos;
-    pos.x = width() - event->pos().x();
+    pos.x = event->pos().x();
     pos.y = height() - event->pos().y();
 
     auto viewportSize = glm::ivec2(width(), height());
     if (_widgetManager->mousePressEvent(activeCamera, pos, viewportSize))
         return;
 
+    _renderConfigurator->setProperty("GL:camera:showcenter", true);
+
     lastpos = event->posF();
     glm::vec4 center = _renderConfigurator->getPosition(pos);
     dbout(glm::to_string(center));
-    if(center.a > 0)
+    if(center.a > 0) {
         activeCamera->setCenter(center.xyz());
+        _renderConfigurator->setProperty("GL:camera:center", center.xyz());
+    }
+
     if(event->modifiers() & Qt::ControlModifier)
         zoom = true;
     else if (event->modifiers() & Qt::ShiftModifier)
@@ -270,6 +275,7 @@ void Viewport::mouseReleaseEvent(QMouseEvent *event)
     lastpos = QPointF();
     
     _widgetManager->mouseReleaseEvent();
+    _renderConfigurator->setProperty("GL:camera:showcenter", false);
 }
 
 void Viewport::mouseMoveEvent(QMouseEvent *event)    
@@ -280,9 +286,6 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 
     auto viewportSize = glm::ivec2(width(), height());
 
-    if (_widgetManager->mouseMoveEvent(activeCamera, pos, viewportSize))
-        return;
-
     float xdist = lastpos.x()  - event->posF().x();
     float ydist = event->posF().y() - lastpos.y();
     if(rotate)
@@ -292,6 +295,11 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
     else if(zoom)
         zoomView(xdist, ydist);
     lastpos = event->posF();
+
+    if(rotate || pan || zoom)
+        return;
+
+    _widgetManager->mouseMoveEvent(activeCamera, pos, viewportSize);
 }
 
 void Viewport::wheelEvent(QWheelEvent *event)    
@@ -312,7 +320,7 @@ void Viewport::rotateView(float xdist, float ydist)
     glm::mat4 rotation = roty * rotx;
 
     glm::mat4 translation = glm::translate(glm::mat4(), center);
-    camtrans = glm::inverse(translation) * rotation * translation * camtrans;
+    camtrans = translation * rotation * glm::inverse(translation) * camtrans;
     activeCamera->setTransformation(camtrans);
 }
 

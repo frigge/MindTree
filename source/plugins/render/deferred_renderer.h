@@ -29,6 +29,7 @@ private:
 };
 
 class ShadowMappingRenderBlock;
+class SinglePointRenderer;
 class DeferredLightingRenderBlock : public RenderBlock
 {
 public:
@@ -62,6 +63,8 @@ private:
     std::weak_ptr<RenderPass> _overlayPass;
     std::weak_ptr<RenderPass> _pixelPass;
     std::weak_ptr<RenderPass> _finalPass;
+
+    SinglePointRenderer *_viewCenter;
 };
 
 }

@@ -75,6 +75,9 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
                                                         Renderbuffer::DEPTH));
     overlay->addOutput(std::make_shared<Texture2D>("overlay"));
     overlay->setCamera(camera);
+    _viewCenter = new SinglePointRenderer();
+    _viewCenter->setVisible(false);
+    overlay->addRenderer(_viewCenter);
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
 
@@ -118,8 +121,16 @@ void DeferredRenderer::setProperty(std::string name, Property prop)
     Object::setProperty(name, prop);
     
     if (name == "GL:showgrid") {
-        bool value = prop.getData<bool>();
+        auto value = prop.getData<bool>();
         _grid->setVisible(value);
+    }
+    if (name == "GL:camera:showcenter") {
+        auto value = prop.getData<bool>();
+        _viewCenter->setVisible(value);
+    }
+    if (name == "GL:camera:center") {
+        auto value = prop.getData<glm::vec3>();
+        _viewCenter->setPosition(value);
     }
 }
 
