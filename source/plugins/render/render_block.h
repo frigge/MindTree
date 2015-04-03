@@ -28,6 +28,7 @@ public:
     virtual void setCamera(std::shared_ptr<Camera> camera);
     virtual void setGeometry(std::shared_ptr<Group> grp);
     std::shared_ptr<RenderPass> addPass();
+    void setEnabled(bool enable);
 
 protected:
     virtual void setRenderersFromGroup(std::shared_ptr<Group> group);

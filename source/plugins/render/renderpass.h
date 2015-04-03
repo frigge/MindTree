@@ -83,6 +83,9 @@ public:
 
     void setTree(RenderTree *tree);
 
+    void setEnabled(bool enable);
+    bool isEnabled() const;
+
 private:
     void init();
     void render(const RenderConfig &config);
@@ -98,6 +101,7 @@ private:
     friend class RenderTree;
 
     std::atomic<bool> _initialized;
+    std::atomic<bool> _enabled;
     std::shared_ptr<Camera> _camera;
     std::shared_ptr<FBO> _target;
 

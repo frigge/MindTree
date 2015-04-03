@@ -18,6 +18,12 @@ RenderBlock::RenderBlock()
 
 }
 
+void RenderBlock::setEnabled(bool enable)
+{
+    for (auto pass : _passes)
+        pass.lock()->setEnabled(enable);
+}
+
 void RenderBlock::setCamera(std::shared_ptr<Camera> camera)
 {
     for (auto pass : _passes)

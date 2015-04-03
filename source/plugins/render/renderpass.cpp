@@ -12,6 +12,7 @@ using namespace MindTree::GL;
 
 RenderPass::RenderPass() : 
     _initialized(false), 
+    _enabled(true),
     _blendSource(GL_SRC_ALPHA),
     _blendDest(GL_ONE_MINUS_SRC_ALPHA),
     _depthOutput(NONE),
@@ -35,6 +36,16 @@ RenderPass::~RenderPass()
     RenderTree::getResourceManager()->scheduleCleanUp(_depthTexture);
     RenderTree::getResourceManager()->scheduleCleanUp(_depthRenderbuffer);
     RenderTree::getResourceManager()->scheduleCleanUp(_target);
+}
+
+void RenderPass::setEnabled(bool enable)
+{
+    _enabled = enable;
+}
+
+bool RenderPass::isEnabled() const
+{
+    return _enabled;
 }
 
 void RenderPass::setCamera(CameraPtr camera)
@@ -543,6 +554,9 @@ void RenderPass::setClearDepth(float value)
 
 void RenderPass::render(const RenderConfig &config)
 {
+    if(!_enabled)
+        return;
+
     int width, height;
     {
         std::lock_guard<std::mutex> lock(_cameraLock);

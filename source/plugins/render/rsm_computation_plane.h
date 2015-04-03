@@ -37,6 +37,8 @@ class RSMGenerationBlock : public ShadowMappingRenderBlock
 public:
     RSMGenerationBlock();
 
+    void setGeometry(std::shared_ptr<Group> grp);
+
 protected:
     virtual std::weak_ptr<RenderPass> createShadowPass(std::shared_ptr<SpotLight> spot);
 
@@ -51,7 +53,6 @@ public:
 
     void setCamera(std::shared_ptr<Camera> cam);
 
-protected:
     void setGeometry(std::shared_ptr<Group> grp);
 
 private:
