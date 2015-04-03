@@ -112,7 +112,7 @@ void DeferredRenderer::setCamera(std::shared_ptr<Camera> cam)
 
 glm::vec4 DeferredRenderer::getPosition(glm::vec2 pixel) const
 {
-    std::vector<std::string> values = {"outposition"};
+    std::vector<std::string> values = {"worldposition"};
     return _geometryPass.lock()->readPixel(values, pixel)[0];
 }
 
@@ -168,6 +168,8 @@ void GBufferRenderBlock::init()
     geopass->addOutput(std::make_shared<Texture2D>("outnormal", 
                                                    Texture::RGBA16F));
     geopass->addOutput(std::make_shared<Texture2D>("outposition", 
+                                                   Texture::RGBA16F));
+    geopass->addOutput(std::make_shared<Texture2D>("worldposition", 
                                                    Texture::RGBA16F));
 
     setupGBuffer();
