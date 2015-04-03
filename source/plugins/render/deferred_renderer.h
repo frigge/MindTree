@@ -6,6 +6,7 @@
 #include "render_block.h"
 
 class SpotLight;
+class Light;
 namespace MindTree {
 namespace GL {
 
@@ -37,6 +38,7 @@ public:
     void init();
 
     void setGeometry(std::shared_ptr<Group> grp);
+    void setProperty(std::string name, Property prop);
 
 private:
     void setupDefaultLights();
@@ -44,6 +46,9 @@ private:
     std::weak_ptr<RenderPass> _deferredPass;
 
     ShadowMappingRenderBlock *_shadowBlock;
+
+    std::vector<std::shared_ptr<Light>> _defaultLights;
+    std::vector<std::shared_ptr<Light>> _sceneLights;
 };
 
 class  DeferredRenderer : public RenderConfigurator

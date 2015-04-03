@@ -56,9 +56,6 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     RenderConfigurator(context, camera)
 {
     auto manager = getManager();
-    auto config = manager->getConfig();
-    config.setProperty("defaultLighting", true);
-    manager->setConfig(config);
 
     addRenderBlock(std::make_shared<GBufferRenderBlock>(_geometryPass));
     auto rsmGenerationBlock = std::make_shared<RSMGenerationBlock>();
@@ -118,7 +115,7 @@ glm::vec4 DeferredRenderer::getPosition(glm::vec2 pixel) const
 
 void DeferredRenderer::setProperty(std::string name, Property prop)
 {
-    Object::setProperty(name, prop);
+    RenderConfigurator::setProperty(name, prop);
     
     if (name == "GL:showgrid") {
         auto value = prop.getData<bool>();
@@ -207,16 +204,23 @@ DeferredLightingRenderBlock::DeferredLightingRenderBlock(ShadowMappingRenderBloc
 {
 }
 
+void DeferredLightingRenderBlock::setProperty(std::string name, Property prop)
+{
+    RenderBlock::setProperty(name, prop);
+    if(name == "defaultLighting") {
+        _deferredPass.lock()->setProperty(name, prop);
+        if(prop.getData<bool>()) {
+            _deferredRenderer->setLights(_defaultLights);
+        }
+        else {
+            _deferredRenderer->setLights(_sceneLights);
+        }
+    }
+}
+
 void DeferredLightingRenderBlock::setGeometry(std::shared_ptr<Group> grp)
 {
-    auto config = _config->getManager()->getConfig();
-    if(config.hasProperty("defaultLighting") &&
-       config["defaultLighting"].getData<bool>()) {
-        setupDefaultLights();
-    }
-    else {
-        _deferredRenderer->setLights(grp->getLights());
-    }
+    _sceneLights = grp->getLights();
     setRenderersFromGroup(grp);
     if(_shadowBlock)
         _deferredRenderer->setShadowPasses(_shadowBlock->getShadowPasses());
@@ -262,7 +266,6 @@ void DeferredLightingRenderBlock::setupDefaultLights()
     auto light3 = std::make_shared<DistantLight>(.1, glm::vec4(1));
     light3->setTransformation(createTransFromZVec(glm::vec3(0, 0, -1)));
 
-    std::vector<LightPtr> lights = {light1, light2, light3};
-    _deferredRenderer->setLights(lights);
+    _defaultLights = {light1, light2, light3};
 }
 
