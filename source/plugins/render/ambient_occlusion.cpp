@@ -10,7 +10,7 @@ AmbientOcclusionPlane::AmbientOcclusionPlane() :
     _searchRadius(.5f),
     _numSamples(400),
     _samplesChanged(false),
-    _ambientColor(1)
+    _ambientColor(0.5, 0.5, 0.5, 1.0)
 {
 }
 
