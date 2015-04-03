@@ -168,6 +168,40 @@ private:
     static std::shared_ptr<VBO> _vbo;
 };
 
+class SphereRenderer : public ShapeRenderer
+{
+public:
+    SphereRenderer(int u=8, int v=8);
+
+protected:
+    void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void init(std::shared_ptr<ShaderProgram> prog);
+
+private:
+    int _u_segments, _v_segments;
+    static std::shared_ptr<VBO> _vbo;
+    static std::shared_ptr<IBO> _ibo;
+};
+
+class SinglePointRenderer : public ShapeRenderer
+{
+public:
+    SinglePointRenderer();
+    void setPointSize(int size);
+    int getPointSize() const;
+    void setPosition(glm::vec3 position);
+
+protected:
+    void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void init(std::shared_ptr<ShaderProgram> prog);
+
+private:
+    int _pointSize;
+    static std::shared_ptr<VBO> _vbo;
+};
+
 class ArrowRenderer : public ShapeRendererGroup
 {
 public:

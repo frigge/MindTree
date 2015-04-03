@@ -8,6 +8,7 @@ uniform mat4 mvp;
 uniform mat4 staticTransformation;
 uniform bool fixed_screensize = true;
 uniform bool screen_oriented = false;
+uniform int point_size = 5;
 
 uniform ivec2 resolution;
 out vec3 pos;
@@ -82,6 +83,7 @@ void main(){
     else 
         output = screenTransform * staticTransformedP;
     gl_Position = output;
+    gl_PointSize = point_size;
 
     pos = (translation * staticTransformedP).xyz;
 };

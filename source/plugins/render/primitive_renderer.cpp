@@ -443,6 +443,122 @@ void ConeRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config
 {
 }
 
+std::shared_ptr<VBO> SphereRenderer::_vbo;
+std::shared_ptr<IBO> SphereRenderer::_ibo;
+
+SphereRenderer::SphereRenderer(int u, int v) :
+    _u_segments(u),
+    _v_segments(v)
+{
+    setFillColor(glm::vec4(1));
+}
+
+void SphereRenderer::init(std::shared_ptr<ShaderProgram> prog)
+{
+    if(_vbo) {
+        _vbo->bind();
+        _vbo->setPointer();
+        return;
+    }
+    _vbo = std::make_shared<VBO>("P");
+    _ibo = std::make_shared<IBO>();
+    _vbo->bind();
+    _ibo->bind();
+    prog->bindAttributeLocation(_vbo);
+
+    auto polygons = std::make_shared<PolygonList>();
+
+    VertexList verts;
+
+    verts.emplace_back(0, 1, 0);
+    verts.emplace_back(0, -1, 0);
+    for(int i=1; i < _u_segments; i++) {
+        float u = float(i) / _u_segments;
+        float circle_radius = sin(PI * u);
+        float height = cos(PI * u);
+        for(int j=0; j <= _v_segments; j++) {
+            float pni = 2 * PI * float(j) / _v_segments;
+            verts.emplace_back(sin(pni) * circle_radius, 
+                               height, 
+                               cos(pni) * circle_radius);
+        }
+    }
+
+    for(uint i = 2; i < _v_segments + 1; i += 3) {
+        polygons->emplace_back(Polygon{(i + 1) % _v_segments, i, 0});
+        uint offset = (_u_segments - 1) * _v_segments + 2;
+        //polygons->emplace_back(Polygon{1, i + offset, i+1 + offset});
+    }
+
+    _ibo->data(polygons);
+    _vbo->data(verts);
+    _vbo->setPointer();
+}
+
+void SphereRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+{
+    //nothing
+}
+
+void SphereRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+{
+    glDrawArrays(GL_POINTS, 0, (_u_segments - 2) * (_v_segments + 1) + 2);
+    //glDrawArrays(GL_TRIANGLE_FAN, 0, (_u_segments - 2) * (_v_segments + 1) + 2);
+    glDrawArrays(GL_TRIANGLES, 0, _v_segments);
+}
+
+std::shared_ptr<VBO> SinglePointRenderer::_vbo;
+
+SinglePointRenderer::SinglePointRenderer() :
+    _pointSize(10)
+{
+    setFillColor(glm::vec4(0.5, 0.5, 1, 1));
+    setBorderColor(glm::vec4(0));
+}
+
+void SinglePointRenderer::setPosition(glm::vec3 position)
+{
+    setTransformation(glm::translate(glm::mat4(), position));
+}
+
+void SinglePointRenderer::setPointSize(int size)
+{
+    _pointSize = size;
+}
+
+int SinglePointRenderer::getPointSize() const
+{
+    return _pointSize;
+}
+
+void SinglePointRenderer::init(std::shared_ptr<ShaderProgram> prog)
+{
+    if(_vbo) {
+        _vbo->bind();
+        _vbo->setPointer();
+        return;
+    }
+    _vbo = std::make_shared<VBO>("P");
+    _vbo->bind();
+    prog->bindAttributeLocation(_vbo);
+
+    VertexList verts;
+    verts.emplace_back(0, 0, 0);
+    _vbo->data(verts);
+    _vbo->setPointer();
+}
+
+void SinglePointRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+{
+    UniformState state(program, "point_size", _pointSize);
+    glDrawArrays(GL_POINTS, 0, 1);
+}
+
+void SinglePointRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+{
+    //nothing
+}
+
 ArrowRenderer::ArrowRenderer(ShapeRendererGroup *parent)
     : ShapeRendererGroup(parent)
 {
