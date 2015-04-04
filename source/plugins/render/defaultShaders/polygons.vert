@@ -7,21 +7,28 @@ uniform bool defaultLighting = true;
 
 in vec3 P;
 in vec3 N;
+
 out vec3 pos;
+out vec3 worldPos;
 out vec3 cameraPos;
+out vec3 cameraNormal;
 out vec3 sn;
+out vec3 worldNormal;
 
 void main(){
    gl_Position = projection * modelView * vec4(P, 1);
-   
+
+   worldPos = (model * vec4(P, 1)).xyz;
+   worldNormal = (model * vec4(N, 0)).xyz;
+   cameraPos = (modelView * vec4(P, 1)).xyz;
+   cameraNormal = (modelView * vec4(N, 0)).xyz;
+
    if(defaultLighting) {
-       pos = (modelView * vec4(P, 1)).xyz;
-       sn = (modelView * vec4(N, 0)).xyz;
-       cameraPos = pos;
+       pos = cameraPos;
+       sn = cameraNormal;
    }
    else {
-       pos = (model * vec4(P, 1)).xyz;
-       sn = (model * vec4(N, 0)).xyz;
-       cameraPos = (modelView * vec4(P, 1)).xyz;
+       pos = worldPos;
+       sn = worldNormal;
    }
 };
