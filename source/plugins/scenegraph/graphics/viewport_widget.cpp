@@ -17,6 +17,8 @@
 */
 
 #include "QComboBox"
+#include "QWidgetAction"
+
 #include "iostream"
 #include "viewport.h"
 #include "data/nodes/data_node.h"
@@ -149,8 +151,12 @@ void ViewportWidget::createToolbar()
     _outputBox->addItems(l);
 
     _camBox = new QComboBox();
-    _tools->addWidget(_camBox);
-    _tools->addWidget(_outputBox);
+    auto *camboxAction = new QWidgetAction(_tools);
+    auto *outputBoxAction = new QWidgetAction(_tools);
+    camboxAction->setDefaultWidget(_camBox);
+    outputBoxAction->setDefaultWidget(_outputBox);
+    _tools->addAction(camboxAction);
+    _tools->addAction(outputBoxAction);
 
     connect(_outputBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(setOutput(QString)));
     connect(_camBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(setCamera(QString)));
