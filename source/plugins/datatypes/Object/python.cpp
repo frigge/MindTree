@@ -118,6 +118,12 @@ void parentProc(MindTree::DataCache *cache)
     cache->pushData(parent);
 }
 
+void emptyProc(MindTree::DataCache *cache)
+{
+    auto empty = std::make_shared<Empty>();
+    cache->pushData(empty);
+}
+
 void createTranslateWidget()
 {
     auto translater1 = [] () { return std::make_shared<TranslateXWidget>(); };
@@ -217,6 +223,9 @@ BOOST_PYTHON_MODULE(object){
 
     proc = new CacheProcessor(parentProc);
     DataCache::addProcessor("TRANSFORMABLE", "PARENTOBJECT", proc);
+
+    proc = new CacheProcessor(emptyProc);
+    DataCache::addProcessor("TRANSFORMABLE", "EMPTY", proc);
 
     ObjectDataPyWrapper::wrap();
     ObjectPyWrapper::wrap();

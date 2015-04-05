@@ -509,7 +509,8 @@ void SphereRenderer::drawFill(const CameraPtr camera, const RenderConfig &config
 
 std::shared_ptr<VBO> SinglePointRenderer::_vbo;
 
-SinglePointRenderer::SinglePointRenderer() :
+SinglePointRenderer::SinglePointRenderer(ShapeRendererGroup *parent) :
+    ShapeRenderer(parent),
     _pointSize(10)
 {
     setFillColor(glm::vec4(0.5, 0.5, 1, 1));

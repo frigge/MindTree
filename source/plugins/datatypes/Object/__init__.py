@@ -70,6 +70,13 @@ class DistantLightNodeDecorator(MT.pytypes.NodeDecorator):
     outsockets = [
             ("Object", "TRANSFORMABLE")]
 
+class EmptyNodeDecortator(MT.pytypes.NodeDecorator):
+    label = "Objects.Empty"
+    type = "EMPTY"
+
+    outsockets = [
+            ("Object", "TRANSFORMABLE")]
+
 class MaterialInstanceNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Material.Default"
     type = "DEFAULTMATERIAL"
@@ -101,3 +108,4 @@ MT.registerNode(SpotLightNodeDecorator)
 MT.registerNode(DistantLightNodeDecorator)
 MT.registerNode(MaterialInstanceNodeDecorator)
 MT.registerNode(SetMaterialInstanceNodeDecorator)
+MT.registerNode(EmptyNodeDecortator)

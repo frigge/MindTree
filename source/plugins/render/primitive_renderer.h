@@ -187,7 +187,7 @@ private:
 class SinglePointRenderer : public ShapeRenderer
 {
 public:
-    SinglePointRenderer();
+    SinglePointRenderer(ShapeRendererGroup *parent=nullptr);
     void setPointSize(int size);
     int getPointSize() const;
     void setPosition(glm::vec3 position);
