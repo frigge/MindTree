@@ -80,10 +80,10 @@ void main()
 
         vec3 lvec = pos - p;
         vec3 nlvec = normalize(lvec);
-        float lightAngleCos = clamp(dot(nlvec, normalize(n)), 0, 1);
+        float lightAngleCos = max(dot(nlvec, normalize(n)), 0);
 
-        float lightLambert = clamp(dot(Nn, -nlvec), 0, 1);
-        float atten = clamp(1 / dot(lvec, lvec), 0, 1);
+        float lightLambert = max(dot(Nn, -nlvec), 0);
+        float atten = max(1 / dot(lvec, lvec), 0);
 
         indirect += flux * lightLambert * lightAngleCos * radius_squared * atten;
         //indirect += flux * lightLambert * lightAngleCos * radius_squared;
