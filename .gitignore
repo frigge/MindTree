@@ -7,3 +7,4 @@ cscope.*
 build/
 *.swp
 *.pyc
+.clang_complete
