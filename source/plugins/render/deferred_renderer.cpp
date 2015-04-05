@@ -199,6 +199,13 @@ void GBufferRenderBlock::addRendererFromObject(std::shared_ptr<GeoObject> obj)
     }
 }
 
+void GBufferRenderBlock::setProperty(std::string name, Property prop)
+{
+    if(name == "defaultLighting") {
+        _geometryPass.lock()->setProperty(name, prop);
+    }
+}
+
 DeferredLightingRenderBlock::DeferredLightingRenderBlock(ShadowMappingRenderBlock *shadowBlock) :
    _shadowBlock(shadowBlock)
 {
@@ -208,7 +215,6 @@ void DeferredLightingRenderBlock::setProperty(std::string name, Property prop)
 {
     RenderBlock::setProperty(name, prop);
     if(name == "defaultLighting") {
-        _deferredPass.lock()->setProperty(name, prop);
         if(prop.getData<bool>()) {
             _deferredRenderer->setLights(_defaultLights);
         }
@@ -221,6 +227,12 @@ void DeferredLightingRenderBlock::setProperty(std::string name, Property prop)
 void DeferredLightingRenderBlock::setGeometry(std::shared_ptr<Group> grp)
 {
     _sceneLights = grp->getLights();
+
+    if(hasProperty("defaultLighting") && !getProperty("defaultLighting").getData<bool>())
+        _deferredRenderer->setLights(_sceneLights);
+    else
+        _deferredRenderer->setLights(_defaultLights);
+
     setRenderersFromGroup(grp);
     if(_shadowBlock)
         _deferredRenderer->setShadowPasses(_shadowBlock->getShadowPasses());

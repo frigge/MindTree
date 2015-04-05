@@ -20,6 +20,8 @@ public:
     ~GBufferRenderBlock();
     void init();
 
+    void setProperty(std::string name, Property prop);
+
 protected:
     void addRendererFromObject(std::shared_ptr<GeoObject> obj) override;
 
