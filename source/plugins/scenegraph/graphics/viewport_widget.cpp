@@ -139,7 +139,6 @@ void ViewportWidget::createToolbar()
     overrideOutputAction->setCheckable(true);
     overrideOutputAction->setChecked(false);
 
-
     auto outputs = _viewport->getRenderTree()->getAllOutputs();
     _outputBox = new QComboBox();
     _outputBox->setEnabled(false);

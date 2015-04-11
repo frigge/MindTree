@@ -93,6 +93,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _finalPass = finalPass;
     finalPass->setCamera(camera);
     manager->addPass(finalPass);
+    finalPass->setCustomTextureNameMapping("final_out", "output");
     pplane = new PixelPlane();
     pplane->setProvider<FinalOut>();
     finalPass->addRenderer(pplane);
@@ -133,12 +134,15 @@ void DeferredRenderer::setProperty(std::string name, Property prop)
 
 void DeferredRenderer::setOverrideOutput(std::string output)
 {
-    _finalPass.lock()->setCustomTextureNameMapping(output, "final_out");
+    _finalPass.lock()->clearCustomTextureNameMapping();
+    _finalPass.lock()->setCustomTextureNameMapping(output, "output");
+    dbout("outputting: " << output);
 }
 
 void DeferredRenderer::clearOverrideOutput()
 {
     _finalPass.lock()->clearCustomTextureNameMapping();
+    _finalPass.lock()->setCustomTextureNameMapping("final_out", "output");
 }
 
 GBufferRenderBlock::GBufferRenderBlock(std::weak_ptr<RenderPass> geopass)

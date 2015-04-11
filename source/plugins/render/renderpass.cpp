@@ -198,8 +198,11 @@ std::string RenderPass::getTextureName(std::shared_ptr<Texture2D> tex) const
 {
     std::lock_guard<std::mutex> lock(_textureNameMappingLock);
     std::string realName = tex->getName();
-    if(_textureNameMappings.find(realName) != end(_textureNameMappings))
-        return _textureNameMappings.at(realName);
+    if(_textureNameMappings.find(realName) != end(_textureNameMappings)) {
+        std::string mappedName = _textureNameMappings.at(realName);
+        dbout("redirecting: " << realName << " to: " << mappedName);
+        return mappedName;
+    }
     else
         return realName;
 }
@@ -235,14 +238,9 @@ void RenderPass::clearCustomFragmentNameMapping()
 void RenderPass::setTextures(std::vector<std::shared_ptr<Texture2D>> textures)
 {
     for (auto shadernode : _shadernodes) {
-        std::vector<std::string> boundTextures;
         for(auto texture : textures) {
             std::string name = getTextureName(texture);
-            if(std::find(begin(boundTextures), 
-                         end(boundTextures), name) == end(boundTextures)) {
-                boundTextures.push_back(name);
-                shadernode->program()->setTexture(texture, name);
-            }
+            shadernode->program()->setTexture(texture, name);
         }
     }
 }
