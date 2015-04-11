@@ -68,10 +68,10 @@ void main()
     isSimilar[2] += checkAngle(N, n3);
     isSimilar[3] += checkAngle(N, n4);
 
-    isSimilar[0] *= checkDistance(P, p1);
-    isSimilar[1] *= checkDistance(P, p2);
-    isSimilar[2] *= checkDistance(P, p3);
-    isSimilar[3] *= checkDistance(P, p4);
+    //isSimilar[0] *= checkDistance(P, p1);
+    //isSimilar[1] *= checkDistance(P, p2);
+    //isSimilar[2] *= checkDistance(P, p3);
+    //isSimilar[3] *= checkDistance(P, p4);
 
     simCnt += isSimilar[0];
     simCnt += isSimilar[1];
@@ -97,5 +97,6 @@ void main()
     vec3 gi = gi1 + gi2 + gi3 + gi4;
     gi /= weightSum;
 
-    rsm_indirect_out_interpolated = vec4(gi, 1);
+    //rsm_indirect_out_interpolated = vec4(gi, 1);
+    rsm_indirect_out_interpolated = vec4(0);
 }

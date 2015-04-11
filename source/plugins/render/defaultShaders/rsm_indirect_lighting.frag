@@ -76,11 +76,11 @@ void main()
         vec3 n = texture(shadow_normal, samplePosition).xyz;
         n = normalize(n);
         vec3 p = texture(shadow_position, samplePosition).xyz;
-        p -= n * 0.05;
+        p -= n * 0.01;
 
         vec3 lvec = pos - p;
         vec3 nlvec = normalize(lvec);
-        float lightAngleCos = max(dot(nlvec, normalize(n)), 0);
+        float lightAngleCos = max(dot(nlvec, n), 0);
 
         float lightLambert = max(dot(Nn, -nlvec), 0);
         float atten = max(1 / dot(lvec, lvec), 0);
@@ -91,7 +91,7 @@ void main()
 
     indirect /= numSamples;
 
-    //indirect *= texture(outdiffusecolor, st).rgb;
+    indirect *= texture(outdiffusecolor, st).rgb;
     //indirect *= texture(outdiffuseintensity, st).rgb;
     rsm_indirect_out = vec4(indirect, 1) * intensity;
 }
