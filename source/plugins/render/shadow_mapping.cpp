@@ -78,7 +78,7 @@ std::weak_ptr<RenderPass> ShadowMappingRenderBlock::createShadowPass(SpotLightPt
     auto camera = std::make_shared<Camera>();
     camera->setResolution(info._size.x, info._size.y);
     camera->setTransformation(spot->getWorldTransformation());
-    camera->setFov(spot->getConeAngle());
+    camera->setFov(spot->getConeAngle() * 2);
     camera->setNear(info._near);
     camera->setFar(info._far);
     shadowPass->setCamera(camera);
