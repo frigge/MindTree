@@ -830,8 +830,16 @@ void ShaderProgram::setUniforms(PropertyMap map)
     }
 }
 
+void ShaderProgram::cleanupTextures()
+{
+    std::vector<tx> to_be_cleaned;
+    _textures.erase(std::remove_if(begin(_textures), end(_textures) [](std::weak_ptr<Texture> tx) {
+        return tx.expired();
+    }), end(_textures));
+}
 void ShaderProgram::setTexture(std::shared_ptr<Texture> texture, std::string name)
 {
+    cleanupTextures();
     assert(RenderThread::id() == std::this_thread::get_id());
 
     assert(_initialized);
@@ -844,8 +852,9 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture> texture, std::string nam
     int textureSlot;
     auto it = std::find_if(begin(_textures), 
                            end(_textures), 
-                           [texture, n] (TextureInfo other){ 
-                               return other.name == n; 
+                           [texture] (TextureInfo other){ 
+                               if(other.texture.expired()) return false;
+                               return other.texture.lock()->getID() == texture->getID(); 
                            });
 
     if(it != end(_textures)) {
