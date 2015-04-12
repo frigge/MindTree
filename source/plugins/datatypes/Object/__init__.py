@@ -78,6 +78,18 @@ class EmptyNodeDecortator(MT.pytypes.NodeDecorator):
     outsockets = [
             ("Object", "TRANSFORMABLE")]
 
+class CameraNodeDecorator(MT.pytypes.NodeDecorator):
+    label = "Objects.Camera"
+    type = "CAMERA"
+
+    insockets = [ 
+            ("FOV", "FLOAT", 45),
+            ("Resolution", "INTVEC2", (1024, 1024)),
+            ("Near Clipping", "FLOAT", 0.1),
+            ("Far Clipping", "FLOAT", 100)
+            ]
+    outsockets = [ ("Camera", "TRANSFORMABLE") ]
+
 class MaterialInstanceNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Material.Default"
     type = "DEFAULTMATERIAL"
@@ -110,3 +122,4 @@ MT.registerNode(DistantLightNodeDecorator)
 MT.registerNode(MaterialInstanceNodeDecorator)
 MT.registerNode(SetMaterialInstanceNodeDecorator)
 MT.registerNode(EmptyNodeDecortator)
+MT.registerNode(CameraNodeDecorator)

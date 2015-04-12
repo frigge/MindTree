@@ -124,6 +124,21 @@ void emptyProc(MindTree::DataCache *cache)
     cache->pushData(empty);
 }
 
+void cameraProc(MindTree::DataCache *cache)
+{
+    auto fov = cache->getData(0).getData<double>();
+    auto res = cache->getData(1).getData<glm::ivec2>();
+    auto near = cache->getData(2).getData<double>();
+    auto far = cache->getData(3).getData<double>();
+
+    auto cam = std::make_shared<Camera>();
+    cam->setFov(fov);
+    cam->setNear(near);
+    cam->setFar(far);
+
+    cache->pushData(cam);
+}
+
 void createTranslateWidget()
 {
     auto translater1 = [] () { return std::make_shared<TranslateXWidget>(); };
@@ -229,6 +244,9 @@ BOOST_PYTHON_MODULE(object){
 
     proc = new CacheProcessor(emptyProc);
     DataCache::addProcessor("TRANSFORMABLE", "EMPTY", proc);
+
+    proc = new CacheProcessor(cameraProc);
+    DataCache::addProcessor("TRANSFORMABLE", "CAMERA", proc);
 
     ObjectDataPyWrapper::wrap();
     ObjectPyWrapper::wrap();
