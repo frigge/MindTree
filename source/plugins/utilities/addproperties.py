@@ -6,22 +6,27 @@ class CustomWidget(MT.pytypes.CustomNodeWidget):
     def __init__(self, node, parent=None):
         MT.pytypes.CustomNodeWidget.__init__(self, node, parent)
 
-        self.setLayout(QHBoxLayout())
+        self.setLayout(QFormLayout())
+
+        self.name_edit = QLineEdit()
+        self.type_edit = QLineEdit()
+
         button = QPushButton("Add Property")
-        self.layout().addWidget(button)
+
+        self.layout().addRow("Name: ", self.name_edit)
+        self.layout().addRow("Type: ", self.type_edit)
+        self.layout().addRow("", button)
+
         button.clicked.connect(self.addProperty)
 
     def addProperty(self):
-        self.node.addInSocket("Property Name", "STRING")
-        self.node.addInSocket("Property VALUE", "VARIABLE")
+        self.node.addInSocket(self.name_edit.text(), self.type_edit.text())
         self.editor.updateEditor(self.node)
 
 class AddPropertiesNodeDecorator(MT.pytypes.NodeDecorator):
     type="ADDPROPERTIES"
     label="Objects.Add Properties"
-    insockets = [("Object(s)", "GROUPDATA"),
-            ("Property Name", "STRING"),
-            ("Property Value", "VARIABLE")]
+    insockets = [("Object(s)", "GROUPDATA")]
     outsockets = [("Object(s)", "GROUPDATA")]
     customwidget = CustomWidget
 
