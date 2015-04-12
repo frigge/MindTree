@@ -33,18 +33,18 @@
 namespace MindTree {
 class DNode;
 
-typedef std::shared_ptr<DNode> DNode_ptr;
+typedef std::shared_ptr<DNode> NodePtr;
 
 class LoadNodeIDMapper
 {
 public:
-    static unsigned short getID(DNode_ptr node);
-    static void setID(DNode_ptr node, unsigned short ID);
-    static DNode_ptr getNode(unsigned short ID);
+    static unsigned short getID(NodePtr node);
+    static void setID(NodePtr node, unsigned short ID);
+    static NodePtr getNode(unsigned short ID);
     static void clear();
 
 private:
-    static std::unordered_map<unsigned short, DNode_ptr>loadIDMapper;
+    static std::unordered_map<unsigned short, NodePtr>loadIDMapper;
 };
 
 class CopyNodeMapper
@@ -128,7 +128,7 @@ public:
     DNSpace* getSpace() const;
     virtual void setSpace(DNSpace* value);
 
-    static DNode_ptr newNode(std::string name, NodeType t, int insize, int outsize);
+    static NodePtr newNode(std::string name, NodeType t, int insize, int outsize);
 
     static bool isInput(const DNode *node);
     static bool isConditionNode(const DNode *node);
@@ -148,7 +148,7 @@ protected:
 
 private:
     BuildInType _buildInType;
-    static std::vector<std::function<DNode_ptr()>> newNodeDecorator;
+    static std::vector<std::function<NodePtr()>> newNodeDecorator;
 
     bool selected;
     DNSpace *space;

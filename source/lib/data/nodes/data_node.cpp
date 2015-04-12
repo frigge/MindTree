@@ -29,11 +29,11 @@
 using namespace MindTree;
 
 unsigned short DNode::count = 1;
-std::unordered_map<unsigned short, DNode_ptr>LoadNodeIDMapper::loadIDMapper;
+std::unordered_map<unsigned short, NodePtr>LoadNodeIDMapper::loadIDMapper;
 std::unordered_map<DNode*, DNode*> CopyNodeMapper::nodeMap;
-std::vector<std::function<DNode_ptr()>> DNode::newNodeDecorator;
+std::vector<std::function<NodePtr()>> DNode::newNodeDecorator;
 
-unsigned short LoadNodeIDMapper::getID(DNode_ptr node)
+unsigned short LoadNodeIDMapper::getID(NodePtr node)
 {
     for (auto p : loadIDMapper)
         if (p.second == node) return p.first;
@@ -41,12 +41,12 @@ unsigned short LoadNodeIDMapper::getID(DNode_ptr node)
     return -1;
 }
 
-void LoadNodeIDMapper::setID(DNode_ptr node, unsigned short ID)
+void LoadNodeIDMapper::setID(NodePtr node, unsigned short ID)
 {
     loadIDMapper.insert({ID, node});
 }
 
-DNode_ptr LoadNodeIDMapper::getNode(unsigned short id)
+NodePtr LoadNodeIDMapper::getNode(unsigned short id)
 {
     return loadIDMapper[id];
 }
@@ -234,159 +234,12 @@ bool DNode::isContainer() const
     return true;
 }
 
-//QDataStream &MindTree::operator <<(QDataStream &stream, DNode  *node)
-//{
-    ////stream<<node->getNodeName()<<node->getID()<<node->getType();
-    //stream<<node->getPos();
-    //stream<<(qint16)node->getInSockets().size()<<(qint16)node->getOutSockets().size();
-
-    //foreach(DinSocket *socket, node->getInSockets())
-    //    stream<<(DSocket*)socket;
-    //foreach(DoutSocket *socket, node->getOutSockets())
-    //    stream<<(DSocket*)socket;
-
-    ////if(node->getNodeType() == FUNCTION) {
-    ////    FunctionNode *fnode = (FunctionNode*) node;
-    ////    stream<<fnode->getFunctionName();
-    ////}
-
-    //if(node->isContainer()) {
-    //    ContainerNode *cnode =(ContainerNode*) node;
-    //    stream<<cnode->getInputs()->getID()<<cnode->getOutputs()->getID();
-    //    stream<<cnode->getSocketMapSize();
-    //    foreach(const DSocket *socket, cnode->getMappedSocketsOnContainer())
-    //        stream<<socket->getID()<<cnode->getSocketInContainer(socket)->getID();
-    //    stream<<cnode->getContainerData();
-    //    if(LoopNode::isLoopNode(node)){
-    //        LoopNode *lnode = node->getDerived<LoopNode>();
-    //        stream<<lnode->getLoopedInputs()->getID();
-    //    }
-    //}
-
-    ////if(node->getNodeType() == LOOPINSOCKETS) {
-
-    ////    LoopSocketNode *lsnode = (LoopSocketNode*)node;
-    ////    stream<<lsnode->getLoopedSocketsCount();
-    ////    foreach(DSocket *socket, lsnode->getLoopedSockets())
-    ////        stream<<socket->getID()<<lsnode->getPartnerSocket(socket)->getID();
-    ////}
-    //return stream;
-//}
-
-DNode_ptr DNode::newNode(std::string name, NodeType t, int insize, int outsize)
+NodePtr DNode::newNode(std::string name, NodeType t, int insize, int outsize)
 {
-    DNode_ptr node = newNodeDecorator[t.id()](); 
+    NodePtr node = newNodeDecorator[t.id()](); 
     node->setName(name);
     return node;
 }
-
-//QDataStream &MindTree::operator >>(QDataStream &stream, DNode_ptr *node)
-//{
-//    QString name;
-//    unsigned short ID;
-//    qint16 insocketsize, outsocketsize;
-//    int nodetype;
-//    QPointF nodepos;
-//    stream>>name>>ID>>nodetype>>nodepos;
-//    stream>>insocketsize>>outsocketsize;
-//
-//    //DNode_ptr newnode = DNode::newNode(name.toStdString(), (NType)nodetype, insocketsize, outsocketsize);
-//    //LoadNodeIDMapper::setID(newnode, ID);
-//    //newnode->setPos(nodepos);
-//    //*node = newnode;
-//
-//    //DSocket *socket;
-//    //newnode->blockCB();
-//    //newnode->blockRegCB();
-//    //for(int i=0; i<insocketsize; i++)
-//    //{
-//    //    socket = new DinSocket("", VARIABLE, newnode.get());
-//    //    stream>>&socket;
-//    //}
-//    //for(int j=0; j<outsocketsize; j++)
-//    //{
-//    //    socket = new DoutSocket("", VARIABLE, newnode.get());
-//    //    stream>>&socket;
-//    //}
-//    ////newnode->unblockCB();
-//    ////newnode->unblockRegCB();
-//
-//    //if(newnode->getNodeType() == FUNCTION)
-//    //{
-//    //    FunctionNode *fnode = newnode->getDerived<FunctionNode>();
-//    //    QString fname;
-//    //    stream>>fname;
-//    //    fnode->setFunctionName(fname.toStdString());
-//    //}
-//
-//    //unsigned short inSocketID, outSocketID, keyID, valueID;
-//    //int smapsize;
-//    //if(newnode->isContainer())
-//    //{
-//    //    ContainerNode *contnode = newnode->getDerived<ContainerNode>();
-//    //    stream>>inSocketID>>outSocketID;
-//    //    stream>>smapsize;
-//    //    auto cont_socket_map_ID_mapper = new QPair<unsigned short, unsigned short>[smapsize];
-//    //    for(int i = 0; i < smapsize; i++)
-//    //    {
-//    //        stream>>keyID>>valueID;
-//    //        cont_socket_map_ID_mapper[i].first = keyID;
-//    //        cont_socket_map_ID_mapper[i].second = valueID;
-//    //    }
-//    //    ContainerSpace *space = 0;
-//    //    stream>>&space;
-//    //    contnode->setContainerData(space);
-//    //    SocketNode *innode = LoadNodeIDMapper::getNode(inSocketID)->getDerived<SocketNode>();
-//    //    contnode->setInputs(innode);
-//    //    SocketNode *outnode = LoadNodeIDMapper::getNode(outSocketID)->getDerived<SocketNode>();
-//    //    contnode->setOutputs(outnode);
-//    //    if(LoopNode::isLoopNode(newnode.get())) {
-//    //        unsigned short loopedNodeID;
-//    //        stream >> loopedNodeID;
-//    //        LoopSocketNode *loopedNode = LoadNodeIDMapper::getNode(loopedNodeID)->getDerived<LoopSocketNode>();
-//    //        LoopSocketNode *loutnode = outnode->getDerived<LoopSocketNode>();
-//    //        LoopSocketNode *linnode = innode->getDerived<LoopSocketNode>();
-//    //        LoopNode *lnode = contnode->getDerived<LoopNode>();
-//    //        lnode->setLoopedSockets(loopedNode);
-//    //        loutnode->setPartner(loopedNode);
-//    //        loopedNode->setPartner(loutnode);
-//    //    }
-//
-//    //    for(int j = 0; j < smapsize; j++) {
-//    //        keyID = cont_socket_map_ID_mapper[j].first;
-//    //        valueID = cont_socket_map_ID_mapper[j].second;
-//    //        contnode->mapOnToIn(const_cast<DSocket*>(LoadSocketIDMapper::getSocket(keyID)),
-//    //                            const_cast<DSocket*>(LoadSocketIDMapper::getSocket(valueID)));
-//    //    }
-//    //}
-//
-//    //if(newnode->getNodeType() == LOOPINSOCKETS)
-//    //        //||newnode->getNodeType() == LOOPOUTSOCKETS)
-//    //{
-//    //    LoopSocketNode *lsnode = newnode->getDerived<LoopSocketNode>();
-//    //    int socketID, partnerID;
-//    //    qint16 partnerSockets; 
-//    //    stream>>partnerSockets;
-//    //    for(int i = 0; i < partnerSockets; i++)
-//    //    {
-//    //        stream>>socketID>>partnerID;
-//    //        DSocket *socket = const_cast<DSocket*>(LoadSocketIDMapper::getSocket(socketID));
-//    //        DSocket *partner = const_cast<DSocket*>(LoadSocketIDMapper::getSocket(partnerID));
-//    //        lsnode->mapPartner(socket, partner);
-//    //    }
-//    //}
-//
-//    ////if(MathNode::isMathNode(newnode)
-//    ////    ||newnode->getNodeType() == GETARRAY
-//    ////    ||newnode->getNodeType() == SETARRAY
-//    ////    ||newnode->getNodeType() == VARNAME) {
-//    ////    DinSocket *in = newnode->getInSockets().first();
-//    ////    DoutSocket *out = newnode->getOutSockets().first();
-//    ////}
-//
-//
-//    return stream;
-//}
 
 bool DNode::operator==(const DNode &node)const
 {
