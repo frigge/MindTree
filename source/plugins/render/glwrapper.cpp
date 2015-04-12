@@ -832,11 +832,11 @@ void ShaderProgram::setUniforms(PropertyMap map)
 
 void ShaderProgram::cleanupTextures()
 {
-    std::vector<tx> to_be_cleaned;
-    _textures.erase(std::remove_if(begin(_textures), end(_textures) [](std::weak_ptr<Texture> tx) {
-        return tx.expired();
+    _textures.erase(std::remove_if(begin(_textures), end(_textures), [](TextureInfo tx) {
+        return tx.texture.expired();
     }), end(_textures));
 }
+
 void ShaderProgram::setTexture(std::shared_ptr<Texture> texture, std::string name)
 {
     cleanupTextures();

@@ -292,6 +292,8 @@ public:
     void init();
 
 private:
+    void cleanupTextures();
+
     struct TextureInfo {
         std::weak_ptr<Texture> texture;
         std::string name;
