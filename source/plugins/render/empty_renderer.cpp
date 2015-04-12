@@ -10,7 +10,7 @@ EmptyRenderer::EmptyRenderer(const EmptyPtr e)
 {
     auto point = new SinglePointRenderer(this);
     point->setFillColor(glm::vec4(.5, 1., .5, 1.));
-    point->setPointSize(5);
+    point->setPointSize(15);
 
     setTransformation(e->getWorldTransformation());
 }
