@@ -566,7 +566,6 @@ void RenderPass::render(const RenderConfig &config)
     }
 
     if(!width || !height) {
-        std::cout << "No viewport geometry" << std::endl;
         return;
     }
 
