@@ -83,32 +83,6 @@ DNSpace::~DNSpace()
         removeNode(node);
 }
 
-// QDataStream & MindTree::operator<<(QDataStream &stream, DNSpace *space)
-// {
-//     stream<<space->getName();
-//     stream<<(qint16)space->getNodeCnt();
-//     foreach(DNode *node, space->getNodes())
-//         stream<<node;
-// }
-
-//QDataStream & MindTree::operator>>(QDataStream &stream, DNSpace **space)
-//{
-//    DNSpace *newspace = 0;
-//    newspace = new DNSpace();
-//    *space = newspace;
-//    qint16 nodecnt;
-//    QString name;
-//    stream>>name;
-//    newspace->setName(name);
-//    stream>>nodecnt;
-//    DNode_ptr node = 0;
-//    for(int i = 0; i<nodecnt; i++)
-//    {
-//        stream>>&node;
-//        newspace->addNode(node.get());
-//    }
-//}
-
 bool DNSpace::operator==(DNSpace &space)
 {
     if(name != space.getName()
@@ -216,24 +190,6 @@ bool ContainerSpace::isContainerSpace() const
 {
     return true;
 }
-
-//QDataStream & MindTree::operator>>(QDataStream &stream, ContainerSpace **space)
-//{
-//    ContainerSpace *newspace = 0;
-//    newspace = new ContainerSpace();
-//    *space = newspace;
-//    qint16 nodecnt;
-//    QString name;
-//    stream>>name;
-//    newspace->setName(name);
-//    stream>>nodecnt;
-//    DNode_ptr node = 0;
-//    for(int i = 0; i<nodecnt; i++)
-//    {
-//        stream>>&node;
-//        newspace->addNode(node.get());
-//    }
-//}
 
 ContainerNode* ContainerSpace::getContainer()
 {
