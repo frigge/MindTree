@@ -159,15 +159,6 @@ std::weak_ptr<RenderPass> RSMGenerationBlock::createShadowPass(SpotLightPtr spot
     return shadowPass;
 }
 
-void RSMGenerationBlock::setGeometry(std::shared_ptr<Group> grp)
-{
-    ShadowMappingRenderBlock::setGeometry(grp);
-
-    if(grp->hasProperty("RSM:enabled")) {
-        setEnabled(grp->getProperty("RSM:enabled").getData<bool>());
-    }
-}
-
 RSMEvaluationBlock::RSMEvaluationBlock(RSMGenerationBlock *shadowBlock) :
     _shadowBlock(shadowBlock)
 {
@@ -226,6 +217,13 @@ void RSMEvaluationBlock::setCamera(std::shared_ptr<Camera> cam)
 
 void RSMEvaluationBlock::setGeometry(std::shared_ptr<Group> grp)
 {
+    if(grp->hasProperty("RSM:enable")) {
+        bool enable = grp->getProperty("RSM:enable").getData<bool>();
+        setEnabled(enable);
+        if(!enable)
+            return;
+    }
+
     auto config = _config->getManager()->getConfig();
     if(!config.hasProperty("defaultLighting") ||
        !config["defaultLighting"].getData<bool>()) {
@@ -247,9 +245,6 @@ void RSMEvaluationBlock::setGeometry(std::shared_ptr<Group> grp)
     if (grp->hasProperty("RSM:samples")) {
         _rsmIndirectHighResPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
         _rsmIndirectLowResPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
-    }
-    if(grp->hasProperty("RSM:enabled")) {
-        setEnabled(grp->getProperty("RSM:enabled").getData<bool>());
     }
 }
 
