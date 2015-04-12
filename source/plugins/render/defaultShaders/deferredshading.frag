@@ -31,6 +31,7 @@ struct Light {
     vec3 dir;
     mat4 shadowmvp;
     int shadow;
+    float bias;
 };
 
 uniform Light light;
@@ -111,8 +112,7 @@ void main(){
         shadowP += 1;
         shadowP *= 0.5;
 
-        float bias = .005;
-        shadowP.z -= bias;
+        shadowP.z -= light.bias;
         inLight = texture(shadow, shadowP.xyz);
 
         inLight += clamp(1 - light.shadow, 0, 1);

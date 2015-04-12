@@ -15,10 +15,11 @@ public:
     };
 
     struct ShadowInfo {
-        ShadowInfo() : _enabled(false), _size(256, 256), _near(1), _far(10) {}
+        ShadowInfo() : _enabled(false), _size(256, 256), _bias(0.05), _near(1), _far(10) {}
         ShadowInfo(bool en, glm::ivec2 s) : _enabled(en), _size(s) {}
         bool _enabled;
         glm::ivec2 _size;
+        double _bias;
         double _near;
         double _far;
     };

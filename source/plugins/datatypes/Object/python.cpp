@@ -158,13 +158,16 @@ void regLightProcs()
         auto coneangle = cache->getData(2).getData<double>();
         auto attenuation = cache->getData(3).getData<bool>();
         auto shadowMapping = cache->getData(4).getData<bool>();
-        auto shadowSize = cache->getData(5).getData<glm::ivec2>();
-        auto near = cache->getData(6).getData<double>();
-        auto far = cache->getData(7).getData<double>();
+        auto shadowSize = cache->getData(5).getData<int>();
+        auto shadowBias = cache->getData(6).getData<double>();
+        auto near = cache->getData(7).getData<double>();
+        auto far = cache->getData(8).getData<double>();
+
         auto light = std::make_shared<SpotLight>(intensity, color, coneangle);
-        Light::ShadowInfo info{shadowMapping, shadowSize};
+        Light::ShadowInfo info{shadowMapping, glm::ivec2(shadowSize)};
         info._near = near;
         info._far = far;
+        info._bias = shadowBias;
         light->setShadowInfo(info);
         cache->pushData(light);
     };

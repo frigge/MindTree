@@ -52,7 +52,8 @@ class SpotLightNodeDecorator(MT.pytypes.NodeDecorator):
             ("Cone Angle", "FLOAT", 45.0),
             ("Square Attenuation", "BOOLEAN", False),
             ("Shadow Mapping", "BOOLEAN", False),
-            ("Shadow Map Size", "INTVECTOR2D", (256, 256)),
+            ("Shadow Map Size", "INTEGER", 512),
+            ("Shadow Map Bias", "FLOAT", 0.05),
             ("Near Clipping", "FLOAT", 1.),
             ("Far Clipping", "FLOAT", 10.)
             ]
