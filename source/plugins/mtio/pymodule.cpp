@@ -9,7 +9,7 @@ BOOST_PYTHON_MODULE(objio)
 {
     auto importFn = [] (bool raw)
     {
-        return new ObjImportNode(raw);
+        return std::make_shared<ObjImportNode>(raw);
     };
 
     NodeDataBase::registerNodeType(new BuildInDecorator("OBJIMPORT", 

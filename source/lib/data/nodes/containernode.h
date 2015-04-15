@@ -24,17 +24,16 @@ public:
     void mapOnToIn(DSocket *on, DSocket *in);
     int getSocketMapSize() const;
 
-    NodeList getAllInNodes();
+    std::vector<DNode*> getAllInNodes();
     ConstNodeList getAllInNodesConst() const;
 
     ContainerSpace* getContainerData() const;
     void setContainerData(ContainerSpace* value);
-    void addItems(NodeList nodes);
 
     void addMappedSocket(DSocket *socket);
 
-    SocketNode* getInputs() const;
-    SocketNode* getOutputs() const;
+    SocketNode *getInputs() const;
+    SocketNode *getOutputs() const;
 
     void setName(std::string name);
     virtual bool operator==(const DNode &node)const;
@@ -63,11 +62,11 @@ public:
     virtual void incVarSocket();
     virtual void decVarSocket(DSocket *socket);
 
-    ContainerNode* getContainer() const;
+    ContainerNode *getContainer() const;
 
 
 private:
-    ContainerNode *container;
+    ContainerNode* container;
 };
 
 class LoopSocketNode;
@@ -76,7 +75,7 @@ class LoopNode : public ContainerNode
 public:
     LoopNode(std::string name="", bool raw=false);
     LoopNode(const LoopNode& node);
-    LoopSocketNode* getLoopedInputs()const;
+    LoopSocketNode *getLoopedInputs()const;
 
 private:
     LoopSocketNode *looped;
@@ -95,7 +94,7 @@ public:
     void deletePartnerSocket(DSocket *);
     void mapPartner(DSocket* here, DSocket *partner);
 
-    void setPartner(LoopSocketNode* p);
+    void setPartner(LoopSocketNode *p);
     DSocket *getPartnerSocket(const DSocket *) const;
     std::vector<DSocket*> getLoopedSockets() const;
     uint getLoopedSocketsCount() const;

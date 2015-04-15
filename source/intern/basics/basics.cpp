@@ -15,7 +15,7 @@ void regContainer()
     auto *containerNodeDecorator = 
         new MindTree::BuildInDecorator("CONTAINER", 
                                      "General.Container", 
-                                     [](bool raw)->DNode*{ return new ContainerNode("Container", raw); });
+                                     [](bool raw)->DNode*{ return std::make_shared<ContainerNode>("Container", raw); });
 
     NodeDataBase::registerNodeType(containerNodeDecorator);
 
@@ -53,7 +53,7 @@ void regForLoop()
     auto *decorator = 
         new MindTree::BuildInDecorator("FOR",
                                      "General.For", 
-                                     [](bool raw)->DNode*{ return new ForNode(raw); });
+                                     [](bool raw)->DNode*{ return std::make_shared<ForNode>(raw); });
 
     NodeDataBase::registerNodeType(decorator);
 
@@ -145,7 +145,7 @@ void regWhileLoop()
     auto *decorator = 
         new MindTree::BuildInDecorator("WHILE", 
                                      "General.While", 
-                                     [](bool raw)->DNode*{ return new WhileNode(raw); });
+                                     [](bool raw)->DNode*{ return std::make_shared<WhileNode>(raw); });
 
     NodeDataBase::registerNodeType(decorator);
 
@@ -161,7 +161,7 @@ void regForeachLoop()
     auto *decorator = 
         new MindTree::BuildInDecorator("FOREACH", 
                                      "General.Foreach", 
-                                     [](bool raw)->DNode*{ return new ForeachNode(raw); });
+                                     [](bool raw)->DNode*{ return std::make_shared<ForeachNode>(raw); });
 
     NodeDataBase::registerNodeType(decorator);
 
@@ -216,7 +216,7 @@ void regCreateList()
     DataCache::addGenericProcessor("CREATELIST", new CacheProcessor(createListProc));
 
     NodeDataBase::registerNodeType(new BuildInDecorator("CREATELIST", "General.Create List", [] (bool raw) {
-        return new CreateListNode(raw);
+        return std::make_shared<CreateListNode>(raw);
     }));
 }
 

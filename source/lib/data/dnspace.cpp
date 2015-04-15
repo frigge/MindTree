@@ -54,7 +54,7 @@ const DNSpace::Iterator& DNSpace::Iterator::operator++()
 
 DNode* DNSpace::Iterator::operator*()    const
 {
-    return space->getNodes().at(pos);
+    return space->getNodes().at(pos).get();
 }
 
 DNSpace::DNSpace()
@@ -65,9 +65,9 @@ DNSpace::DNSpace()
 DNSpace::DNSpace(const DNSpace &space)
     : name(space.getName())
 {
-    for(auto *node : space.getNodes())
+    for(auto node : space.getNodes())
     {
-        DNode *copy = node->clone();
+        auto copy = node->clone();
         addNode(copy);
     }
 }
@@ -75,11 +75,11 @@ DNSpace::DNSpace(const DNSpace &space)
 DNSpace::~DNSpace()
 {
     //try to clear all links before deleting nodes
-    for(auto *node : getNodes())
+    for(auto node : getNodes())
         for(auto *socket : node->getInSockets())
             socket->clearLink();
 
-    for(auto *node : getNodes())
+    for(auto node : getNodes())
         removeNode(node);
 }
 
@@ -89,10 +89,10 @@ bool DNSpace::operator==(DNSpace &space)
             ||getNodeCnt() != space.getNodeCnt())
         return false;
 
-    for(DNode* node1 : getNodes())
+    for(auto node1 : getNodes())
     {
         bool hasASimilar = false;
-        for(DNode *node2 : space.getNodes())
+        for(auto node2 : space.getNodes())
         {
             if(*node1 == *node2)
                 hasASimilar = true;
@@ -107,7 +107,7 @@ bool DNSpace::operator!=(DNSpace &space)
     return(!(*this == space));
 }
 
-void DNSpace::addNode(DNode *node)
+void DNSpace::addNode(NodePtr node)
 {
     if(!node)return;
     node->setSpace(this);
@@ -121,15 +121,18 @@ void DNSpace::addNode(DNode *node)
 
 void DNSpace::removeNode(DNode *node)
 {
-    unregisterNode(node);
-    MT_CUSTOM_SIGNAL_EMITTER("removeNode", node);
-    delete node;
+    nodes.erase(std::remove_if(begin(nodes), 
+                               end(nodes), 
+                               [=](NodePtr other){return other.get() == node;}),
+                end(nodes));
 }
 
-void DNSpace::unregisterNode(DNode *node)    
+void DNSpace::removeNode(NodePtr node)
 {
+    MT_CUSTOM_SIGNAL_EMITTER("removeNode", node);
+
     nodes.erase(std::find(nodes.begin(), nodes.end(), node));
-    node->setSpace(0);
+    node->setSpace(nullptr);
 }
 
 uint DNSpace::getNodeCnt()
@@ -207,7 +210,7 @@ IO::OutStream& MindTree::operator<<(IO::OutStream &stream, const DNSpace &space)
     stream.beginBlock("Space");
     stream << space.getName();
     stream << space.getNodes().size();
-    for (const DNode* node : space.getNodes()) {
+    for (const auto node : space.getNodes()) {
         stream << *node;
     }
     stream.endBlock("Space");
@@ -227,8 +230,8 @@ IO::InStream& MindTree::operator>>(IO::InStream &stream, DNSpace &space)
 
     if(isCont) {
         auto nodes = space.getNodes();
-        auto* inNode = nodes[0];
-        auto* outNode = nodes[1];
+        auto inNode = nodes[0];
+        auto outNode = nodes[1];
 
         NodeType t;
         stream.beginBlock("DNode");
@@ -246,7 +249,7 @@ IO::InStream& MindTree::operator>>(IO::InStream &stream, DNSpace &space)
         NodeType type;
         stream >> type;
 
-        auto* node = NodeDataBase::createNodeByType(type);
+        auto node = NodeDataBase::createNodeByType(type);
         if(node) stream >> *node;
         stream.endBlock("DNode");
 

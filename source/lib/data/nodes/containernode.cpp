@@ -15,8 +15,13 @@ ContainerNode::ContainerNode(std::string name, bool raw)
     setContainerData(new ContainerSpace);
     containerData->setName(name);
     if(!raw) {
-        setInSockets(new SocketNode(DSocket::IN, this, false));
-        setOutSockets(new SocketNode(DSocket::OUT, this, false));
+        auto in = std::make_shared<SocketNode>(DSocket::IN, this, false);
+        setInSockets(in.get());
+        auto out = std::make_shared<SocketNode>(DSocket::OUT, this, false);
+        setOutSockets(out.get());
+
+        containerData->addNode(in);
+        containerData->addNode(out);
     }
 }
 
@@ -47,20 +52,16 @@ void ContainerNode::setInSockets(SocketNode *node)
 {
     if(inSocketNode) {
         containerData->removeNode(inSocketNode);
-        delete inSocketNode;
     }
     inSocketNode = node;
-    containerData->addNode(inSocketNode);
 }
 
 void ContainerNode::setOutSockets(SocketNode *node)
 {
-if(outSocketNode) {
-    containerData->removeNode(outSocketNode);
-    delete outSocketNode;
-}
-outSocketNode = node;
-containerData->addNode(outSocketNode);
+    if(outSocketNode) {
+        containerData->removeNode(outSocketNode);
+    }
+    outSocketNode = node;
 }
 
 void ContainerNode::setSpace(DNSpace *space)
@@ -69,13 +70,13 @@ void ContainerNode::setSpace(DNSpace *space)
     if(containerData) containerData->setParentSpace(space);
 }
 
-NodeList ContainerNode::getAllInNodes()
+std::vector<DNode*> ContainerNode::getAllInNodes()
 {
-    NodeList nodes = DNode::getAllInNodes();
+    std::vector<DNode*> nodes = DNode::getAllInNodes();
     for(auto socket : getOutputs()->getInSockets()) {
         DoutSocket *cntd = nullptr;
         if((cntd = socket->toIn()->getCntdSocket())) {
-            NodeList morenodes = cntd->getNode()->getAllInNodes();
+            std::vector<DNode*> morenodes = cntd->getNode()->getAllInNodes();
             nodes.insert(nodes.end(), morenodes.begin(), morenodes.end());
         }
     }
@@ -124,18 +125,12 @@ void ContainerNode::addtolib()
     //out<<this;
 }
 
-void ContainerNode::addItems(NodeList nodes)
-{
-    for(auto *node : nodes)
-        containerData->addNode(node);
-}
-
-SocketNode* ContainerNode::getInputs() const
+SocketNode *ContainerNode::getInputs() const
 {
     return inSocketNode;
 }
 
-SocketNode* ContainerNode::getOutputs() const
+SocketNode *ContainerNode::getOutputs() const
 {
     return outSocketNode;
 }
@@ -397,13 +392,19 @@ LoopNode::LoopNode(std::string name, bool raw)
         setContainerData(new ContainerSpace);
         getContainerData()->setName(name.c_str());
 
-        inputNode = new SocketNode(DSocket::IN, this);
-        inputNode->setType("LOOPINPUTS");
-        inputNode->setName("Static Inputs");
-        looped = new LoopSocketNode(DSocket::IN, this);
-        loopOutputs = new LoopSocketNode(DSocket::OUT, this);
+        auto in = std::make_shared<SocketNode>(DSocket::IN, this);
+        in->setType("LOOPINPUTS");
+        in->setName("Static Inputs");
+        inputNode = in.get();
+
+        auto loop = std::make_shared<LoopSocketNode>(DSocket::IN, this);
+        looped = loop.get();
+        auto lout = std::make_shared<LoopSocketNode>(DSocket::OUT, this);
+        loopOutputs = lout.get();
         setInSockets(inputNode);
-        getContainerData()->addNode(looped);
+        getContainerData()->addNode(in);
+        getContainerData()->addNode(lout);
+        getContainerData()->addNode(loop);
         setOutSockets(loopOutputs);
 
         looped->setPartner(loopOutputs);
@@ -484,11 +485,11 @@ void ForeachNode::incVarSocket()
     auto t = getLastSocket()->getType();
     if(t.toStr().find("LIST:") != std::string::npos) {
         auto singleType = t.toStr().substr(t.toStr().find(":") + 1);
-        new DoutSocket(getLastSocket()->getName(), singleType, nodes[1]);
+        new DoutSocket(getLastSocket()->getName(), singleType, nodes[1].get());
         new DoutSocket(getLastSocket()->getName(), t, this);
-        new DinSocket(getLastSocket()->getName(), singleType, nodes[2]);
+        new DinSocket(getLastSocket()->getName(), singleType, nodes[2].get());
     }
     else {
-        new DoutSocket(getLastSocket()->getName(), t, nodes[0]);
+        new DoutSocket(getLastSocket()->getName(), t, nodes[0].get());
     }
 }

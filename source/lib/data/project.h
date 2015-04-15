@@ -20,8 +20,6 @@ public:
     static Project* create();
     static Project* load(std::string filename);
 
-    void removeSelectedNodes(NodeList nodes);
-
     void save(); 
     void saveAs(); 
     DNSpace* fromFile(std::string filename);

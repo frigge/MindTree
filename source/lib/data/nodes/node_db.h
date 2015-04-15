@@ -5,17 +5,20 @@
 #include "functional"
 #include "string"
 #include "vector"
+#include "memory"
 
 namespace MindTree
 {
 class DNode;
+typedef std::shared_ptr<DNode> NodePtr;
+
 class NodeType;
 class AbstractNodeDecorator
 {
 public:
     AbstractNodeDecorator(std::string type="", std::string label="");
     virtual ~AbstractNodeDecorator();
-    virtual DNode* operator()(bool) = 0;
+    virtual NodePtr operator()(bool) = 0;
     void setLabel(std::string l);
     std::string getLabel();
     void setType(std::string t);
@@ -28,12 +31,12 @@ private:
 class BuildInDecorator : public AbstractNodeDecorator
 {
 public:
-    BuildInDecorator(std::string type, std::string label, std::function<DNode*(bool)> func);
+    BuildInDecorator(std::string type, std::string label, std::function<NodePtr(bool)> func);
     virtual ~BuildInDecorator();
-    virtual DNode* operator()(bool);
+    virtual NodePtr operator()(bool);
 
 private:
-    std::function<DNode*(bool)> func;
+    std::function<NodePtr(bool)> func;
 };
 
 class NodeDataBase
@@ -42,8 +45,8 @@ public:
     static void scanFolders();
     static void registerNodeType(AbstractNodeDecorator *factory);
     static std::vector<AbstractNodeDecorator*> getFactories();
-    static DNode* createNode(std::string name);
-    static DNode* createNodeByType(const NodeType &t);
+    static NodePtr createNode(std::string name);
+    static NodePtr createNodeByType(const NodeType &t);
 
 private:
     static std::vector<AbstractNodeDecorator*> nodeFactories;

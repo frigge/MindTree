@@ -63,7 +63,7 @@ BPy::object DNodeListIteratorPyWrapper::next()
         BPy::throw_error_already_set();
         return BPy::object();
     }
-    DNode *node = nodelist[_index];
+    NodePtr node = nodelist[_index];
     BPy::object obj = getPyObject(node);
     ++_index;
     return obj;
@@ -80,10 +80,10 @@ PythonNodeDecorator::~PythonNodeDecorator()
 {
 }
 
-DNode* PythonNodeDecorator::operator()(bool raw)
+NodePtr  PythonNodeDecorator::operator()(bool raw)
 {
     GILLocker releaser;
-    DNode *node = new DNode();
+    auto node = std::make_shared<DNode>();
     node->setType(getType());
     try{
         cls(getPyObject(node), raw);
@@ -288,7 +288,7 @@ std::string DNSpacePyWrapper::__str__()
 {
     if(!alive()) return std::string();
     std::string str("[");
-    for(DNode *node : getWrapped<DNSpace>()->getNodes()){
+    for(NodePtr node : getWrapped<DNSpace>()->getNodes()){
         str.append("\""+std::string(node->getNodeName().c_str())+"\"");
         if(node != *getWrapped<DNSpace>()->getNodes().end())
             str.append(", ");
@@ -306,7 +306,7 @@ std::string DNSpacePyWrapper::__repr__()
 BPy::object DNSpacePyWrapper::__getitem__(std::string name)
 {
     if(!alive()) return BPy::object();
-    for(DNode *node : getWrapped<DNSpace>()->getNodes()){
+    for(NodePtr node : getWrapped<DNSpace>()->getNodes()){
         if(node->getNodeName() == name)
             return getPyObject(node);
     }
@@ -354,7 +354,10 @@ void ContainerSpacePyWrapper::wrap()
 ContainerNodePyWrapper* ContainerSpacePyWrapper::getContainer()
 {
     if(!alive()) return nullptr;
-    return new ContainerNodePyWrapper(getWrapped<ContainerSpace>()->getContainer());
+    auto node = getWrapped<ContainerSpace>()->getContainer();
+    NodeList nodes = node->getSpace()->getNodes();
+    auto it = std::find_if(begin(nodes), end(nodes), [node](NodePtr other) {return other.get() == node;});
+    return new ContainerNodePyWrapper(*it);
 }
 
 BPy::object ContainerSpacePyWrapper::getParent()
@@ -364,8 +367,8 @@ BPy::object ContainerSpacePyWrapper::getParent()
     return getPyObject(space->getParent());
 }
 
-DNodePyWrapper::DNodePyWrapper(DNode *node)
-    : PyWrapper(node)
+DNodePyWrapper::DNodePyWrapper(NodePtr node)
+    : PyWrapper(node), _node(node)
 {
 }
 
@@ -374,7 +377,7 @@ DNodePyWrapper::~DNodePyWrapper()
 }
 
 //helper
-BPy::object MindTree::getPyObject(DNode* node)
+BPy::object MindTree::getPyObject(NodePtr node)
 {
     if(!node) return BPy::object();
 
@@ -390,6 +393,11 @@ BPy::object MindTree::getPyObject(DNode* node)
                 return obj;
             }
     }
+}
+
+NodePtr DNodePyWrapper::getNodePtr() const
+{
+    return _node;
 }
 
 void DNodePyWrapper::wrap()
@@ -516,7 +524,7 @@ BPy::list DNodePyWrapper::out()
     return l;
 }
 
-ContainerNodePyWrapper::ContainerNodePyWrapper(ContainerNode *node)
+ContainerNodePyWrapper::ContainerNodePyWrapper(std::shared_ptr<ContainerNode> node)
     : DNodePyWrapper(node)
 {
 }

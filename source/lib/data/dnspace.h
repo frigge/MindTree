@@ -50,9 +50,9 @@ public:
     DNSpace();
     DNSpace(const DNSpace &space);
     virtual ~DNSpace();
-    void addNode(DNode *node);
+    void addNode(NodePtr node);
+    void removeNode(NodePtr node);
     void removeNode(DNode *node);
-    void unregisterNode(DNode *node);
     std::string getName() const;
 	void setName(std::string value);
     bool operator==(DNSpace &space);

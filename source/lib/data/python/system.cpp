@@ -59,7 +59,7 @@ void MindTree::Python::sys::regNode(PyObject *nodeClass)
 BPy::object MindTree::Python::sys::createNode(std::string name)    
 {
     GILReleaser releaser;
-    DNode *node = MindTree::NodeDataBase::createNode(name);
+    NodePtr node = MindTree::NodeDataBase::createNode(name);
     if(!node) return BPy::object();
 
     return getPyObject(node);

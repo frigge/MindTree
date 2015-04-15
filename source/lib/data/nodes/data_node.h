@@ -60,7 +60,7 @@ private:
 class DNSpace;
 class ContainerNode;
 
-typedef std::vector<DNode*> NodeList;
+typedef std::vector<NodePtr> NodeList;
 typedef std::vector<const DNode*> ConstNodeList;
 
 
@@ -84,7 +84,7 @@ public:
 
     const NodeType& getType()const;
     void setType(NodeType value);
-    virtual DNode* clone();
+    virtual NodePtr clone();
 
     const Vec2i& getPos()const;
     void setPos(Vec2i value);
@@ -95,7 +95,7 @@ public:
     template<class C>
     C* getDerived();
 
-    virtual NodeList getAllInNodes();
+    virtual std::vector<DNode*> getAllInNodes();
     virtual ConstNodeList getAllInNodesConst() const;
 
     virtual void setName(std::string name);

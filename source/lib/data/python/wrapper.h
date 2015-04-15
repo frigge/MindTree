@@ -24,6 +24,7 @@
 #include "iostream"
 
 #include "glm/glm.hpp"
+#include "memory"
 #include "data/nodes/node_db.h"
 #include "data/windowfactory.h"
 
@@ -32,10 +33,12 @@ namespace MindTree
 {
     
 class DNode;
+typedef std::shared_ptr<DNode> NodePtr;
+typedef std::vector<NodePtr> NodeList;
 class ContainerSpace;
 class ContainerNode;
 
-BPy::object getPyObject(DNode* node);
+BPy::object getPyObject(NodePtr node);
 
 template<class T>
 struct PyConverter{
@@ -118,7 +121,7 @@ class DNodePyWrapper;
 class DNodeListIteratorPyWrapper
 {
 public:
-    DNodeListIteratorPyWrapper(std::vector<DNode*> nodelist);
+    DNodeListIteratorPyWrapper(NodeList nodelist);
     virtual ~DNodeListIteratorPyWrapper();
     static void wrap();
     DNodeListIteratorPyWrapper* iter();
@@ -126,7 +129,7 @@ public:
 
 private:
     size_t _index;
-    std::vector<DNode*> nodelist;
+    NodeList nodelist;
 };
 
 class PythonNodeDecorator : public MindTree::AbstractNodeDecorator
@@ -134,7 +137,7 @@ class PythonNodeDecorator : public MindTree::AbstractNodeDecorator
 public:
     PythonNodeDecorator(BPy::object cls);
     virtual ~PythonNodeDecorator();
-    DNode* operator()(bool);
+    NodePtr operator()(bool);
 
 private:
     BPy::object cls;
@@ -178,6 +181,7 @@ private:
 class Project;
 class DNSpace;
 class DNode;
+typedef std::shared_ptr<DNode> NodePtr;
 class DSocket;
 class DinSocket;
 class DoutSocket;
@@ -229,7 +233,7 @@ class DoutSocketPyWrapper;
 class DNodePyWrapper : public PyWrapper
 {
 public:
-    DNodePyWrapper(DNode *node);
+    DNodePyWrapper(NodePtr node);
     virtual ~DNodePyWrapper();
 
     static void init(BPy::object self);
@@ -250,20 +254,41 @@ public:
     DinSocketPyWrapper* addInSocket(std::string name, std::string type);
     DoutSocketPyWrapper* addOutSocket(std::string name, std::string type);
     BPy::object getSpace();
+
+    NodePtr getNodePtr() const;
+
+private:
+    NodePtr _node;
 };
+
 template<>
-struct PyConverter<DNode*> {
-    static BPy::object pywrap(DNode *data) { return getPyObject(data); }
+struct PyConverter<NodePtr> {
+    static BPy::object pywrap(NodePtr data) { return getPyObject(data); }
 };
 
 class ContainerSpacePyWrapper;
 class ContainerNodePyWrapper: public DNodePyWrapper
 {
-    PYWRAPHEAD(ContainerNode);
+public:
+    ContainerNodePyWrapper(std::shared_ptr<ContainerNode> node);
+    virtual ~ContainerNodePyWrapper();
+
+    static void wrap();
+
     ContainerSpacePyWrapper* getGraph();
 
 };
-PYWRAPPERFUNC(ContainerNode)
+
+template<>
+struct PyConverter<std::shared_ptr<ContainerNode>>
+{
+    static BPy::object pywrap(std::shared_ptr<ContainerNode> data)
+    {
+        return BPy::object(new ContainerNodePyWrapper(data));
+    }
+
+    typedef ContainerNodePyWrapper t;
+};
 
 class DSocketPyWrapper;
 class DSocketPyWrapper : public PyWrapper

@@ -35,7 +35,7 @@ std::string AbstractNodeDecorator::getType()
     return type;
 }
 
-BuildInDecorator::BuildInDecorator(std::string type, std::string label, std::function<DNode*(bool)> func)
+BuildInDecorator::BuildInDecorator(std::string type, std::string label, std::function<NodePtr(bool)> func)
     : AbstractNodeDecorator(type, label), func(func)
 {
 }
@@ -44,7 +44,7 @@ BuildInDecorator::~BuildInDecorator()
 {
 }
 
-DNode* BuildInDecorator::operator()(bool raw)    
+NodePtr BuildInDecorator::operator()(bool raw)    
 {
     return func(raw);
 }
@@ -54,7 +54,7 @@ void NodeDataBase::registerNodeType(AbstractNodeDecorator *factory)
     nodeFactories.push_back(factory);
 }
 
-DNode* NodeDataBase::createNode(std::string name)    
+NodePtr NodeDataBase::createNode(std::string name)    
 {
     for(auto fac : nodeFactories)
         if(fac->getLabel() == name)
@@ -64,7 +64,7 @@ DNode* NodeDataBase::createNode(std::string name)
     return nullptr;
 }
 
-DNode* NodeDataBase::createNodeByType(const NodeType &t)
+NodePtr NodeDataBase::createNodeByType(const NodeType &t)
 {
     for(auto fac : nodeFactories)
         if(t == fac->getType())

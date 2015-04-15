@@ -17,6 +17,7 @@
 */
 
 #include "data/properties.h"
+#include "data/dnspace.h"
 #include "data/nodes/data_node.h"
 #include "pycache_main.h"
 
@@ -36,7 +37,11 @@ void MindTree::PyCacheProcessor::operator()(MindTree::DataCache* cache)
 
 MindTree::DNodePyWrapper* MindTree::wrap_DataCache_getNode(MindTree::DataCache *cache)    
 {
-    return new MindTree::DNodePyWrapper(const_cast<DNode*>(cache->getNode())); 
+    const DNode *node = cache->getNode();
+    NodeList nodes = node->getSpace()->getNodes();
+    auto it = std::find_if(begin(nodes), end(nodes), [node](NodePtr other) {return other.get() == node;});
+
+    return new MindTree::DNodePyWrapper(*it);
 }
 
 BPy::object MindTree::wrap_DataCache_getData(MindTree::DataCache *self, int index)

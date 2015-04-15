@@ -27,32 +27,32 @@ using namespace MindTree;
 BOOST_PYTHON_MODULE(mathnodes){
     NodeDataBase::registerNodeType(new BuildInDecorator( "ADD", "Math.Add",
                                     [] (bool raw){
-                                        return new MathNode(NodeType("ADD"), raw);
+                                        return std::make_shared<MathNode>(NodeType("ADD"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "SUBTRACT", "Math.Subtract",
                                     [] (bool raw){
-                                        return new MathNode(NodeType("SUBTRACT"), raw);
+                                        return std::make_shared<MathNode>(NodeType("SUBTRACT"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "MULTIPLY", "Math.Multiply",
                                     [](bool raw){
-                                        return new MathNode(NodeType("MULTIPLY"), raw);
+                                        return std::make_shared<MathNode>(NodeType("MULTIPLY"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "DIVIDE", "Math.Divide", 
                                     [] (bool raw){
-                                        return new MathNode(NodeType("DIVIDE"), raw);
+                                        return std::make_shared<MathNode>(NodeType("DIVIDE"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "DOTPRODUCT", "Math.Dot Product",
                                     [] (bool raw){
-                                        return new MathNode(NodeType("DOTPRODUCT"), raw);
+                                        return std::make_shared<MathNode>(NodeType("DOTPRODUCT"), raw);
                                     }));
 
     NodeDataBase::registerNodeType(new BuildInDecorator( "MODULO", "Math.Modulo",
                                     [] (bool raw){
-                                        return new MathNode(NodeType("MODULO"), raw);
+                                        return std::make_shared<MathNode>(NodeType("MODULO"), raw);
                                     }));
 
 }

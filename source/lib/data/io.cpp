@@ -466,8 +466,12 @@ InStream& InStream::operator>>(ContainerNode &node)
     auto *space = node.getContainerData();
     space->setName(node.getNodeName());
 
-    node.setInSockets(new SocketNode(DSocket::IN, &node, true));
-    node.setOutSockets(new SocketNode(DSocket::OUT, &node, true));
+    auto in = std::make_shared<SocketNode>(DSocket::IN, &node, true);
+    node.setInSockets(in.get());
+    node.getContainerData()->addNode(in);
+    auto out = std::make_shared<SocketNode>(DSocket::OUT, &node, true);
+    node.setOutSockets(out.get());
+    node.getContainerData()->addNode(out);
 
     *this >> static_cast<DNSpace&>(*space);
     return *this;

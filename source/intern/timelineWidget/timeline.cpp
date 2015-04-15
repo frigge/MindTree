@@ -262,7 +262,7 @@ BOOST_PYTHON_MODULE(mttimeline) {
     auto *timelineNodeDecorator = 
         new MindTree::BuildInDecorator("TIMELINE", 
                                      "Values.Frame", 
-                                     [](bool raw)->MindTree::DNode*{ return new TimelineNode(raw); });
+                                     [](bool raw)->MindTree::DNode*{ return std::make_shared<TimelineNode>(raw); });
 
     MindTree::NodeDataBase::registerNodeType(timelineNodeDecorator);
 

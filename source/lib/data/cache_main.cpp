@@ -88,8 +88,8 @@ void LoopCache::setStep(int step)
 {
     stepValue = step;
     auto nodes = getNode()->getContainerData()->getNodes();
-    DataCache::invalidate(nodes[0]); //static inputs
-    DataCache::invalidate(nodes[1]); //looped inputs
+    DataCache::invalidate(nodes[0].get()); //static inputs
+    DataCache::invalidate(nodes[1].get()); //looped inputs
 }
 
 int LoopCache::getStep()const
@@ -197,8 +197,8 @@ void DataCache::invalidate(const DNode *node)
         const auto *contnode = node->getDerivedConst<ContainerNode>();
         auto *contData = contnode->getContainerData();
         if(contData)
-            for (const auto *n : contnode->getContainerData()->getNodes())
-                invalidate(n);
+            for (const auto n : contnode->getContainerData()->getNodes())
+                invalidate(n.get());
     }
 }
 

@@ -66,7 +66,7 @@ BOOST_PYTHON_MODULE(simulation) {
     auto *decorator = new BuildInDecorator("SIMULATION", 
                                            "General.Simulation", 
                                            [] (bool raw) {
-                                                return new SimulationNode(raw);
+                                                return std::make_shared<SimulationNode>(raw);
     });
     NodeDataBase::registerNodeType(decorator);
 
