@@ -62,7 +62,7 @@ BPy::object MindTree::Python::sys::createNode(std::string name)
     NodePtr node = MindTree::NodeDataBase::createNode(name);
     if(!node) return BPy::object();
 
-    return getPyObject(node);
+    return utils::getPyObject(node);
 }
 
 BPy::list MindTree::Python::sys::getRegisteredNodes()    

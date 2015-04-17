@@ -22,7 +22,7 @@ void regSimulation()
         int outindex = std::distance(bout, std::find(bout, eout, out));
         MindTree::DataCache simCache(cacheCtx);
         simCache.setType(out->getType());
-        simCache.setNode(loopoutnode);
+        simCache.setNode(loopoutnode.get());
 
         auto data = simCache.getData(outindex);
         cacheCtx->addData(outindex, data);

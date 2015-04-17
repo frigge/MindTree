@@ -121,6 +121,9 @@ void DNSpace::addNode(NodePtr node)
 
 void DNSpace::removeNode(DNode *node)
 {
+    MT_CUSTOM_SIGNAL_EMITTER("removeNode", node);
+    node->setSpace(nullptr);
+
     nodes.erase(std::remove_if(begin(nodes), 
                                end(nodes), 
                                [=](NodePtr other){return other.get() == node;}),
@@ -129,8 +132,7 @@ void DNSpace::removeNode(DNode *node)
 
 void DNSpace::removeNode(NodePtr node)
 {
-    MT_CUSTOM_SIGNAL_EMITTER("removeNode", node);
-
+    MT_CUSTOM_SIGNAL_EMITTER("removeNode", node.get());
     nodes.erase(std::find(nodes.begin(), nodes.end(), node));
     node->setSpace(nullptr);
 }

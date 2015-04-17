@@ -32,13 +32,20 @@ namespace BPy = boost::python;
 namespace MindTree
 {
     
+class ContainerSpace;
+class ContainerNode;
+class DNSpace;
 class DNode;
 typedef std::shared_ptr<DNode> NodePtr;
 typedef std::vector<NodePtr> NodeList;
-class ContainerSpace;
-class ContainerNode;
 
+namespace utils
+{
 BPy::object getPyObject(NodePtr node);
+BPy::object getPyObject(DNSpace *space);
+
+NodePtr getNodePtr(DNode* node);
+}
 
 template<class T>
 struct PyConverter{
@@ -179,9 +186,6 @@ private:
 };
 
 class Project;
-class DNSpace;
-class DNode;
-typedef std::shared_ptr<DNode> NodePtr;
 class DSocket;
 class DinSocket;
 class DoutSocket;
@@ -262,8 +266,16 @@ private:
 };
 
 template<>
+struct PyConverter<DNode*> {
+    static BPy::object pywrap(DNode *data) 
+    {
+        return utils::getPyObject(utils::getNodePtr(data));
+    }
+};
+
+template<>
 struct PyConverter<NodePtr> {
-    static BPy::object pywrap(NodePtr data) { return getPyObject(data); }
+    static BPy::object pywrap(NodePtr data) { return utils::getPyObject(data); }
 };
 
 class ContainerSpacePyWrapper;

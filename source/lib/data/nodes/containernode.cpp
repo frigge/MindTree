@@ -403,8 +403,8 @@ LoopNode::LoopNode(std::string name, bool raw)
         loopOutputs = lout.get();
         setInSockets(inputNode);
         getContainerData()->addNode(in);
-        getContainerData()->addNode(lout);
         getContainerData()->addNode(loop);
+        getContainerData()->addNode(lout);
         setOutSockets(loopOutputs);
 
         looped->setPartner(loopOutputs);

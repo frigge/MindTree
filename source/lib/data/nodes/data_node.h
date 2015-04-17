@@ -73,7 +73,7 @@ public:
     };
 
     DNode(std::string name="");
-    DNode(const DNode& node);
+    explicit DNode(const DNode& node);
 
     static NodeList copy(NodeList nodes);
     virtual ~DNode();
