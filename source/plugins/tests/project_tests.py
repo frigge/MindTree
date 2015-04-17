@@ -12,11 +12,7 @@ def testNewProject():
 
     MT.newProject()
 
-    try:
-        print(node.name)
-    except ReferenceError:
-        return True
-    return False
+    return len(MT.project.root) == 0
 
 def testSaveProject():
     node = MT.createNode("Math.Add")
@@ -132,5 +128,5 @@ def testLoadProject():
     test.floatEqual(node1.insockets[0].value, 5.7, 0.00001)
     test.equal(node9.insockets[3].value, False)
     test.equal(node9.insockets[4].value, True)
-    test.equal(node9.insockets[5].value, (256, 256))
+    test.equal(node9.insockets[5].value, 512)
     return test.exit()

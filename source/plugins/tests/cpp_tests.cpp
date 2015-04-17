@@ -5,13 +5,14 @@
 #include "data/io.h"
 
 namespace BPy = boost::python;
+using namespace MindTree;
 
 bool testSocketProperties()
 {
-    MindTree::DNode *node = MindTree::NodeDataBase::createNode("Values.Float Value");
+    NodePtr node = NodeDataBase::createNode("Values.Float Value");
     node->getInSockets()[0]->setProperty(2.5);
 
-    MindTree::DataCache *cache = new MindTree::DataCache(node->getOutSockets()[0]);
+    DataCache *cache = new DataCache(node->getOutSockets()[0]);
 
     std::cout << "cached value is: " << cache->getData(0).getData<double>() << std::endl;
     
@@ -21,29 +22,29 @@ bool testSocketProperties()
 bool testProperties()
 {
     bool success=true;
-    MindTree::Property floatprop{2.5};
+    Property floatprop{2.5};
     std::cout << "created " << floatprop.getType().toStr() << " Property: "
         << floatprop.getData<double>() << std::endl;
     success = success && floatprop.getData<double>() == 2.5;
 
-    MindTree::Property intprop{2};
+    Property intprop{2};
     std::cout << "created " << intprop.getType().toStr() << " Property: "
         << intprop.getData<int>() << std::endl;
     success = success && intprop.getData<int>() == 2;
 
-    MindTree::Property stringprop{std::string("hallo test")};
+    Property stringprop{std::string("hallo test")};
     std::cout << "created " << stringprop.getType().toStr() << " Property: "
         << stringprop.getData<std::string>() << std::endl;
     success = success && stringprop.getData<std::string>() == "hallo test";
 
-    MindTree::Property colorprop{glm::vec4(1, 0, 0, 1)};
+    Property colorprop{glm::vec4(1, 0, 0, 1)};
     glm::vec4 color = colorprop.getData<glm::vec4>();
     std::cout << "created " << colorprop.getType().toStr() << " Property: ("
         << color.r << ", " << color.g << ", " << color.b << ", " << color.a << ")" << std::endl;
     success = success && colorprop.getData<glm::vec4>() == glm::vec4(1, 0, 0, 1);
 
     glm::vec3 oldvec = glm::vec3(24454.456, 10, 25);
-    MindTree::Property vec3prop{oldvec};
+    Property vec3prop{oldvec};
     glm::vec3 vec3 = vec3prop.getData<glm::vec3>();
     std::cout << "created " << vec3prop.getType().toStr() << " Property: ("
         << vec3.x << ", " << vec3.y << ", " << vec3.z << ")" << std::endl;
@@ -54,17 +55,17 @@ bool testProperties()
 
 bool testPropertiesTypeInfo()
 {
-    MindTree::Property prop{2.5};
+    Property prop{2.5};
     std::string type1 = prop.getType().toStr();
     std::cout << "original Prop Type: " << type1 << std::endl;
     if(type1 != "FLOAT") return false;
 
-    MindTree::Property copyProp(prop);
+    Property copyProp(prop);
     std::cout << "copy Prop Type: " << copyProp.getType().toStr() << std::endl;
     if(type1 != copyProp.getType().toStr())
         return false;
 
-    MindTree::Property assignmentProp;
+    Property assignmentProp;
     assignmentProp = prop;
     std::cout << "assignment Prop Type: " << assignmentProp.getType().toStr() << std::endl;
     if(type1 != assignmentProp.getType().toStr())
@@ -76,7 +77,7 @@ bool testPropertiesTypeInfo()
 bool testObjectInProperty()
 {
     GeoObjectPtr obj = std::make_shared<GeoObject>();
-    MindTree::Property objProp{obj};
+    Property objProp{obj};
     std::cout << "original Prop Type: " << objProp.getType().toStr() << std::endl;
     if(objProp.getType() != "TRANSFORMABLE")
         return false;
@@ -88,7 +89,7 @@ bool testPropertyConversion()
 {
     int a = 25;
     std::cout << "creating int value: " << a << std::endl;
-    MindTree::Property intprop{a};
+    Property intprop{a};
     std::cout << "Property has type: " << intprop.getType().toStr() << std::endl;
     double converted = intprop.getData<double>();
 
@@ -126,17 +127,17 @@ bool testRaycasting()
 
 bool testSaveLoadProperties()
 {
-    MindTree::Property prop{5};
+    Property prop{5};
     {
-        MindTree::IO::OutStream str("testSaveLoadProperties.mt");
+        IO::OutStream str("testSaveLoadProperties.mt");
         str.beginBlock("Property");
         str << prop;
         str.endBlock("Property");
     }
 
-    MindTree::Property newProp;
+    Property newProp;
     {
-        MindTree::IO::InStream str("testSaveLoadProperties.mt");
+        IO::InStream str("testSaveLoadProperties.mt");
         str.beginBlock("Property");
         str >> newProp;
         str.endBlock("Property");
@@ -147,20 +148,20 @@ bool testSaveLoadProperties()
 
 bool testCreateList()
 {
-    auto *createListNode = MindTree::NodeDataBase::createNode("General.Create List");
-    auto *floatValueNode = MindTree::NodeDataBase::createNode("Values.Float Value");
-    auto *intValueNode = MindTree::NodeDataBase::createNode("Values.Int Value");
+    NodePtr createListNode = NodeDataBase::createNode("General.Create List");
+    NodePtr floatValueNode = NodeDataBase::createNode("Values.Float Value");
+    NodePtr intValueNode = NodeDataBase::createNode("Values.Int Value");
 
-    MindTree::Project::instance()->getRootSpace()->addNode(createListNode);
-    MindTree::Project::instance()->getRootSpace()->addNode(floatValueNode);
-    MindTree::Project::instance()->getRootSpace()->addNode(intValueNode);
+    Project::instance()->getRootSpace()->addNode(createListNode);
+    Project::instance()->getRootSpace()->addNode(floatValueNode);
+    Project::instance()->getRootSpace()->addNode(intValueNode);
 
     floatValueNode->getInSockets()[0]->setProperty(5.0);
     intValueNode->getInSockets()[0]->setProperty(10);
     createListNode->getInSockets()[0]->setCntdSocket(floatValueNode->getOutSockets()[0]);
     createListNode->getInSockets()[1]->setCntdSocket(intValueNode->getOutSockets()[0]);
 
-    MindTree::DataCache cache(createListNode->getOutSockets()[0]);
+    DataCache cache(createListNode->getOutSockets()[0]);
 
     auto output = cache.getOutput();
 
