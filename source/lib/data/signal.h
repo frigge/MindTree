@@ -158,10 +158,7 @@ public:
             if (it != end(this->handlers)) {
                 this->handlers.erase(it);
                 handler->detached = true;
-            //std::cout << "handler: " << handler << " released" << std::endl;
             }
-            //else
-                //std::cout << "huh? (<Args...>)" << std::endl;
         };
 
         cb.copyNotifier = [this] (CallbackHandler* handler) {

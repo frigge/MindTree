@@ -77,113 +77,93 @@ DNode::DNode(std::string name)
           nodeName(name),
           _signalLiveTime(new Signal::LiveTimeTracker(this)),
           _buildInType(NODE)
-    {
-    };
+{
+}
 
-    DNode::DNode(const DNode& node)
-        : selected(false),
-          space(nullptr),
-          varcnt(0),
-          ID(count++),
-          nodeName(node.nodeName),
-          type(node.getType()),
-          _signalLiveTime(new Signal::LiveTimeTracker(this)),
-          _buildInType(node._buildInType)
-    {
-        for(DinSocket *socket : node.getInSockets())
-            new DinSocket(*socket, this);
-        for(DoutSocket *socket : node.getOutSockets())
-            new DoutSocket(*socket, this);
-        varsocket = const_cast<DSocket*>(CopySocketMapper::getCopy(node.getVarSocket()));
-        lastsocket = const_cast<DSocket*>(CopySocketMapper::getCopy(node.getLastSocket()));
+DNode::DNode(const DNode& node)
+: selected(false),
+    space(nullptr),
+    varcnt(0),
+    ID(count++),
+    nodeName(node.nodeName),
+    type(node.getType()),
+    _signalLiveTime(new Signal::LiveTimeTracker(this)),
+    _buildInType(node._buildInType)
+{
+    for(DinSocket *socket : node.getInSockets())
+        new DinSocket(*socket, this);
+    for(DoutSocket *socket : node.getOutSockets())
+        new DoutSocket(*socket, this);
+    varsocket = const_cast<DSocket*>(CopySocketMapper::getCopy(node.getVarSocket()));
+    lastsocket = const_cast<DSocket*>(CopySocketMapper::getCopy(node.getLastSocket()));
 
-        CopyNodeMapper::setNodePair(const_cast<DNode*>(&node), this);
-        setPos(node.getPos());
-    }
+    CopyNodeMapper::setNodePair(const_cast<DNode*>(&node), this);
+    setPos(node.getPos());
+}
 
-    DNode::~DNode()
-    {
-        MT_CUSTOM_SIGNAL_EMITTER("nodeDeleted", this);
-        for (auto *in : getInSockets())
+DNode::~DNode()
+{
+    MT_CUSTOM_SIGNAL_EMITTER("nodeDeleted", this);
+    for (auto *in : getInSockets())
+        in->clearLink();
+
+    for (auto *out : getOutSockets())
+        for (auto *in : out->getCntdSockets())
             in->clearLink();
 
-        for (auto *out : getOutSockets())
-            for (auto *in : out->getCntdSockets())
-                in->clearLink();
+    for(DinSocket *socket : getInSockets())
+        delete socket;
+    for(DoutSocket *socket : getOutSockets())
+        delete socket;
+}
 
-        for(DinSocket *socket : getInSockets())
-            delete socket;
-        for(DoutSocket *socket : getOutSockets())
-            delete socket;
-    }
+DNode::BuildInType DNode::getBuildInType() const
+{
+    return _buildInType;
+}
 
-    DNode::BuildInType DNode::getBuildInType() const
-    {
-        return _buildInType;
-    }
+bool DNode::getSelected()
+{
+    return selected;
+}
 
-    bool DNode::getSelected()
-    {
-        return selected;
-    }
+void DNode::setSelected(bool value)
+{
+    MT_CUSTOM_SIGNAL_EMITTER("selectionChanged", this);
+    selected = value;
+}
 
-    void DNode::setSelected(bool value)
-    {
-        MT_CUSTOM_SIGNAL_EMITTER("selectionChanged", this);
-        selected = value;
-    }
+const Vec2i& DNode::getPos()const
+{
+    return pos;
+}
 
-    const Vec2i& DNode::getPos()const
-    {
-        return pos;
-    }
+void DNode::setPos(Vec2i value)
+{
+    pos = value;
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime.get(), "nodePositionChanged");
+}
 
-    void DNode::setPos(Vec2i value)
-    {
-        pos = value;
-        MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime.get(), "nodePositionChanged");
-    }
+DSocket* DNode::getSocketByIDName(std::string idname)    
+{
+    for(auto *socket : getInSockets())
+        if(socket->getIDName() == idname)
+            return socket;
+    for(auto *socket : getOutSockets())
+        if(socket->getIDName() == idname)
+            return socket;
+    return 0;
+}
 
-    DSocket* DNode::getSocketByIDName(std::string idname)    
-    {
-        for(auto *socket : getInSockets())
-            if(socket->getIDName() == idname)
-                return socket;
-        for(auto *socket : getOutSockets())
-            if(socket->getIDName() == idname)
-                return socket;
-        return 0;
-    }
+const NodeType& DNode::getType()const
+{
+    return type;
+}
 
-    //void DNode::blockCB()    
-    //{
-    //    addSocketCallbacks.setBlock(true);
-    //}
-    //
-    //void DNode::unblockCB()    
-    //{
-    //    addSocketCallbacks.setBlock(false);
-    //}
-    //
-    //void DNode::blockRegCB()    
-    //{
-    //    blockCBregister = true; 
-    //}
-    //
-    //void DNode::unblockRegCB()    
-    //{
-    //    blockCBregister = false;
-    //}
-    //
-    const NodeType& DNode::getType()const
-    {
-        return type;
-    }
-
-    void DNode::setType(NodeType value)
-    {
-        type = value;
-    }
+void DNode::setType(NodeType value)
+{
+    type = value;
+}
 
 NodePtr DNode::clone()
 {
