@@ -57,6 +57,13 @@ def testContainerCache():
     test.equal(add.insockets[1].type, "FLOAT")
     test.equal(add.insockets[2].type, "FLOAT")
     test.equal(inputnode.outsockets[0].type, "FLOAT")
+
+    valuenode.insockets[0].value = 10.
+    MT.cache.DataCache.invalidate(valuenode)
+    cache = MT.cache.DataCache(container.outsockets[0])
+    expected_result = 10. + value2 + value3 + value4
+    test.equal(cache.getOutput(), expected_result, "invalidation")
+
     return test.exit()
 
 def testForLoopCache():

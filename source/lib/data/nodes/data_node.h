@@ -69,7 +69,8 @@ class DNode : public Object, public PyExposable
 public:
     enum BuildInType {
         NODE = 1,
-        CONTAINER = 2
+        CONTAINER = 2,
+        SOCKETNODE = 3
     };
 
     DNode(std::string name="");

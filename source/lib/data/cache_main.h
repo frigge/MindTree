@@ -121,6 +121,7 @@ public:
     void setContext(CacheContext *context);
 
 private:
+    static void invalidateNode(const DNode *node);
     std::vector<Property>& _getCachedOutputs();
     void _pushInputData(Property prop, int index = -1);
 

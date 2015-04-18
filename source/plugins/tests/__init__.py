@@ -9,6 +9,8 @@ from .project_tests import *
 from .datacachetests import *
 from .simulationtests import *
 from .list_tests import *
+from .containertests import *
+from .switchtests import *
 
 import sys, traceback
 

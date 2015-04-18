@@ -174,22 +174,39 @@ void DataCache::setContext(CacheContext *context)
     _context = context;
 }
 
-
-void DataCache::invalidate(const DNode *node)
+void DataCache::invalidateNode(const DNode *node)
 {
     if(!node) return;
 
     {
         std::lock_guard<std::recursive_mutex> lock(_cachedOutputsMutex);
         auto cacheIter = _cachedOutputs.find(node);
-        if(cacheIter != end(_cachedOutputs))
-            _cachedOutputs.erase(cacheIter);
+        if(cacheIter == end(_cachedOutputs))
+            return;
+
+        _cachedOutputs.erase(cacheIter);
     }
+}
+
+void DataCache::invalidate(const DNode *node)
+{
+    invalidateNode(node);
 
     //recursively invalidate everything following this node
     for(const auto *out : node->getOutSockets()) {
         for(const auto *ins : out->getCntdSockets()) {
-            invalidate(ins->getNode());
+            DNode* n = ins->getNode();
+            if(n->getBuildInType() == DNode::SOCKETNODE) {
+                ContainerNode *cnode = dynamic_cast<SocketNode*>(n)->getContainer();
+                invalidateNode(cnode);
+                for(auto cout : cnode->getOutSockets()) {
+                    for(auto *cntdOnCont : cout->getCntdSockets()) {
+                        invalidate(cntdOnCont->getNode());
+                    }
+                }
+            } else {
+                invalidate(ins->getNode());
+            }
         }
     }
 
@@ -200,6 +217,7 @@ void DataCache::invalidate(const DNode *node)
             for (const auto n : contnode->getContainerData()->getNodes())
                 invalidate(n.get());
     }
+
 }
 
 bool DataCache::isCached(const DNode *node)

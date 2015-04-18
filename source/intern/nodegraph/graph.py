@@ -169,8 +169,24 @@ class NodeGraph(QGraphicsView):
         self.setAcceptDrops(True)
         self.dragPos = None
 
+        containerShortcut = QShortcut(self)
+        containerShortcut.setContext(Qt.WidgetShortcut)
+        containerShortcut.setKey("c")
+        containerShortcut.activated.connect(self.createContainer)
+
     def newGraph(self, project):
         self.scene().changeSpace(project.root)
+
+
+    def createContainer(self):
+        items = self.scene().selectedItems()
+        if len(items) == 0:
+            return
+
+        nodes = [n.data for n in items]
+
+        MT.createContainer(nodes)
+
 
     def resizeEvent(self, event):
         QGraphicsView.resizeEvent(self, event)

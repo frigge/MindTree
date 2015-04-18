@@ -232,6 +232,7 @@ bool ContainerNode::operator!=(const DNode &node)const
 SocketNode::SocketNode(DSocket::SocketDir dir, ContainerNode *contnode, bool raw)
     : container(contnode)
 {
+    setBuildInType(SOCKETNODE);
     if (dir == DSocket::IN)
     {
         setType("INSOCKETS");
@@ -253,6 +254,7 @@ SocketNode::SocketNode(const SocketNode &node)
     container(CopyNodeMapper::getCopy(static_cast<DNode*>(node.getContainer()))
               ->getDerived<ContainerNode>())
 {
+    setBuildInType(SOCKETNODE);
 }
 
 ContainerNode* SocketNode::getContainer() const

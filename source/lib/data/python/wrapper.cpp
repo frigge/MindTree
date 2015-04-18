@@ -391,14 +391,14 @@ BPy::object MindTree::utils::getPyObject(NodePtr node)
     if(!node) return BPy::object();
 
     switch(node->getBuildInType()) {
-        case DNode::NODE:
-            {
-                BPy::object obj(new DNodePyWrapper(node));
-                return obj;
-            }
         case DNode::CONTAINER:
             {
                 BPy::object obj(new ContainerNodePyWrapper(std::dynamic_pointer_cast<ContainerNode>(node)));
+                return obj;
+            }
+        default:
+            {
+                BPy::object obj(new DNodePyWrapper(node));
                 return obj;
             }
     }
