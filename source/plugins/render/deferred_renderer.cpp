@@ -3,9 +3,12 @@
 #include "renderpass.h"
 #include "rendertree.h"
 #include "../3dwidgets/widgets.h"
+
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
+#include "functional"
+
 #include "data/debuglog.h"
 #include "light_renderer.h"
 #include "light_accumulation_plane.h"
@@ -16,6 +19,7 @@
 #include "empty_renderer.h"
 #include "shader_render_node.h"
 #include "rsm_computation_plane.h"
+#include "benchmark.h"
 
 #include "deferred_renderer.h"
 
@@ -56,9 +60,19 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     RenderConfigurator(context, camera)
 {
     auto manager = getManager();
+    auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
+    manager->setBenchmark(benchmark);
+    benchmark->setCallback([](Benchmark* benchmark) {
+                               if(benchmark->getNumCalls() > 24) {
+                               std::cout << "======START======" << std::endl;
+                                   std::cout << (*benchmark) << std::endl;
+                               std::cout << "======END======" << std::endl;
+                                   benchmark->reset();
+                               }
+                           });
 
-    addRenderBlock(std::make_shared<GBufferRenderBlock>(_geometryPass));
     auto rsmGenerationBlock = std::make_shared<RSMGenerationBlock>();
+    addRenderBlock(std::make_shared<GBufferRenderBlock>(_geometryPass));
     addRenderBlock(rsmGenerationBlock);
     addRenderBlock(std::make_shared<DeferredLightingRenderBlock>(rsmGenerationBlock.get()));
     addRenderBlock(std::make_shared<RSMEvaluationBlock>(rsmGenerationBlock.get()));
@@ -148,6 +162,10 @@ void DeferredRenderer::clearOverrideOutput()
 GBufferRenderBlock::GBufferRenderBlock(std::weak_ptr<RenderPass> geopass)
     : GeometryRenderBlock(geopass)
 {
+    auto gbBench = std::make_shared<Benchmark>("GBuffer Creation");
+    geopass.lock()->setBenchmark(gbBench);
+    setBenchmark(std::make_shared<Benchmark>("GBuffer"));
+    getBenchmark().lock()->addBenchmark(gbBench);
 }
 
 GBufferRenderBlock::~GBufferRenderBlock()
@@ -268,6 +286,8 @@ void DeferredLightingRenderBlock::init()
     deferredPass->setBlendFunc(GL_ONE, GL_ONE);
 
     setupDefaultLights();
+
+    setBenchmark(std::make_shared<Benchmark>("Deferred Shading"));
 }
 
 void DeferredLightingRenderBlock::setupDefaultLights()

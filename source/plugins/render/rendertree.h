@@ -12,6 +12,7 @@
 class QGLContext;
 
 namespace MindTree {
+class Benchmark;
 namespace GL {
 
 class Texture;
@@ -63,6 +64,9 @@ public:
     RenderTree(QGLContext *context);
     virtual ~RenderTree();
 
+    void setBenchmark(std::shared_ptr<Benchmark> benchmark);
+    std::weak_ptr<Benchmark> getBenchmark() const;
+
     std::vector<std::string> getAllOutputs() const;
 
     void addPass(std::shared_ptr<RenderPass> pass);
@@ -92,6 +96,8 @@ private:
     QGLContext *_context;
     bool _initialized;
     double renderTime;
+
+    std::shared_ptr<Benchmark> _benchmark;
 };
 
 }

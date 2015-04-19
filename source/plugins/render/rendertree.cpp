@@ -6,8 +6,10 @@
 #include "render.h"
 #include "renderpass.h"
 #include "shader_render_node.h"
+#include "benchmark.h"
 #include "rendertree.h"
 
+using namespace MindTree;
 using namespace MindTree::GL;
 
 void RenderConfig::setDrawPoints(bool draw)    
@@ -115,6 +117,16 @@ RenderTree::RenderTree(QGLContext *context)
 
 RenderTree::~RenderTree()
 {
+}
+
+void RenderTree::setBenchmark(std::shared_ptr<Benchmark> benchmark)
+{
+    _benchmark = benchmark;
+}
+
+std::weak_ptr<Benchmark> RenderTree::getBenchmark() const
+{
+    return _benchmark;
 }
 
 std::shared_ptr<ResourceManager> RenderTree::getResourceManager()
@@ -239,7 +251,8 @@ void RenderTree::draw()
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_POLYGON_OFFSET_POINT);
 
-    auto start = std::chrono::steady_clock::now();
+    BenchmarkHandler handler(_benchmark);
+
     {
         std::lock_guard<std::mutex> lock(_managerLock);
         if(!_initialized) {
@@ -259,20 +272,4 @@ void RenderTree::draw()
     _context->swapBuffers();
 
     //glFinish();
-
-    static int drawCount{0};
-    static double renderTime{0};
-
-    auto end = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
-    renderTime += duration.count() / 1000000000.0;
-    if(drawCount == 25) {
-        renderTime /= drawCount;
-        std::cout << "Rendering took " << renderTime << "s"
-            << " ==> " << 1.0 / renderTime << "fps" << std::endl;
-
-        drawCount = 0;
-        renderTime = 0;
-    }
-    ++drawCount;
 }

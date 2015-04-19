@@ -14,6 +14,7 @@
 #include "empty_renderer.h"
 #include "shader_render_node.h"
 #include "render_block.h"
+#include "benchmark.h"
 
 #include "render_setup.h"
 
@@ -59,6 +60,11 @@ void RenderConfigurator::addRenderBlock(std::shared_ptr<RenderBlock> block)
 {
     block->_config = this;
     block->init();
+    auto bench = _rendertree->getBenchmark();
+    if(!bench.expired()) {
+        bench.lock()->addBenchmark(block->getBenchmark().lock());
+    }
+
     block->setCamera(_camera);
     _renderBlocks.push_back(block);
 }

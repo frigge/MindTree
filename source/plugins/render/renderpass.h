@@ -13,6 +13,8 @@
 #include "data/mtobject.h"
 
 namespace MindTree {
+class Benchmark;
+
 namespace GL {
 
 class ShaderRenderNode;
@@ -32,6 +34,7 @@ public:
     RenderPass();
     virtual ~RenderPass();
 
+    void setBenchmark(std::shared_ptr<Benchmark> benchmark);
     void setCamera(CameraPtr camera);
 
     void setTarget(std::shared_ptr<FBO> target);
@@ -141,6 +144,8 @@ private:
     std::unordered_map<std::string, std::string> _fragmentNameMappings;
 
     RenderTree *_tree;
+
+    std::shared_ptr<Benchmark> _benchmark;
 };
 
 }

@@ -2,6 +2,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "render_setup.h"
 #include "rendertree.h"
+#include "benchmark.h"
 #include "rsm_computation_plane.h"
 
 using namespace MindTree;
@@ -135,6 +136,8 @@ void RSMIndirectPlane::setSamples(int samples)
 
 RSMGenerationBlock::RSMGenerationBlock()
 {
+    auto shadowBench = std::make_shared<Benchmark>("RSM Generation");
+    setBenchmark(shadowBench);
 }
 
 std::weak_ptr<RenderPass> RSMGenerationBlock::createShadowPass(SpotLightPtr spot)
@@ -143,6 +146,14 @@ std::weak_ptr<RenderPass> RSMGenerationBlock::createShadowPass(SpotLightPtr spot
 
     if(!shadowPass)
         return std::weak_ptr<RenderPass>();
+
+    if(_benchmark) {
+        std::string name = _benchmark->getName();
+        std::string spot_name = spot->getName();
+        auto bench = std::make_shared<Benchmark>(name + "_" + spot_name);
+        _benchmark->addBenchmark(bench);
+        shadowPass->setBenchmark(bench);
+    }
 
     auto pos = std::make_shared<Texture2D>("shadow_position",
                                                              Texture::RGBA16F);
@@ -202,6 +213,8 @@ void RSMEvaluationBlock::init()
     auto rsmFinalPlane = new PixelPlane();
     rsmFinalPlane->setProvider<RSMFinalProvider>();
     rsmFinalPass->addRenderer(rsmFinalPlane);
+
+    setBenchmark(std::make_shared<Benchmark>("RSM Evaluation"));
 }
 
 void RSMEvaluationBlock::setCamera(std::shared_ptr<Camera> cam)

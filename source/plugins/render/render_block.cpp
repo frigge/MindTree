@@ -7,6 +7,9 @@
 #include "empty_renderer.h"
 #include "render_setup.h"
 #include "rendertree.h"
+#include "benchmark.h"
+#include "string"
+
 #include "render_block.h"
 
 using namespace MindTree;
@@ -18,10 +21,35 @@ RenderBlock::RenderBlock()
 
 }
 
+void RenderBlock::setBenchmark(std::shared_ptr<Benchmark> benchmark)
+{
+    _benchmark = benchmark;
+    if (!benchmark)
+        return;
+
+    std::string name_base = _benchmark->getName();
+    for (int i = 0; i < _passes.size(); ++i) {
+        auto pass = _passes[i];
+        if(pass.expired())
+            continue;
+
+        std::string name = name_base + std::to_string(i + 1);
+        auto bench = std::make_shared<Benchmark>(name);
+        pass.lock()->setBenchmark(bench);
+        _benchmark->addBenchmark(bench);
+    }
+}
+
+std::weak_ptr<Benchmark> RenderBlock::getBenchmark() const
+{
+    return _benchmark;
+}
+
 void RenderBlock::setEnabled(bool enable)
 {
-    for (auto pass : _passes)
+    for (auto pass : _passes) {
         pass.lock()->setEnabled(enable);
+    }
 }
 
 void RenderBlock::setCamera(std::shared_ptr<Camera> camera)

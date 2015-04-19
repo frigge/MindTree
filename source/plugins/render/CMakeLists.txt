@@ -1,5 +1,6 @@
 project(render)
 set(RENDER_SRC
+    benchmark.cpp
     camera_renderer.cpp
     deferred_renderer.cpp
     empty_renderer.cpp

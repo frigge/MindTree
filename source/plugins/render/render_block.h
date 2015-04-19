@@ -14,6 +14,7 @@ class Empty;
 class Group;
 
 namespace MindTree {
+class Benchmark;
 namespace GL{
 
 class RenderPass;
@@ -25,6 +26,8 @@ class RenderBlock : public Object
 public:
     RenderBlock();
     virtual void init() = 0;
+    void setBenchmark(std::shared_ptr<Benchmark> benchmark);
+    std::weak_ptr<Benchmark> getBenchmark() const;
     virtual void setCamera(std::shared_ptr<Camera> camera);
     virtual void setGeometry(std::shared_ptr<Group> grp);
     std::shared_ptr<RenderPass> addPass();
@@ -40,6 +43,7 @@ protected:
     virtual void addRendererFromEmpty(std::shared_ptr<Empty> obj);
 
     RenderConfigurator* _config;
+    std::shared_ptr<Benchmark> _benchmark;
 
 private:
     friend class RenderConfigurator;

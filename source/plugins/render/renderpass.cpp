@@ -5,6 +5,7 @@
 #include "data/debuglog.h"
 #include "shader_render_node.h"
 #include "rendertree.h"
+#include "benchmark.h"
 #include "renderpass.h"
 
 using namespace MindTree;
@@ -36,6 +37,11 @@ RenderPass::~RenderPass()
     RenderTree::getResourceManager()->scheduleCleanUp(_depthTexture);
     RenderTree::getResourceManager()->scheduleCleanUp(_depthRenderbuffer);
     RenderTree::getResourceManager()->scheduleCleanUp(_target);
+}
+
+void RenderPass::setBenchmark(std::shared_ptr<Benchmark> benchmark)
+{
+    _benchmark = benchmark;
 }
 
 void RenderPass::setEnabled(bool enable)
@@ -568,6 +574,8 @@ void RenderPass::render(const RenderConfig &config)
     if(!width || !height) {
         return;
     }
+
+    BenchmarkHandler bhandler(_benchmark);
 
     if(!_initialized || _currentHeight != height || _currentWidth != width) init();
 
