@@ -389,7 +389,11 @@ public:
     void setName(std::string name);
     virtual void bind();
     virtual void release();
+
     virtual void init();
+    void init(std::vector<glm::vec2> data);
+    void init(std::vector<unsigned char> data);
+
     GLuint getID() const;
     void setFormat(Texture::Format format);
     void setWrapMode(Texture::WrapMode wrap);
@@ -405,7 +409,6 @@ public:
     GLenum getGLSize();
 
     bool isInitialized() const;
-    void init(std::vector<unsigned char> data);
 
 protected:
     GLenum getInternalFormat() const;
