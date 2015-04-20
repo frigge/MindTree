@@ -25,6 +25,7 @@
 #include "QMenu"
 #include "QMouseEvent"
 #include "QPointF"
+#include "QShortcut"
 
 #include "iostream"
 #include "ctime"
@@ -37,6 +38,7 @@
 
 #include "../../render/deferred_renderer.h"
 #include "../../datatypes/Object/lights.cpp"
+#include  "viewport_widget.h"
 
 #include "data/debuglog.h"
 
@@ -46,7 +48,7 @@ using namespace MindTree;
 
 std::vector<Viewport*> Viewport::_viewports;
 
-Viewport::Viewport() :
+Viewport::Viewport(ViewportWidget *widget) :
     QGLWidget(new GL::QtContext(), nullptr, _viewports.empty() ? nullptr : _viewports[0]),
     defaultCamera(std::make_shared<Camera>()),
     rotate(false), 
@@ -54,7 +56,8 @@ Viewport::Viewport() :
     zoom(false), 
     selectionMode(false), 
     _showGrid(true), 
-    transformMode(0)
+    transformMode(0),
+    _viewportWidget(widget)
 {
     _viewports.push_back(this);
 
@@ -73,8 +76,13 @@ Viewport::Viewport() :
 Viewport::~Viewport()
 {
     _renderConfigurator->stopRendering();
-
     _viewports.erase(std::find(begin(_viewports), end(_viewports), this));
+}
+
+void Viewport::exitFullscreen()
+{
+    setWindowState(windowState() & ~Qt::WindowFullScreen);
+    _viewportWidget->resetViewport();
 }
 
 void Viewport::setOverride(std::string name)
@@ -274,6 +282,11 @@ void Viewport::mouseReleaseEvent(QMouseEvent *event)
     
     _widgetManager->mouseReleaseEvent();
     _renderConfigurator->setProperty("GL:camera:showcenter", false);
+}
+
+void Viewport::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    exitFullscreen();
 }
 
 void Viewport::mouseMoveEvent(QMouseEvent *event)    

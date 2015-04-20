@@ -60,7 +60,7 @@ void ViewportViewer::update()
 }
 
 ViewportWidget::ViewportWidget(ViewportViewer *viewer)
-    : _viewport(new Viewport()), _viewer(viewer)
+    : _viewport(new Viewport(this)), _viewer(viewer)
 {
     createMainLayout();
     createToolbar();
@@ -109,6 +109,11 @@ void ViewportWidget::createMainLayout()
     mainlayout->addWidget(_viewport);
 }
 
+void ViewportWidget::resetViewport()
+{
+    layout()->addWidget(_viewport);
+}
+
 void ViewportWidget::createToolbar()    
 {
     QAction *showPointsAction = _tools->addAction("Show Points");
@@ -134,6 +139,8 @@ void ViewportWidget::createToolbar()
     QAction *showGridAction = _tools->addAction("Grid");
     showGridAction->setCheckable(true);
     showGridAction->setChecked(true);
+
+    QAction *fullscreenAction = _tools->addAction("Fullscreen");
 
     QAction *overrideOutputAction = _tools->addAction("Override Output");
     overrideOutputAction->setCheckable(true);
@@ -167,6 +174,14 @@ void ViewportWidget::createToolbar()
     connect(showGridAction, SIGNAL(toggled(bool)), this, SLOT(toggleGrid(bool)));
     connect(toggleDefaultLight, SIGNAL(toggled(bool)), this, SLOT(toggleDefaultLighting(bool)));
     connect(overrideOutputAction, SIGNAL(toggled(bool)), this, SLOT(setOverrideOutput(bool)));
+    connect(fullscreenAction, SIGNAL(triggered(bool)), this, SLOT(setFullscreen()));
+}
+
+void ViewportWidget::setFullscreen()
+{
+    _viewport->setParent(nullptr);
+    _viewport->setWindowState(_viewport->windowState() | Qt::WindowFullScreen);
+    _viewport->show();
 }
 
 void ViewportWidget::setCamera(QString cam)

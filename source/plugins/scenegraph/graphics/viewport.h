@@ -40,11 +40,12 @@ namespace GL {
 
 class Widget3DManager;
 
+class ViewportWidget;
 class Viewport : public QGLWidget
 {
     Q_OBJECT
 public:
-    Viewport();
+    Viewport(ViewportWidget *widget);
     ~Viewport();
     void setStartSocket(MindTree::DoutSocket *socket);
     MindTree::DoutSocket* getStartSocket();
@@ -66,6 +67,7 @@ public:
     Q_SLOT void setShowGrid(bool b);
     Q_SLOT void changeCamera(std::string cam);
     Q_SLOT void setData(std::shared_ptr<Group> value);
+    Q_SLOT void exitFullscreen();
 //---------------
 
 protected:
@@ -82,6 +84,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 
     void transform(QPointF mpos);
     void checkTransform();
@@ -109,6 +112,8 @@ private:
     bool selectionMode;
     bool _showGrid;
     unsigned short transformMode;
+
+    ViewportWidget *_viewportWidget;
 };
 
 #endif /* end of include guard: VIEWPORT */

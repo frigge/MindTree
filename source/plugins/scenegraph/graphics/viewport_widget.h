@@ -60,8 +60,10 @@ public:
     Q_SLOT void toggleDefaultLighting(bool value);
     Q_SLOT void setOverrideOutput(bool value);
     Q_SLOT void setCamera(QString cam);
+    Q_SLOT void setFullscreen();
 
     void setCameras();
+    void resetViewport();
 
 private:
     void createToolbar();
