@@ -21,6 +21,7 @@
 #include "data/dnspace.h"
 #include "data/nodes/containernode.h"
 #include "data/signal.h"
+#include "data/debuglog.h"
 
 #include "cache_main.h"
 
@@ -442,4 +443,8 @@ void DataCache::cacheInputs()
         return;
     }
     (*datacache)(this);
+    std::string status = "done caching caching: " + node->getNodeName();
+    MT_SIGNAL_EMITTER("STATUSUPDATE", status);
+    dbout(status);
+
 }

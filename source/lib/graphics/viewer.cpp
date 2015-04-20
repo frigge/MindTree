@@ -65,6 +65,7 @@ void WorkerThread::start()
                     if(ptr->_node) DataCache::invalidate(ptr->_node);
                     ptr->_viewer->cache.start(ptr->_viewer->start);
                     ptr->_viewer->update();
+                    MT_SIGNAL_EMITTER("STATUSUPDATE", std::string("done updating"));
                     ptr->_update = false;
                 }
                 ++i;

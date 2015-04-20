@@ -48,6 +48,7 @@
 #include "data/properties.h"
 #include "graphics/windowlist.h"
 #include "data/signal.h"
+#include "data/debuglog.h"
 #include "mindtree_mainwindow.h"
 
 using namespace MindTree;
@@ -104,8 +105,13 @@ MainWindow::MainWindow(QWidget *parent)
     t->start(2000);
 #endif
 
-    MindTree::Signal::getHandler<QString>().connect("filename_changed",[this](QString title){
-        this->change_window_title(title); 
+    MindTree::Signal::getHandler<std::string>().connect("filename_changed",[this](std::string title){
+        this->change_window_title(title.c_str()); 
+    }).detach();
+
+    MindTree::Signal::getHandler<std::string>().connect("STATUSUPDATE",[this](std::string message){
+                                                        dbout("test");
+        this->statusBar()->showMessage(message.c_str());
     }).detach();
 };
 
