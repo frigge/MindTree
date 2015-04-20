@@ -63,7 +63,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
     manager->setBenchmark(benchmark);
     benchmark->setCallback([](Benchmark* benchmark) {
-                               if(benchmark->getNumCalls() > 24) {
+                               if(benchmark->getNumCalls() >= 100) {
                                std::cout << "======START======" << std::endl;
                                    std::cout << (*benchmark) << std::endl;
                                std::cout << "======END======" << std::endl;
