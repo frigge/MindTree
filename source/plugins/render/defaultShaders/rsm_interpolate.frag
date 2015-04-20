@@ -10,6 +10,7 @@ uniform float cosAngleTolerance = 0.3;
 uniform float distanceTolerance = 0.9;
 
 out vec4 rsm_indirect_out_interpolated;
+out vec4 rsm_indirect_out_mask;
 
 int checkDistance(vec3 ref, vec4 other)
 {
@@ -79,7 +80,9 @@ void main()
     simCnt += isSimilar[3];
 
     if (simCnt < 3) {
-        discard;
+        rsm_indirect_out_interpolated = vec4(0);
+        rsm_indirect_out_mask = vec4(1, 0, 0, 1);
+        return;
     }
 
     float wx1 = (1 - remain.x) * (1 - remain.y) * isSimilar[0];
