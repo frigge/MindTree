@@ -1,4 +1,5 @@
 #include "iomanip"
+#include "algorithm"
 #include "benchmark.h"
 
 using namespace MindTree;
@@ -66,6 +67,13 @@ void Benchmark::reset()
         if(!bench.expired())
             bench.lock()->reset();
     }
+
+    auto e = std::end(_benchmarks);
+    _benchmarks.erase(std::remove_if(begin(_benchmarks),
+                                     e,
+                                     [] (auto bench) {
+                                         return bench.expired();
+                                     }), e);
 }
 
 int Benchmark::getNumCalls() const
@@ -104,7 +112,8 @@ std::ostream& MindTree::operator<<(std::ostream &stream, const MindTree::Benchma
 
     if(benchmark._benchmarks.size() > 1) {
         for(auto bench : benchmark._benchmarks) {
-            stream << *(bench.lock());
+            if(!bench.expired())
+                stream << *(bench.lock());
         }
     }
 
