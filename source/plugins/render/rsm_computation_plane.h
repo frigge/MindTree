@@ -60,6 +60,8 @@ private:
     std::weak_ptr<RenderPass> _rsmIndirectPass;
     std::weak_ptr<RenderPass> _rsmIndirectLowResPass;
 
+    std::atomic<int> _downSampling;
+
     RSMGenerationBlock *_shadowBlock;
 };
 

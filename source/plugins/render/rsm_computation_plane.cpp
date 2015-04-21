@@ -169,7 +169,7 @@ std::weak_ptr<RenderPass> RSMGenerationBlock::createShadowPass(SpotLightPtr spot
 }
 
 RSMEvaluationBlock::RSMEvaluationBlock(RSMGenerationBlock *shadowBlock) :
-    _shadowBlock(shadowBlock)
+    _shadowBlock(shadowBlock), _downSampling(2)
 {
 }
 
@@ -217,8 +217,9 @@ void RSMEvaluationBlock::setCamera(std::shared_ptr<Camera> cam)
     RenderBlock::setCamera(cam);
     _rsmIndirectPass.lock()->setCamera(cam);
     auto lowrescam = std::dynamic_pointer_cast<Camera>(cam->clone());
-    int w = cam->getWidth() / 4;
-    int h = cam->getHeight() / 4;
+    int downres = pow(2, _downSampling.load());
+    int w = cam->getWidth() / downres;
+    int h = cam->getHeight() / downres;
     lowrescam->setResolution(w, h);
     _rsmIndirectLowResPass.lock()->setCamera(lowrescam);
 }
@@ -253,6 +254,10 @@ void RSMEvaluationBlock::setGeometry(std::shared_ptr<Group> grp)
     if (grp->hasProperty("RSM:samples")) {
         _rsmIndirectHighResPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
         _rsmIndirectLowResPlane->setSamples(grp->getProperty("RSM:samples").getData<int>());
+    }
+    if (grp->hasProperty("RSM:downsampling")) {
+        _downSampling = grp->getProperty("RSM:downsampling").getData<int>();
+        setCamera(getCamera().lock());
     }
 }
 
