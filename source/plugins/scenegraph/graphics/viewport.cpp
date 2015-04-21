@@ -175,7 +175,7 @@ void Viewport::resizeEvent(QResizeEvent *)
     doneCurrent();
     activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
     activeCamera->setResolution(width(), height());
-    _renderConfigurator->getManager()->setDirty();
+    _renderConfigurator->setCamera(activeCamera);
 }
 
 void Viewport::paintEvent(QPaintEvent *)

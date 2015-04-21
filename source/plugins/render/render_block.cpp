@@ -52,8 +52,14 @@ void RenderBlock::setEnabled(bool enable)
     }
 }
 
+std::weak_ptr<Camera> RenderBlock::getCamera() const
+{
+    return _camera;
+}
+
 void RenderBlock::setCamera(std::shared_ptr<Camera> camera)
 {
+    _camera = camera;
     for (auto pass : _passes)
         pass.lock()->setCamera(camera);
 }

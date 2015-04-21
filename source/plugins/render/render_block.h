@@ -28,7 +28,10 @@ public:
     virtual void init() = 0;
     void setBenchmark(std::shared_ptr<Benchmark> benchmark);
     std::weak_ptr<Benchmark> getBenchmark() const;
+
     virtual void setCamera(std::shared_ptr<Camera> camera);
+    std::weak_ptr<Camera> getCamera() const;
+
     virtual void setGeometry(std::shared_ptr<Group> grp);
     std::shared_ptr<RenderPass> addPass();
     void setEnabled(bool enable);
@@ -48,6 +51,7 @@ protected:
 private:
     friend class RenderConfigurator;
     std::vector<std::weak_ptr<RenderPass>> _passes;
+    std::weak_ptr<Camera> _camera;
 };
 
 class GeometryRenderBlock : public RenderBlock
