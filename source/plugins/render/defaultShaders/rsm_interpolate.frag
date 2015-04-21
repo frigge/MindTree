@@ -15,7 +15,7 @@ out vec4 rsm_indirect_out_mask;
 int checkDistance(vec3 ref, vec4 other)
 {
     if(other.a < 0.5) return 0;
-    return distance(ref, other.xyz) < distanceTolerance ? 1 : 0;
+    return distance(vec3(distanceTolerance), other.xyz) <= distanceTolerance ? 1 : 0;
 }
 
 int checkAngle(vec3 ref, vec4 other)
@@ -24,10 +24,15 @@ int checkAngle(vec3 ref, vec4 other)
     return abs(dot(ref, other.xyz)) > cosAngleTolerance ? 1 : 0;
 }
 
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
 void main()
 {
     ivec2 lowres = textureSize(rsm_indirect_out_lowres, 0);
     vec2 fp = vec2(st * lowres);
+    fp -= vec2(0.5);
     //fp = clamp(vec2(0), lowres, fp);
 
     vec2 remain = mod(fp, vec2(1));
@@ -42,6 +47,9 @@ void main()
     ivec2 px2 = ivec2(hx, ly);
     ivec2 px3 = ivec2(lx, hy);
     ivec2 px4 = ivec2(hx, hy);
+
+    //rsm_indirect_out_mask = vec4(vec3(rand(vec2(hx, hy))), 1);
+    //return;
 
     ivec2 px1h = ivec2(round(px1 * resFac));
     ivec2 px2h = ivec2(round(px3 * resFac));
@@ -79,7 +87,7 @@ void main()
     simCnt += isSimilar[2];
     simCnt += isSimilar[3];
 
-    if (simCnt < 3) {
+    if (simCnt < 4) {
         rsm_indirect_out_interpolated = vec4(0);
         rsm_indirect_out_mask = vec4(1, 0, 0, 1);
         return;
@@ -100,6 +108,7 @@ void main()
     vec3 gi = gi1 + gi2 + gi3 + gi4;
     gi /= weightSum;
 
-    //rsm_indirect_out_interpolated = vec4(gi, 1);
-    rsm_indirect_out_interpolated = vec4(0);
+    rsm_indirect_out_interpolated = vec4(gi, 1);
+    rsm_indirect_out_mask = vec4(texture(rsm_indirect_out_lowres, st).rgb, 1);
+    //rsm_indirect_out_interpolated = vec4(0);
 }
