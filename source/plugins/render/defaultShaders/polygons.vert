@@ -3,7 +3,7 @@ uniform mat4 modelView;
 uniform mat4 model;
 uniform mat4 projection;
 
-uniform bool defaultLighting = true;
+uniform bool defaultLighting = false;
 
 in vec3 P;
 in vec3 N;
