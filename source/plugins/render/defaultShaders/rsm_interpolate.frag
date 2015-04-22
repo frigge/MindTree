@@ -6,8 +6,8 @@ uniform sampler2D outposition;
 in vec2 st;
 uniform ivec2 resolution;
 
-uniform float cosAngleTolerance = 0.3;
-uniform float distanceTolerance = 0.9;
+uniform float cosAngleTolerance = 2;
+uniform float distanceTolerance = 1.0;
 
 out vec4 rsm_indirect_out_interpolated;
 out vec4 rsm_indirect_out_mask;
@@ -15,13 +15,13 @@ out vec4 rsm_indirect_out_mask;
 int checkDistance(vec3 ref, vec4 other)
 {
     if(other.a < 0.5) return 0;
-    return distance(vec3(distanceTolerance), other.xyz) <= distanceTolerance ? 1 : 0;
+    return distance(ref, other.xyz) <= distanceTolerance ? 1 : 0;
 }
 
 int checkAngle(vec3 ref, vec4 other)
 {
     if(other.a < 0.5) return 0;
-    return abs(dot(ref, other.xyz)) > cosAngleTolerance ? 1 : 0;
+    return acos(abs(dot(ref, other.xyz))) < radians(cosAngleTolerance) ? 1 : 0;
 }
 
 float rand(vec2 co){
@@ -57,7 +57,7 @@ void main()
     ivec2 px4h = ivec2(round(px4 * resFac));
 
     vec3 N = normalize(texture(outnormal, st)).xyz;
-    vec3 P = normalize(texture(outposition, st)).xyz;
+    vec3 P = texture(outposition, st).xyz;
 
     int simCnt = 0;
     ivec4 isSimilar = ivec4(0);
@@ -77,10 +77,10 @@ void main()
     isSimilar[2] += checkAngle(N, n3);
     isSimilar[3] += checkAngle(N, n4);
 
-    //isSimilar[0] *= checkDistance(P, p1);
-    //isSimilar[1] *= checkDistance(P, p2);
-    //isSimilar[2] *= checkDistance(P, p3);
-    //isSimilar[3] *= checkDistance(P, p4);
+    isSimilar[0] *= checkDistance(P, p1);
+    isSimilar[1] *= checkDistance(P, p2);
+    isSimilar[2] *= checkDistance(P, p3);
+    isSimilar[3] *= checkDistance(P, p4);
 
     simCnt += isSimilar[0];
     simCnt += isSimilar[1];

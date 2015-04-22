@@ -59,6 +59,7 @@ private:
 
     std::weak_ptr<RenderPass> _rsmIndirectPass;
     std::weak_ptr<RenderPass> _rsmIndirectLowResPass;
+    std::weak_ptr<RenderPass> _rsmInterpolatePass;
 
     std::atomic<int> _downSampling;
 

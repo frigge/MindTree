@@ -185,7 +185,8 @@ void RSMEvaluationBlock::init()
     rsmIndirectLowResPass->addRenderer(_rsmIndirectLowResPlane);
     rsmIndirectLowResPass->setBlendFunc(GL_ONE, GL_ONE);
 
-    auto rsmInterpolatePass = addPass();
+    _rsmInterpolatePass = addPass();
+    auto rsmInterpolatePass = _rsmInterpolatePass.lock();
     rsmInterpolatePass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_interpolated", Texture::RGBA16F));
     rsmInterpolatePass->addOutput(std::make_shared<Texture2D>("rsm_indirect_interpolate_mask", Texture::RGBA8));
     auto rsmInterpolatePlane = new PixelPlane();
@@ -258,6 +259,12 @@ void RSMEvaluationBlock::setGeometry(std::shared_ptr<Group> grp)
     if (grp->hasProperty("RSM:downsampling")) {
         _downSampling = grp->getProperty("RSM:downsampling").getData<int>();
         setCamera(getCamera().lock());
+    }
+    if (auto prop = grp->getProperty("RSM:lowresdistance")) {
+        _rsmInterpolatePass.lock()->setProperty("distanceTolerance", prop);
+    }
+    if (auto prop = grp->getProperty("RSM:lowresangle")) {
+        _rsmInterpolatePass.lock()->setProperty("cosAngleTolerance", prop);
     }
 }
 
