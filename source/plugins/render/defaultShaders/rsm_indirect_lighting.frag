@@ -92,6 +92,5 @@ void main()
     indirect /= numSamples;
 
     indirect *= texture(outdiffusecolor, st).rgb;
-    //indirect *= texture(outdiffuseintensity, st).rgb;
-    rsm_indirect_out = vec4(indirect, 1) * intensity;
+    rsm_indirect_out = vec4(indirect * intensity, 1);
 }
