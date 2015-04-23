@@ -155,13 +155,16 @@ std::weak_ptr<RenderPass> RSMGenerationBlock::createShadowPass(SpotLightPtr spot
 
     auto pos = std::make_shared<Texture2D>("shadow_position",
                                                              Texture::RGBA16F);
+    pos->setFilter(Texture::NEAREST);
     pos->setWrapMode(Texture::REPEAT);
     shadowPass->addOutput(pos);
     auto normal = std::make_shared<Texture2D>("shadow_normal",
                                                              Texture::RGBA16F);
+    normal->setFilter(Texture::NEAREST);
     normal->setWrapMode(Texture::REPEAT);
     shadowPass->addOutput(normal);
     auto flux = std::make_shared<Texture2D>("shadow_flux", Texture::RGBA16F);
+    flux->setFilter(Texture::NEAREST);
     shadowPass->addOutput(flux);
     flux->setWrapMode(Texture::REPEAT);
 
@@ -189,6 +192,8 @@ void RSMEvaluationBlock::init()
     auto rsmInterpolatePass = _rsmInterpolatePass.lock();
     rsmInterpolatePass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_interpolated", Texture::RGBA16F));
     rsmInterpolatePass->addOutput(std::make_shared<Texture2D>("rsm_indirect_interpolate_mask", Texture::RGBA8));
+    rsmInterpolatePass->addOutput(std::make_shared<Texture2D>("rsm_indirect_lowres_pixels", Texture::RGBA8));
+    rsmInterpolatePass->setProperty("downsampling", _downSampling.load());
     auto rsmInterpolatePlane = new PixelPlane();
     rsmInterpolatePlane->setProvider<RSMInterpolateProvider>();
     rsmInterpolatePass->addRenderer(rsmInterpolatePlane);
@@ -258,6 +263,7 @@ void RSMEvaluationBlock::setGeometry(std::shared_ptr<Group> grp)
     }
     if (grp->hasProperty("RSM:downsampling")) {
         _downSampling = grp->getProperty("RSM:downsampling").getData<int>();
+        _rsmInterpolatePass.lock()->setProperty("downsampling", _downSampling.load());
         setCamera(getCamera().lock());
     }
     if (auto prop = grp->getProperty("RSM:lowresdistance")) {

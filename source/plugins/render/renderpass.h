@@ -40,6 +40,8 @@ public:
     void setTarget(std::shared_ptr<FBO> target);
     std::shared_ptr<FBO> getTarget();
 
+    void addPostRenderCallback(std::function<void(RenderPass*)> cb);
+
     enum DepthOutput {
         TEXTURE,
         RENDERBUFFER,
@@ -146,6 +148,8 @@ private:
     RenderTree *_tree;
 
     std::shared_ptr<Benchmark> _benchmark;
+
+    std::vector<std::function<void(RenderPass*)>> _postRenderCallbacks;
 };
 
 }

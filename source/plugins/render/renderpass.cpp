@@ -39,6 +39,11 @@ RenderPass::~RenderPass()
     RenderTree::getResourceManager()->scheduleCleanUp(_target);
 }
 
+void RenderPass::addPostRenderCallback(std::function<void(RenderPass*)> cb)
+{
+    _postRenderCallbacks.push_back(cb);
+}
+
 void RenderPass::setBenchmark(std::shared_ptr<Benchmark> benchmark)
 {
     _benchmark = benchmark;
@@ -678,6 +683,9 @@ void RenderPass::render(const RenderConfig &config)
                 }
             }
         }
+
+        for(auto cb : _postRenderCallbacks)
+            cb(this);
         MTGLERROR;
         processPixelRequests();
     }

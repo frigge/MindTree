@@ -184,12 +184,21 @@ void GBufferRenderBlock::init()
     geopass->addOutput(std::make_shared<Texture2D>("outcolor"));
     geopass->addOutput(std::make_shared<Texture2D>("outdiffuseintensity"));
     geopass->addOutput(std::make_shared<Texture2D>("outspecintensity"));
-    geopass->addOutput(std::make_shared<Texture2D>("outnormal", 
-                                                   Texture::RGBA16F));
-    geopass->addOutput(std::make_shared<Texture2D>("outposition", 
-                                                   Texture::RGBA16F));
+    auto normal = std::make_shared<Texture2D>("outnormal",
+                                              Texture::RGBA16F);
+    normal->generateMipmaps();
+    geopass->addOutput(normal);
+    auto position = std::make_shared<Texture2D>("outposition", 
+                                                Texture::RGBA16F);
+    position->generateMipmaps();
+    geopass->addOutput(position);
     geopass->addOutput(std::make_shared<Texture2D>("worldposition", 
                                                    Texture::RGBA16F));
+
+    geopass->addPostRenderCallback([normal, position] (RenderPass *) {
+                                       normal->generateMipmaps();
+                                       position->generateMipmaps();
+                                   });
 
     setupGBuffer();
 }
