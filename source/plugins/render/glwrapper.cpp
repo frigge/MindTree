@@ -1058,7 +1058,9 @@ Texture::Texture(std::string name, Texture::Format format, Target target)
     _name(name), 
     _id(0),
     _wrapMode(CLAMP_TO_EDGE),
-    _width(0)
+    _width(0),
+    _filter(LINEAR),
+    _genMipmaps(false)
 {
 }
 
@@ -1081,6 +1083,11 @@ void Texture::setName(std::string name)
     _name = name;
 }
 
+void Texture::generateMipmaps()
+{
+    _genMipmaps = true;
+}
+
 namespace {
     bool isDepthTexture(Texture::Format fm)
     {
@@ -1094,18 +1101,22 @@ void Texture::bind()
     GLenum target = getGLTarget();
     glBindTexture(target, _id);
     GLenum wrap = getGLWrapMode();
-    GLenum filter = GL_LINEAR;
+    GLenum filter = getGLFilter();
     if(isDepthTexture(getFormat())) {
         glTexParameteri(target, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
         glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
         glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-        filter = GL_NEAREST;
     }
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, filter);
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filter);
     glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap);
     glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap);
     glTexParameteri(target, GL_TEXTURE_WRAP_R, wrap);
+
+    if(_genMipmaps) {
+        glGenerateMipmap(target);
+        _genMipmaps = false;
+    }
 }
 
 void Texture::release()
@@ -1267,9 +1278,27 @@ GLenum Texture::getGLWrapMode() const
     }
 }
 
+GLenum Texture::getGLFilter() const
+{
+    switch(_filter) {
+        case NEAREST: return GL_NEAREST;
+        case LINEAR: return GL_LINEAR;
+    }
+}
+
 void Texture::setWrapMode(WrapMode wrap)
 {
     _wrapMode = wrap;
+}
+
+void Texture::setFilter(Filter filter)
+{
+    _filter = filter;
+}
+
+Texture::Filter Texture::getFilter() const
+{
+    return _filter;
 }
 
 Texture::WrapMode Texture::getWrapMode() const

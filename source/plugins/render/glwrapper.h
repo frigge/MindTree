@@ -380,6 +380,11 @@ public:
         CLAMP_TO_EDGE
     };
 
+    enum Filter {
+        NEAREST,
+        LINEAR
+    };
+
     Texture(std::string name, Texture::Format format, Target target=TEXTURE1D);
     virtual ~Texture();
 
@@ -403,12 +408,17 @@ public:
     GLenum getGLDataType() const;
     GLenum getGLInternalFormat() const;
     GLenum getGLWrapMode() const;
+    GLenum getGLFilter() const;
+
+    void setFilter(Filter filter);
+    Texture::Filter getFilter() const;
 
     void setWidth(int w);
 
     GLenum getGLSize();
 
     bool isInitialized() const;
+    void generateMipmaps();
 
 protected:
     GLenum getInternalFormat() const;
@@ -420,10 +430,13 @@ private:
     Format _format;
     Target _target;
     WrapMode _wrapMode;
+    Filter _filter;
 
     bool _initialized;
     std::string _name;
     int _width;
+
+    bool _genMipmaps;
 };
 
 class Texture2D : public Texture
