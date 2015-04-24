@@ -23,7 +23,9 @@ using namespace GL;
 
 RenderConfigurator::RenderConfigurator(QGLContext *context, CameraPtr camera) :
     _rendertree(new RenderTree(context)),
-    _camera(camera)
+    _camera(camera),
+    _vertexCount(0),
+    _polyCount(0)
 {
     auto geometryPass = std::make_shared<RenderPass>();
     _geometryPass = geometryPass;
@@ -95,8 +97,20 @@ void RenderConfigurator::setProperty(std::string name, Property prop)
     }
 }
 
+int RenderConfigurator::getPolygonCount() const
+{
+    return _polyCount;
+}
+
+int RenderConfigurator::getVertexCount() const
+{
+    return _vertexCount;
+}
+
 void RenderConfigurator::setGeometry(std::shared_ptr<Group> grp)
 {
+    _vertexCount = grp->getVertexCount();
+    _polyCount = grp->getPolygonCount();
     for(auto block : _renderBlocks) {
         block->setGeometry(grp);
     }

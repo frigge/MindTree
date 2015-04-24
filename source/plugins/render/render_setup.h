@@ -50,12 +50,16 @@ public:
 
     std::weak_ptr<RenderPass> getGeometryPass() const;
 
+    int getPolygonCount() const;
+    int getVertexCount() const;
+
 protected:
     std::weak_ptr<RenderPass> _geometryPass;
     GridRenderer* _grid;
 
 private:
-
+    int _vertexCount;
+    int _polyCount;
     std::shared_ptr<RenderTree> _rendertree;
     std::vector<std::shared_ptr<RenderBlock>> _renderBlocks;
     std::shared_ptr<Camera> _camera;

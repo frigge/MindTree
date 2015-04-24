@@ -347,6 +347,18 @@ void MeshData::computeVertexNormals()
     setProperty("N", vertexnormals);
 }
 
+int MeshData::getVertexCount() const
+{
+    if(!hasProperty("P")) return 0;
+    return getProperty("P").size();
+}
+
+int MeshData::getPolygonCount() const
+{
+    if(!hasProperty("polygon")) return 0;
+    return getProperty("polygon").size();
+}
+
 GeoObject::GeoObject()
     : AbstractTransformable(GEO)
 {
@@ -406,12 +418,12 @@ void Group::addMembers(std::vector<std::shared_ptr<AbstractTransformable>> list)
     members.insert(end(members), begin(list), end(list));
 }
 
-std::vector<std::shared_ptr<AbstractTransformable>> Group::getMembers()    const
+std::vector<std::shared_ptr<AbstractTransformable>> Group::getMembers() const
 {
     return members;
 }
 
-std::vector<std::shared_ptr<GeoObject>> Group::getGeometry()
+std::vector<std::shared_ptr<GeoObject>> Group::getGeometry() const
 {
     std::vector<std::shared_ptr<GeoObject>> objs;
     for(auto &obj : members)
@@ -420,7 +432,27 @@ std::vector<std::shared_ptr<GeoObject>> Group::getGeometry()
     return objs;
 }
 
-std::vector<std::shared_ptr<Camera>> Group::getCameras()    
+int Group::getVertexCount() const
+{
+    int cnt = 0;
+    for (auto obj : getGeometry()) {
+        if(obj->getType() == AbstractTransformable::GEO)
+            cnt += std::static_pointer_cast<MeshData>(obj->getData())->getVertexCount();
+    }
+    return cnt;
+}
+
+int Group::getPolygonCount() const
+{
+    int cnt = 0;
+    for (auto obj : getGeometry()) {
+        if(obj->getType() == AbstractTransformable::GEO)
+            cnt += std::static_pointer_cast<MeshData>(obj->getData())->getPolygonCount();
+    }
+    return cnt;
+}
+
+std::vector<std::shared_ptr<Camera>> Group::getCameras() const
 {
     std::vector<std::shared_ptr<Camera>> cams;
     for(auto &obj : members)
@@ -429,7 +461,7 @@ std::vector<std::shared_ptr<Camera>> Group::getCameras()
     return cams;
 }
 
-std::vector<std::shared_ptr<Light>> Group::getLights()
+std::vector<std::shared_ptr<Light>> Group::getLights() const
 {
     std::vector<std::shared_ptr<Light>> lights;
     for(auto &obj : members)
