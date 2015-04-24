@@ -48,7 +48,6 @@ void ObjImporter::readData(QTextStream &stream)
     while(!stream.atEnd()) {
         QString line = stream.readLine();
         if(line.startsWith("o ")) {
-            if(obj) std::static_pointer_cast<MeshData>(obj->getData())->computeVertexNormals();
             obj = addObject(line);
         }
         else if(line.startsWith("v "))
