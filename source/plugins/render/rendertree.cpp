@@ -271,5 +271,5 @@ void RenderTree::draw()
     glDisable(GL_POLYGON_OFFSET_POINT);
     _context->swapBuffers();
 
-    //glFinish();
+    glFinish();
 }
