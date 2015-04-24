@@ -33,7 +33,7 @@ void regSwitchNode()
 
         int sw = cache->getData(0).getData<int>();
 
-        sw = std::min(sw, (int)node->getInSockets().size());
+        sw = std::min(sw, (int)node->getInSockets().size() - 2);
         sw = std::max(0, sw);
         ++sw;
 
