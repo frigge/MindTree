@@ -44,6 +44,7 @@ void ObjImporter::readData(QTextStream &stream)
 {
     std::shared_ptr<GeoObject> obj;
 
+    std::cout <<  "importing object ...";
     while(!stream.atEnd()) {
         QString line = stream.readLine();
         if(line.startsWith("o ")) {
@@ -52,12 +53,21 @@ void ObjImporter::readData(QTextStream &stream)
         }
         else if(line.startsWith("v "))
                 addVertex(line, obj);
+        else if(line.startsWith("vn "))
+                addNormal(line, obj);
         else if(line.startsWith("f "))
                 addFace(line, obj);
         else if(line.startsWith("st "))
             addUV(line, obj);
     }
-    std::static_pointer_cast<MeshData>(obj->getData())->computeVertexNormals();
+
+    std::cout <<  " done" << std::endl;
+    auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
+    if(!mesh->hasProperty("N")) {
+        std::cout <<  "no normals found, computing normals ... ";
+        mesh->computeVertexNormals();
+        std::cout <<  "done" << std::endl;
+    }
 }
 
 std::shared_ptr<GeoObject> ObjImporter::addObject(QString line)    
@@ -89,6 +99,25 @@ void ObjImporter::addVertex(QString line, std::shared_ptr<GeoObject> obj)
     }
     std::static_pointer_cast<MeshData>(obj->getData())
         ->getProperty("P")
+        .getData<std::shared_ptr<VertexList>>()
+        ->push_back(glm::vec3(d[0], d[1], d[2]));
+}
+
+void ObjImporter::addNormal(QString line, std::shared_ptr<GeoObject> obj)
+{
+    QStringList l = line.split(" ");
+    double d[3];
+    int i=0;
+    l.takeFirst();
+    for(QString vstr : l){
+        d[i] = vstr.toDouble();
+        ++i;
+    }
+    auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
+    if(!mesh->hasProperty("N"))
+        mesh->setProperty("N", std::make_shared<VertexList>());
+
+    mesh->getProperty("N")
         .getData<std::shared_ptr<VertexList>>()
         ->push_back(glm::vec3(d[0], d[1], d[2]));
 }
