@@ -41,7 +41,7 @@ void main()
         vec3 sN = texture(outnormal, samplePosition).xyz;
         vec3 sP = texture(outposition, samplePosition).xyz;
 
-        occlusion += dot(sN, Nn) < 0.2 ? 1 : 0;
+        occlusion += max(0, dot(sN, Nn));
     }
 
     occlusion /= numSamples;
