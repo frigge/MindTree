@@ -1352,52 +1352,6 @@ Texture::WrapMode Texture::getWrapMode() const
     return _wrapMode;
 }
 
-void Texture::init(std::vector<unsigned char> data)
-{
-    Texture::init();
-
-    GLenum format = getGLFormat();
-    GLenum internalFormat = getGLInternalFormat();
-    GLenum type = getGLDataType();
-
-    bind();
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glTexImage1D(GL_TEXTURE_1D,
-                 0,
-                 internalFormat,
-                 width(),
-                 0,
-                 format,
-                 type,
-                 data.data());
-    MTGLERROR;
-}
-
-void Texture::init(std::vector<glm::vec2> data)
-{
-    Texture::init();
-
-    GLenum format = getGLFormat();
-    GLenum internalFormat = getGLInternalFormat();
-    GLenum type = getGLDataType();
-
-    bind();
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glTexImage1D(GL_TEXTURE_1D,
-                 0,
-                 internalFormat,
-                 width(),
-                 0,
-                 format,
-                 type,
-                 data.data());
-    MTGLERROR;
-}
-
 void Texture::setWidth(int width)
 {
     _width = width;
