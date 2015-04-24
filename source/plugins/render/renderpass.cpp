@@ -565,9 +565,6 @@ void RenderPass::setClearDepth(float value)
 
 void RenderPass::render(const RenderConfig &config)
 {
-    if(!_enabled)
-        return;
-
     int width, height;
     {
         std::lock_guard<std::mutex> lock(_cameraLock);
@@ -646,46 +643,48 @@ void RenderPass::render(const RenderConfig &config)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         MTGLERROR;
 
-        {
-            std::lock_guard<std::mutex> lock(_geometryLock);
-
-            //render nodes that do not have a corresponding objectdata element (grid, 3d widgets, etc.)
-            for(auto node : _shadernodes) {
-                node->init();
-                {
-                    GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
-                    for(const auto &p : getProperties())
-                        node->program()->setUniformFromProperty(p.first, p.second);
+        if(_enabled) {
+            {
+                std::lock_guard<std::mutex> lock(_geometryLock);
     
-                    for(const auto &p : config.getProperties())
-                        node->program()->setUniformFromProperty(p.first, p.second);
-    
+                //render nodes that do not have a corresponding objectdata element (grid, 3d widgets, etc.)
+                for(auto node : _shadernodes) {
+                    node->init();
                     {
-                        std::lock_guard<std::mutex> lock(_cameraLock);
-                        node->render(_camera, glm::ivec2(width, height), config);
+                        GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
+                        for(const auto &p : getProperties())
+                            node->program()->setUniformFromProperty(p.first, p.second);
+        
+                        for(const auto &p : config.getProperties())
+                            node->program()->setUniformFromProperty(p.first, p.second);
+        
+                        {
+                            std::lock_guard<std::mutex> lock(_cameraLock);
+                            node->render(_camera, glm::ivec2(width, height), config);
+                        }
+                    }
+                }
+    
+                for(auto node : _geometryShaderNodes) {
+                    node->init();
+                    {
+                        GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
+                        for(const auto &p : getProperties())
+                            node->program()->setUniformFromProperty(p.first, p.second);
+        
+                        for(const auto &p : config.getProperties())
+                            node->program()->setUniformFromProperty(p.first, p.second);
+                        {
+                            std::lock_guard<std::mutex> lock(_cameraLock);
+                            node->render(_camera, glm::ivec2(width, height), config);
+                        }
                     }
                 }
             }
-
-            for(auto node : _geometryShaderNodes) {
-                node->init();
-                {
-                    GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
-                    for(const auto &p : getProperties())
-                        node->program()->setUniformFromProperty(p.first, p.second);
-    
-                    for(const auto &p : config.getProperties())
-                        node->program()->setUniformFromProperty(p.first, p.second);
-                    {
-                        std::lock_guard<std::mutex> lock(_cameraLock);
-                        node->render(_camera, glm::ivec2(width, height), config);
-                    }
-                }
-            }
+            for(auto cb : _postRenderCallbacks)
+                cb(this);
         }
 
-        for(auto cb : _postRenderCallbacks)
-            cb(this);
         MTGLERROR;
         processPixelRequests();
     }
