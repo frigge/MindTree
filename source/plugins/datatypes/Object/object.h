@@ -162,6 +162,8 @@ public:
 
     void computeFaceNormals();
     void computeVertexNormals();
+    int getVertexCount() const;
+    int getPolygonCount() const;
 
 private:
     std::string name;
@@ -205,10 +207,13 @@ public:
     void addMember(std::shared_ptr<AbstractTransformable> trans);
     std::vector<std::shared_ptr<AbstractTransformable>> getMembers()const;
     void addMembers(std::vector<std::shared_ptr<AbstractTransformable>> list);
-    std::vector<std::shared_ptr<Camera>> getCameras();
-    std::vector<std::shared_ptr<GeoObject>> getGeometry();
-    std::vector<std::shared_ptr<Light>> getLights();
+    std::vector<std::shared_ptr<Camera>> getCameras() const;
+    std::vector<std::shared_ptr<GeoObject>> getGeometry() const;
+    std::vector<std::shared_ptr<Light>> getLights() const;
     void setProperty(std::string name, MindTree::Property prop);
+
+    int getVertexCount() const;
+    int getPolygonCount() const;
 
 private:
     std::vector<std::shared_ptr<AbstractTransformable>> members;

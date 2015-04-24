@@ -38,7 +38,7 @@ void Benchmark::addBenchmark(std::weak_ptr<Benchmark> benchmark)
 
 double Benchmark::getTime() const
 {
-    double t = _time.count() / 1000000.0;
+    double t = _time.count() / 1'000.0;
     return t / _num_calls;
 }
 
@@ -58,7 +58,7 @@ void Benchmark::setCallback(std::function<void(Benchmark *)> cb)
 
 void Benchmark::reset()
 {
-    _time = std::chrono::nanoseconds(0);
+    _time = std::chrono::microseconds(0);
     _num_calls = 0;
     _running = false;
     _children_called = 0;
@@ -89,7 +89,7 @@ void Benchmark::end()
     ++_num_calls;
     _end = std::chrono::steady_clock::now();
     _children_called = 0;
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(_end - _start);
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(_end - _start);
     _time += duration;
     _running = false;
 
