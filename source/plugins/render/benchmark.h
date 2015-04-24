@@ -37,7 +37,7 @@ private:
     Benchmark *_parent;
 
     std::string _name;
-    std::chrono::nanoseconds _time;
+    std::chrono::microseconds _time;
     int _num_calls;
     int _children_called;
 
