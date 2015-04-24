@@ -30,7 +30,10 @@ ObjImporter::ObjImporter(std::string filepath)
     QFile file(filepath.c_str());
     file.open(QFile::ReadOnly);
     QFileInfo fi(file);
-    if(!fi.exists()) return;
+    if(!fi.exists()) {
+        std::cout << filepath << " not found" << std::endl;
+        return;
+    }
     QTextStream stream(&file);
 
     readData(stream);
