@@ -25,6 +25,7 @@ private:
     std::shared_ptr<Texture> _samplingPattern;
     std::atomic<double> _searchRadius;
     std::atomic<int> _numSamples;
+    std::mutex _colorLock;
     glm::vec4 _ambientColor;
 
     std::atomic<bool> _samplesChanged;

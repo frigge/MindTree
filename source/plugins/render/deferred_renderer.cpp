@@ -81,7 +81,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     addRenderBlock(rsmGenerationBlock);
     addRenderBlock(std::make_shared<DeferredLightingRenderBlock>(rsmGenerationBlock.get()));
     addRenderBlock(std::make_shared<RSMEvaluationBlock>(rsmGenerationBlock.get()));
-    //addRenderBlock(std::make_shared<AmbientOcclusionBlock>());
+    addRenderBlock(std::make_shared<AmbientOcclusionBlock>());
 
     auto overlayPass = std::make_shared<RenderPass>();
     _overlayPass = overlayPass;

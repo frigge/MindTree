@@ -8,7 +8,7 @@ using namespace MindTree::GL;
 
 AmbientOcclusionPlane::AmbientOcclusionPlane() :
     _searchRadius(.5f),
-    _numSamples(400),
+    _numSamples(16),
     _samplesChanged(false),
     _ambientColor(0.5, 0.5, 0.5, 1.0)
 {
@@ -40,6 +40,7 @@ void AmbientOcclusionPlane::initSamplingTexture()
 
 void AmbientOcclusionPlane::setAmbientColor(glm::vec4 color)
 {
+    std::lock_guard<std::mutex> lock(_colorLock);
     _ambientColor = color;
 }
 
@@ -60,6 +61,8 @@ void AmbientOcclusionPlane::draw(const CameraPtr camera, const RenderConfig &con
 {
     if(_samplesChanged)
         initSamplingTexture();
+
+    std::lock_guard<std::mutex> lock(_colorLock);
 
     program->setTexture(_samplingPattern);
     UniformStateManager manager(program);
@@ -104,6 +107,14 @@ void AmbientOcclusionBlock::init()
 
 void AmbientOcclusionBlock::setGeometry(std::shared_ptr<Group> grp)
 {
+    if(grp->hasProperty("AO:enabled")) {
+        auto enabled = grp->getProperty("AO:enabled").getData<bool>();
+        setEnabled(enabled);
+        if(!enabled) {
+            return;
+        }
+    }
+
     if(grp->hasProperty("AO:numsamples")) {
         _aoplane->setSamples(grp->getProperty("AO:numsamples").getData<int>());
     }
