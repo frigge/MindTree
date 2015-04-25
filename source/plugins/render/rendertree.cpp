@@ -265,7 +265,6 @@ void RenderTree::draw()
         _resourceManager->cleanUp();
     }
 
-
     glDisable(GL_POINT_SMOOTH);
     glDisable(GL_PROGRAM_POINT_SIZE);
     glDisable(GL_POLYGON_OFFSET_POINT);
