@@ -81,6 +81,7 @@ Viewport::~Viewport()
 
 void Viewport::exitFullscreen()
 {
+    dbout("exit");
     setWindowState(windowState() & ~Qt::WindowFullScreen);
     _viewportWidget->resetViewport();
 }

@@ -182,6 +182,7 @@ void ViewportWidget::setFullscreen()
     _viewport->setParent(nullptr);
     _viewport->setWindowState(_viewport->windowState() | Qt::WindowFullScreen);
     _viewport->show();
+    dbout("fullscreen");
 }
 
 void ViewportWidget::setCamera(QString cam)
