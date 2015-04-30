@@ -95,6 +95,7 @@ protected:
     void drawFps();
 
 private:
+    friend class ViewportWidget;
     std::shared_ptr<Camera> activeCamera, defaultCamera;
 
     std::unique_ptr<MindTree::GL::RenderConfigurator> _renderConfigurator;

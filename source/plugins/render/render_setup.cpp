@@ -114,6 +114,9 @@ void RenderConfigurator::setGeometry(std::shared_ptr<Group> grp)
     for(auto block : _renderBlocks) {
         block->setGeometry(grp);
     }
+
+    if(!_rendertree->getBenchmark().expired())
+        _rendertree->getBenchmark().lock()->reset();
 }
 
 void RenderConfigurator::setCamera(std::shared_ptr<Camera> camera)
@@ -123,6 +126,9 @@ void RenderConfigurator::setCamera(std::shared_ptr<Camera> camera)
     }
     _camera = camera;
     _rendertree->setDirty();
+
+    if(!_rendertree->getBenchmark().expired())
+        _rendertree->getBenchmark().lock()->reset();
 }
 
 std::shared_ptr<Camera> RenderConfigurator::getCamera() const

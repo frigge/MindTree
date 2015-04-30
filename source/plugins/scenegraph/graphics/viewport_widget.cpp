@@ -25,6 +25,7 @@
 #include "../../render/rendertree.h"
 #include "../../render/renderpass.h"
 #include "../../render/render.h"
+#include "../../render/benchmark.h"
 #include "data/debuglog.h"
 
 #include "viewport_widget.h"
@@ -180,6 +181,7 @@ void ViewportWidget::createToolbar()
 void ViewportWidget::setFullscreen()
 {
     _viewport->setParent(nullptr);
+
     _viewport->setWindowState(_viewport->windowState() | Qt::WindowFullScreen);
     _viewport->show();
     dbout("fullscreen");
