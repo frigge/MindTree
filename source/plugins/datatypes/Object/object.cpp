@@ -61,6 +61,22 @@ AbstractTransformable::~AbstractTransformable()
 {
 }
 
+int AbstractTransformable::getVertexCount() const
+{
+    int cnt = 0;
+    for(auto ch : getChildren())
+        cnt += std::static_pointer_cast<GeoObject>(ch)->getVertexCount();
+    return cnt;
+}
+
+int AbstractTransformable::getPolygonCount() const
+{
+    int cnt = 0;
+    for(auto ch : getChildren())
+        cnt += std::static_pointer_cast<GeoObject>(ch)->getPolygonCount();
+    return cnt;
+}
+
 AbstractTransformablePtr AbstractTransformable::clone() const
 {
     auto *obj = new AbstractTransformable(*this);
@@ -103,6 +119,11 @@ void AbstractTransformable::addChildren(std::vector<AbstractTransformablePtr> ob
 }
 
 std::vector<std::shared_ptr<AbstractTransformable>> AbstractTransformable::getChildren()    
+{
+    return _children; 
+}
+
+std::vector<std::shared_ptr<AbstractTransformable>> AbstractTransformable::getChildren() const 
 {
     return _children; 
 }
@@ -350,13 +371,22 @@ void MeshData::computeVertexNormals()
 int MeshData::getVertexCount() const
 {
     if(!hasProperty("P")) return 0;
-    return getProperty("P").size();
+    auto list = getProperty("P").getData<VertexListPtr>();
+    if(!list) return 0;
+    return list->size();
 }
 
 int MeshData::getPolygonCount() const
 {
     if(!hasProperty("polygon")) return 0;
-    return getProperty("polygon").size();
+    auto list = getProperty("polygon").getData<PolygonListPtr>();
+    if(!list) return 0;
+
+    int cnt = 0;
+    for(auto p : *list) {
+        cnt += p.size() - 2;
+    }
+    return cnt;
 }
 
 GeoObject::GeoObject()
@@ -372,6 +402,20 @@ GeoObject::GeoObject(const GeoObject &other)
 
 GeoObject::~GeoObject()
 {
+}
+
+int GeoObject::getVertexCount() const
+{
+    int cnt = AbstractTransformable::getPolygonCount();
+    cnt += std::static_pointer_cast<MeshData>(data)->getVertexCount();
+    return cnt;
+}
+
+int GeoObject::getPolygonCount() const
+{
+    int cnt = AbstractTransformable::getPolygonCount();
+    cnt += std::static_pointer_cast<MeshData>(data)->getPolygonCount();
+    return cnt;
 }
 
 AbstractTransformablePtr GeoObject::clone() const
@@ -435,9 +479,8 @@ std::vector<std::shared_ptr<GeoObject>> Group::getGeometry() const
 int Group::getVertexCount() const
 {
     int cnt = 0;
-    for (auto obj : getGeometry()) {
-        if(obj->getType() == AbstractTransformable::GEO)
-            cnt += std::static_pointer_cast<MeshData>(obj->getData())->getVertexCount();
+    for (auto obj : getMembers()) {
+        cnt += obj->getVertexCount();
     }
     return cnt;
 }
@@ -445,9 +488,8 @@ int Group::getVertexCount() const
 int Group::getPolygonCount() const
 {
     int cnt = 0;
-    for (auto obj : getGeometry()) {
-        if(obj->getType() == AbstractTransformable::GEO)
-            cnt += std::static_pointer_cast<MeshData>(obj->getData())->getPolygonCount();
+    for (auto obj : getMembers()) {
+        cnt += obj->getPolygonCount();
     }
     return cnt;
 }
