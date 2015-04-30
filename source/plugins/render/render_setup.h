@@ -38,7 +38,7 @@ public:
 
     RenderTree* getManager();
 
-    virtual void setGeometry(std::shared_ptr<Group> grp);
+    void setGeometry(std::shared_ptr<Group> grp);
 
     virtual void setOverrideOutput(std::string output);
     virtual void clearOverrideOutput();
