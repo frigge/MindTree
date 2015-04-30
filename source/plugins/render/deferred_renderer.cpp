@@ -63,7 +63,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
     manager->setBenchmark(benchmark);
     benchmark->setCallback([this](Benchmark* benchmark) {
-                               if(benchmark->getNumCalls() >= 100) {
+                               if(benchmark->getNumCalls() >= 500) {
                                    int vcnt = this->getVertexCount();
                                    int pcnt = this->getPolygonCount();
                                    std::cout << "======START======\n";
