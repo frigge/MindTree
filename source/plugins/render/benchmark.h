@@ -6,6 +6,7 @@
 #include "memory"
 #include "vector"
 #include "ostream"
+#include "mutex"
 #include "functional"
 
 namespace MindTree { class Benchmark; }
@@ -18,7 +19,6 @@ class Benchmark
 {
 public:
     Benchmark(std::string name);
-    double getTime() const;
     void addBenchmark(std::weak_ptr<Benchmark> benchmark);
     std::string getName() const;
     void reset();
@@ -26,6 +26,7 @@ public:
     int getNumCalls() const;
 
 private:
+    double getTime() const;
     friend class BenchmarkHandler;
     friend std::ostream& operator<<(std::ostream &stream, const Benchmark &benchmark);
 
@@ -40,6 +41,7 @@ private:
     std::chrono::microseconds _time;
     int _num_calls;
     int _children_called;
+    mutable std::recursive_mutex _benchmarkLock;
 
     std::vector<std::weak_ptr<Benchmark>> _benchmarks;
     bool _running;

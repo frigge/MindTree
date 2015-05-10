@@ -688,4 +688,5 @@ void RenderPass::render(const RenderConfig &config)
         MTGLERROR;
         processPixelRequests();
     }
+    glFinish();
 }

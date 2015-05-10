@@ -72,6 +72,9 @@ public:
     AbstractTransformable(eObjType t);
     virtual ~AbstractTransformable();
 
+    virtual int getVertexCount() const;
+    virtual int getPolygonCount() const;
+
     virtual AbstractTransformablePtr clone() const;
 
     AbstractTransformable::eObjType getType();
@@ -100,6 +103,7 @@ public:
     void addChildren(std::vector<AbstractTransformablePtr> objs);
     void removeChild(AbstractTransformable *child);
     std::vector<std::shared_ptr<AbstractTransformable>> getChildren();
+    std::vector<std::shared_ptr<AbstractTransformable>> getChildren() const;
 
     void setProperty(std::string name, MindTree::Property prop);
 
@@ -184,6 +188,9 @@ public:
 
     MaterialInstancePtr getMaterial();
     void setMaterial(MaterialInstancePtr material);
+
+    int getVertexCount() const;
+    int getPolygonCount() const;
 
 protected:
     GeoObject(const GeoObject &other);
