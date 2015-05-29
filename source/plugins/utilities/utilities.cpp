@@ -59,7 +59,7 @@ BOOST_PYTHON_MODULE(utilities) {
         auto sockets = cache->getNode()->getInSockets();
         int prop_cnt = sockets.size();
 
-        for(int i = 0; i < prop_cnt; ++i) {
+        for(int i = 1; i < prop_cnt; ++i) {
             auto prop_name = sockets[i]->getName();
             auto prop_value = cache->getData(i);
 
