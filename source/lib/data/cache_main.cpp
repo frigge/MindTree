@@ -443,8 +443,5 @@ void DataCache::cacheInputs()
         return;
     }
     (*datacache)(this);
-    std::string status = "done caching caching: " + node->getNodeName();
-    MT_SIGNAL_EMITTER("STATUSUPDATE", status);
-    dbout(status);
 
 }
