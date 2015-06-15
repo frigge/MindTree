@@ -80,10 +80,10 @@ struct AOShader : public PixelPlane::ShaderProvider {
         auto prog = std::make_shared<ShaderProgram>();
 
         prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
+            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert",
                                 ShaderProgram::VERTEX);
         prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/ambient_occlusion.frag", 
+            ->addShaderFromFile("../plugins/render/defaultShaders/ambient_occlusion.frag",
                                 ShaderProgram::FRAGMENT);
 
         return prog;
