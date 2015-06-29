@@ -170,12 +170,20 @@ class NodeGraph(QGraphicsView):
         self.dragPos = None
 
         containerShortcut = QShortcut(self)
+        deleteShortcut = QShortcut(self)
         containerShortcut.setContext(Qt.WidgetShortcut)
+        deleteShortcut.setContext(Qt.WidgetShortcut)
         containerShortcut.setKey("c")
+        deleteShortcut.setKey(QKeySequence(Qt.Key_Delete))
         containerShortcut.activated.connect(self.createContainer)
+        deleteShortcut.activated.connect(self.deleteNode)
 
     def newGraph(self, project):
         self.scene().changeSpace(project.root)
+
+    def deleteNode(self):
+        for item in self.scene().selectedItems():
+            self.scene().space.removeNode(item.data)
 
 
     def createContainer(self):
