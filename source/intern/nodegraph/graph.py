@@ -8,8 +8,8 @@ from PySide.QtCore import *
 from .nodebrowser import NodeBrowser
 
 MT.__dict__["customNodeVisualizations"] = {}
-class NodeSpace(QGraphicsScene):
 
+class NodeSpace(QGraphicsScene):
     def __init__(self, space):
         self.space = space
         QGraphicsScene.__init__(self)
@@ -312,7 +312,6 @@ class NodeGraphWidget(QWidget):
 
             return change
 
-            
         for graph in graphList:
             graphAction = self.graphtool.addAction(graph.name + "/")
             graphAction.triggered.connect(getChangeFunc(graph))

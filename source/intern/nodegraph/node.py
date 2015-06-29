@@ -581,4 +581,3 @@ class NodeItem(QGraphicsSvgItem):
     def delete(self):
         space = self.data.space
         space.removeNode(self.data)
-
