@@ -389,24 +389,22 @@ class NodeNameBG(QGraphicsItem):
         painter.setPen(Qt.NoPen)
         painter.drawRoundedRect(0, 0, self.width, self.height, 8, 8)
 
-
     def boundingRect(self):
         return QRectF(0, 0, self.width, self.height)
 
 class NodeItem(QGraphicsSvgItem):
-
-    def __init__(self, 
-            data, 
-            parent=None, 
-            options=True, 
-            width=NodeDesigner.width, 
+    def __init__(self,
+            data,
+            parent=None,
+            options=True,
+            width=NodeDesigner.width,
             height=NodeDesigner.height):
         QGraphicsSvgItem.__init__(self, parent)
         self.data = data
 
         self.width = width
         self.height = height
-        
+
         self.viewed = False
 
         self._viewSockets = False
@@ -504,7 +502,7 @@ class NodeItem(QGraphicsSvgItem):
                     if abs(ownpos.y() - otherpos.y()) < 10:
                         ownpos.setY(otherpos.y())
                         snap = True
-                    
+
 
         if snap:
             self.setPos(ownpos)
@@ -572,7 +570,7 @@ class NodeItem(QGraphicsSvgItem):
                         action = menu.addAction(s.name)
                         action.triggered.connect(action_triggered_cb(s))
                 menu.exec_(event.screenPos())
-                
+
             elif len(compSockets) == 1:
                 s = compSockets[0]
                 if MT.isCompatible(s, out):
