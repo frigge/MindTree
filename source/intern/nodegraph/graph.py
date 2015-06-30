@@ -24,6 +24,59 @@ class NodeSpace(QGraphicsScene):
         self.cb = MT.attachToSignal("createLink", self.drawLink)
         self.setSceneRect(-5000, -5000, 10000, 10000)
 
+    def drawForeground(self, painter, rect):
+        items = self.itemsBoundingRect()
+        combinedrect = rect | items
+        size = 100
+        margin = 2
+        if combinedrect == rect:
+            return
+
+        painter.setPen(Qt.NoPen)
+
+        #draw bound rectangle
+        pos = QPointF(rect.bottomRight() - QPointF(size + margin, size + margin))
+
+        cwidth = combinedrect.width()
+        cheight = combinedrect.height()
+
+        rpos = QPointF(((rect.x() - combinedrect.x()) / cwidth),
+                       ((rect.y() - combinedrect.y()) / cheight)) * size
+        rpos += pos
+
+        painter.setBrush(QBrush(QColor(50, 50, 50)))
+        painter.drawRect(QRectF(pos, QSize(size, size)))
+
+        #draw viewport rect
+        width = (rect.width() / cwidth) * size
+        height = (rect.height() / cheight) * size
+
+        painter.setBrush(QBrush(QColor(80, 80, 80)))
+        painter.drawRect(QRectF(rpos, QSize(width, height)))
+
+        super().drawForeground(painter, rect)
+
+        width_scale = width / cwidth
+        height_scale = height / cheight
+
+        nodewidth = max(4, node.NodeDesigner.width * width_scale)
+        nodeheight = max(4, node.NodeDesigner.height * height_scale)
+        nodesize = QSize(nodewidth, nodeheight)
+
+        painter.setBrush(QBrush(QColor(50, 160, 50)))
+
+        for item in self.items():
+            if not type(item) is node.NodeItem:
+                continue
+
+            p = item.pos()
+            rp = QPointF(((p.x() - combinedrect.x()) / cwidth),
+                        ((p.y() - combinedrect.y()) / cheight)) * size
+            rp += pos
+
+            r = QRect(rp.toPoint(), nodesize)
+            painter.drawRect(r)
+
     def clearCallbacks(self):
         del self.cb
 
