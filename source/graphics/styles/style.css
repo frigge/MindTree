@@ -232,3 +232,7 @@ QSplitter::handle:active {
     background-color: rgb(60, 60, 60);
     image: none;
 }
+
+NodeBrowser {
+    background-color: black;
+}
