@@ -224,12 +224,24 @@ class NodeGraph(QGraphicsView):
 
         containerShortcut = QShortcut(self)
         deleteShortcut = QShortcut(self)
+        browserShortcut = QShortcut(self)
         containerShortcut.setContext(Qt.WidgetShortcut)
         deleteShortcut.setContext(Qt.WidgetShortcut)
+        browserShortcut.setContext(Qt.WidgetShortcut)
         containerShortcut.setKey("c")
+        browserShortcut.setKey(" ")
         deleteShortcut.setKey(QKeySequence(Qt.Key_Delete))
         containerShortcut.activated.connect(self.createContainer)
         deleteShortcut.activated.connect(self.deleteNode)
+        browserShortcut.activated.connect(self.showNodeBrowser)
+        self.nodeBrowser = None
+
+    def showNodeBrowser(self):
+        if self.nodeBrowser is None:
+            self.nodeBrowser = NodeBrowser(self)
+
+        self.nodeBrowser.show()
+        self.nodeBrowser.move(QCursor.pos())
 
     def newGraph(self, project):
         self.scene().changeSpace(project.root)
@@ -237,7 +249,6 @@ class NodeGraph(QGraphicsView):
     def deleteNode(self):
         for item in self.scene().selectedItems():
             self.scene().space.removeNode(item.data)
-
 
     def createContainer(self):
         items = self.scene().selectedItems()
@@ -266,14 +277,16 @@ class NodeGraph(QGraphicsView):
         if nodeLabel == "":
             return
 
-        _node = MT.createNode(nodeLabel)
+        scenePos = self.mapToScene(event.pos())
+        self.dropNode(nodeLabel, scenePos)
 
+    def dropNode(self, label, pos):
+        _node = MT.createNode(label)
         if _node is not None:
             self.scene().space.addNode(_node)
-            scenePos = self.mapToScene(event.pos())
             nw = node.NodeDesigner.width
             nh = node.NodeDesigner.height
-            _node.pos = (scenePos.x() - nw/2, scenePos.y() - nh/2)
+            _node.pos = (pos.x() - nw/2, pos.y() - nh/2)
 
     def addNode(self, n):
         if n.space.ptr != self.scene().space.ptr:
@@ -317,7 +330,7 @@ class NodeGraph(QGraphicsView):
 
             self.centerOn(rect.center())
             self.dragPos = event.pos()
-        else: 
+        else:
             QGraphicsView.mouseMoveEvent(self, event)
 
     def mouseReleaseEvent(self, event):
@@ -340,12 +353,12 @@ class NodeGraphWidget(QWidget):
         #self.toolbar.setOrientation(core.Qt.Vertical)
         #lay.addWidget(self.toolbar)
         self.graph = NodeGraph(self)
-        self.nodeBrowser = NodeBrowser(self.graph)
-        self.nodeBrowser.initList()
-        self.nodeBrowser.resize(100, self.nodeBrowser.height())
+        #self.nodeBrowser = NodeBrowser(self.graph)
+        #self.nodeBrowser.initList()
+        #self.nodeBrowser.resize(100, self.nodeBrowser.height())
         splitter = QSplitter(Qt.Horizontal)
         lay.addWidget(splitter)
-        splitter.addWidget(self.nodeBrowser)
+        #splitter.addWidget(self.nodeBrowser)
         splitter.setStretchFactor(0, .25)
         splitter.setStretchFactor(1, 1)
         splitter.setOpaqueResize(False)

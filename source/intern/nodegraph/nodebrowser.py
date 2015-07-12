@@ -5,24 +5,74 @@ from PySide.QtCore import *
 
 from functools import partial
 
-
-class NodeBrowser(QTreeWidget):
+class NodeBrowser(QWidget):
     def __init__(self, graph):
-        QTreeWidget.__init__(self)
-        self.resize(50, 50)
+        super().__init__(graph, Qt.Popup)
+        #QWidget.__init__(self, parent, Qt.Popup)
+        self.setLayout(QVBoxLayout())
+        self.browser = NodeBrowserTree(graph)
+        self.browser.initList()
+        self.node_filter = QLineEdit()
+        self.layout().addWidget(self.node_filter)
+        self.layout().addWidget(self.browser)
+
+        self.node_filter.textChanged.connect(self.filter)
+
+    def show(self):
+        self.node_filter.setFocus()
+        super().show()
+
+    def filter(self, text):
+        it  = QTreeWidgetItemIterator(self.browser)
+        item = it.value()
+        while item is not None:
+            if text.lower() in item.text(1).lower():
+                item.setHidden(False)
+                parent = item.parent()
+                while parent:
+                    parent.setHidden(False)
+                    parent.setExpanded(True)
+                    parent = parent.parent()
+            else:
+                item.setHidden(True)
+
+            if not text:
+                item.setHidden(False)
+                parent = item.parent()
+                while parent:
+                    parent.setExpanded(False)
+                    parent = parent.parent()
+            it += 1
+            item = it.value()
+
+    def sizeHint(self):
+        return QSize(100, 200)
+
+    def initList(self):
+        self.browser.initList()
+
+class NodeBrowserTree(QTreeWidget):
+    def __init__(self, graph, parent=None):
+        super().__init__()
+        self.resize(100, 200)
         self.tree = {}
         self.graph = graph
         self.setHeaderLabel("")
         self.setHeaderHidden(True)
         self.setDragEnabled(True)
-        self.setAlternatingRowColors(True)
 
     def sizeHint(self):
-        return QSize(100, 50)
+        return QSize(100, 200)
 
     def mousePressEvent(self, event):
         QTreeWidget.mousePressEvent(self, event)
         self.pressPos = event.pos()
+
+    def keyReleaseEvent(self, event):
+        QTreeWidget.keyReleaseEvent(self, event)
+        if event.key() == Qt.Key_Return:
+            node = self.selectedItems()[0].text(1)
+            self.graph.dropNode(node, self.graph.mapToScene(self.graph.rect().center()))
 
     def mouseMoveEvent(self, event):
         if event.buttons() & Qt.LeftButton and len(self.selectedItems()) > 0:
