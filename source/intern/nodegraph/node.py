@@ -7,7 +7,6 @@ class NodeDesigner:
     width = 40
     height = 25
     view_renderer = QSvgRenderer(":node_show.svg")
-
     @staticmethod
     def paint_outsocket(socket, painter):
         painter.setPen(Qt.NoPen)
