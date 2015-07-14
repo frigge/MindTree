@@ -293,6 +293,8 @@ class NodeGraph(QGraphicsView):
             return
 
         item = self.scene().addNode(n)
+        for it in self.scene().items():
+            it.setSelected(False)
         item.setSelected(True)
 
     def removeNode(self, n):
