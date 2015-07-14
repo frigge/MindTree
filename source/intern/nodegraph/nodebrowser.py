@@ -5,6 +5,8 @@ from PySide.QtCore import *
 
 from functools import partial
 
+from . import node as n
+
 class NodeBrowser(QWidget):
     def __init__(self, graph):
         super().__init__(graph, Qt.Popup)
@@ -24,7 +26,7 @@ class NodeBrowser(QWidget):
         dropCenterShortcut.setContext(Qt.WidgetWithChildrenShortcut)
         dropConnectShortcut.setContext(Qt.WidgetWithChildrenShortcut)
         dropCenterShortcut.setKey(QKeySequence(Qt.Key_Return))
-        dropConnectShortcut.setKey(QKeySequence(Qt.Key_Shift, Qt.Key_Return))
+        dropConnectShortcut.setKey(Qt.CTRL + Qt.Key_Return)
         dropCenterShortcut.activated.connect(self.browser.dropNodeCenter)
         dropConnectShortcut.activated.connect(self.browser.dropNodeConnect)
 
@@ -86,18 +88,28 @@ class NodeBrowserTree(QTreeWidget):
 
     def dropNodeCenter(self):
         node = self.selectedItems()[0].text(1)
+        pos = self.graph.mapToScene(self.graph.rect().center())
         self.graph.dropNode(node,
-                            self.graph.mapToScene(self.graph.rect().center()))
+                            (pos.x(), pos.y()))
 
     def dropNodeConnect(self):
-        print("hello world")
-        last_node = self.graph.scene().selectedItems()[0]
-        newPos = last_node.pos() + QPoint(0, 40)
-        node = self.selectedItems()[0].text(1)
-        self.graph.dropNode(node, newPos)
+        sitems = self.graph.scene().selectedItems()
+        if not sitems:
+            return self.dropNodeCenter()
 
-        self.graph.scene().nodes[node]
+        last_node = sitems[0].data
+        pos = last_node.pos
+        newPos = (pos[0], pos[1] + (n.NodeDesigner.height * 2) + 20)
+        nodelabel = self.selectedItems()[0].text(1)
+        node = self.graph.dropNode(nodelabel, newPos)
 
+        for snode in sitems:
+            for outsocket in snode.data.outsockets:
+                for insocket in node.insockets:
+                    if (MT.isCompatible(insocket, outsocket)
+                        and not insocket.connected):
+                        insocket.connected = outsocket
+                        break
 
     def sizeHint(self):
         return QSize(100, 200)
