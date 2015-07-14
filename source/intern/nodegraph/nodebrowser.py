@@ -17,16 +17,39 @@ class NodeBrowser(QWidget):
         self.layout().addWidget(self.browser)
 
         self.node_filter.textChanged.connect(self.filter)
+        self.node_filter.installEventFilter(self)
+
+        dropCenterShortcut = QShortcut(self)
+        dropConnectShortcut = QShortcut(self)
+        dropCenterShortcut.setContext(Qt.WidgetWithChildrenShortcut)
+        dropConnectShortcut.setContext(Qt.WidgetWithChildrenShortcut)
+        dropCenterShortcut.setKey(QKeySequence(Qt.Key_Return))
+        dropConnectShortcut.setKey(QKeySequence(Qt.Key_Shift, Qt.Key_Return))
+        dropCenterShortcut.activated.connect(self.browser.dropNodeCenter)
+        dropConnectShortcut.activated.connect(self.browser.dropNodeConnect)
 
     def show(self):
         self.node_filter.setFocus()
         super().show()
 
+    def eventFilter(self, obj, event):
+        if obj is self.node_filter:
+            if (event.type() == QEvent.Type.KeyPress
+                and (event.key() == Qt.Key_Up
+                     or event.key() == Qt.Key_Down)):
+                self.browser.keyPressEvent(event)
+                return True
+        return super().eventFilter(obj, event)
+
     def filter(self, text):
         it  = QTreeWidgetItemIterator(self.browser)
         item = it.value()
+        first = True
         while item is not None:
             if text.lower() in item.text(1).lower():
+                if first and item.childCount() == 0:
+                    item.setSelected(True)
+                    first = False
                 item.setHidden(False)
                 parent = item.parent()
                 while parent:
@@ -61,18 +84,27 @@ class NodeBrowserTree(QTreeWidget):
         self.setHeaderHidden(True)
         self.setDragEnabled(True)
 
+    def dropNodeCenter(self):
+        node = self.selectedItems()[0].text(1)
+        self.graph.dropNode(node,
+                            self.graph.mapToScene(self.graph.rect().center()))
+
+    def dropNodeConnect(self):
+        print("hello world")
+        last_node = self.graph.scene().selectedItems()[0]
+        newPos = last_node.pos() + QPoint(0, 40)
+        node = self.selectedItems()[0].text(1)
+        self.graph.dropNode(node, newPos)
+
+        self.graph.scene().nodes[node]
+
+
     def sizeHint(self):
         return QSize(100, 200)
 
     def mousePressEvent(self, event):
         QTreeWidget.mousePressEvent(self, event)
         self.pressPos = event.pos()
-
-    def keyReleaseEvent(self, event):
-        QTreeWidget.keyReleaseEvent(self, event)
-        if event.key() == Qt.Key_Return:
-            node = self.selectedItems()[0].text(1)
-            self.graph.dropNode(node, self.graph.mapToScene(self.graph.rect().center()))
 
     def mouseMoveEvent(self, event):
         if event.buttons() & Qt.LeftButton and len(self.selectedItems()) > 0:
