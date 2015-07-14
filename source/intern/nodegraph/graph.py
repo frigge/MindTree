@@ -278,15 +278,17 @@ class NodeGraph(QGraphicsView):
             return
 
         scenePos = self.mapToScene(event.pos())
-        self.dropNode(nodeLabel, scenePos)
+        nw = node.NodeDesigner.width
+        nh = node.NodeDesigner.height
+        pos = (scenePos.x() - nw/2, scenePos.y() - nh/2)
+        self.dropNode(nodeLabel, pos)
 
     def dropNode(self, label, pos):
         _node = MT.createNode(label)
         if _node is not None:
             self.scene().space.addNode(_node)
-            nw = node.NodeDesigner.width
-            nh = node.NodeDesigner.height
-            _node.pos = (pos.x() - nw/2, pos.y() - nh/2)
+            _node.pos = pos
+        return _node
 
     def addNode(self, n):
         if n.space.ptr != self.scene().space.ptr:
