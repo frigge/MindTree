@@ -439,9 +439,18 @@ class NodeItem(QGraphicsSvgItem):
         else:
             self.nodeOptions.setElementId("node_view")
 
+    def setPos(self, pos):
+        for item in self.scene().items():
+            if (item is not self
+                and item.boundingRect().contains(pos)):
+                self.data.pos = (pos.x() + NodeDesigner.width + 10, pos.y())
+        super().setPos(pos)
+
     def updatePositionFromData(self):
-        if (self.pos().x(), self.pos().y()) != self.data.pos:
-            self.setPos(*self.data.pos)
+        if (self.pos().x(), self.pos().y()) == self.data.pos:
+            return
+
+        self.setPos(*self.data.pos)
 
     def itemChange(self, change, value):
         if change == self.ItemSelectedChange:

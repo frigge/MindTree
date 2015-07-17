@@ -119,8 +119,11 @@ class NodeSpace(QGraphicsScene):
             item = MT.customNodeVisualizations[n.type](n)
         else:
             item = node.NodeItem(n)
+
+        pos = QPoint(n.pos[0], n.pos[1])
+
         self.addItem(item)
-        item.setPos(n.pos[0], n.pos[1])
+        item.setPos(pos)
         self.nodes[n.ptr] = item
         return item
 
