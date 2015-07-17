@@ -120,10 +120,14 @@ link_directories(
 set(ALL_SRC ${SOURCE} ${MOC_SRC} ${RES_RCC})
 set(MINDTREE_CORE_LIB ${PROJECT_BINARY_DIR}/source/lib/libmindtree_core.so)
 
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH "../lib")
+
 add_subdirectory(source/lib)
 
 add_executable(mindTree ${ALL_SRC})
-target_link_libraries(mindTree 
+target_link_libraries(mindTree
             mindtree_core
             ${MINDTREE_CORE_LIB}
             ${QT_LIBRARIES}
@@ -143,7 +147,7 @@ message("Binary Dir:" ${PROJECT_BINARY_DIR})
 message("mindtree core lib:" ${MINDTREE_CORE_LIB})
 message("Python Libs: " ${PYTHON_LIBRARIES})
 install(TARGETS mindTree RUNTIME DESTINATION ${PROJECT_BINARY_DIR}/bin)
-install(DIRECTORY source/plugins DESTINATION ${PROJECT_BINARY_DIR} PATTERN ".h .cpp" EXCLUDE)
-install(DIRECTORY source/intern DESTINATION ${PROJECT_BINARY_DIR} PATTERN ".h .cpp" EXCLUDE)
-install(DIRECTORY source/settings DESTINATION ${PROJECT_BINARY_DIR} PATTERN ".h .cpp" EXCLUDE)
+install(DIRECTORY source/plugins DESTINATION ${PROJECT_BINARY_DIR} PATTERN "*.h|*.cpp" EXCLUDE)
+install(DIRECTORY source/intern DESTINATION ${PROJECT_BINARY_DIR} PATTERN "*.h|*.cpp" EXCLUDE)
+install(DIRECTORY source/settings DESTINATION ${PROJECT_BINARY_DIR} PATTERN "*.h|*.cpp" EXCLUDE)
 
