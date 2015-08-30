@@ -450,7 +450,8 @@ class NodeItem(QGraphicsSvgItem):
         if (self.pos().x(), self.pos().y()) == self.data.pos:
             return
 
-        self.setPos(*self.data.pos)
+        p = QPoint(self.data.pos[0], self.data.pos[1])
+        self.setPos(p)
 
     def itemChange(self, change, value):
         if change == self.ItemSelectedChange:
