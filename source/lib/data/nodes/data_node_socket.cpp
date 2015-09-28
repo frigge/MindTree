@@ -152,6 +152,16 @@ DSocket::~DSocket()
     socketIDHash.erase(ID);
 }
 
+void DSocket::setConverter(NodePtr converter)
+{
+    _converter = converter;
+}
+
+NodePtr DSocket::getConverter() const
+{
+    return _converter;
+}
+
 bool DSocket::operator==(DSocket &socket)    const
 {
     if(getVariable() != socket.getVariable()
@@ -387,6 +397,12 @@ DinSocket::~DinSocket()
 {
     if(cntdSocket)
         cntdSocket->unregisterSocket(this);
+}
+
+void DinSocket::setConverter(NodePtr converter)
+{
+    DSocket::setConverter(converter);
+    setCntdSocket(converter->getOutSockets()[0]);
 }
 
 Property DinSocket::getProperty()const
