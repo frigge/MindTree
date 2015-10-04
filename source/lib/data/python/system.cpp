@@ -50,7 +50,7 @@ void MindTree::Python::sys::regNode(PyObject *nodeClass)
 {
     try {
         BPy::object cls(BPy::handle<>(BPy::borrowed(nodeClass)));
-        NodeDataBase::registerNodeType(new PythonNodeDecorator(cls));
+        NodeDataBase::registerNodeType(std::make_unique<PythonNodeDecorator>(cls));
     } catch(BPy::error_already_set const &) {
         PyErr_Print();
     }

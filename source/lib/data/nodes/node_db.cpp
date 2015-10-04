@@ -3,7 +3,7 @@
 
 using namespace MindTree;
 
-std::vector<AbstractNodeDecorator*> NodeDataBase::nodeFactories;
+std::vector<std::unique_ptr<AbstractNodeDecorator>> NodeDataBase::nodeFactories;
 
 AbstractNodeDecorator::AbstractNodeDecorator(std::string type, std::string label)
     : type(type), label(label)
@@ -11,26 +11,22 @@ AbstractNodeDecorator::AbstractNodeDecorator(std::string type, std::string label
     NodeType::registerType(type);
 }
 
-AbstractNodeDecorator::~AbstractNodeDecorator()
-{
-}
-
-void AbstractNodeDecorator::setLabel(std::string l)    
+void AbstractNodeDecorator::setLabel(std::string l)
 {
     label=l;
 }
 
-std::string AbstractNodeDecorator::getLabel()    
+std::string AbstractNodeDecorator::getLabel()
 {
     return label;
 }
 
-void AbstractNodeDecorator::setType(std::string t)    
+void AbstractNodeDecorator::setType(std::string t)
 {
     type = t;
 }
 
-std::string AbstractNodeDecorator::getType()    
+std::string AbstractNodeDecorator::getType()
 {
     return type;
 }
@@ -40,23 +36,19 @@ BuildInDecorator::BuildInDecorator(std::string type, std::string label, std::fun
 {
 }
 
-BuildInDecorator::~BuildInDecorator()
-{
-}
-
-NodePtr BuildInDecorator::operator()(bool raw)    
+NodePtr BuildInDecorator::operator()(bool raw)
 {
     return func(raw);
 }
 
-void NodeDataBase::registerNodeType(AbstractNodeDecorator *factory)    
+void NodeDataBase::registerNodeType(std::unique_ptr<AbstractNodeDecorator> &&factory)
 {
-    nodeFactories.push_back(factory);
+    nodeFactories.push_back(std::move(factory));
 }
 
-NodePtr NodeDataBase::createNode(std::string name)    
+NodePtr NodeDataBase::createNode(std::string name)
 {
-    for(auto fac : nodeFactories)
+    for(const auto &fac : nodeFactories)
         if(fac->getLabel() == name)
             return (*fac)(false);
 
@@ -66,7 +58,7 @@ NodePtr NodeDataBase::createNode(std::string name)
 
 NodePtr NodeDataBase::createNodeByType(const NodeType &t)
 {
-    for(auto fac : nodeFactories)
+    for(const auto &fac : nodeFactories)
         if(t == fac->getType())
             return (*fac)(true);
 
@@ -74,7 +66,11 @@ NodePtr NodeDataBase::createNodeByType(const NodeType &t)
     return nullptr;
 }
 
-std::vector<AbstractNodeDecorator*> NodeDataBase::getFactories()    
+std::vector<AbstractNodeDecorator*> NodeDataBase::getFactories()
 {
-    return nodeFactories;    
+    std::vector<AbstractNodeDecorator*> factories;
+    for(const auto &fac : nodeFactories) {
+        factories.push_back(fac.get());
+    }
+    return factories;
 }

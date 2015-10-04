@@ -12,12 +12,15 @@ using namespace MindTree;
 
 void regContainer()
 {
-    auto *containerNodeDecorator = 
-        new MindTree::BuildInDecorator("CONTAINER", 
-                                     "General.Container", 
-                                     [](bool raw)->NodePtr{ return std::make_shared<ContainerNode>("Container", raw); });
+    auto containerNodeDecorator =
+        std::make_unique<BuildInDecorator>("CONTAINER",
+                    "General.Container",
+                    [](bool raw){
+                            return std::make_shared<ContainerNode>("Container",
+                                                                    raw);
+                    });
 
-    NodeDataBase::registerNodeType(containerNodeDecorator);
+    NodeDataBase::registerNodeType(std::move(containerNodeDecorator));
 
     auto stepIn = [] (DataCache *cache) {
         const auto *cont = cache->getNode()->getDerivedConst<ContainerNode>();
@@ -50,15 +53,17 @@ void regContainer()
 
 void regForLoop()
 {
-    auto *decorator = 
-        new MindTree::BuildInDecorator("FOR",
-                                     "General.For", 
-                                     [](bool raw)->NodePtr{ return std::make_shared<ForNode>(raw); });
+    auto decorator =
+        std::make_unique<BuildInDecorator>("FOR",
+                            "General.For",
+                            [](bool raw)->NodePtr{
+                                 return std::make_shared<ForNode>(raw);
+                            });
 
-    NodeDataBase::registerNodeType(decorator);
+    NodeDataBase::registerNodeType(std::move(decorator));
 
     auto forloopproc = [](DataCache *cache) {
-        const ForNode *node = cache->getNode()->getDerivedConst<ForNode>(); 
+        const ForNode *node = cache->getNode()->getDerivedConst<ForNode>();
 
         //cache start, end and step values
         int startval = cache->getData(0).getData<int>();
@@ -68,13 +73,13 @@ void regForLoop()
         LoopCache c(node);
 
         const auto *out = cache->getStart();
-        
+
         auto loopoutnode = node->getContainerData()->getNodes()[2];
         auto outsockets = node->getOutSockets();
         const auto bout = begin(outsockets);
         const auto eout = end(outsockets);
         int outindex = std::distance(bout, std::find(bout, eout, out));
-        MindTree::DataCache loopCache(&c);
+        DataCache loopCache(&c);
         loopCache.setType(out->getType());
         loopCache.setNode(loopoutnode.get());
         for(int i = startval; i < endval; i += stepval) {
@@ -124,12 +129,12 @@ void regForLoop()
                 auto *inOnCont = loopNode->getSocketOnContainer(out)->toIn();
                 auto ins = loopNode->getInSockets();
                 int inIndex = std::distance(begin(ins),
-                                            std::find(begin(ins), 
-                                                      end(ins), 
+                                            std::find(begin(ins),
+                                                      end(ins),
                                                       inOnCont));
                 auto data = c.getData(inIndex);
 
-                cache->pushData(data); 
+                cache->pushData(data);
             }
             ++i;
         }
@@ -142,12 +147,14 @@ void regForLoop()
 
 void regWhileLoop()
 {
-    auto *decorator = 
-        new MindTree::BuildInDecorator("WHILE", 
-                                     "General.While", 
-                                     [](bool raw)->NodePtr{ return std::make_shared<WhileNode>(raw); });
+    auto decorator =
+        std::make_unique<BuildInDecorator>("WHILE",
+                                "General.While",
+                                [](bool raw)->NodePtr{
+                                        return std::make_shared<WhileNode>(raw);
+                                });
 
-    NodeDataBase::registerNodeType(decorator);
+    NodeDataBase::registerNodeType(std::move(decorator));
 
     auto whileproc = [](DataCache *cache) {
 
@@ -158,12 +165,14 @@ void regWhileLoop()
 
 void regForeachLoop()
 {
-    auto *decorator = 
-        new MindTree::BuildInDecorator("FOREACH", 
-                                     "General.Foreach", 
-                                     [](bool raw)->NodePtr{ return std::make_shared<ForeachNode>(raw); });
+    auto decorator =
+        std::make_unique<BuildInDecorator>("FOREACH",
+                            "General.Foreach",
+                            [](bool raw)->NodePtr{
+                                    return std::make_shared<ForeachNode>(raw);
+                            });
 
-    NodeDataBase::registerNodeType(decorator);
+    NodeDataBase::registerNodeType(std::move(decorator));
 
     auto foreachproc = [](DataCache *cache) {
         const auto *fornode = cache->getNode()->getDerivedConst<ForeachNode>();
@@ -213,11 +222,15 @@ void regCreateList()
         cache->pushData(list);
     };
 
-    DataCache::addGenericProcessor("CREATELIST", new CacheProcessor(createListProc));
+    DataCache::addGenericProcessor("CREATELIST",
+                                   new CacheProcessor(createListProc));
 
-    NodeDataBase::registerNodeType(new BuildInDecorator("CREATELIST", "General.Create List", [] (bool raw) {
-        return std::make_shared<CreateListNode>(raw);
-    }));
+    NodeDataBase::registerNodeType(
+                    std::make_unique<BuildInDecorator>("CREATELIST",
+                                                       "General.Create List",
+                            [] (bool raw) {
+                                return std::make_shared<CreateListNode>(raw);
+                            }));
 }
 
 BOOST_PYTHON_MODULE(basics)

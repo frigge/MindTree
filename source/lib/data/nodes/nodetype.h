@@ -24,7 +24,7 @@
 namespace MindTree{
 
 class NodeType;
-class NodeType : public Type<NodeType> 
+class NodeType : public Type<NodeType>
 {
 public:
     NodeType(const std::string &typeStr="")

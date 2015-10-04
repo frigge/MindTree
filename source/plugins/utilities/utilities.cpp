@@ -23,7 +23,7 @@ SwitchNode::SwitchNode(bool raw)
 
 void regSwitchNode()
 {
-    NodeDataBase::registerNodeType(new BuildInDecorator("SWITCH", 
+    NodeDataBase::registerNodeType(std::make_unique<BuildInDecorator>("SWITCH", 
                                                         "General.Switch",
                                                         [] (bool raw) {
                                                             return std::make_shared<SwitchNode>(raw);

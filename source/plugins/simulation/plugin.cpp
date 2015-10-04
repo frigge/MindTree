@@ -13,7 +13,7 @@ void regSimulation()
         auto *cacheCtx = SimulationContext::getContext(simNode);
 
         const auto *out = cache->getStart();
-        
+
         auto loopoutnode = simNode->getContainerData()->getNodes()[2];
         auto outsockets = simNode->getOutSockets();
         const auto bout = begin(outsockets);
@@ -47,12 +47,12 @@ void regSimulation()
                 auto *inOnCont = loopNode->getSocketOnContainer(out)->toIn();
                 auto ins = loopNode->getInSockets();
                 int inIndex = std::distance(begin(ins),
-                                            std::find(begin(ins), 
-                                                      end(ins), 
+                                            std::find(begin(ins),
+                                                      end(ins),
                                                       inOnCont));
                 auto data = c.getData(inIndex);
 
-                cache->pushData(data); 
+                cache->pushData(data);
             }
             ++i;
         }
@@ -63,12 +63,12 @@ void regSimulation()
 }
 
 BOOST_PYTHON_MODULE(simulation) {
-    auto *decorator = new BuildInDecorator("SIMULATION", 
-                                           "General.Simulation", 
+    auto decorator = std::make_unique<BuildInDecorator>("SIMULATION",
+                                           "General.Simulation",
                                            [] (bool raw) {
                                                 return std::make_shared<SimulationNode>(raw);
     });
-    NodeDataBase::registerNodeType(decorator);
+    NodeDataBase::registerNodeType(std::move(decorator));
 
     regSimulation();
 }

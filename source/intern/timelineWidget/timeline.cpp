@@ -7,7 +7,7 @@
 #include "timeline.h"
 
 Timer::Timer(int interval)
-    : _interval(interval), 
+    : _interval(interval),
     _running(false)
 {
 }
@@ -27,7 +27,7 @@ bool Timer::isRunning()
     return _running;
 }
 
-void Timer::start() 
+void Timer::start()
 {
     if (_running) return;
     _running = true;
@@ -241,9 +241,10 @@ TimelineNode::TimelineNode(bool raw)
     setType("TIMELINE");
     auto cbhandler = MindTree::Signal::SignalHandler<int>
         ::handler.connect("frameChanged",
-                          [this](int) { 
-                              MT_CUSTOM_SIGNAL_EMITTER("nodeChanged", static_cast<DNode*>(this)); 
-                          }); 
+                          [this](int) {
+                              MT_CUSTOM_SIGNAL_EMITTER("nodeChanged",
+                                                       static_cast<DNode*>(this));
+                          });
 
     callbacks.push_back(cbhandler);
 }
@@ -259,19 +260,21 @@ TimelineNode::~TimelineNode()
 
 
 BOOST_PYTHON_MODULE(mttimeline) {
-    auto *timelineNodeDecorator = 
-        new MindTree::BuildInDecorator("TIMELINE", 
-                                     "Values.Frame", 
-                                     [](bool raw)->MindTree::NodePtr{ return std::make_shared<TimelineNode>(raw); });
+    auto timelineNodeDecorator =
+        std::make_unique<MindTree::BuildInDecorator>("TIMELINE",
+                                     "Values.Frame",
+                            [](bool raw){
+                                    return std::make_shared<TimelineNode>(raw);
+                            });
 
-    MindTree::NodeDataBase::registerNodeType(timelineNodeDecorator);
+    MindTree::NodeDataBase::registerNodeType(std::move(timelineNodeDecorator));
 
     auto frameProc = [](MindTree::DataCache* cache) {
         cache->pushData(Timeline::frame());
     };
 
-    MindTree::DataCache::addProcessor("INTEGER", 
-                                      "TIMELINE", 
+    MindTree::DataCache::addProcessor("INTEGER",
+                                      "TIMELINE",
                                       new MindTree::CacheProcessor(frameProc));
 
     Timeline::init();

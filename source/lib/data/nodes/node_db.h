@@ -17,7 +17,6 @@ class AbstractNodeDecorator
 {
 public:
     AbstractNodeDecorator(std::string type="", std::string label="");
-    virtual ~AbstractNodeDecorator();
     virtual NodePtr operator()(bool) = 0;
     void setLabel(std::string l);
     std::string getLabel();
@@ -32,7 +31,6 @@ class BuildInDecorator : public AbstractNodeDecorator
 {
 public:
     BuildInDecorator(std::string type, std::string label, std::function<NodePtr(bool)> func);
-    virtual ~BuildInDecorator();
     virtual NodePtr operator()(bool);
 
 private:
@@ -43,14 +41,13 @@ class NodeDataBase
 {
 public:
     static void scanFolders();
-    static void registerNodeType(AbstractNodeDecorator *factory);
+    static void registerNodeType(std::unique_ptr<AbstractNodeDecorator> &&factory);
     static std::vector<AbstractNodeDecorator*> getFactories();
     static NodePtr createNode(std::string name);
     static NodePtr createNodeByType(const NodeType &t);
 
 private:
-    static std::vector<AbstractNodeDecorator*> nodeFactories;
-
+    static std::vector<std::unique_ptr<AbstractNodeDecorator>> nodeFactories;
 };
 } /* MindTree */
 

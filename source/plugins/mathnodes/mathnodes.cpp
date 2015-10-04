@@ -23,61 +23,67 @@
 #include "mathnodes.h"
 
 using namespace MindTree;
+using namespace std;
 
 BOOST_PYTHON_MODULE(mathnodes){
-    NodeDataBase::registerNodeType(new BuildInDecorator( "ADD", "Math.Add",
-                                    [] (bool raw){
-                                        return std::make_shared<MathNode>(NodeType("ADD"), raw);
-                                    }));
+    using ndb = NodeDataBase;
+    ndb::registerNodeType(make_unique<BuildInDecorator>("ADD",
+                                                        "Math.Add",
+                            [] (bool raw){
+                                return make_shared<MathNode>(NodeType("ADD"),
+                                                                raw);
+                            }));
 
-    NodeDataBase::registerNodeType(new BuildInDecorator( "SUBTRACT", "Math.Subtract",
-                                    [] (bool raw){
-                                        return std::make_shared<MathNode>(NodeType("SUBTRACT"), raw);
-                                    }));
+    ndb::registerNodeType(make_unique<BuildInDecorator>("SUBTRACT",
+                                                        "Math.Subtract",
+                        [] (bool raw){
+                            return make_shared<MathNode>(NodeType("SUBTRACT"),
+                                                            raw);
+                        }));
 
-    NodeDataBase::registerNodeType(new BuildInDecorator( "MULTIPLY", "Math.Multiply",
-                                    [](bool raw){
-                                        return std::make_shared<MathNode>(NodeType("MULTIPLY"), raw);
-                                    }));
+    ndb::registerNodeType(make_unique<BuildInDecorator>("MULTIPLY",
+                                                        "Math.Multiply",
+                        [](bool raw){
+                            return make_shared<MathNode>(NodeType("MULTIPLY"),
+                                                            raw);
+                        }));
 
-    NodeDataBase::registerNodeType(new BuildInDecorator( "DIVIDE", "Math.Divide", 
-                                    [] (bool raw){
-                                        return std::make_shared<MathNode>(NodeType("DIVIDE"), raw);
-                                    }));
+    ndb::registerNodeType(make_unique<BuildInDecorator>("DIVIDE",
+                                                        "Math.Divide",
+                            [] (bool raw){
+                                return make_shared<MathNode>(NodeType("DIVIDE"),
+                                                                raw);
+                            }));
 
-    NodeDataBase::registerNodeType(new BuildInDecorator( "DOTPRODUCT", "Math.Dot Product",
-                                    [] (bool raw){
-                                        return std::make_shared<MathNode>(NodeType("DOTPRODUCT"), raw);
-                                    }));
+    ndb::registerNodeType(make_unique<BuildInDecorator>("DOTPRODUCT",
+                                                        "Math.Dot Product",
+                        [] (bool raw){
+                            return make_shared<MathNode>(NodeType("DOTPRODUCT"),
+                                                            raw);
+                        }));
 
-    NodeDataBase::registerNodeType(new BuildInDecorator( "MODULO", "Math.Modulo",
-                                    [] (bool raw){
-                                        return std::make_shared<MathNode>(NodeType("MODULO"), raw);
-                                    }));
+    ndb::registerNodeType(make_unique<BuildInDecorator>("MODULO",
+                                                        "Math.Modulo",
+                            [] (bool raw){
+                                return make_shared<MathNode>(NodeType("MODULO"),
+                                                                raw);
+                            }));
 
 }
 
 MathNode::MathNode(NodeType t, bool raw)
 {
+    std::map<std::string, std::string> names = {
+        { "ADD", "Add" },
+        { "SUBTRACT", "Substract" },
+        { "MULTIPLY", "Multiply" },
+        { "DIVIDE", "Divide" },
+        { "DOTPRODUCT", "Dot Product" },
+        { "MODULO", "Modulo" }
+    };
+
     setType(t);
-    if(t == "ADD") {
-        setName("Add");
-    }
-    else if(t == "SUBTRACT") {
-        setName("Subtract");
-    }
-    else if(t == "MULTIPLY") {
-        setName("Multiply");
-    }
-    else if(t == "DIVIDE") {
-        setName("Divide");
-    }
-    else if(t == "DOTPRODUCT") {
-        setName("Dot Product");
-    }
-    else if(t == "MODULO") {
-        setName("Modulo");
-    }
+    setName(names[t.toStr()]);
 
     if(!raw) {
         auto *out = new DoutSocket("Result", "VARIABLE", this);
