@@ -127,7 +127,7 @@ private:
     static std::mutex _id_map_mutex;
 };
 
-class DataType : public Type<DataType> 
+class DataType : public Type<DataType>
 {
 public:
     DataType(const std::string &typeStr="")

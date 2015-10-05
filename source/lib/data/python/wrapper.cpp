@@ -91,7 +91,7 @@ PythonNodeDecorator::~PythonNodeDecorator()
 {
 }
 
-NodePtr  PythonNodeDecorator::operator()(bool raw)
+NodePtr  PythonNodeDecorator::createNode(bool raw)
 {
     GILLocker releaser;
     auto node = std::make_shared<DNode>();

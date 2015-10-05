@@ -144,7 +144,7 @@ class PythonNodeDecorator : public MindTree::AbstractNodeDecorator
 public:
     PythonNodeDecorator(BPy::object cls);
     virtual ~PythonNodeDecorator();
-    NodePtr operator()(bool);
+    NodePtr createNode(bool);
 
 private:
     BPy::object cls;
