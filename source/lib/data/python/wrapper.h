@@ -172,7 +172,7 @@ public:
         return dynamic_cast<T*>(element);
     }
 
-    bool alive();
+    bool alive() const;
 #ifdef QT_DEBUG
     static QString getStylePath();
     static void setStylePath(QString path);
@@ -302,7 +302,6 @@ struct PyConverter<std::shared_ptr<ContainerNode>>
     typedef ContainerNodePyWrapper t;
 };
 
-class DSocketPyWrapper;
 class DSocketPyWrapper : public PyWrapper
 {
 public:
@@ -314,8 +313,7 @@ public:
     void setName(std::string name);
     void setType(std::string value);
     std::string getType();
-
-private:
+    std::string getDir() const;
 };
 PYWRAPPERFUNC(DSocket)
 
@@ -330,6 +328,7 @@ public:
     BPy::object getProp();
     void setProp(BPy::object value);
     static void wrap();
+    BPy::list getChildNodes() const;
 };
 PYWRAPPERFUNC(DinSocket)
 

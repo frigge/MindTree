@@ -125,8 +125,8 @@ public:
 	void setType(SocketType value);
 	void setName(std::string value);
 
-    virtual void setConverter(NodePtr converter);
-    NodePtr getConverter() const;
+    void addChildNode(NodePtr child);
+    NodeList getChildNodes() const;
 
 protected:
     Signal::LiveTimeTracker* _signalLiveTime;
@@ -148,7 +148,7 @@ private:
 
     static std::unordered_map<unsigned short, DSocket*>socketIDHash;
 
-    NodePtr _converter;
+    NodeList _childNodes;
 };
 
 class DoutSocket;
@@ -183,7 +183,6 @@ public:
     void setProperty(Property property);
 
     void clearLink();
-    void setConverter(NodePtr converter) override;
 
 private:
     friend IO::InStream& operator>>(IO::InStream& stream, DinSocket &socket);

@@ -168,7 +168,7 @@ void PyWrapper::elementDestroyed()
     element = nullptr;
 }
 
-bool PyWrapper::alive()
+bool PyWrapper::alive() const
 {
     if(!element){
         PyErr_SetString(PyExc_ReferenceError, "Referenced data is already destoryed");
@@ -572,7 +572,21 @@ void DSocketPyWrapper::wrap()
         .add_property("name", &DSocketPyWrapper::getName, &DSocketPyWrapper::setName)
         .add_property("type", &DSocketPyWrapper::getType, &DSocketPyWrapper::setType)
         .add_property("node", &DSocketPyWrapper::getNode);
+        .add_property("direction", &DSocketPyWrapper::getDir);
         //.def("getNode", &DSocketPyWrapper::getNode, BPy::return_value_policy<BPy::manage_new_object>());
+}
+
+std::string DSocketPyWrapper::getDir() const
+
+private:
+{
+    if(!alive()) return;
+    switch(getWrapped<DSocket*>()->getDir()) {
+        case DSocket::IN:
+            return "IN";
+        case DSocket::OUT:
+            return "OUT";
+    }
 }
 
 std::string DSocketPyWrapper::getName()
@@ -627,7 +641,19 @@ void DinSocketPyWrapper::wrap()
                     &DinSocketPyWrapper::setCntd)
             .add_property("value",
                     &DinSocketPyWrapper::getProp,
-                    &DinSocketPyWrapper::setProp);
+                    &DinSocketPyWrapper::setProp)
+            .def("getChildNodes", &DinSocketPyWrapper::getChildNodes);
+}
+
+BPy::list DinSocketPyWrapper::getChildNodes() const
+{
+    BPy::list l;
+    if(!alive()) return l;
+    NodeList children = getWrapped<DinSocket>()->getChildNodes();
+    for (auto node : children) {
+        l.append(utils::getPyObject(node));
+    }
+    return l;
 }
 
 BPy::object DinSocketPyWrapper::getProp()

@@ -39,7 +39,7 @@ void AbstractNodeDecorator::createChildNodes(NodePtr node)
 {
     for (DinSocket *socket : node->getInSockets()) {
         for (auto *factory : NodeDataBase::getConverters(socket->getType())) {
-            socket->setConverter((*factory)(false));
+            socket->addChildNode((*factory)(false));
         }
     }
 }
