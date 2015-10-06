@@ -33,6 +33,17 @@ def isCompatible(socket1, socket2):
     if type1compset is not None and type2 in type1compset:
         return True
 
+    if socket1.direction == "IN":
+        for child in socket1.childNodes:
+            for s in child.inSockets:
+                if isCompatible(s, socket2):
+                    return True
+    else:
+        for child in socket2.childNodes:
+            for s in child.inSockets:
+                if isCompatible(s, socket1):
+                    return True
+
     return False
 
 MT.__dict__["addCompatibility"] = addCompatibility
