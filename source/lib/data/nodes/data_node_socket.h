@@ -118,8 +118,6 @@ public:
     static unsigned short count;
     static void createLink(DSocket *socket1, DSocket *socket2);
     static void removeLink(DinSocket *in, DoutSocket *out);
-    static bool isCompatible(DSocket *s1, DSocket *s2);
-    static bool isCompatible(SocketType s1, SocketType s2);
     static DSocket* getSocket(unsigned short ID);
 
 	void setType(SocketType value);

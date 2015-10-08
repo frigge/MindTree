@@ -88,7 +88,7 @@ class NodeLink(QGraphicsItem):
             #find sockets this corresponds to
             insocket = None
             for socket in self.start.data.insockets:
-                if (socket.connected is not None 
+                if (socket.connected is not None
                         and socket.connected.node.ptr == self.end.data.ptr):
                     insocket = socket
                     break
@@ -96,7 +96,7 @@ class NodeLink(QGraphicsItem):
             out = insocket.connected
 
             #find new matching insocket and link
-            insockets = list(filter(lambda in_: MT.isCompatible(in_, out), _node.insockets))
+            insockets = MT.getCompatibleSockets(out, node_)
 
             if len(insockets) == 1:
                 insockets[0].connected = out
@@ -561,10 +561,7 @@ class NodeItem(QGraphicsSvgItem):
             out = self.scene().tmpLink.outsocket
             self.scene().removeTmpLink()
 
-            compSockets = []
-            for s in self.data.insockets:
-                if MT.isCompatible(s, out):
-                    compSockets.append(s)
+            compSockets = MT.getCompatibleSockets(out, self.data)
 
             if len(compSockets) > 1:
                 menu = QMenu()
@@ -574,16 +571,14 @@ class NodeItem(QGraphicsSvgItem):
                         s.connected = out
                     return action_triggered
 
-                for s in self.data.insockets:
-                    if MT.isCompatible(s, out):
-                        action = menu.addAction(s.name)
-                        action.triggered.connect(action_triggered_cb(s))
+                for name, s in compSockets:
+                    action = menu.addAction(name)
+                    action.triggered.connect(action_triggered_cb(s))
                 menu.exec_(event.screenPos())
 
             elif len(compSockets) == 1:
-                s = compSockets[0]
-                if MT.isCompatible(s, out):
-                    s.connected = out
+                s = compSockets.values()[0]
+                s.connected = out
 
     def delete(self):
         space = self.data.space

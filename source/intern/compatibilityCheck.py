@@ -13,6 +13,17 @@ def addCompatibility(type1, type2):
 
     _compatibilityMaps[type2].add(type1)
 
+def getCompatibleSockets(outsocket, node, namepath=[]):
+    compIns = {}
+    for in_ in node.insockets:
+        pathlist = namepath[:]
+        pathlist.append(in_.name)
+        path = ".".join(pathlist)
+        if isCompatible(in_, outsocket):
+            compIns[path] = _in
+        for child in in_.childNodes:
+            compIns.extend(getCompatibleSockets(outsocket, child, pathlist))
+
 def isCompatible(socket1, socket2):
     type1 = socket1.type
     type2 = socket2.type
@@ -32,19 +43,8 @@ def isCompatible(socket1, socket2):
 
     if type1compset is not None and type2 in type1compset:
         return True
-
-    if socket1.direction == "IN":
-        for child in socket1.childNodes:
-            for s in child.inSockets:
-                if isCompatible(s, socket2):
-                    return True
-    else:
-        for child in socket2.childNodes:
-            for s in child.inSockets:
-                if isCompatible(s, socket1):
-                    return True
-
     return False
 
 MT.__dict__["addCompatibility"] = addCompatibility
 MT.__dict__["isCompatible"] = isCompatible
+MT.__dict__["getCompatibleSockets"] = getCompatibleSockets

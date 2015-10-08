@@ -196,20 +196,6 @@ const DoutSocket* DSocket::toOut()const
     return static_cast<const DoutSocket*>(this);
 }
 
-bool DSocket::isCompatible(DSocket *s1, DSocket *s2)
-{
-    if(s1 == s2)
-        return false;
-    if(s1->getNode() == s2->getNode())
-        return false;
-    return isCompatible(s1->getType(), s2->getType());
-}
-
-bool DSocket::isCompatible(SocketType s1, SocketType s2)
-{
-    return true;
-}
-
 void DSocket::createLink(DSocket *socket1, DSocket *socket2)
 {
     DinSocket *in = 0;
@@ -418,9 +404,6 @@ void DinSocket::setProperty(Property property)
 void DinSocket::addLink(DoutSocket *socket)
 {
     if(cntdSocket == socket)
-        return;
-
-    if(!isCompatible(this, socket))
         return;
 
     //here we set the actual link
