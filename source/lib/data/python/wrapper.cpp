@@ -571,17 +571,14 @@ void DSocketPyWrapper::wrap()
         //.def("getName", &DSocketPyWrapper::getName)
         .add_property("name", &DSocketPyWrapper::getName, &DSocketPyWrapper::setName)
         .add_property("type", &DSocketPyWrapper::getType, &DSocketPyWrapper::setType)
-        .add_property("node", &DSocketPyWrapper::getNode);
+        .add_property("node", &DSocketPyWrapper::getNode)
         .add_property("direction", &DSocketPyWrapper::getDir);
-        //.def("getNode", &DSocketPyWrapper::getNode, BPy::return_value_policy<BPy::manage_new_object>());
 }
 
 std::string DSocketPyWrapper::getDir() const
-
-private:
 {
-    if(!alive()) return;
-    switch(getWrapped<DSocket*>()->getDir()) {
+    if(!alive()) return "";
+    switch(getWrapped<DSocket>()->getDir()) {
         case DSocket::IN:
             return "IN";
         case DSocket::OUT:
