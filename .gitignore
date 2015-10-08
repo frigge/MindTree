@@ -1,6 +1,7 @@
 *.pro.user
 tags/
 tags
+TAGS
 *.user
 source/tags
 cscope.*
