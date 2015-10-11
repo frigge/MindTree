@@ -376,6 +376,11 @@ BPy::object ContainerSpacePyWrapper::getParent()
     return utils::getPyObject(space->getParent());
 }
 
+DNodePyWrapper::DNodePyWrapper(DNode *node)
+    : PyWrapper(node)
+{
+}
+
 DNodePyWrapper::DNodePyWrapper(NodePtr node)
     : PyWrapper(node.get()), _node(node)
 {
@@ -394,6 +399,24 @@ BPy::object MindTree::utils::getPyObject(NodePtr node)
         case DNode::CONTAINER:
             {
                 BPy::object obj(new ContainerNodePyWrapper(std::dynamic_pointer_cast<ContainerNode>(node)));
+                return obj;
+            }
+        default:
+            {
+                BPy::object obj(new DNodePyWrapper(node));
+                return obj;
+            }
+    }
+}
+
+BPy::object MindTree::utils::getPyObject(DNode* node)
+{
+    if(!node) return BPy::object();
+
+    switch(node->getBuildInType()) {
+        case DNode::CONTAINER:
+            {
+                BPy::object obj(new ContainerNodePyWrapper(dynamic_cast<ContainerNode*>(node)));
                 return obj;
             }
         default:
@@ -533,8 +556,13 @@ BPy::list DNodePyWrapper::out()
     return l;
 }
 
-ContainerNodePyWrapper::ContainerNodePyWrapper(std::shared_ptr<ContainerNode> node)
-    : DNodePyWrapper(node)
+ContainerNodePyWrapper::ContainerNodePyWrapper(ContainerNode *node) :
+    DNodePyWrapper(node)
+{
+}
+
+ContainerNodePyWrapper::ContainerNodePyWrapper(std::shared_ptr<ContainerNode> node) :
+    DNodePyWrapper(node)
 {
 }
 
@@ -617,7 +645,7 @@ BPy::object DSocketPyWrapper::getNode()
 {
     if(!alive()) return BPy::object();
     DNode *node = getWrapped<DSocket>()->getNode();
-    return utils::getPyObject(utils::getNodePtr(node));
+    return utils::getPyObject(node);
 }
 
 DinSocketPyWrapper::DinSocketPyWrapper(DinSocket *socket)
@@ -639,7 +667,7 @@ void DinSocketPyWrapper::wrap()
             .add_property("value",
                     &DinSocketPyWrapper::getProp,
                     &DinSocketPyWrapper::setProp)
-            .def("getChildNodes", &DinSocketPyWrapper::getChildNodes);
+            .add_property("childNodes", &DinSocketPyWrapper::getChildNodes);
 }
 
 BPy::list DinSocketPyWrapper::getChildNodes() const
@@ -648,7 +676,7 @@ BPy::list DinSocketPyWrapper::getChildNodes() const
     if(!alive()) return l;
     NodeList children = getWrapped<DinSocket>()->getChildNodes();
     for (auto node : children) {
-        l.append(utils::getPyObject(node));
+        l.append(utils::getPyObject(node.get()));
     }
     return l;
 }
