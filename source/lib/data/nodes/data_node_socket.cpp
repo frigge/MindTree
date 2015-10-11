@@ -25,6 +25,7 @@
 #include "data_node.h"
 #include "data/signal.h"
 
+#include "data/debuglog.h"
 #include "data_node_socket.h"
 
 using namespace MindTree;
@@ -135,7 +136,7 @@ DSocket::DSocket(std::string name, SocketType type, DNode *node)
 }
 
 DSocket::DSocket(const DSocket& socket, DNode *node)
-:   _signalLiveTime(new Signal::LiveTimeTracker(this)),
+:   _signalLiveTime(this),
     name(socket.getName()),
     type(socket.getType()),
     node(node),
@@ -267,7 +268,7 @@ void DSocket::setName(std::string value)
 {
     if(value == name) return;
 	name = value;
-    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "nameChanged", value);
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(&_signalLiveTime, "nameChanged", value);
 }
 
 const SocketType& DSocket::getType() const
@@ -284,7 +285,7 @@ void DSocket::setType(SocketType value)
         type = value;
     }
 
-    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "typeChanged", value);
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(&_signalLiveTime, "typeChanged", value);
 }
 
 void DSocket::setTypePropagationFunction(std::function<SocketType(SocketType)> fn)
@@ -490,7 +491,7 @@ void DinSocket::listenToLinked()
 
 void DinSocket::setCntdSocket(DoutSocket *socket)
 {
-    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "linkChanged", socket);
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(&_signalLiveTime, "linkChanged", socket);
     if(!socket) {
         clearLink();
         return;
@@ -561,7 +562,7 @@ bool DoutSocket::operator !=(DoutSocket &socket)const
 
 void DoutSocket::registerSocket(DinSocket *socket)
 {
-    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "outLinkChanged", socket);
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(&_signalLiveTime, "outLinkChanged", socket);
     if(this == getNode()->getVarSocket())
         getNode()->incVarSocket();
     
@@ -583,7 +584,7 @@ std::vector<DinSocket*> DoutSocket::getCntdSockets() const
 
 void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
 {
-    MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime, "outLinkChanged", socket);
+    MT_CUSTOM_BOUND_SIGNAL_EMITTER(&_signalLiveTime, "outLinkChanged", socket);
     auto it = std::find(cntdSockets.begin(), cntdSockets.end(), socket);
     if(it != end(cntdSockets)) {
         cntdSockets.erase(it);
