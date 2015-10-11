@@ -23,6 +23,8 @@
 
 #include "data/signal.h"
 #include "data_node.h"
+
+#define MT_DEBUG_SIGNALS
 #include "data/signal.h"
 
 #include "data/debuglog.h"

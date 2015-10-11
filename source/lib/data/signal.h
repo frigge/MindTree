@@ -18,6 +18,7 @@
 #include "data/python/wrapper.h"
 #include "data/properties.h"
 #include "data/python/pyutils.h"
+#include "data/debuglog.h"
 
 #define MT_SIGNAL_EMITTER(...) MindTree::Signal::callHandler(__PRETTY_FUNCTION__, ##__VA_ARGS__)
 
@@ -464,6 +465,9 @@ void callHandler(std::string sig, Args... args) noexcept
 template<typename ...Args>
 void callBoundHandler(LiveTimeTracker* tracker, std::string sig, Args... args)
 {
+#ifdef MT_DEBUG_SIGNALS
+    dblog("calling signal: " << sig << " on bound object: " << tracker->boundObject);
+#endif
     if(!tracker->registered) {
         tracker->destructor = [tracker] {
             BoundSignalHandler<Args...>::handlers.erase(tracker->boundObject);
@@ -501,6 +505,9 @@ SignalCollector<Args...>& getHandler()
 template<typename ...Args>
 SignalCollector<Args...>& getBoundHandler(void* boundObject)
 {
+#ifdef MT_DEBUG_SIGNALS
+    dbout("receiving bound signal handler for: " << boundObject);
+#endif
     auto begin = BoundSignalHandler<Args...>::handlers.begin();
     auto end = BoundSignalHandler<Args...>::handlers.end();
 
