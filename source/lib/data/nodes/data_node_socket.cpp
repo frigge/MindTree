@@ -385,6 +385,20 @@ DinSocket::~DinSocket()
         cntdSocket->unregisterSocket(this);
 }
 
+void DinSocket::addChildNode(NodePtr child)
+{
+    DSocket::addChildNode(child);
+    dbout("adding child nodes for " << getNode()->getNodeName());
+    for (auto *in : child->getInSockets()) {
+        dbout("register cb for " << in->getName());
+        auto cb = Signal::getBoundHandler<DoutSocket*>(in)
+            .connect("linkChanged", [this, child](DoutSocket *out) {
+                    this->setCntdSocket(child->getOutSockets()[0]);
+            });
+        _callbacks.push_back(cb);
+    }
+}
+
 Property DinSocket::getProperty()const
 {
     std::lock_guard<std::mutex> lock(_propLock);
