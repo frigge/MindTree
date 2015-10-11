@@ -123,15 +123,15 @@ public:
 	void setType(SocketType value);
 	void setName(std::string value);
 
-    void addChildNode(NodePtr child);
+    virtual void addChildNode(NodePtr child);
+
     NodeList getChildNodes() const;
 
 protected:
-    Signal::LiveTimeTracker* _signalLiveTime;
-
-private:
+    Signal::LiveTimeTracker _signalLiveTime;
     Signal::CallbackVector _callbacks;
 
+private:
     friend IO::InStream& operator>>(IO::InStream& stream, DSocket &socket);
     std::function<SocketType(SocketType)> _propagateType;
 
@@ -161,9 +161,11 @@ public:
     void setNode(DNode*);
     void addLink(DoutSocket*);
 
-    void listenToLinkedName();
-    void listenToLinkedType();
-    void listenToLinked();
+    void addChildNode(NodePtr child) override;
+
+    void listenToLinkedName() override;
+    void listenToLinkedType() override;
+    void listenToLinked() override;
 
     static void createLink(DinSocket *in, DinSocket *out);
 	const DoutSocket* getCntdSocketConst() const;
@@ -211,9 +213,9 @@ public:
     void unregisterSocket(DinSocket *socket, bool decr=true);
     void pushSocket(DinSocket *socket);
 
-    void listenToLinkedName();
-    void listenToLinkedType();
-    void listenToLinked();
+    void listenToLinkedName() override;
+    void listenToLinkedType() override;
+    void listenToLinked() override;
 
 private:
     std::vector<DinSocket*> cntdSockets;

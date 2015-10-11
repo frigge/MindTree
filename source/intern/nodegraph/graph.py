@@ -124,8 +124,14 @@ class NodeSpace(QGraphicsScene):
 
         self.addItem(item)
         item.setPos(pos)
-        self.nodes[n.ptr] = item
+        self.cacheNodeGeometry(n, item)
         return item
+
+    def cacheNodeGeometry(self, node, item):
+        self.nodes[node.ptr] = item
+        for socket in node.insockets:
+            for childNode in socket.childNodes:
+                self.cacheNodeGeometry(childNode, item)
 
     def setViewedNode(self, node):
         for n in self.nodes.values():

@@ -571,7 +571,7 @@ class NodeItem(QGraphicsSvgItem):
                         s.connected = out
                     return action_triggered
 
-                for name, s in compSockets:
+                for name, s in compSockets.items():
                     action = menu.addAction(name)
                     action.triggered.connect(action_triggered_cb(s))
                 menu.exec_(event.screenPos())

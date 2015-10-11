@@ -62,11 +62,21 @@ NodePtr BuildInDecorator::createNode(bool raw)
 void NodeDataBase::registerNodeType(std::unique_ptr<AbstractNodeDecorator> &&factory)
 {
     NodePtr prototype = (*factory)(false);
-    if(prototype->getOutSockets().size() == 1) {
-        std::string type_string = prototype->getOutSockets()[0]->getType().toStr();
-        if(s_converters.find(type_string) == end(s_converters))
-        s_converters[type_string] = std::vector<AbstractNodeDecorator*>();
-        s_converters[type_string].push_back(factory.get());
+    auto outsockets = prototype->getOutSockets();
+    auto insockets = prototype->getInSockets();
+    if(outsockets.size() == 1
+       && insockets.size() > 1) {
+        auto p = [&outsockets](const DinSocket *socket) {
+            return outsockets[0]->getType() != socket->getType();
+        };
+
+        if (std::all_of(begin(insockets), end(insockets), p)) {
+            std::string type_string = outsockets[0]->getType().toStr();
+            if(s_converters.find(type_string) == end(s_converters)) {
+                s_converters[type_string] = std::vector<AbstractNodeDecorator*>();
+            }
+            s_converters[type_string].push_back(factory.get());
+        }
     }
 
     nodeFactories.push_back(std::move(factory));

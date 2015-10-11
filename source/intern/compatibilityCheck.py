@@ -20,9 +20,10 @@ def getCompatibleSockets(outsocket, node, namepath=[]):
         pathlist.append(in_.name)
         path = ".".join(pathlist)
         if isCompatible(in_, outsocket):
-            compIns[path] = _in
+            compIns[path] = in_
         for child in in_.childNodes:
-            compIns.extend(getCompatibleSockets(outsocket, child, pathlist))
+            compIns.update(getCompatibleSockets(outsocket, child, pathlist))
+    return compIns
 
 def isCompatible(socket1, socket2):
     type1 = socket1.type
