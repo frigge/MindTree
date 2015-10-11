@@ -71,7 +71,7 @@ public:
 
 private:
     bool registered;
-    template<typename ...Args> friend  
+    template<typename ...Args> friend
     void callBoundHandler(LiveTimeTracker* tracker, std::string sig, Args... args);
 
     std::function<void()> destructor;
