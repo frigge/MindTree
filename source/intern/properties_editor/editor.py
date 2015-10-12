@@ -232,6 +232,34 @@ class Vector3DEditor(QWidget):
         z = self.zspin.value()
         self.socket.value = (x, y, z)
 
+class EditorRow(QWidget):
+    def __init__(self, socket, parent=None):
+        super().__init__(parent)
+        self.setLayout(QHBoxLayout())
+        self.layout().setMargin(0)
+        self.layout().setSpacing(0)
+        self.socket = socket
+        plusButton = QPushButton("+")
+        plusButton.pressed.connect(self.expand)
+        self.layout().addWidget(plusButton)
+        self.widget = Editor.editors[socket.type](socket)
+        self.layout().addWidget(self.widget)
+        self.expanded = False
+
+    def expand(self):
+        if not self.expanded:
+            self.layout().removeWidget(self.widget)
+            for n in self.socket.childNodes:
+                self.view = EditorView()
+                self.layout().addWidget(self.view)
+                self.view.updateEditor(n)
+            self.expanded = True
+        else:
+            self.layout().removeWidget(self.view)
+            self.layout().addWidget(self.widget)
+            self.expanded = False
+        self.parent().update()
+
 class EditorView(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -239,31 +267,14 @@ class EditorView(QWidget):
         self.layout().setMargin(0)
         self.layout().setSpacing(0)
 
+    def addEditor(self, s):
+        if s.type in Editor.editors:
+            self.layout().addRow(s.name, EditorRow(s))
+
     def updateEditor(self, node):
         for s in node.insockets:
             if s.connected == None:
-                if s.type == "STRING":
-                    self.layout().addRow(s.name, StringEditor(s))
-                if s.type == "DIRECTORY":
-                    self.layout().addRow(s.name, DirEditor(s))
-                elif s.type == "FLOAT":
-                    self.layout().addRow(s.name, FloatEditor(s))
-                elif s.type == "INTEGER":
-                    self.layout().addRow(s.name, IntEditor(s))
-                elif s.type == "BOOLEAN":
-                    self.layout().addRow(s.name, BoolEditor(s))
-                elif s.type == "COLOR":
-                    self.layout().addRow(s.name, ColorEditor(s))
-                elif s.type == "INTVECTOR2D":
-                    self.layout().addRow(s.name, IntVector2DEditor(s))
-                elif s.type == "VECTOR2D":
-                    self.layout().addRow(s.name, Vector2DEditor(s))
-                elif s.type == "VECTOR3D":
-                    self.layout().addRow(s.name, Vector3DEditor(s))
-            for n in s.childNodes:
-                view = EditorView()
-                self.layout().addRow("", view)
-                view.updateEditor(n)
+                self.addEditor(s)
 
         type_ = node.type
         customwidget = None;
@@ -277,6 +288,18 @@ class EditorView(QWidget):
 
 class Editor(QWidget):
     customWidgets = {}
+
+    editors = {
+        "STRING" : StringEditor,
+        "DIRECTORY" : DirEditor,
+        "FLOAT" : FloatEditor,
+        "INTEGER" : IntEditor,
+        "BOOLEAN" : BoolEditor,
+        "COLOR" : ColorEditor,
+        "INTVECTOR2D" : IntVector2DEditor,
+        "VECTOR2D" : Vector2DEditor,
+        "VECTOR3D" : Vector3DEditor
+    }
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
