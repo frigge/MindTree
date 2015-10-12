@@ -466,7 +466,7 @@ template<typename ...Args>
 void callBoundHandler(LiveTimeTracker* tracker, std::string sig, Args... args)
 {
 #ifdef MT_DEBUG_SIGNALS
-    dblog("calling signal: " << sig << " on bound object: " << tracker->boundObject);
+    dbout("calling signal: " << sig << " on bound object: " << tracker->boundObject);
 #endif
     if(!tracker->registered) {
         tracker->destructor = [tracker] {

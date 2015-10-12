@@ -24,9 +24,6 @@
 #include "data/signal.h"
 #include "data_node.h"
 
-#define MT_DEBUG_SIGNALS
-#include "data/signal.h"
-
 #include "data/debuglog.h"
 #include "data_node_socket.h"
 
@@ -126,7 +123,7 @@ IO::InStream& MindTree::operator>>(IO::InStream& stream, DSocket &socket)
 }
 
 DSocket::DSocket(std::string name, SocketType type, DNode *node)
-:   _signalLiveTime(new Signal::LiveTimeTracker(this)),
+:   _signalLiveTime(this),
     name(name),
     type(type),
     node(node),
