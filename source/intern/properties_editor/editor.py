@@ -221,7 +221,7 @@ class Vector3DEditor(QWidget):
             self.xspin.setValue(value[0])
             self.yspin.setValue(value[1])
             self.zspin.setValue(value[2])
-            
+
         self.xspin.valueChanged.connect(self.setVector)
         self.yspin.valueChanged.connect(self.setVector)
         self.zspin.valueChanged.connect(self.setVector)
@@ -232,53 +232,38 @@ class Vector3DEditor(QWidget):
         z = self.zspin.value()
         self.socket.value = (x, y, z)
 
-class Editor(QWidget):
-    customWidgets = {}
-
+class EditorView(QWidget):
     def __init__(self, parent=None):
-        QWidget.__init__(self, parent)
-        self.widget = QWidget()
-        lay = QVBoxLayout()
-        lay.setMargin(0)
-        lay.setSpacing(0)
-        self.setLayout(lay)
-        lay.addWidget(self.widget)
-        self.widget.setLayout(QFormLayout())
-        self.widget.layout().setMargin(0)
-        self.widget.layout().setSpacing(0)
-
-        self.cb = MT.attachToSignal("selectionChanged", self.updateEditor)
-
-    def sizeHint(self):
-        return QSize(300, 100)
+        super().__init__(parent)
+        self.setLayout(QFormLayout())
+        self.layout().setMargin(0)
+        self.layout().setSpacing(0)
 
     def updateEditor(self, node):
-        self.layout().removeWidget(self.widget)
-        self.widget = QWidget()
-        self.widget.setLayout(QFormLayout())
-        self.widget.layout().setMargin(0)
-        self.widget.layout().setSpacing(1)
-        self.layout().addWidget(self.widget)
         for s in node.insockets:
             if s.connected == None:
                 if s.type == "STRING":
-                    self.widget.layout().addRow(s.name, StringEditor(s))
+                    self.layout().addRow(s.name, StringEditor(s))
                 if s.type == "DIRECTORY":
-                    self.widget.layout().addRow(s.name, DirEditor(s))
+                    self.layout().addRow(s.name, DirEditor(s))
                 elif s.type == "FLOAT":
-                    self.widget.layout().addRow(s.name, FloatEditor(s))
+                    self.layout().addRow(s.name, FloatEditor(s))
                 elif s.type == "INTEGER":
-                    self.widget.layout().addRow(s.name, IntEditor(s))
+                    self.layout().addRow(s.name, IntEditor(s))
                 elif s.type == "BOOLEAN":
-                    self.widget.layout().addRow(s.name, BoolEditor(s))
+                    self.layout().addRow(s.name, BoolEditor(s))
                 elif s.type == "COLOR":
-                    self.widget.layout().addRow(s.name, ColorEditor(s))
+                    self.layout().addRow(s.name, ColorEditor(s))
                 elif s.type == "INTVECTOR2D":
-                    self.widget.layout().addRow(s.name, IntVector2DEditor(s))
+                    self.layout().addRow(s.name, IntVector2DEditor(s))
                 elif s.type == "VECTOR2D":
-                    self.widget.layout().addRow(s.name, Vector2DEditor(s))
+                    self.layout().addRow(s.name, Vector2DEditor(s))
                 elif s.type == "VECTOR3D":
-                    self.widget.layout().addRow(s.name, Vector3DEditor(s))
+                    self.layout().addRow(s.name, Vector3DEditor(s))
+            for n in s.childNodes:
+                view = EditorView()
+                self.layout().addRow("", view)
+                view.updateEditor(n)
 
         type_ = node.type
         customwidget = None;
@@ -288,6 +273,28 @@ class Editor(QWidget):
         if customwidget is not None:
             print("adding customwidget: %s to layout" % customwidget)
             widget = customwidget(node, self)
-            self.widget.layout().addRow("", widget)
-    
+            self.layout().addRow("", widget)
+
+class Editor(QWidget):
+    customWidgets = {}
+
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        self.widget = QScrollArea()
+        self.editor = EditorView()
+        lay = QVBoxLayout()
+        lay.setMargin(0)
+        lay.setSpacing(0)
+        self.setLayout(lay)
+        lay.addWidget(self.widget)
+        self.widget.setWidget(self.editor)
+
+        self.cb = MT.attachToSignal("selectionChanged", self.updateEditor)
+
+    def updateEditor(self, node):
+        self.editor = EditorView()
+        self.editor.updateEditor(node);
+        self.widget.setWidget(self.editor)
+        self.editor.show()
+
 MT.gui.registerWindow("PropertiesEditor", Editor)
