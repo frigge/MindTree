@@ -31,7 +31,7 @@ class DirEditor(QWidget):
         self.layout().setMargin(0)
         self.browsebutton.pressed.connect(self.browseFilePath)
         self.widget.textChanged.connect(lambda x: setattr(self.socket, "value", str(x)))
-        
+
         self.path = ""
 
     def browseFilePath(self):
@@ -159,7 +159,7 @@ class IntVector2DEditor(QWidget):
             value = socket.value
             self.xspin.setValue(value[0])
             self.yspin.setValue(value[1])
-            
+
         self.xspin.valueChanged.connect(self.setVector)
         self.yspin.valueChanged.connect(self.setVector)
 
@@ -188,7 +188,7 @@ class Vector2DEditor(QWidget):
             value = socket.value
             self.xspin.setValue(value[0])
             self.yspin.setValue(value[1])
-            
+
         self.xspin.valueChanged.connect(self.setVector)
         self.yspin.valueChanged.connect(self.setVector)
 
@@ -232,61 +232,11 @@ class Vector3DEditor(QWidget):
         z = self.zspin.value()
         self.socket.value = (x, y, z)
 
-class EditorRow(QWidget):
-    def __init__(self, socket, parent=None):
-        super().__init__(parent)
-        self.setLayout(QHBoxLayout())
-        self.layout().setMargin(0)
-        self.layout().setSpacing(0)
-        self.socket = socket
-        plusButton = QPushButton("+")
-        plusButton.pressed.connect(self.expand)
-        self.layout().addWidget(plusButton)
-        self.widget = Editor.editors[socket.type](socket)
-        self.layout().addWidget(self.widget)
-        self.expanded = False
-
-    def expand(self):
-        if not self.expanded:
-            self.layout().removeWidget(self.widget)
-            for n in self.socket.childNodes:
-                self.view = EditorView()
-                self.layout().addWidget(self.view)
-                self.view.updateEditor(n)
-            self.expanded = True
-        else:
-            self.layout().removeWidget(self.view)
-            self.layout().addWidget(self.widget)
-            self.expanded = False
-        self.parent().update()
-
-class EditorView(QWidget):
+class Delegate(QItemDelegate):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setLayout(QFormLayout())
-        self.layout().setMargin(0)
-        self.layout().setSpacing(0)
+        self.editors = {}
 
-    def addEditor(self, s):
-        if s.type in Editor.editors:
-            self.layout().addRow(s.name, EditorRow(s))
-
-    def updateEditor(self, node):
-        for s in node.insockets:
-            if s.connected == None:
-                self.addEditor(s)
-
-        type_ = node.type
-        customwidget = None;
-        if type_ in Editor.customWidgets:
-            customwidget = Editor.customWidgets[type_]
-
-        if customwidget is not None:
-            print("adding customwidget: %s to layout" % customwidget)
-            widget = customwidget(node, self)
-            self.layout().addRow("", widget)
-
-class Delegate(QItemDelegate):
     def createEditor(self, parent, option, index):
         if index.column() == 0:
             return
@@ -298,6 +248,8 @@ class Delegate(QItemDelegate):
         widget = Editor.editors[socket.type](socket)
         widget.setParent(parent)
         widget.setFocusPolicy(Qt.StrongFocus)
+        self.editors[index] = widget
+
         return widget
 
     def sizeHint(self, option, index):
@@ -325,6 +277,9 @@ class Editor(QWidget):
         self.tree.setModel(self.model)
         self.model.setHorizontalHeaderLabels(["Name", "Value"])
         self.tree.setItemDelegate(Delegate())
+        self.tree.expanded.connect(self.connect)
+        self.tree.collapsed.connect(self.disconnect)
+
         lay = QVBoxLayout()
         lay.setMargin(0)
         lay.setSpacing(0)
@@ -334,6 +289,21 @@ class Editor(QWidget):
         self.customWidget = None
 
         self.cb = MT.attachToSignal("selectionChanged", self.updateEditor)
+
+    def connect(self, index):
+        si = index.sibling(index.row(), 1)
+        socket = si.data(Qt.UserRole + 1)
+        if len(socket.childNodes) == 1:
+            out = socket.childNodes[0].outsockets[0]
+            socket.connected = out
+            self.tree.itemDelegate().editors[si].setEnabled(False)
+
+    def disconnect(self, index):
+        si = index.sibling(index.row(), 1)
+        socket = si.data(Qt.UserRole + 1)
+        if len(socket.childNodes) == 1:
+            socket.connected = None
+            self.tree.itemDelegate().editors[si].setEnabled(False)
 
     def addItem(self, socket, parent):
         name = QStandardItem(socket.name)
