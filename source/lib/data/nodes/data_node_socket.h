@@ -123,15 +123,16 @@ public:
 	void setType(SocketType value);
 	void setName(std::string value);
 
-    virtual void addChildNode(NodePtr child);
-
     NodeList getChildNodes() const;
 
 protected:
+    virtual void addChildNode(NodePtr child);
+
     Signal::LiveTimeTracker _signalLiveTime;
     Signal::CallbackVector _callbacks;
 
 private:
+
     friend IO::InStream& operator>>(IO::InStream& stream, DSocket &socket);
     std::function<SocketType(SocketType)> _propagateType;
 
@@ -161,8 +162,6 @@ public:
     void setNode(DNode*);
     void addLink(DoutSocket*);
 
-    void addChildNode(NodePtr child) override;
-
     void listenToLinkedName() override;
     void listenToLinkedType() override;
     void listenToLinked() override;
@@ -185,6 +184,9 @@ public:
     void clearLink();
 
 private:
+    void addChildNode(NodePtr child) override;
+    void createChildNodes();
+
     friend IO::InStream& operator>>(IO::InStream& stream, DinSocket &socket);
 
     Signal::CallbackHandler _linkedNameChangeCallback;

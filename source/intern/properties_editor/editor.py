@@ -286,6 +286,23 @@ class EditorView(QWidget):
             widget = customwidget(node, self)
             self.layout().addRow("", widget)
 
+class Delegate(QItemDelegate):
+    def createEditor(self, parent, option, index):
+        if index.column() == 0:
+            return
+
+        socket = index.model().data(index, Qt.UserRole + 1)
+        if not socket.type in Editor.editors:
+            return
+
+        widget = Editor.editors[socket.type](socket)
+        widget.setParent(parent)
+        widget.setFocusPolicy(Qt.StrongFocus)
+        return widget
+
+    def sizeHint(self, option, index):
+        return QSize(20, 20)
+
 class Editor(QWidget):
     customWidgets = {}
 
@@ -303,21 +320,49 @@ class Editor(QWidget):
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
-        self.widget = QScrollArea()
-        self.editor = EditorView()
+        self.tree = QTreeView()
+        self.model = QStandardItemModel(0, 2, parent);
+        self.tree.setModel(self.model)
+        self.model.setHorizontalHeaderLabels(["Name", "Value"])
+        self.tree.setItemDelegate(Delegate())
         lay = QVBoxLayout()
         lay.setMargin(0)
         lay.setSpacing(0)
         self.setLayout(lay)
-        lay.addWidget(self.widget)
-        self.widget.setWidget(self.editor)
+        lay.addWidget(self.tree)
+
+        self.customWidget = None
 
         self.cb = MT.attachToSignal("selectionChanged", self.updateEditor)
 
+    def addItem(self, socket, parent):
+        name = QStandardItem(socket.name)
+        socketItem = QStandardItem()
+        socketItem.setData(socket)
+        parent.appendRow([name, socketItem]);
+        index = self.model.indexFromItem(socketItem)
+        self.tree.openPersistentEditor(index)
+        return name
+
+    def addItems(self, node, parent):
+        for socket in node.insockets:
+            newparent = self.addItem(socket, parent)
+            for n in socket.childNodes:
+                self.addItems(n, newparent)
+
     def updateEditor(self, node):
-        self.editor = EditorView()
-        self.editor.updateEditor(node);
-        self.widget.setWidget(self.editor)
-        self.editor.show()
+        self.model.clear()
+        self.model.setHorizontalHeaderLabels(["Name", "Value"])
+        root = self.model.invisibleRootItem()
+        self.addItems(node, root)
+
+        type_ = node.type
+        customwidget = None;
+        if type_ in Editor.customWidgets:
+            customwidget = Editor.customWidgets[type_]
+
+        if customwidget is not None and self.customWidget is None:
+            self.customWidget = customwidget(node, self)
+            self.layout().addWidget(self.customWidget)
 
 MT.gui.registerWindow("PropertiesEditor", Editor)

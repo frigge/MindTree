@@ -367,6 +367,7 @@ DinSocket::DinSocket(std::string name, SocketType type, DNode *node)
 {
 	setDir(IN);
     getNode()->addSocket(this);
+    createChildNodes();
 };
 
 DinSocket::DinSocket(const DinSocket& socket, DNode *node)
@@ -377,6 +378,10 @@ DinSocket::DinSocket(const DinSocket& socket, DNode *node)
 {
     setDir(IN);
     getNode()->addSocket(this);
+
+    for(auto child : socket.getChildNodes()) {
+        addChildNode(std::make_shared<DNode>(*child));
+    }
 }
 
 DinSocket::~DinSocket()
@@ -398,6 +403,14 @@ void DinSocket::addChildNode(NodePtr child)
         _callbacks.push_back(cb);
     }
 }
+
+void DinSocket::createChildNodes()
+{
+    for (auto *factory : NodeDataBase::getConverters(getType())) {
+        addChildNode((*factory)(false));
+    }
+}
+
 
 Property DinSocket::getProperty()const
 {

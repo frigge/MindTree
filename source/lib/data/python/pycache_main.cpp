@@ -30,18 +30,14 @@ MindTree::PyCacheProcessor::~PyCacheProcessor()
 {
 }
 
-void MindTree::PyCacheProcessor::operator()(MindTree::DataCache* cache)    
+void MindTree::PyCacheProcessor::operator()(MindTree::DataCache* cache)
 {
-    processor(BPy::ptr(cache)); 
+    processor(BPy::ptr(cache));
 }
 
-MindTree::DNodePyWrapper* MindTree::wrap_DataCache_getNode(MindTree::DataCache *cache)    
+MindTree::DNodePyWrapper* MindTree::wrap_DataCache_getNode(MindTree::DataCache *cache)
 {
-    const DNode *node = cache->getNode();
-    NodeList nodes = node->getSpace()->getNodes();
-    auto it = std::find_if(begin(nodes), end(nodes), [node](NodePtr other) {return other.get() == node;});
-
-    return new MindTree::DNodePyWrapper(*it);
+    return new MindTree::DNodePyWrapper(const_cast<DNode*>(cache->getNode()));
 }
 
 BPy::object MindTree::wrap_DataCache_getData(MindTree::DataCache *self, int index)
@@ -65,7 +61,7 @@ void MindTree::wrap_DataCache_setData(MindTree::DataCache *self, BPy::object dat
     self->pushData(MindTree::Property::createPropertyFromPython(data));
 }
 
-MindTree::DoutSocketPyWrapper* MindTree::wrap_DataCache_getStart(DataCache *cache)    
+MindTree::DoutSocketPyWrapper* MindTree::wrap_DataCache_getStart(DataCache *cache)
 {
     return new MindTree::DoutSocketPyWrapper(const_cast<DoutSocket*>(cache->getStart()));
 }
@@ -110,7 +106,7 @@ void MindTree::wrap_DataCache_invalidate(DNodePyWrapper *node)
     MindTree::DataCache::invalidate(node->getWrapped<DNode>());
 }
 
-void MindTree::wrap_DataCache()    
+void MindTree::wrap_DataCache()
 {
     BPy::class_<MindTree::DataCache>("_DataCache", BPy::no_init)
         //.def("cache", &wrap_DataCache_cache)

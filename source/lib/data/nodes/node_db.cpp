@@ -29,19 +29,7 @@ void AbstractNodeDecorator::setType(std::string t)
 
 NodePtr AbstractNodeDecorator::operator()(bool raw)
 {
-    auto node = createNode(raw);
-
-    createChildNodes(node);
-    return node;
-}
-
-void AbstractNodeDecorator::createChildNodes(NodePtr node)
-{
-    for (DinSocket *socket : node->getInSockets()) {
-        for (auto *factory : NodeDataBase::getConverters(socket->getType())) {
-            socket->addChildNode((*factory)(false));
-        }
-    }
+    return createNode(raw);
 }
 
 std::string AbstractNodeDecorator::getType()

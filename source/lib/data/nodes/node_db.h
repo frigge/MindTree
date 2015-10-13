@@ -27,7 +27,6 @@ public:
 
 private:
     virtual NodePtr createNode(bool raw)=0;
-    void createChildNodes(NodePtr node);
 
     std::string type, label;
 };
