@@ -8,59 +8,23 @@
 using namespace MindTree;
 using namespace GL;
 
-struct RSMProgram : public PixelPlane::ShaderProvider {
-    std::shared_ptr<ShaderProgram> provideProgram()
-    {
-        std::shared_ptr<ShaderProgram> prog;
-        prog = std::make_shared<ShaderProgram>();
+struct RSMProgram;
+struct RSMInterpolateProvider;
+struct RSMFinalProvider;
 
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/rsm_indirect_lighting.frag", 
-                                ShaderProgram::FRAGMENT);
+template<>
+const std::string
+PixelPlane::ShaderFiles<RSMProgram>::
+fragmentShader = "../plugins/render/defaultShaders/rsm_indirect_lighting.frag";
+template<>
+const std::string
+PixelPlane::ShaderFiles<RSMInterpolateProvider>::
+fragmentShader = "../plugins/render/defaultShaders/rsm_interpolate.frag";
+template<>
+const std::string
+PixelPlane::ShaderFiles<RSMFinalProvider>::
+fragmentShader = "../plugins/render/defaultShaders/rsm_final.frag";
 
-        return prog;
-    }
-
-};
-
-struct RSMInterpolateProvider : public PixelPlane::ShaderProvider {
-    std::shared_ptr<ShaderProgram> provideProgram()
-    {
-        std::shared_ptr<ShaderProgram> prog;
-        prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/rsm_interpolate.frag", 
-                                ShaderProgram::FRAGMENT);
-
-        return prog;
-    }
-
-};
-
-struct RSMFinalProvider : public PixelPlane::ShaderProvider {
-    std::shared_ptr<ShaderProgram> provideProgram()
-    {
-        std::shared_ptr<ShaderProgram> prog;
-        prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/rsm_final.frag", 
-                                ShaderProgram::FRAGMENT);
-
-        return prog;
-    }
-
-};
 
 RSMIndirectPlane::RSMIndirectPlane() :
     _intensity(1.f),
@@ -178,6 +142,17 @@ RSMEvaluationBlock::RSMEvaluationBlock(RSMGenerationBlock *shadowBlock) :
 
 void RSMEvaluationBlock::init()
 {
+    PropertyMap settings = {
+        { "RSM:enable", false },
+        { "RSM:searchRadius", 1.0 },
+        { "RSM:intensity", 1.0 },
+        { "RSM:samples", 128 },
+        { "RSM:downsampling", 4 },
+        { "RSM:lowresdistance", 0.1 },
+        { "RSM:lowresangle", 0.5 },
+    };
+    _config->addSettings("RSM Evaluation", settings);
+
     auto rsmIndirectLowResPass = addPass();
     _rsmIndirectLowResPass = rsmIndirectLowResPass;
     rsmIndirectLowResPass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_lowres",

@@ -5,23 +5,14 @@
 using namespace MindTree;
 using namespace GL;
 
-struct LightAccumProvider : public PixelPlane::ShaderProvider {
-    std::shared_ptr<ShaderProgram> provideProgram() {
-        auto prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/deferredshading.frag", 
-                                ShaderProgram::FRAGMENT);
-        return prog;
-    }
-};
+template<>
+const std::string
+PixelPlane::ShaderFiles<LightAccumulationPlane>::
+fragmentShader = "../plugins/render/defaultShaders/deferredshading.frag";
 
 LightAccumulationPlane::LightAccumulationPlane()
 {
-    setProvider<LightAccumProvider>();
+    setProvider<LightAccumulationPlane>();
 }
 
 LightAccumulationPlane::~LightAccumulationPlane()

@@ -26,35 +26,18 @@
 using namespace MindTree;
 using namespace GL;
 
-struct Compositor : public PixelPlane::ShaderProvider {
-    std::shared_ptr<ShaderProgram> provideProgram() {
-        auto prog = std::make_shared<ShaderProgram>();
+struct Compositor;
+struct FinalOut;
 
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.frag", 
-                                ShaderProgram::FRAGMENT);
+template<>
+const std::string
+PixelPlane::ShaderFiles<Compositor>::
+fragmentShader = "../plugins/render/defaultShaders/fullscreenquad.frag";
 
-        return prog;
-    }
-};
-
-struct FinalOut : public PixelPlane::ShaderProvider {
-    std::shared_ptr<ShaderProgram> provideProgram() {
-        auto prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/fullscreenquad.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/finalout.frag", 
-                                ShaderProgram::FRAGMENT);
-
-        return prog;
-    }
-};
+template<>
+const std::string
+PixelPlane::ShaderFiles<FinalOut>::
+fragmentShader = "../plugins/render/defaultShaders/finalout.frag";
 
 DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
     RenderConfigurator(context, camera)
