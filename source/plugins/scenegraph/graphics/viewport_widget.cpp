@@ -35,28 +35,90 @@ ViewportViewer::ViewportViewer(DoutSocket *socket)
     : Viewer(socket)
 {
     setWidget(new ViewportWidget(this));
+    setupSettingsNode();
 }
 
 ViewportViewer::~ViewportViewer()
 {
 }
 
+void ViewportViewer::setupSettingsNode()
+{
+    _settingsNode = std::make_shared<DNode>();
+    _settingsNode->setType("SETPROPERTYMAP");
+    new DoutSocket("Properties", "PROPERTYMAP", _settingsNode.get());
+
+    DinSocket *s{nullptr};
+    auto *viewportSettings = new DinSocket("Viewport Settings", "PROPERTYMAP", _settingsNode.get());
+    auto node = std::make_shared<DNode>();
+    node->setName("Viewport Settings");
+    node->setType("SETPROPERTYMAP");
+    viewportSettings->addChildNode(node);
+
+    s = new DinSocket("defaultLighting", "BOOLEAN", node.get());
+    s->setProperty(true);
+    s = new DinSocket("GL:showpoints", "BOOLEAN", node.get());
+    s->setProperty(true);
+    s = new DinSocket("GL:showedges", "BOOLEAN", node.get());
+    s->setProperty(true);
+    s = new DinSocket("GL:showpolygons", "BOOLEAN", node.get());
+    s->setProperty(true);
+    s = new DinSocket("GL:flatshading", "BOOLEAN", node.get());
+    s->setProperty(false);
+    s = new DinSocket("GL:showgrid", "BOOLEAN", node.get());
+    s->setProperty(true);
+
+    auto *out = new DoutSocket("Properties", "PROPERTYMAP", node.get());
+    viewportSettings->setCntdSocket(out);
+
+    auto widget = dynamic_cast<ViewportWidget*>(getWidget());
+    auto *viewport = widget->getViewport();
+    createSettingsFromMap(_settingsNode.get(), viewport->getSettings());
+}
+
+void ViewportViewer::createSettingsFromMap(DNode *node, PropertyMap props)
+{
+    for(const auto &prop: props) {
+        DinSocket *socket = new DinSocket(prop.first, prop.second.getType(), node);
+        if(prop.second.getType() == "PROPERTYMAP") {
+            auto n = std::make_shared<DNode>();
+            auto *out = new DoutSocket("Properties", "PROPERTYMAP", n.get());
+            socket->setCntdSocket(out);
+
+            node->setName(prop.first);
+            node->setType("SETPROPERTYMAP");
+            socket->addChildNode(n);
+            createSettingsFromMap(n.get(), prop.second.getData<PropertyMap>());
+        }
+        else {
+            socket->setProperty(prop.second);
+        }
+    }
+}
+
 void ViewportViewer::update()
 {
     auto widget = dynamic_cast<ViewportWidget*>(getWidget());
     auto *viewport = widget->getViewport();
-    Property data = cache.getOutput(getStart());
+    Property data = dataCache.getOutput(getStart());
+    Property settings = settingsCache.getOutput(_settingsNode->getOutSockets()[0]);
+    PropertyMap properties = settings.getData<PropertyMap>();
 
+    GroupPtr grp;
     if(data.getType() == "GROUPDATA") {
-        viewport->setData(data.getData<GroupPtr>());
+        grp = data.getData<GroupPtr>();
     }
     else if(data.getType() == "TRANSFORMABLE") {
         auto obj = data.getData<AbstractTransformablePtr>();
         assert(obj);
-        auto grp = std::make_shared<Group>();
+        grp = std::make_shared<Group>();
         grp->addMember(obj);
-        viewport->setData(grp);
     }
+    for(auto prop : properties) {
+        viewport->setOption(prop.first, prop.second);
+        grp->setProperty(prop.first, prop.second);
+    }
+    viewport->setData(grp);
     widget->setCameras();
 }
 
@@ -117,30 +179,6 @@ void ViewportWidget::resetViewport()
 
 void ViewportWidget::createToolbar()    
 {
-    QAction *showPointsAction = _tools->addAction("Show Points");
-    showPointsAction->setCheckable(true);
-    showPointsAction->setChecked(true);
-
-    QAction *showEdgesAction = _tools->addAction("Show Edges");
-    showEdgesAction->setCheckable(true);
-    showEdgesAction->setChecked(true);
-
-    QAction *showPolygonsAction = _tools->addAction("Show Faces");
-    showPolygonsAction->setCheckable(true);
-    showPolygonsAction->setChecked(true);
-
-    QAction *toggleDefaultLight = _tools->addAction("Default Light");
-    toggleDefaultLight->setCheckable(true);
-    toggleDefaultLight->setChecked(true);
-
-    QAction *showFlatShadedAction = _tools->addAction("Flat Shaded");
-    showFlatShadedAction->setCheckable(true);
-    showFlatShadedAction->setChecked(false);
-
-    QAction *showGridAction = _tools->addAction("Grid");
-    showGridAction->setCheckable(true);
-    showGridAction->setChecked(true);
-
     QAction *fullscreenAction = _tools->addAction("Fullscreen");
 
     QAction *overrideOutputAction = _tools->addAction("Override Output");
@@ -168,12 +206,6 @@ void ViewportWidget::createToolbar()
     connect(_outputBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(setOutput(QString)));
     connect(_camBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(setCamera(QString)));
 
-    connect(showPointsAction, SIGNAL(toggled(bool)), this, SLOT(togglePoints(bool)));
-    connect(showEdgesAction, SIGNAL(toggled(bool)), this, SLOT(toggleEdges(bool)));
-    connect(showPolygonsAction, SIGNAL(toggled(bool)), this, SLOT(togglePolygons(bool)));
-    connect(showFlatShadedAction, SIGNAL(toggled(bool)), this, SLOT(toggleFlatShading(bool)));
-    connect(showGridAction, SIGNAL(toggled(bool)), this, SLOT(toggleGrid(bool)));
-    connect(toggleDefaultLight, SIGNAL(toggled(bool)), this, SLOT(toggleDefaultLighting(bool)));
     connect(overrideOutputAction, SIGNAL(toggled(bool)), this, SLOT(setOverrideOutput(bool)));
     connect(fullscreenAction, SIGNAL(triggered(bool)), this, SLOT(setFullscreen()));
 }
@@ -204,34 +236,4 @@ void ViewportWidget::setOutput(QString out)
 {
     _viewport->clearOverrideOutput();
     _viewport->setOverride(out.toStdString());
-}
-
-void ViewportWidget::toggleDefaultLighting(bool value)
-{
-    _viewport->setOption("defaultLighting", value);
-}
-
-void ViewportWidget::togglePoints(bool b)    
-{
-    _viewport->setShowPoints(b);
-}
-
-void ViewportWidget::toggleEdges(bool b)    
-{
-    _viewport->setShowEdges(b);
-}
-
-void ViewportWidget::togglePolygons(bool b)    
-{
-    _viewport->setShowPolygons(b);
-}
-
-void ViewportWidget::toggleFlatShading(bool b)
-{
-    _viewport->setShowFlatShading(b);
-}
-
-void ViewportWidget::toggleGrid(bool b)
-{
-    _viewport->setShowGrid(b);
 }

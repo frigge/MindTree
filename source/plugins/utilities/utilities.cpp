@@ -51,6 +51,28 @@ void SwitchNode::incVarSocket()
     varsocket->toIn()->listenToLinked();
 }
 
+void setPropertyMap(DataCache *cache) {
+    PropertyMap props;
+    auto sockets = cache->getNode()->getInSockets();
+    int prop_cnt = sockets.size();
+
+    for(int i = 0; i < prop_cnt; ++i) {
+        auto prop_name = sockets[i]->getName();
+        auto prop_value = cache->getData(i);
+        auto type = prop_value.getType();
+
+        if(type == "PROPERTYMAP") {
+            auto otherProps = prop_value.getData<PropertyMap>();
+            props.insert(begin(otherProps), end(otherProps));
+        }
+        else {
+            props[prop_name] =  prop_value;
+        }
+    }
+
+    cache->pushData(props);
+}
+
 BOOST_PYTHON_MODULE(utilities) {
     auto addPropertiesProc = [](DataCache *cache) {
         auto grp = cache->getData(0).getData<std::shared_ptr<Group>>();
@@ -69,9 +91,13 @@ BOOST_PYTHON_MODULE(utilities) {
         cache->pushData(new_grp);
     };
 
-    DataCache::addProcessor("GROUPDATA", 
-                            "ADDPROPERTIES", 
+    DataCache::addProcessor("GROUPDATA",
+                            "ADDPROPERTIES",
                             new CacheProcessor(addPropertiesProc));
+
+    DataCache::addProcessor("PROPERTYMAP",
+                            "SETPROPERTYMAP",
+                            new CacheProcessor(setPropertyMap));
 
     regSwitchNode();
 }

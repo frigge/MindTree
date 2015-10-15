@@ -83,7 +83,7 @@ DoutSocketPyWrapper* PyViewerBase::getSocket()
 DataCache PyViewerBase::getCache() const
 {
     GILReleaser releaser;
-    return cache;
+    return dataCache;
 }
 
 void PyViewerBase::update()

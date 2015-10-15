@@ -51,11 +51,11 @@ std::vector<Viewport*> Viewport::_viewports;
 Viewport::Viewport(ViewportWidget *widget) :
     QGLWidget(new GL::QtContext(), nullptr, _viewports.empty() ? nullptr : _viewports[0]),
     defaultCamera(std::make_shared<Camera>()),
-    rotate(false), 
-    pan(false), 
-    zoom(false), 
-    selectionMode(false), 
-    _showGrid(true), 
+    rotate(false),
+    pan(false),
+    zoom(false),
+    selectionMode(false),
+    _showGrid(true),
     transformMode(0),
     _viewportWidget(widget)
 {
@@ -150,10 +150,10 @@ void Viewport::changeCamera(std::string cam)
     if(cam == "Default")
     {
         activeCamera = defaultCamera;
-    } 
+    }
     else if(_cameras.find(cam) != end(_cameras)) {
         activeCamera = _cameras[cam];
-    } 
+    }
     else if(_lights.find(cam) != end(_lights)) {
         activeCamera = std::make_shared<Camera>();
         activeCamera->setNear(_lights[cam]->getShadowInfo()._near);
@@ -161,7 +161,7 @@ void Viewport::changeCamera(std::string cam)
         activeCamera->setTransformation(_lights[cam]->getWorldTransformation());
         if(_lights[cam]->getLightType() == Light::SPOT)
             activeCamera->setFov(2 * std::dynamic_pointer_cast<SpotLight>(_lights[cam])->getConeAngle());
-    } 
+    }
     else {
         return;
     }
@@ -195,21 +195,21 @@ void Viewport::hideEvent(QHideEvent *)
     _renderConfigurator->stopRendering();
 }
 
-void Viewport::setShowPoints(bool b)    
+void Viewport::setShowPoints(bool b)
 {
     auto config = _renderConfigurator->getManager()->getConfig();
     config.setDrawPoints(b);
     _renderConfigurator->getManager()->setConfig(config);
 }
 
-void Viewport::setShowEdges(bool b)    
+void Viewport::setShowEdges(bool b)
 {
     auto config = _renderConfigurator->getManager()->getConfig();
     config.setDrawEdges(b);
     _renderConfigurator->getManager()->setConfig(config);
 }
 
-void Viewport::setShowPolygons(bool b)    
+void Viewport::setShowPolygons(bool b)
 {
     auto config = _renderConfigurator->getManager()->getConfig();
     config.setDrawPolygons(b);
@@ -225,7 +225,11 @@ void Viewport::setShowFlatShading(bool b)
 
 void Viewport::setOption(const std::string &key, Property value)
 {
-    _renderConfigurator->setProperty(key, value);
+    if(key == "GL:showpoints") setShowPoints(value.getData<bool>());
+    if(key == "GL:showedges") setShowEdges(value.getData<bool>());
+    if(key == "GL:showpolygons") setShowPolygons(value.getData<bool>());
+    if(key == "GL:flatshading") setShowFlatShading(value.getData<bool>());
+    else _renderConfigurator->setProperty(key, value);
 }
 
 void Viewport::setShowGrid(bool b)
@@ -245,7 +249,7 @@ void Viewport::paintGL()
 {
 }
 
-void Viewport::mousePressEvent(QMouseEvent *event)    
+void Viewport::mousePressEvent(QMouseEvent *event)
 {
     glm::ivec2 pos;
     pos.x = event->pos().x();
@@ -273,16 +277,21 @@ void Viewport::mousePressEvent(QMouseEvent *event)
         rotate = true;
 }
 
-void Viewport::mouseReleaseEvent(QMouseEvent *event)    
+void Viewport::mouseReleaseEvent(QMouseEvent *event)
 {
     rotate = false;
     pan = false;
     zoom = false;
     selectionMode =false;
     lastpos = QPointF();
-    
+
     _widgetManager->mouseReleaseEvent();
     _renderConfigurator->setProperty("GL:camera:showcenter", false);
+}
+
+PropertyMap Viewport::getSettings() const
+{
+    return _renderConfigurator->getSettings();
 }
 
 void Viewport::mouseDoubleClickEvent(QMouseEvent *event)
@@ -290,7 +299,7 @@ void Viewport::mouseDoubleClickEvent(QMouseEvent *event)
     exitFullscreen();
 }
 
-void Viewport::mouseMoveEvent(QMouseEvent *event)    
+void Viewport::mouseMoveEvent(QMouseEvent *event)
 {
     glm::ivec2 pos;
     pos.x = event->pos().x();
@@ -314,7 +323,7 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
     _widgetManager->mouseMoveEvent(activeCamera, pos, viewportSize);
 }
 
-void Viewport::wheelEvent(QWheelEvent *event)    
+void Viewport::wheelEvent(QWheelEvent *event)
 {
     zoomView(0, event->delta());
 }
@@ -336,7 +345,7 @@ void Viewport::rotateView(float xdist, float ydist)
     activeCamera->setTransformation(camtrans);
 }
 
-void Viewport::panView(float xdist, float ydist)    
+void Viewport::panView(float xdist, float ydist)
 {
     if(!activeCamera)
         return;
@@ -347,7 +356,7 @@ void Viewport::panView(float xdist, float ydist)
     activeCamera->translate(glm::vec3(0, 1, 0) * ytrans);
 }
 
-void Viewport::zoomView(float xdist, float ydist)    
+void Viewport::zoomView(float xdist, float ydist)
 {
     if(!activeCamera)
         return;

@@ -58,6 +58,7 @@ public:
 
     void setOverride(std::string name);
     void clearOverrideOutput();
+    MindTree::PropertyMap getSettings() const;
 
 //SLOTS:
     Q_SLOT void setShowPoints(bool b);

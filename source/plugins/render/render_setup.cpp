@@ -119,6 +119,16 @@ void RenderConfigurator::setGeometry(std::shared_ptr<Group> grp)
         _rendertree->getBenchmark().lock()->reset();
 }
 
+void RenderConfigurator::addSettings(std::string name, Property prop)
+{
+    _settings[name] = prop;
+}
+
+PropertyMap RenderConfigurator::getSettings() const
+{
+    return _settings;
+}
+
 void RenderConfigurator::setCamera(std::shared_ptr<Camera> camera)
 {
     for(auto block : _renderBlocks) {

@@ -99,11 +99,15 @@ protected:
     void focusInEvent(QFocusEvent *event);
 
 private:
+    void setViewerWidget(QWidget *widget);
+
     BPy::object pywidget;
+    BPy::object editor;
     DoutSocket *startSocket;
     AbstractGuiFactory *_factory;
     DNode *node;
     Viewer *viewer;
+    QWidget *_viewerWidget;
     bool pinned;
 };
 

@@ -18,9 +18,11 @@
 
 #include "QAction"
 #include "QStyle"
+#include "QSplitter"
 #include "QSizePolicy"
 #include "QApplication"
 #include "QComboBox"
+#include "QVBoxLayout"
 
 #ifndef Q_MOC_RUN
 #include "data/signal.h"
@@ -76,27 +78,27 @@ void ViewerDockHeaderWidget::fillViewerBox()
     //    getViewerNode(viewerBox->currentText());
 }
 
-void ViewerDockHeaderWidget::addToViewerBox(DNode *node)    
+void ViewerDockHeaderWidget::addToViewerBox(DNode *node)
 {
     //if(!DNode::isViewerNode(node))
     //    return;
     if(!comboBoxContains(node->getNodeName().c_str())) viewerBox->addItem(node->getNodeName().c_str());
 }
 
-bool ViewerDockHeaderWidget::comboBoxContains(QString name)    
+bool ViewerDockHeaderWidget::comboBoxContains(QString name)
 {
     for(int i=0; i<viewerBox->count(); i++)
         if(viewerBox->itemText(i)==name) return true;
     return false;
 }
 
-void ViewerDockHeaderWidget::createViewerBox()    
+void ViewerDockHeaderWidget::createViewerBox()
 {
     viewerBox = new QComboBox(this);
     fillViewerBox();
 }
 
-void ViewerDockHeaderWidget::createButtons()    
+void ViewerDockHeaderWidget::createButtons()
 {
     pinButton = new ViewerTitleBarButton(this);
     pinButton->setCheckable(true);
@@ -115,7 +117,7 @@ QSize ViewerDockHeaderWidget::sizeHint()    const
 }
 
 ViewerDockBase::ViewerDockBase(QString name, AbstractGuiFactory *factory)
-    : startSocket(0), pinned(false), viewer(0), _factory(factory)
+    : startSocket(nullptr), pinned(false), viewer(nullptr), _factory(factory)
 {
     setObjectName(name);
     setWindowTitle(name);
@@ -144,10 +146,38 @@ void ViewerDockBase::focusInEvent(QFocusEvent *event)
     _factory->setActive(this);
 }
 
-void ViewerDockBase::setViewer(Viewer *view)    
+void ViewerDockBase::setViewer(Viewer *view)
 {
     viewer = view;
-    setWidget(view->getWidget());
+    setViewerWidget(view->getWidget());
+}
+
+void ViewerDockBase::setViewerWidget(QWidget *widget)
+{
+    auto *w = new QSplitter();
+    w->addWidget(widget);
+
+    DNode* settings{nullptr};
+    if(viewer) settings = viewer->getSettings();
+    //setting Node Editor for settings
+    if(settings) {
+        WId id;
+        Python::GILLocker locker;
+        try{
+
+            BPy::object module = BPy::import("properties_editor");
+            BPy::object settingsObj = utils::getPyObject(settings);
+            BPy::object nodeEditorClass = module.attr("Editor");
+            editor = nodeEditorClass(settingsObj);
+            Py_IncRef(editor.ptr());
+            id = BPy::extract<WId>(editor.attr("winId")());
+        } catch(BPy::error_already_set) {
+            PyErr_Print();
+        }
+        auto *nodeEditorWidget = QWidget::find(id);
+        w->addWidget(nodeEditorWidget);
+    }
+    setWidget(w);
 }
 
 Viewer* ViewerDockBase::getViewer()
@@ -155,12 +185,12 @@ Viewer* ViewerDockBase::getViewer()
     return viewer;
 }
 
-void ViewerDockBase::deleteThis(bool del)    
+void ViewerDockBase::deleteThis(bool del)
 {
     if(!del)deleteLater();
 }
 
-void ViewerDockBase::setPythonWidget(BPy::object widget)    
+void ViewerDockBase::setPythonWidget(BPy::object widget)
 {
     WId id;
     try{
@@ -171,20 +201,20 @@ void ViewerDockBase::setPythonWidget(BPy::object widget)
         PyErr_Print();
     }
     auto w = QWidget::find(id);
-    if(w) setWidget(w);
+    if(w) setViewerWidget(w);
     else std::cout<<"Window not valid"<<std::endl;
 }
 
-void ViewerDockBase::init()    
+void ViewerDockBase::init()
 {
 }
 
-void ViewerDockBase::setPinned(bool pin)    
+void ViewerDockBase::setPinned(bool pin)
 {
     pinned = pin;
 }
 
-void ViewerDockBase::adjust(bool vis)    
+void ViewerDockBase::adjust(bool vis)
 {
     //if(vis) {
     //    connect((QObject*)FRG::Space, SIGNAL(linkChanged()), this, SLOT(update()));
@@ -196,7 +226,7 @@ void ViewerDockBase::adjust(bool vis)
     //}
 }
 
-void ViewerDockBase::updateFocus()    
+void ViewerDockBase::updateFocus()
 {
     //if(pinned) return;
     //if(!FRG::Space->selectedNodes().isEmpty()) {
@@ -218,27 +248,27 @@ void ViewerDockBase::setStart(DoutSocket* value)
     viewer->setStart(value);
 }
 
-void ViewerDockBase::setFocusNode(DNode* node)    
+void ViewerDockBase::setFocusNode(DNode* node)
 {
     this->node = node;
 }
 
-void ViewerDockBase::update()    
+void ViewerDockBase::update()
 {
-    exec(); 
+    exec();
 }
 
-void ViewerDockBase::update(DNode* node)    
+void ViewerDockBase::update(DNode* node)
 {
     exec(node);
 }
 
-void ViewerDockBase::toggleFloating()    
+void ViewerDockBase::toggleFloating()
 {
     setFloating(!isFloating());
 }
 
-void ViewerDockBase::destroy()    
+void ViewerDockBase::destroy()
 {
     delete this;
 }

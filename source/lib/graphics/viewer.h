@@ -7,6 +7,7 @@
 #include "thread"
 #include "deque"
 #include "mutex"
+#include "memory"
 #include "atomic"
 
 namespace BPy=boost::python;
@@ -16,10 +17,6 @@ namespace MindTree
 namespace Signal {
     class LiveTimeTracker;
 }
-
-    
-class DoutSocket;
-class DinSocket;
 
 class Viewer;
 
@@ -61,14 +58,19 @@ public:
     void setStart(DoutSocket* value);
     QWidget* getWidget();
     void setWidget(QWidget* value);
+    DNode* getSettings();
 
 protected:
     QWidget *widget;
-    MindTree::DataCache cache;
+    MindTree::DataCache dataCache;
+    MindTree::DataCache settingsCache;
+    NodePtr _settingsNode;
 
 private:
     void update_viewer(DinSocket*);
     void update_viewer(DNode *node);
+
+    void cacheAndUpdate();
 
     DoutSocket *start;
     Signal::LiveTimeTracker *_signalLiveTime;

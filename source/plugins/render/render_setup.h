@@ -53,6 +53,9 @@ public:
     int getPolygonCount() const;
     int getVertexCount() const;
 
+    void addSettings(std::string name, Property prop);
+    PropertyMap getSettings() const;
+
 protected:
     std::weak_ptr<RenderPass> _geometryPass;
     GridRenderer* _grid;
@@ -63,6 +66,7 @@ private:
     std::shared_ptr<RenderTree> _rendertree;
     std::vector<std::shared_ptr<RenderBlock>> _renderBlocks;
     std::shared_ptr<Camera> _camera;
+    PropertyMap _settings;
 };
 
 }

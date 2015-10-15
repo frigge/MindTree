@@ -34,10 +34,10 @@ void WorkerThread::removeViewer(Viewer *viewer)
 {
     {
         std::lock_guard<std::mutex> lock(_updateMutex);
-        auto it = std::find_if(begin(_updateQueue), 
-                               end(_updateQueue), 
-                               [viewer] (std::weak_ptr<UpdateInfo> i) { 
-                               return i.lock()->_viewer == viewer; 
+        auto it = std::find_if(begin(_updateQueue),
+                               end(_updateQueue),
+                               [viewer] (std::weak_ptr<UpdateInfo> i) {
+                               return i.lock()->_viewer == viewer;
                                });
         if(it != end(_updateQueue))
             _updateQueue.erase(it);
@@ -48,6 +48,7 @@ void WorkerThread::removeViewer(Viewer *viewer)
 
 void WorkerThread::start()
 {
+    std::cout << "starting update Thread" << std::endl;
     if(_updateThread.joinable()) _updateThread.join();
 
     auto updateFunc = []{
@@ -63,9 +64,7 @@ void WorkerThread::start()
                     if(!ptr->_update) continue;
 
                     if(ptr->_node) DataCache::invalidate(ptr->_node);
-                    ptr->_viewer->cache.start(ptr->_viewer->start);
-                    ptr->_viewer->update();
-                    MT_SIGNAL_EMITTER("STATUSUPDATE", std::string("done updating"));
+                    ptr->_viewer->cacheAndUpdate();
                     ptr->_update = false;
                 }
                 ++i;
@@ -95,21 +94,21 @@ Viewer::Viewer(DoutSocket *start)
     _updateInfo(std::make_shared<WorkerThread::UpdateInfo>(this))
 {
     auto cbhandler = Signal::getHandler<DinSocket*>()
-        .connect("createLink", 
-                std::bind(static_cast<void (Viewer::*)(DinSocket*)>(&Viewer::update_viewer), 
-                          this, 
+        .connect("createLink",
+                std::bind(static_cast<void (Viewer::*)(DinSocket*)>(&Viewer::update_viewer),
+                          this,
                           std::placeholders::_1));
 
     auto cbhandler2 = Signal::getHandler<DinSocket*>()
-        .connect("socketChanged", 
+        .connect("socketChanged",
                 std::bind(static_cast<void (Viewer::*)(DinSocket*)>(&Viewer::update_viewer),
-                          this, 
+                          this,
                           std::placeholders::_1));
 
     auto cbhandler3 = Signal::getHandler<DNode*>()
-        .connect("nodeChanged", 
+        .connect("nodeChanged",
                 std::bind(static_cast<void (Viewer::*)(DNode*)>(&Viewer::update_viewer),
-                          this, 
+                          this,
                           std::placeholders::_1));
 
     cbhandlers.push_back(cbhandler);
@@ -153,12 +152,23 @@ void Viewer::update_viewer(DinSocket *socket)
     if(socket) node = socket->getNode();
     //check whether start and socket are connected
     bool connected = false;
-    if (!socket || socket->getNode() == start->getNode()) {
+    if (!socket || socket->getNode() == start->getNode()
+        || socket->getNode() == _settingsNode.get()) {
         connected = true;
     }
     else {
         ConstNodeList nodes = start->getNode()->getAllInNodesConst();
         for(const DNode *node : nodes) {
+            for (const DinSocket *in : node->getInSockets()) {
+                if (in == socket) {
+                    connected = true;
+                    break;
+                }
+            }
+            if(connected) break;
+        }
+        ConstNodeList settingsNodes = _settingsNode->getAllInNodesConst();
+        for(const DNode *node : settingsNodes) {
             for (const DinSocket *in : node->getInSockets()) {
                 if (in == socket) {
                     connected = true;
@@ -198,3 +208,16 @@ void Viewer::setWidget(QWidget* value)
     update_viewer(static_cast<DinSocket*>(nullptr));
 }
 
+void Viewer::cacheAndUpdate()
+{
+    dataCache.start(start);
+    if(_settingsNode)
+        settingsCache.start(_settingsNode->getOutSockets()[0]);
+    update();
+    MT_SIGNAL_EMITTER("STATUSUPDATE", std::string("done updating"));
+}
+
+DNode* Viewer::getSettings()
+{
+    return _settingsNode.get();
+}

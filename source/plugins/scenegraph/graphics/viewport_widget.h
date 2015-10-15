@@ -25,11 +25,14 @@
 #include "QVBoxLayout"
 #include "QToolBar"
 
+#include "memory"
+
 #include "graphics/viewer.h"
 
 class Viewport;
 class ViewportWidget;
 class QComboBox;
+class Group;
 
 class ViewportViewer : public MindTree::Viewer
 {
@@ -38,6 +41,10 @@ public:
     virtual ~ViewportViewer();
 
     void update();
+
+private:
+    void createSettingsFromMap(MindTree::DNode *node, MindTree::PropertyMap props);
+    void setupSettingsNode();
 };
 
 class ViewportWidget : public QWidget
@@ -51,13 +58,7 @@ public:
 
     Viewport* getViewport();
 
-    Q_SLOT void togglePolygons(bool b);
-    Q_SLOT void toggleEdges(bool b);
-    Q_SLOT void togglePoints(bool b);
-    Q_SLOT void toggleFlatShading(bool b);
-    Q_SLOT void toggleGrid(bool b);
     Q_SLOT void setOutput(QString out);
-    Q_SLOT void toggleDefaultLighting(bool value);
     Q_SLOT void setOverrideOutput(bool value);
     Q_SLOT void setCamera(QString cam);
     Q_SLOT void setFullscreen();
