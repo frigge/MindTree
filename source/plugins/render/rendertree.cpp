@@ -12,17 +12,17 @@
 using namespace MindTree;
 using namespace MindTree::GL;
 
-void RenderConfig::setDrawPoints(bool draw)    
+void RenderConfig::setDrawPoints(bool draw)
 {
     _drawPoints = draw;
 }
 
-void RenderConfig::setDrawEdges(bool draw)    
+void RenderConfig::setDrawEdges(bool draw)
 {
     _drawEdges = draw;
 }
 
-void RenderConfig::setDrawPolygons(bool draw)    
+void RenderConfig::setDrawPolygons(bool draw)
 {
     _drawPolygons = draw;
 }
@@ -32,17 +32,17 @@ void RenderConfig::setShowFlatShaded(bool b)
     _flatShading = b;
 }
 
-bool RenderConfig::drawPoints()    const 
+bool RenderConfig::drawPoints()    const
 {
     return _drawPoints;
 }
 
-bool RenderConfig::drawEdges()    const 
+bool RenderConfig::drawEdges()    const
 {
     return _drawEdges;
 }
 
-bool RenderConfig::drawPolygons()    const 
+bool RenderConfig::drawPolygons()    const
 {
     return _drawPolygons;
 }
@@ -94,6 +94,7 @@ void RenderThread::start()
         }
     };
 
+    std::cout << "starting render thread" << std::endl;
     _renderThread = std::thread(renderLoop);
 }
 
@@ -184,13 +185,13 @@ std::vector<std::string> RenderTree::getAllOutputs() const
     return outputs;
 }
 
-void RenderTree::setConfig(RenderConfig cfg)    
+void RenderTree::setConfig(RenderConfig cfg)
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     config = cfg;
 }
 
-RenderConfig RenderTree::getConfig()    
+RenderConfig RenderTree::getConfig()
 {
     std::lock_guard<std::mutex> lock(_managerLock);
     return config;

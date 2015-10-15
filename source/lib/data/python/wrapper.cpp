@@ -710,8 +710,10 @@ DoutSocketPyWrapper* DinSocketPyWrapper::getCntd()
 void DinSocketPyWrapper::setCntd(DoutSocketPyWrapper *socket)
 {
     GILReleaser releaser;
-    if(!alive())return;
-    getWrapped<DinSocket>()->setCntdSocket(socket->getWrapped<DoutSocket>());
+    if(!alive()) return;
+    DoutSocket *out = nullptr;
+    if(socket) out = socket->getWrapped<DoutSocket>();
+    getWrapped<DinSocket>()->setCntdSocket(out);
 }
 
 DoutSocketPyWrapper::DoutSocketPyWrapper(DoutSocket *socket)

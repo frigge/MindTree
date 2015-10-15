@@ -42,6 +42,8 @@ Object& Object::operator=(const Object &&other)
 Property Object::getProperty(std::string name) const
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
+    if (_properties.find(name) == end(_properties))
+        return Property();
     auto prop = _properties.at(name);
     return prop;
 }
@@ -55,6 +57,8 @@ PropertyMap Object::getProperties() const
 Property Object::operator[](std::string name) const
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
+    if (_properties.find(name) == end(_properties))
+        return Property();
     return _properties.at(name);
 }
 
@@ -67,6 +71,8 @@ void Object::setProperty(std::string name, Property value)
 void Object::rmProperty(std::string name)
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
+    if (_properties.find(name) == end(_properties))
+        return;
     _properties.erase(name);
 }
 
