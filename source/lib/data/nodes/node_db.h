@@ -50,10 +50,12 @@ public:
     static NodePtr createNode(std::string name);
     static NodePtr createNodeByType(const NodeType &t);
     static std::vector<AbstractNodeDecorator*> getConverters(DataType t);
+    static void setNotConvertible(std::string type);
 
 private:
     static std::vector<std::unique_ptr<AbstractNodeDecorator>> nodeFactories;
     static std::unordered_map<std::string, std::vector<AbstractNodeDecorator*>> s_converters;
+    static std::vector<std::string> s_nonConverters;
 };
 } /* MindTree */
 

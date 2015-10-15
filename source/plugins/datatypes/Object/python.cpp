@@ -5,6 +5,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "data/debuglog.h"
 
+#include "data/nodes/node_db.h"
+
 #include "../../3dwidgets/translate_widgets.h"
 #include "python.h"
 
@@ -247,6 +249,8 @@ BOOST_PYTHON_MODULE(object){
 
     proc = new CacheProcessor(cameraProc);
     DataCache::addProcessor("TRANSFORMABLE", "CAMERA", proc);
+
+    NodeDataBase::setNotConvertible("TRANSFORMABLE");
 
     ObjectDataPyWrapper::wrap();
     ObjectPyWrapper::wrap();

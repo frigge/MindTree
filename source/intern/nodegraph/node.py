@@ -577,7 +577,7 @@ class NodeItem(QGraphicsSvgItem):
                 menu.exec_(event.screenPos())
 
             elif len(compSockets) == 1:
-                s = compSockets.values()[0]
+                s = list(compSockets.values())[0]
                 s.connected = out
 
     def delete(self):

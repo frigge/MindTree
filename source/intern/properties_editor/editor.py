@@ -270,15 +270,13 @@ class Editor(QWidget):
         "VECTOR3D" : Vector3DEditor
     }
 
-    def __init__(self, parent=None):
+    def __init__(self, node = None, parent=None):
         QWidget.__init__(self, parent)
         self.tree = QTreeView()
         self.model = QStandardItemModel(0, 2, parent);
         self.tree.setModel(self.model)
         self.model.setHorizontalHeaderLabels(["Name", "Value"])
         self.tree.setItemDelegate(Delegate())
-        self.tree.expanded.connect(self.connect)
-        self.tree.collapsed.connect(self.disconnect)
 
         lay = QVBoxLayout()
         lay.setMargin(0)
@@ -287,26 +285,41 @@ class Editor(QWidget):
         lay.addWidget(self.tree)
 
         self.customWidget = None
+        self.node = None
 
-        self.cb = MT.attachToSignal("selectionChanged", self.updateEditor)
+        if node is None:
+            self.cb = MT.attachToSignal("selectionChanged", self.updateEditor)
+            self.cb2 = MT.attachToSignal("linkChanged", self.updateEditorLinks)
+            self.tree.expanded.connect(self.connect)
+            self.tree.collapsed.connect(self.disconnect)
+        else:
+            self.updateEditor(node)
+
 
     def connect(self, index):
         si = index.sibling(index.row(), 1)
         socket = si.data(Qt.UserRole + 1)
-        if len(socket.childNodes) == 1:
-            out = socket.childNodes[0].outsockets[0]
+        node = index.data(Qt.UserRole + 1)
+        if node != socket.node:
+            out = node.outsockets[0]
             socket.connected = out
-            self.tree.itemDelegate().editors[si].setEnabled(False)
+        if si in self.tree.itemDelegate().editors:
+            self.tree.closePersistentEditor(si)
+            self.model.itemFromIndex(si).setText(out.name)
 
     def disconnect(self, index):
         si = index.sibling(index.row(), 1)
         socket = si.data(Qt.UserRole + 1)
-        if len(socket.childNodes) == 1:
-            socket.connected = None
-            self.tree.itemDelegate().editors[si].setEnabled(False)
+        socket.connected = None
+        if si in self.tree.itemDelegate().editors:
+            self.tree.openPersistentEditor(si)
 
     def addItem(self, socket, parent):
         name = QStandardItem(socket.name)
+        if len(socket.childNodes) == 1:
+            name.setData(socket.childNodes[0])
+        else:
+            name.setData(socket.node)
         socketItem = QStandardItem()
         socketItem.setData(socket)
         parent.appendRow([name, socketItem]);
@@ -317,10 +330,29 @@ class Editor(QWidget):
     def addItems(self, node, parent):
         for socket in node.insockets:
             newparent = self.addItem(socket, parent)
-            for n in socket.childNodes:
-                self.addItems(n, newparent)
+            if (socket.connected is not None
+                and socket.connected.node in socket.childNodes):
+                self.tree.setExpanded(self.model.indexFromItem(newparent), True)
+
+            if len(socket.childNodes) == 1:
+                self.addItems(socket.childNodes[0], newparent)
+            else:
+                for n in socket.childNodes:
+                    nodeItem = QStandardItem(n.name)
+                    nodeItem.setData(n)
+                    socketItem = QStandardItem()
+                    socketItem.setData(socket)
+                    newparent.appendRow([nodeItem, socketItem])
+                    if socket.connected is not None and socket.connected.node == n:
+                        self.tree.setExpanded(self.model.indexFromItem(nodeItem), True)
+                    self.addItems(n, nodeItem)
+
+    def updateEditorLinks(self, socket):
+        if self.node is not None:
+            self.updateEditor(self.node)
 
     def updateEditor(self, node):
+        self.node = node
         self.model.clear()
         self.model.setHorizontalHeaderLabels(["Name", "Value"])
         root = self.model.invisibleRootItem()

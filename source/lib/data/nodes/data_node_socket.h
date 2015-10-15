@@ -124,9 +124,9 @@ public:
 	void setName(std::string value);
 
     NodeList getChildNodes() const;
+    virtual void addChildNode(NodePtr child);
 
 protected:
-    virtual void addChildNode(NodePtr child);
 
     Signal::LiveTimeTracker _signalLiveTime;
     Signal::CallbackVector _callbacks;
@@ -182,9 +182,9 @@ public:
     void setProperty(Property property);
 
     void clearLink();
+    void addChildNode(NodePtr child) override;
 
 private:
-    void addChildNode(NodePtr child) override;
     void createChildNodes();
 
     friend IO::InStream& operator>>(IO::InStream& stream, DinSocket &socket);

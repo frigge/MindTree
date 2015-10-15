@@ -5,6 +5,7 @@ using namespace MindTree;
 
 std::vector<std::unique_ptr<AbstractNodeDecorator>> NodeDataBase::nodeFactories;
 std::unordered_map<std::string, std::vector<AbstractNodeDecorator*>> NodeDataBase::s_converters;
+std::vector<std::string> NodeDataBase::s_nonConverters;
 
 AbstractNodeDecorator::AbstractNodeDecorator(std::string type, std::string label)
     : type(type), label(label)
@@ -47,6 +48,11 @@ NodePtr BuildInDecorator::createNode(bool raw)
     return func(raw);
 }
 
+void NodeDataBase::setNotConvertible(std::string type)
+{
+    s_nonConverters.push_back(type);
+}
+
 void NodeDataBase::registerNodeType(std::unique_ptr<AbstractNodeDecorator> &&factory)
 {
     NodePtr prototype = (*factory)(false);
@@ -63,7 +69,10 @@ void NodeDataBase::registerNodeType(std::unique_ptr<AbstractNodeDecorator> &&fac
             if(s_converters.find(type_string) == end(s_converters)) {
                 s_converters[type_string] = std::vector<AbstractNodeDecorator*>();
             }
-            s_converters[type_string].push_back(factory.get());
+            if (std::none_of(begin(s_nonConverters),
+                               end(s_nonConverters),
+                             [&type_string](const std::string &s) { return s == type_string; }))
+                s_converters[type_string].push_back(factory.get());
         }
     }
 
