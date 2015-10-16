@@ -23,6 +23,7 @@
 #include "data/properties.h"
 #include "data/signal.h"
 #include "data/type.h"
+#include "data/mtobject.h"
 #include "mutex"
 
 namespace MindTree
@@ -132,7 +133,6 @@ protected:
     Signal::CallbackVector _callbacks;
 
 private:
-
     friend IO::InStream& operator>>(IO::InStream& stream, DSocket &socket);
     std::function<SocketType(SocketType)> _propagateType;
 

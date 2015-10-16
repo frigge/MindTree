@@ -33,11 +33,11 @@ public:
             auto tessControl = ShaderFiles<T>::tessControlShader;
             auto tessEval = ShaderFiles<T>::tessEvalShader;
 
-            if(vert)prog ->addShaderFromFile(vert, ShaderProgram::VERTEX);
-            if(geo)prog ->addShaderFromFile(geo, ShaderProgram::GEOMETRY);
-            if(frag)prog ->addShaderFromFile(frag, ShaderProgram::FRAGMENT);
-            if(tessControl)prog ->addShaderFromFile(tessControl, ShaderProgram::TESSELATION_CONTROL);
-            if(tessEval)prog ->addShaderFromFile(tessEval, ShaderProgram::TESSELATION_EVALUATION);
+            if(vert != "")prog ->addShaderFromFile(vert, ShaderProgram::VERTEX);
+            if(geo != "")prog ->addShaderFromFile(geo, ShaderProgram::GEOMETRY);
+            if(frag != "")prog ->addShaderFromFile(frag, ShaderProgram::FRAGMENT);
+            if(tessControl != "")prog ->addShaderFromFile(tessControl, ShaderProgram::TESSELATION_CONTROL);
+            if(tessEval != "")prog ->addShaderFromFile(tessEval, ShaderProgram::TESSELATION_EVALUATION);
             return prog;
         }
     };

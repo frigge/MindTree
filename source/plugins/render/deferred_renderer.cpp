@@ -31,11 +31,6 @@ struct FinalOut;
 
 template<>
 const std::string
-PixelPlane::ShaderFiles<Compositor>::
-fragmentShader = "../plugins/render/defaultShaders/fullscreenquad.frag";
-
-template<>
-const std::string
 PixelPlane::ShaderFiles<FinalOut>::
 fragmentShader = "../plugins/render/defaultShaders/finalout.frag";
 
