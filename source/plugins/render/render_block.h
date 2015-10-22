@@ -21,6 +21,7 @@ class RenderPass;
 class RenderTree;
 class RenderConfigurator;
 
+class Texture2D;
 class RenderBlock : public Object
 {
 public:
@@ -35,6 +36,7 @@ public:
     virtual void setGeometry(std::shared_ptr<Group> grp);
     std::shared_ptr<RenderPass> addPass();
     void setEnabled(bool enable);
+    std::vector<std::weak_ptr<Texture2D>> getOutputs() const;
 
 protected:
     virtual void setRenderersFromGroup(std::shared_ptr<Group> group);
@@ -44,6 +46,7 @@ protected:
     virtual void addRendererFromLight(std::shared_ptr<Light> obj);
     virtual void addRendererFromCamera(std::shared_ptr<Camera> obj);
     virtual void addRendererFromEmpty(std::shared_ptr<Empty> obj);
+    void addOutput(std::weak_ptr<Texture2D> output);
 
     RenderConfigurator* _config;
     std::shared_ptr<Benchmark> _benchmark;
@@ -52,6 +55,7 @@ private:
     friend class RenderConfigurator;
     std::vector<std::weak_ptr<RenderPass>> _passes;
     std::weak_ptr<Camera> _camera;
+    std::vector<std::weak_ptr<Texture2D>> _outputs;
 };
 
 class GeometryRenderBlock : public RenderBlock

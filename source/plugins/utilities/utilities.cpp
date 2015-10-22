@@ -56,8 +56,9 @@ void setPropertyMap(DataCache *cache) {
     auto sockets = cache->getNode()->getInSockets();
     int prop_cnt = sockets.size();
 
+    auto node_name = cache->getNode()->getNodeName();
     for(int i = 0; i < prop_cnt; ++i) {
-        auto prop_name = sockets[i]->getName();
+        auto prop_name = node_name + ":" + sockets[i]->getName();
         auto prop_value = cache->getData(i);
         auto type = prop_value.getType();
 

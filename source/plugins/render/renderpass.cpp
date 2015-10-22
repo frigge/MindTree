@@ -11,11 +11,13 @@
 using namespace MindTree;
 using namespace MindTree::GL;
 
-RenderPass::RenderPass() : 
-    _initialized(false), 
+RenderPass::RenderPass() :
+    _initialized(false),
     _enabled(true),
-    _blendSource(GL_SRC_ALPHA),
-    _blendDest(GL_ONE_MINUS_SRC_ALPHA),
+    _blendColorSource(GL_SRC_ALPHA),
+    _blendAlphaSource(GL_SRC_ALPHA),
+    _blendColorDest(GL_ONE_MINUS_SRC_ALPHA),
+    _blendAlphaDest(GL_ONE_MINUS_SRC_ALPHA),
     _depthOutput(NONE),
     _blending(true),
     _bgColor(0),
@@ -69,8 +71,19 @@ void RenderPass::setCamera(CameraPtr camera)
 void RenderPass::setBlendFunc(GLenum src, GLenum dst)
 {
     std::lock_guard<std::mutex> lock(_blendLock);
-    _blendSource = src;
-    _blendDest = dst;
+    _blendColorSource = src;
+    _blendAlphaSource = src;
+    _blendColorDest = dst;
+    _blendAlphaDest = dst;
+}
+
+void RenderPass::setBlendFuncSeparate(GLenum srcColor, GLenum srcAlpha, GLenum dstColor, GLenum dstAlpha)
+{
+    std::lock_guard<std::mutex> lock(_blendLock);
+    _blendColorSource = srcColor;
+    _blendAlphaSource = srcAlpha;
+    _blendColorDest = dstColor;
+    _blendAlphaDest = dstAlpha;
 }
 
 void RenderPass::setEnableBlending(bool value)
@@ -478,6 +491,7 @@ void RenderPass::addRenderer(Renderer *renderer)
     }
 
     std::shared_ptr<ShaderProgram> prog = renderer->getProgram();
+    assert(prog);
     for(auto shaderNode : _shadernodes) {
         if(shaderNode->program() == prog) {
             shaderNode->addRenderer(renderer);
@@ -505,6 +519,7 @@ void RenderPass::addGeometryRenderer(Renderer *renderer)
     }
 
     std::shared_ptr<ShaderProgram> prog = renderer->getProgram();
+    assert(prog);
     for(auto shaderNode : _geometryShaderNodes) {
         if(shaderNode->program() == prog) {
             shaderNode->addRenderer(renderer);
@@ -565,7 +580,8 @@ void RenderPass::setClearDepth(float value)
 
 void RenderPass::render(const RenderConfig &config)
 {
-    int width, height;
+    int width{0};
+    int height{0};
     {
         std::lock_guard<std::mutex> lock(_cameraLock);
         if(!_camera) return;
@@ -589,9 +605,22 @@ void RenderPass::render(const RenderConfig &config)
         MTGLERROR;
 
         {
+            glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
             std::lock_guard<std::mutex> lock(_blendLock);
-            glBlendFunc(_blendSource, _blendDest);
+            if(_blendColorSource == _blendAlphaSource
+               && _blendColorDest == _blendAlphaDest) {
+                glBlendFuncSeparate(GL_ONE, GL_ZERO,  GL_ONE, GL_ZERO);
+                glBlendFunc(_blendColorSource, _blendColorDest);
+            } else {
+                glBlendFunc(GL_ONE, GL_ZERO);
+                glBlendFuncSeparate(_blendColorSource, _blendAlphaSource,  _blendColorDest, _blendAlphaDest);
+            }
             MTGLERROR;
+
+            if(_blending)
+                glEnable(GL_BLEND);
+            else
+                glDisable(GL_BLEND);
         }
 
         GLObjectBinder<std::shared_ptr<FBO>> fbobinder(_target);
@@ -601,11 +630,6 @@ void RenderPass::render(const RenderConfig &config)
             glClearColor(_bgColor.r, _bgColor.g, _bgColor.b, _bgColor.a);
         }
         glClearDepth(_depth);
-
-        if(_blending)
-            glEnable(GL_BLEND);
-        else
-            glDisable(GL_BLEND);
 
         getGLFramebufferError(__PRETTY_FUNCTION__);
         MTGLERROR;
@@ -624,29 +648,23 @@ void RenderPass::render(const RenderConfig &config)
         else {
             if(!_target) {
                 glDrawBuffer(GL_BACK);
-                MTGLERROR;
             }
             else {
                 glDrawBuffer(GL_NONE);
-                MTGLERROR;
             }
         }
 
-        if(_shadernodes.size() == 0 && _geometryShaderNodes.size() == 0) {
+        if(_shadernodes.empty() && _geometryShaderNodes.empty()) {
             std::cout << "RenderPass is empty" << std::endl;
             return;
         }
 
         glViewport(0, 0, (GLint)width, (GLint)height);
-        MTGLERROR;
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        MTGLERROR;
 
         if(_enabled) {
             {
                 std::lock_guard<std::mutex> lock(_geometryLock);
-    
                 //render nodes that do not have a corresponding objectdata element (grid, 3d widgets, etc.)
                 for(auto node : _shadernodes) {
                     node->init();
@@ -654,24 +672,24 @@ void RenderPass::render(const RenderConfig &config)
                         GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
                         for(const auto &p : getProperties())
                             node->program()->setUniformFromProperty(p.first, p.second);
-        
+
                         for(const auto &p : config.getProperties())
                             node->program()->setUniformFromProperty(p.first, p.second);
-        
+
                         {
                             std::lock_guard<std::mutex> lock(_cameraLock);
                             node->render(_camera, glm::ivec2(width, height), config);
                         }
                     }
                 }
-    
+
                 for(auto node : _geometryShaderNodes) {
                     node->init();
                     {
                         GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
                         for(const auto &p : getProperties())
                             node->program()->setUniformFromProperty(p.first, p.second);
-        
+
                         for(const auto &p : config.getProperties())
                             node->program()->setUniformFromProperty(p.first, p.second);
                         {
@@ -684,8 +702,6 @@ void RenderPass::render(const RenderConfig &config)
             for(auto cb : _postRenderCallbacks)
                 cb(this);
         }
-
-        MTGLERROR;
         processPixelRequests();
     }
     glFinish();

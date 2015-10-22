@@ -51,22 +51,25 @@ void ViewportViewer::setupSettingsNode()
     DinSocket *s{nullptr};
     auto *viewportSettings = new DinSocket("Viewport Settings", "PROPERTYMAP", _settingsNode.get());
     auto node = std::make_shared<DNode>();
-    node->setName("Viewport Settings");
+    node->setName("GL");
     node->setType("SETPROPERTYMAP");
     viewportSettings->addChildNode(node);
 
     s = new DinSocket("defaultLighting", "BOOLEAN", node.get());
     s->setProperty(true);
-    s = new DinSocket("GL:showpoints", "BOOLEAN", node.get());
+    s = new DinSocket("showpoints", "BOOLEAN", node.get());
     s->setProperty(true);
-    s = new DinSocket("GL:showedges", "BOOLEAN", node.get());
+    s = new DinSocket("showedges", "BOOLEAN", node.get());
     s->setProperty(true);
-    s = new DinSocket("GL:showpolygons", "BOOLEAN", node.get());
+    s = new DinSocket("showpolygons", "BOOLEAN", node.get());
     s->setProperty(true);
-    s = new DinSocket("GL:flatshading", "BOOLEAN", node.get());
+    s = new DinSocket("flatshading", "BOOLEAN", node.get());
     s->setProperty(false);
-    s = new DinSocket("GL:showgrid", "BOOLEAN", node.get());
+    s = new DinSocket("showgrid", "BOOLEAN", node.get());
     s->setProperty(true);
+    s = new DinSocket("backgroundColor", "COLOR", node.get());
+    float value = 70.0 / 255;
+    s->setProperty(glm::vec4(value, value, value, 1.));
 
     auto *out = new DoutSocket("Properties", "PROPERTYMAP", node.get());
     viewportSettings->setCntdSocket(out);
@@ -78,8 +81,15 @@ void ViewportViewer::setupSettingsNode()
 
 void ViewportViewer::createSettingsFromMap(DNode *node, PropertyMap props)
 {
+    std::string first_prop = begin(props)->first;
+    dbout(first_prop);
+    auto prop_start = first_prop.find_first_of(":");
+    std::string category_name = first_prop.substr(0, prop_start);
+    dbout(category_name);
+    node->setName(category_name);
     for(const auto &prop: props) {
-        DinSocket *socket = new DinSocket(prop.first, prop.second.getType(), node);
+        std::string prop_name = prop.first.substr(prop_start + 1);
+        DinSocket *socket = new DinSocket(prop_name, prop.second.getType(), node);
         if(prop.second.getType() == "PROPERTYMAP") {
             auto n = std::make_shared<DNode>();
             auto *out = new DoutSocket("Properties", "PROPERTYMAP", n.get());

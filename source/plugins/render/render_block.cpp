@@ -40,6 +40,16 @@ void RenderBlock::setBenchmark(std::shared_ptr<Benchmark> benchmark)
     }
 }
 
+void RenderBlock::addOutput(std::weak_ptr<Texture2D> output)
+{
+    _outputs.push_back(output);
+}
+
+std::vector<std::weak_ptr<Texture2D>> RenderBlock::getOutputs() const
+{
+    return _outputs;
+}
+
 std::weak_ptr<Benchmark> RenderBlock::getBenchmark() const
 {
     return _benchmark;

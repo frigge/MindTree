@@ -63,6 +63,7 @@ public:
     void setClearDepth(float value);
 
     void setBlendFunc(GLenum src, GLenum dst);
+    void setBlendFuncSeparate(GLenum srcColor, GLenum srcAlpha, GLenum dstColor, GLenum dstAlpha);
     void setEnableBlending(bool value);
 
     CameraPtr getCamera();
@@ -124,7 +125,11 @@ private:
     std::shared_ptr<Renderbuffer> _depthRenderbuffer;
 
     std::mutex _blendLock;
-    GLenum _blendSource, _blendDest;
+    GLenum _blendColorSource;
+    GLenum _blendAlphaSource;
+    GLenum _blendColorDest;
+    GLenum _blendAlphaDest;
+
     std::atomic<bool> _blending;
 
     DepthOutput _depthOutput;
