@@ -12,6 +12,7 @@
 using namespace MindTree::GL;
 
 //#define DEBUG_GL_WRAPPER
+#define DEBUG_GL_WRAPPER_SHADER
 //#define DEBUG_GL_WRAPPER1
 
 bool MindTree::GL::getGLFramebufferError(std::string location)
@@ -467,10 +468,31 @@ void ShaderProgram::init()
     _id = glCreateProgram();
     MTGLERROR;
 
+#ifdef DEBUG_GL_WRAPPER_SHADER
+    dbout("initializing GLSL Shader");
+#endif
     for (auto p : _shaderSources)
         _addShaderFromSource(p.second, static_cast<ShaderType>(p.first));
 
     link();
+}
+
+std::string ShaderProgram::shaderTypeStr(int type)
+{
+    switch(type) {
+        case VERTEX:
+            return "VERTEX";
+        case FRAGMENT:
+            return "FRAGMENT";
+        case GEOMETRY:
+            return "GEOMETRY";
+        case TESSELATION_EVALUATION:
+            return "TESSELATION";
+        case TESSELATION_CONTROL:
+            return "TESSELATION";
+        case COMPUTE:
+            return "COMPUTE";
+    }
 }
 
 void ShaderProgram::bind()
@@ -507,8 +529,15 @@ void ShaderProgram::link()
     glLinkProgram(_id);
     GLint linkStatus;
     glGetProgramiv(_id, GL_LINK_STATUS, &linkStatus);
-    if(linkStatus != GL_TRUE)
+    if(linkStatus != GL_TRUE){
         std::cout << "program could not be linked" << std::endl;
+        GLchar log[1024];
+        GLsizei len = 0;
+        glGetProgramInfoLog(_id, 1024, &len, log);
+        std::string str(log, len);
+        std::cout << str << std::endl;
+    }
+    assert(linkStatus == GL_TRUE);
     MTGLERROR;
 }
 
@@ -541,6 +570,10 @@ void ShaderProgram::_addShaderFromSource(std::string src, ShaderProgram::ShaderT
         default:
             break;
     }
+
+#ifdef DEBUG_GL_WRAPPER_SHADER
+    dbout("compiling " << shadertype << " shader");
+#endif
 
     GLuint shader = glCreateShader(t);
     MTGLERROR;

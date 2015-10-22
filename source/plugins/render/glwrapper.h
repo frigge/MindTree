@@ -249,6 +249,8 @@ public:
 
     int getUniformLocation(std::string name) const;
 
+    static std::string shaderTypeStr(int type);
+
     glm::ivec2 getUniformi2(std::string name) const;
     glm::ivec3 getUniformi3(std::string name) const;
     glm::vec2 getUniformf2(std::string name) const;
