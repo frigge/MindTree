@@ -28,16 +28,10 @@ public:
         std::shared_ptr<ShaderProgram> provideProgram() override {
             auto prog = std::make_shared<ShaderProgram>();
             auto vert = ShaderFiles<T>::vertexShader;
-            auto geo = ShaderFiles<T>::geometryShader;
             auto frag = ShaderFiles<T>::fragmentShader;
-            auto tessControl = ShaderFiles<T>::tessControlShader;
-            auto tessEval = ShaderFiles<T>::tessEvalShader;
 
             if(vert != "")prog ->addShaderFromFile(vert, ShaderProgram::VERTEX);
-            if(geo != "")prog ->addShaderFromFile(geo, ShaderProgram::GEOMETRY);
             if(frag != "")prog ->addShaderFromFile(frag, ShaderProgram::FRAGMENT);
-            if(tessControl != "")prog ->addShaderFromFile(tessControl, ShaderProgram::TESSELATION_CONTROL);
-            if(tessEval != "")prog ->addShaderFromFile(tessEval, ShaderProgram::TESSELATION_EVALUATION);
             return prog;
         }
     };
@@ -60,12 +54,9 @@ private:
     std::shared_ptr<VBO> _coord_vbo;
 };
 
-template<typename T> const std::string PixelPlane::ShaderFiles<T>::vertexShader{};
-template<typename T> const std::string PixelPlane::ShaderFiles<T>::geometryShader{};
+template<typename T> const std::string PixelPlane::ShaderFiles<T>::
+    vertexShader{ "../plugins/render/defaultShaders/fullscreenquad.vert"};
 template<typename T> const std::string PixelPlane::ShaderFiles<T>::fragmentShader{};
-template<typename T> const std::string PixelPlane::ShaderFiles<T>::tessControlShader{};
-template<typename T> const std::string PixelPlane::ShaderFiles<T>::tessEvalShader{};
-
 }
 }
 #endif
