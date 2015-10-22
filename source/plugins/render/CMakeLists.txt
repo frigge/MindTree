@@ -2,6 +2,7 @@ project(render)
 set(RENDER_SRC
     benchmark.cpp
     camera_renderer.cpp
+    compositor_plane.cpp
     deferred_renderer.cpp
     empty_renderer.cpp
     forward_renderer.cpp

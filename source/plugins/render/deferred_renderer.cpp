@@ -16,6 +16,7 @@
 #include "../datatypes/Object/lights.h"
 #include "polygon_renderer.h"
 #include "camera_renderer.h"
+#include "compositor_plane.h"
 #include "empty_renderer.h"
 #include "shader_render_node.h"
 #include "rsm_computation_plane.h"
@@ -26,9 +27,7 @@
 using namespace MindTree;
 using namespace GL;
 
-struct Compositor;
 struct FinalOut;
-
 template<>
 const std::string
 PixelPlane::ShaderFiles<FinalOut>::
@@ -54,10 +53,13 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
                            });
 
     auto rsmGenerationBlock = std::make_shared<RSMGenerationBlock>();
-    addRenderBlock(std::make_shared<GBufferRenderBlock>(_geometryPass));
+    auto gbuffer = std::make_shared<GBufferRenderBlock>(_geometryPass);
+    addRenderBlock(gbuffer);
     addRenderBlock(rsmGenerationBlock);
-    addRenderBlock(std::make_shared<DeferredLightingRenderBlock>(rsmGenerationBlock.get()));
-    addRenderBlock(std::make_shared<RSMEvaluationBlock>(rsmGenerationBlock.get()));
+    auto deferred = std::make_shared<DeferredLightingRenderBlock>(rsmGenerationBlock.get());
+    addRenderBlock(deferred);
+    auto rsm = std::make_shared<RSMEvaluationBlock>(rsmGenerationBlock.get());
+    addRenderBlock(rsm);
 
     auto overlayPass = std::make_shared<RenderPass>();
     _overlayPass = overlayPass;
@@ -66,7 +68,8 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     overlay
         ->setDepthOutput(std::make_shared<Renderbuffer>("depth",
                                                         Renderbuffer::DEPTH));
-    overlay->addOutput(std::make_shared<Texture2D>("overlay"));
+    auto overtx = std::make_shared<Texture2D>("overlay");
+    overlay->addOutput(overtx);
     overlay->setCamera(camera);
     _viewCenter = new SinglePointRenderer();
     _viewCenter->setVisible(false);
@@ -78,21 +81,37 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     _pixelPass = pixelPass;
     manager->addPass(pixelPass);
     pixelPass->setCamera(camera);
-    auto pplane = new PixelPlane();
-    pplane->setProvider<Compositor>();
+    pixelPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+    auto pplane = new CompositorPlane();
+    pplane->addLayer(deferred->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
+    pplane->addLayer(rsm->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
+    pplane->addLayer(gbuffer->getOutputs()[1], 1.0, CompositorPlane::CompositType::ALPHAOVER);
+    pplane->addLayer(overtx, 1.0, CompositorPlane::CompositType::ALPHAOVER);
     pixelPass->addRenderer(pplane);
-    float value = 70.0 / 255;
-    pixelPass->setBackgroundColor(glm::vec4(value, value, value, 1.));
     pixelPass->addOutput(std::make_shared<Texture2D>("final_out"));
+
+    PropertyMap layer = {
+        {"enabled", true},
+        {"mixValue", 1.0}
+    };
+
+    PropertyMap layerSettings = {
+        {"Shading", layer},
+        {"RSM", layer},
+        {"GBuffer", layer},
+        {"Overlay", layer}
+    };
+
+    addSettings("LayerSettings", layerSettings);
 
     auto finalPass = std::make_shared<RenderPass>();
     _finalPass = finalPass;
     finalPass->setCamera(camera);
     manager->addPass(finalPass);
     finalPass->setCustomTextureNameMapping("final_out", "output");
-    pplane = new PixelPlane();
-    pplane->setProvider<FinalOut>();
-    finalPass->addRenderer(pplane);
+    PixelPlane *finalPlane = new PixelPlane();
+    finalPlane->setProvider<FinalOut>();
+    finalPass->addRenderer(finalPlane);
 
     setCamera(camera);
 }
@@ -102,6 +121,7 @@ void DeferredRenderer::setCamera(std::shared_ptr<Camera> cam)
     RenderConfigurator::setCamera(cam);
     _overlayPass.lock()->setCamera(cam);
     _pixelPass.lock()->setCamera(cam);
+    _finalPass.lock()->setCamera(cam);
 }
 
 glm::vec4 DeferredRenderer::getPosition(glm::vec2 pixel) const
@@ -125,6 +145,10 @@ void DeferredRenderer::setProperty(std::string name, Property prop)
     if (name == "GL:camera:center") {
         auto value = prop.getData<glm::vec3>();
         _viewCenter->setPosition(value);
+    }
+    if (name == "GL:backgroundColor") {
+        auto value = prop.getData<glm::vec4>();
+        _finalPass.lock()->setBackgroundColor(value);
     }
 }
 
@@ -160,8 +184,9 @@ void GBufferRenderBlock::init()
 
     geopass->setEnableBlending(false);
 
-    geopass->setDepthOutput(std::make_shared<Texture2D>("depth", 
-                                                        Texture::DEPTH));
+    auto depth = std::make_shared<Texture2D>("depth",
+                                             Texture::DEPTH);
+    geopass->setDepthOutput(depth);
     geopass->addOutput(std::make_shared<Texture2D>("outdiffusecolor"));
     geopass->addOutput(std::make_shared<Texture2D>("outcolor"));
     geopass->addOutput(std::make_shared<Texture2D>("outdiffuseintensity"));
@@ -170,11 +195,11 @@ void GBufferRenderBlock::init()
                                               Texture::RGBA16F);
     normal->generateMipmaps();
     geopass->addOutput(normal);
-    auto position = std::make_shared<Texture2D>("outposition", 
+    auto position = std::make_shared<Texture2D>("outposition",
                                                 Texture::RGBA16F);
     position->generateMipmaps();
     geopass->addOutput(position);
-    geopass->addOutput(std::make_shared<Texture2D>("worldposition", 
+    geopass->addOutput(std::make_shared<Texture2D>("worldposition",
                                                    Texture::RGBA16F));
 
     geopass->addPostRenderCallback([normal, position] (RenderPass *) {
@@ -182,6 +207,10 @@ void GBufferRenderBlock::init()
                                        position->generateMipmaps();
                                    });
 
+    //register the outputs on the block
+    //used for compositing later on
+    for(auto tx : geopass->getOutputTextures())
+        addOutput(tx);
     setupGBuffer();
 }
 
@@ -189,10 +218,10 @@ void GBufferRenderBlock::setupGBuffer()
 {
     auto gbufferShader = std::make_shared<ShaderProgram>();
     gbufferShader
-        ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
+        ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert",
                             ShaderProgram::VERTEX);
     gbufferShader
-        ->addShaderFromFile("../plugins/render/defaultShaders/gbuffer.frag", 
+        ->addShaderFromFile("../plugins/render/defaultShaders/gbuffer.frag",
                             ShaderProgram::FRAGMENT);
     auto gbufferNode = std::make_shared<ShaderRenderNode>(gbufferShader);
     _gbufferNode = gbufferNode;
@@ -271,14 +300,17 @@ void DeferredLightingRenderBlock::init()
     _deferredPass = deferredPass;
     deferredPass
         ->addOutput(std::make_shared<Texture2D>("shading_out",
-                                                Texture::RGB16F));
+                                                Texture::RGBA16F));
     _deferredRenderer = new LightAccumulationPlane();
     deferredPass->addRenderer(_deferredRenderer);
-    deferredPass->setBlendFunc(GL_ONE, GL_ONE);
+    deferredPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     setupDefaultLights();
 
     setBenchmark(std::make_shared<Benchmark>("Deferred Shading"));
+
+    for(auto tx : deferredPass->getOutputTextures())
+        addOutput(tx);
 }
 
 void DeferredLightingRenderBlock::setupDefaultLights()

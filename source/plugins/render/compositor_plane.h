@@ -9,18 +9,23 @@ namespace GL {
 class CompositorPlane : public PixelPlane
 {
 public:
-    struct CompositInfo {
-        enum class CompositType {
-            ADD,
-            MULTIPLY,
-            ALPHAOVER,
-            MIX
-        };
+    CompositorPlane();
 
+    enum class CompositType {
+        ADD = 0,
+        MULTIPLY,
+        ALPHAOVER,
+        MIX
+    };
+
+    struct CompositInfo {
         CompositType type;
         float mixValue;
         std::weak_ptr<Texture2D> texture;
+        bool enabled=true;
     };
+
+    CompositInfo& addLayer(std::weak_ptr<Texture2D> tx, float mix, CompositType type);
 
 protected:
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
