@@ -6,10 +6,11 @@
 using namespace MindTree;
 using namespace MindTree::GL;
 
-ShaderRenderNode::ShaderRenderNode(std::shared_ptr<ShaderProgram> program) : 
+ShaderRenderNode::ShaderRenderNode(std::shared_ptr<ShaderProgram> program) :
     _program(program),
     _initialized(false)
 {
+    assert(_program);
 }
 
 ShaderRenderNode::~ShaderRenderNode()

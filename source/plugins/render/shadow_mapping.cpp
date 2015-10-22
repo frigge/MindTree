@@ -20,10 +20,10 @@ void ShadowMappingRenderBlock::init()
     auto shadowShader = std::make_shared<ShaderProgram>();
     _shadowNode = std::make_shared<ShaderRenderNode>(shadowShader);
     shadowShader
-        ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
+        ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert",
                             ShaderProgram::VERTEX);
     shadowShader
-        ->addShaderFromFile("../plugins/render/defaultShaders/shadow.frag", 
+        ->addShaderFromFile("../plugins/render/defaultShaders/shadow.frag",
                             ShaderProgram::FRAGMENT);
 }
 

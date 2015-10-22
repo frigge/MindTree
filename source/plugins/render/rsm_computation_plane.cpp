@@ -156,12 +156,13 @@ void RSMEvaluationBlock::init()
     auto rsmIndirectLowResPass = addPass();
     _rsmIndirectLowResPass = rsmIndirectLowResPass;
     rsmIndirectLowResPass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_lowres",
-                                                Texture::RGB16F));
+                                                Texture::RGBA16F));
     rsmIndirectLowResPass->setCustomFragmentNameMapping("rsm_indirect_out_lowres", "rsm_indirect_out");
 
     _rsmIndirectLowResPlane = new RSMIndirectPlane();
     rsmIndirectLowResPass->addRenderer(_rsmIndirectLowResPlane);
     rsmIndirectLowResPass->setBlendFunc(GL_ONE, GL_ONE);
+    rsmIndirectLowResPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     _rsmInterpolatePass = addPass();
     auto rsmInterpolatePass = _rsmInterpolatePass.lock();
@@ -176,21 +177,23 @@ void RSMEvaluationBlock::init()
     auto rsmIndirectHighResPass = addPass();
     _rsmIndirectPass = rsmIndirectHighResPass;
     rsmIndirectHighResPass ->addOutput(std::make_shared<Texture2D>("rsm_indirect_out_highres",
-                                                Texture::RGB16F));
+                                                Texture::RGBA16F));
     rsmIndirectHighResPass->setCustomFragmentNameMapping("rsm_indirect_out_highres", "rsm_indirect_out");
     rsmIndirectHighResPass->setProperty("highres", true);
 
     _rsmIndirectHighResPlane = new RSMIndirectPlane();
     rsmIndirectHighResPass->addRenderer(_rsmIndirectHighResPlane);
     rsmIndirectHighResPass->setBlendFunc(GL_ONE, GL_ONE);
+    rsmIndirectHighResPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     auto rsmFinalPass = addPass();
-    rsmFinalPass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out", Texture::RGB16F));
+    rsmFinalPass->addOutput(std::make_shared<Texture2D>("rsm_indirect_out", Texture::RGBA16F));
     auto rsmFinalPlane = new PixelPlane();
     rsmFinalPlane->setProvider<RSMFinalProvider>();
     rsmFinalPass->addRenderer(rsmFinalPlane);
 
     setBenchmark(std::make_shared<Benchmark>("RSM Evaluation"));
+    addOutput(rsmFinalPass->getOutputTextures()[0]);
 }
 
 void RSMEvaluationBlock::setCamera(std::shared_ptr<Camera> cam)

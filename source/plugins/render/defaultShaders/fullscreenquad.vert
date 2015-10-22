@@ -5,10 +5,9 @@ out vec2 st;
 
 uniform mat4 modelView;
 uniform mat4 projection;
-uniform int layer = 1;
 
 void main(){
-    vec3 p = vec3(P.xy, layer);
+    vec3 p = vec3(P.xy, 1);
    gl_Position = vec4(p, 1);
    st = _st;
 };

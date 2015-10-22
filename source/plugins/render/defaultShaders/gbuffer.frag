@@ -31,5 +31,5 @@ void main() {
     outdiffusecolor = diffuse_color;
     outdiffuseintensity = vec4(vec3(diffuse_intensity), 1);
     outspecintensity = vec4(vec3(specular_intensity), 1);
-    outcolor = vec4(0);
+    //outcolor = vec4(0);
 }

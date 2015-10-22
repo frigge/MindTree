@@ -9,8 +9,8 @@ out vec4 rsm_indirect_out;
 
 void main()
 {
-    vec3 highres = texture(rsm_indirect_out_highres, st).xyz;
-    vec3 interpolated = texture(rsm_indirect_out_interpolated, st).xyz;
+    vec4 highres = texture(rsm_indirect_out_highres, st);
+    vec4 interpolated = texture(rsm_indirect_out_interpolated, st);
 
-    rsm_indirect_out = vec4(highres + interpolated, 1);
+    rsm_indirect_out = vec4(highres + interpolated);
 }
