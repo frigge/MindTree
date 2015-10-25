@@ -400,16 +400,17 @@ const DoutSocket* DataCache::getStart() const
 
 void DataCache::setStart(const DoutSocket *socket)
 {
-    startsocket = socket; 
+    startsocket = socket;
 }
 
 void DataCache::cacheInputs()
 {
-    if(isCached(node)) 
+    if(isCached(node))
         return;
 
     auto ntype = node->getType();
     unsigned long nodeTypeID = ntype.id();
+    std::string nodeName = node->getNodeName();
 
     AbstractCacheProcessor* genericProcessor = _genericProcessors[ntype];
     if(genericProcessor) {
@@ -420,7 +421,7 @@ void DataCache::cacheInputs()
     if(type.id() >= static_cast<int>(processors.size())){
         std::cout<< "no processors defined for this data type ("
                  << type.toStr()
-                 << " id:" 
+                 << " id:"
                  << type.id()
                  << ")"
                  << std::endl;
@@ -430,9 +431,11 @@ void DataCache::cacheInputs()
     if(nodeTypeID >= list.size()){
         std::cout<< "no processors defined for this node type ("
                  << node->getType().toStr()
-                 << " id:" 
+                 << " id:"
                  <<nodeTypeID
                  <<")"
+                 << " on node: "
+                 << nodeName
                  << std::endl;
         return;
     }
