@@ -84,9 +84,11 @@ void ViewportViewer::createSettingsFromMap(DNode *node, PropertyMap props)
     std::string first_prop = begin(props)->first;
     dbout(first_prop);
     auto prop_start = first_prop.find_first_of(":");
-    std::string category_name = first_prop.substr(0, prop_start);
-    dbout(category_name);
-    node->setName(category_name);
+    if(prop_start == std::string::npos) {
+        std::string category_name = first_prop.substr(0, prop_start);
+        dbout(category_name);
+        node->setName(category_name);
+    }
     for(const auto &prop: props) {
         std::string prop_name = prop.first.substr(prop_start + 1);
         DinSocket *socket = new DinSocket(prop_name, prop.second.getType(), node);
@@ -95,8 +97,8 @@ void ViewportViewer::createSettingsFromMap(DNode *node, PropertyMap props)
             auto *out = new DoutSocket("Properties", "PROPERTYMAP", n.get());
             socket->setCntdSocket(out);
 
-            node->setName(prop.first);
-            node->setType("SETPROPERTYMAP");
+            n->setName(prop.first);
+            n->setType("SETPROPERTYMAP");
             socket->addChildNode(n);
             createSettingsFromMap(n.get(), prop.second.getData<PropertyMap>());
         }

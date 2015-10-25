@@ -133,7 +133,8 @@ glm::vec4 DeferredRenderer::getPosition(glm::vec2 pixel) const
 void DeferredRenderer::setProperty(std::string name, Property prop)
 {
     RenderConfigurator::setProperty(name, prop);
-    
+
+    dbout(name);
     if (name == "GL:showgrid") {
         auto value = prop.getData<bool>();
         _grid->setVisible(value);
