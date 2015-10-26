@@ -37,20 +37,20 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     RenderConfigurator(context, camera)
 {
     auto manager = getManager();
-    auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
-    manager->setBenchmark(benchmark);
-    benchmark->setCallback([this](Benchmark* benchmark) {
-                               if(benchmark->getNumCalls() >= 500) {
-                                   int vcnt = this->getVertexCount();
-                                   int pcnt = this->getPolygonCount();
-                                   std::cout << "======START======\n";
-                                   std::cout << "Vertexcount: " << vcnt;
-                                   std::cout << " Polygoncount: " << pcnt << "\n";
-                                   std::cout << (*benchmark) << "\n";
-                                   std::cout << "======END======" << std::endl;
-                                   benchmark->reset();
-                               }
-                           });
+    //auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
+    //manager->setBenchmark(benchmark);
+    //benchmark->setCallback([this](Benchmark* benchmark) {
+    //                           if(benchmark->getNumCalls() >= 500) {
+    //                               int vcnt = this->getVertexCount();
+    //                               int pcnt = this->getPolygonCount();
+    //                               std::cout << "======START======\n";
+    //                               std::cout << "Vertexcount: " << vcnt;
+    //                               std::cout << " Polygoncount: " << pcnt << "\n";
+    //                               std::cout << (*benchmark) << "\n";
+    //                               std::cout << "======END======" << std::endl;
+    //                               benchmark->reset();
+    //                           }
+    //                       });
 
     auto rsmGenerationBlock = std::make_shared<RSMGenerationBlock>();
     auto gbuffer = std::make_shared<GBufferRenderBlock>(_geometryPass);
