@@ -355,7 +355,40 @@ private:
 };
 
 
-typedef std::unordered_map<std::string, Property> PropertyMap;
+class PropertyMap {
+public:
+    typedef std::pair<std::string, Property> Info;
+    typedef std::vector<Info>::iterator Iterator;
+    typedef std::vector<Info>::const_iterator CIterator;
+
+    PropertyMap() = default;
+    PropertyMap(std::initializer_list<Info> init);
+    void insert(Info value);
+    void insert(Iterator b, Iterator e);
+    void clear();
+    size_t size() const;
+    bool empty() const;
+
+    Property at(const std::string &name);
+    const Property& at(const std::string &name) const;
+    Property& operator[](const std::string &name);
+    Property& operator[](std::string &&name);
+
+    Iterator begin();
+    Iterator end();
+    CIterator cbegin() const;
+    CIterator cend() const;
+
+    Iterator find(const std::string& name);
+    CIterator find(const std::string& name) const;
+
+    void erase(const std::string& name);
+
+private:
+    std::vector<Info> _properties;
+};
+
+//typedef std::unordered_map<std::string, Property> PropertyMap;
 
 namespace IO {
 template <typename T>
@@ -412,6 +445,11 @@ private:
 };
 
 }
+ MindTree::PropertyMap::Iterator begin(MindTree::PropertyMap&);
+ MindTree::PropertyMap::Iterator end(MindTree::PropertyMap&);
+ MindTree::PropertyMap::Iterator begin(const MindTree::PropertyMap&);
+ MindTree::PropertyMap::Iterator end(const MindTree::PropertyMap&);
+
 } /* MindTree */
 
 #endif /* end of include guard: PROPERTIES_K7LMQN2D */

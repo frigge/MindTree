@@ -79,5 +79,5 @@ void Object::rmProperty(std::string name)
 bool Object::hasProperty(std::string name) const
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
-    return _properties.find(name) != _properties.end();
+    return _properties.find(name) != _properties.cend();
 }

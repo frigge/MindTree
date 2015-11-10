@@ -182,7 +182,142 @@ BPy::object Property::toPython() const
     if(!data) {
         return BPy::object();
     }
-    return _meta.pyconverter(); 
+    return _meta.pyconverter();
+}
+
+PropertyMap::PropertyMap(std::initializer_list<Info> init)
+{
+    _properties.insert(std::begin(_properties), init);
+}
+
+void PropertyMap::insert(Info value)
+{
+    _properties.push_back(value);
+}
+
+void PropertyMap::insert(Iterator b, Iterator e)
+{
+    _properties.insert(_properties.end(), b, e);
+}
+
+void PropertyMap::clear()
+{
+    _properties.clear();
+}
+
+size_t PropertyMap::size() const
+{
+    return _properties.size();
+}
+
+bool PropertyMap::empty() const
+{
+    return _properties.empty();
+}
+
+Property PropertyMap::at(const std::string &name)
+{
+    return *std::find_if(std::begin(_properties),
+                         std::end(_properties),
+                         [&name](const Info& info) {
+            return info.first == name;
+        });
+}
+
+const Property& PropertyMap::at(const std::string &name) const
+{
+    size_t pos = std::distance(_properties.cbegin(),
+                               std::find_if(_properties.cbegin(),
+                                            _properties.cend(),
+                                            [&name](const Info& info) {
+                                                return info.first == name;
+                                            }));
+    return _properties.at(pos).second;
+}
+
+Property& PropertyMap::operator[](const std::string &name)
+{
+    size_t pos = std::distance(_properties.begin(),
+                               std::find_if(_properties.begin(),
+                                            _properties.end(),
+                                            [&name](const Info& info) {
+                                                return info.first == name;
+                                            }));
+    return _properties.at(pos).second;
+}
+
+Property& PropertyMap::operator[](std::string &&name)
+{
+    size_t pos = std::distance(_properties.begin(),
+                               std::find_if(_properties.begin(),
+                                            _properties.end(),
+                                            [&name](const Info& info) {
+                                                return info.first == name;
+                                            }));
+    return _properties.at(pos).second;
+}
+
+PropertyMap::Iterator PropertyMap::begin()
+{
+    return _properties.begin();
+}
+
+PropertyMap::Iterator PropertyMap::end()
+{
+    return _properties.end();
+}
+
+PropertyMap::CIterator PropertyMap::cbegin() const
+{
+    return _properties.cbegin();
+}
+
+PropertyMap::CIterator PropertyMap::cend() const
+{
+    return _properties.cend();
+}
+
+PropertyMap::Iterator PropertyMap::find(const std::string& name)
+{
+    return std::find_if(_properties.begin(),
+                        _properties.end(),
+                        [&name](const Info& info) {
+                            return info.first == name;
+                        });
+}
+
+PropertyMap::CIterator PropertyMap::find(const std::string& name) const
+{
+    return std::find_if(_properties.begin(),
+                        _properties.end(),
+                        [&name](const Info& info) {
+                            return info.first == name;
+                        });
+}
+
+void PropertyMap::erase(const std::string& name)
+{
+    _properties.erase(find(name));
+}
+
+PropertyMap::Iterator begin(PropertyMap& map)
+{
+    return map.begin();
+}
+
+PropertyMap::Iterator end(PropertyMap& map)
+{
+    return map.end();
+}
+
+PropertyMap::CIterator begin(const PropertyMap& map)
+{
+    return map.cbegin();
+}
+
+PropertyMap::CIterator end(const PropertyMap& map)
+{
+    return map.cend();
 }
 
 IO::Input::ReaderList IO::Input::_readers;
