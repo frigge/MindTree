@@ -77,32 +77,12 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
 
-    auto pixelPass = std::make_shared<RenderPass>();
-    _pixelPass = pixelPass;
-    manager->addPass(pixelPass);
-    pixelPass->setCamera(camera);
-    pixelPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
-    auto pplane = new CompositorPlane();
-    pplane->addLayer(deferred->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
-    pplane->addLayer(rsm->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
-    pplane->addLayer(gbuffer->getOutputs()[1], 1.0, CompositorPlane::CompositType::ALPHAOVER);
-    pplane->addLayer(overtx, 1.0, CompositorPlane::CompositType::ALPHAOVER);
-    pixelPass->addRenderer(pplane);
-    pixelPass->addOutput(std::make_shared<Texture2D>("final_out"));
-
-    PropertyMap layer = {
-        {"enabled", true},
-        {"mixValue", 1.0}
-    };
-
-    PropertyMap layerSettings = {
-        {"Shading", layer},
-        {"RSM", layer},
-        {"GBuffer", layer},
-        {"Overlay", layer}
-    };
-
-    addSettings("LayerSettings", layerSettings);
+    auto compositor = std::make_shared<Compositor>();
+    compositor->addLayer(deferred->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
+    compositor->addLayer(rsm->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
+    compositor->addLayer(gbuffer->getOutputs()[1], 1.0, CompositorPlane::CompositType::ALPHAOVER);
+    compositor->addLayer(overtx, 1.0, CompositorPlane::CompositType::ALPHAOVER);
+    addRenderBlock(compositor);
 
     auto finalPass = std::make_shared<RenderPass>();
     _finalPass = finalPass;
@@ -120,7 +100,6 @@ void DeferredRenderer::setCamera(std::shared_ptr<Camera> cam)
 {
     RenderConfigurator::setCamera(cam);
     _overlayPass.lock()->setCamera(cam);
-    _pixelPass.lock()->setCamera(cam);
     _finalPass.lock()->setCamera(cam);
 }
 

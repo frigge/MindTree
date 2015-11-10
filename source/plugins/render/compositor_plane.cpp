@@ -1,3 +1,5 @@
+#include "renderpass.h"
+#include "render_setup.h"
 #include "compositor_plane.h"
 
 using namespace MindTree;
@@ -54,4 +56,51 @@ void CompositorPlane::draw(const CameraPtr camera, const RenderConfig &config, s
         PixelPlane::draw(camera, config, program);
         ++i;
     }
+}
+
+CompositorPlane::CompositInfo& CompositorPlane::getInfo(std::string txName)
+{
+    return *std::find_if(begin(_layers), end(_layers), [&txName] (const CompositInfo &info) {
+            return info.texture.lock()->getName() == txName;
+        });
+}
+
+const std::vector<CompositorPlane::CompositInfo>& CompositorPlane::getLayers() const
+{
+    return _layers;
+}
+
+Compositor::Compositor() :
+    _plane{new CompositorPlane()}
+{
+}
+
+void Compositor::init()
+{
+    auto pixelPass = addPass();
+    _pixelPass = pixelPass.get();
+    pixelPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+    pixelPass->addRenderer(_plane);
+    pixelPass->addOutput(std::make_shared<Texture2D>("final_out"));
+
+    PropertyMap layer = {
+        {"enabled", true},
+        {"mixValue", 1.0}
+    };
+
+    PropertyMap layerSettings;
+    for  (const auto &info : _plane->getLayers()) {
+        layerSettings[info.texture.lock()->getName()] = layer;
+    }
+
+    _config->addSettings("LayerSettings", layerSettings);
+}
+
+void Compositor::setProperty(std::string name, Property prop)
+{
+}
+
+void Compositor::addLayer(std::weak_ptr<Texture2D> tx, float mix, CompositorPlane::CompositType type)
+{
+    _plane->addLayer(tx, mix, type);
 }

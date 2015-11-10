@@ -3,6 +3,7 @@
 
 #include "vector"
 #include "pixel_plane.h"
+#include "render_block.h"
 
 namespace MindTree {
 namespace GL {
@@ -26,6 +27,9 @@ public:
     };
 
     CompositInfo& addLayer(std::weak_ptr<Texture2D> tx, float mix, CompositType type);
+    CompositInfo& getInfo(std::string txName);
+
+    const std::vector<CompositorPlane::CompositInfo>& getLayers() const;
 
 protected:
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
@@ -33,6 +37,21 @@ protected:
 private:
     std::vector<CompositInfo> _layers;
 };
+
+class Compositor : public RenderBlock
+{
+public:
+    Compositor();
+
+    void setProperty(std::string name, Property prop);
+    void addLayer(std::weak_ptr<Texture2D> tx, float mix, CompositorPlane::CompositType type);
+    void init();
+
+ private:
+    CompositorPlane *_plane;
+    RenderPass *_pixelPass;
+};
+
 }
 }
 
