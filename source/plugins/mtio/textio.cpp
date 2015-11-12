@@ -110,5 +110,5 @@ BOOST_PYTHON_MODULE(textio) {
         cache->pushData(content);
     };
 
-    DataCache::addProcessor("STRING", "TEXTREAD", new CacheProcessor(readText));
+    DataCache::addProcessor(new CacheProcessor("STRING", "TEXTREAD", readText));
 }

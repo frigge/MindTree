@@ -58,8 +58,8 @@ void regSimulation()
         }
     };
 
-    DataCache::addGenericProcessor("SIMULATION", new CacheProcessor(simProc));
-    DataCache::addGenericProcessor("SIMULATEDINPUTS", new CacheProcessor(simulatedProc));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("SIMULATION", simProc));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("SIMULATEDINPUTS", simulatedProc));
 }
 
 BOOST_PYTHON_MODULE(simulation) {

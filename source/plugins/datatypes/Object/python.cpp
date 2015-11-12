@@ -196,9 +196,9 @@ void regLightProcs()
         cache->pushData(light);
     };
 
-    DataCache::addProcessor("TRANSFORMABLE", "POINTLIGHT", new CacheProcessor(pointLightProc));
-    DataCache::addProcessor("TRANSFORMABLE", "SPOTLIGHT", new CacheProcessor(spotLightProc));
-    DataCache::addProcessor("TRANSFORMABLE", "DISTANTLIGHT", new CacheProcessor(distantLightProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "POINTLIGHT", pointLightProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "SPOTLIGHT", spotLightProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "DISTANTLIGHT", distantLightProc));
 }
 
 void materialProcs()
@@ -230,13 +230,12 @@ void materialProcs()
         cache->pushData(newObj);
     };
 
-    DataCache::addProcessor("MATERIAL", "DEFAULTMATERIAL", new CacheProcessor(materialInstanceProc));
-    DataCache::addProcessor("TRANSFORMABLE", "SETMATERIALINSTANCE", new CacheProcessor(setMaterialProc));
+    DataCache::addProcessor(new CacheProcessor("MATERIAL", "DEFAULTMATERIAL", materialInstanceProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "SETMATERIALINSTANCE", setMaterialProc));
 }
 
 BOOST_PYTHON_MODULE(object){
-    auto proc = new CacheProcessor(groupProc);
-    DataCache::addProcessor("GROUPDATA", "GROUP", proc);
+    DataCache::addProcessor(new CacheProcessor("GROUPDATA", "GROUP", groupProc));
 
     proc = new CacheProcessor(transformProc);
     DataCache::addProcessor("TRANSFORMABLE", "TRANSFORM", proc);

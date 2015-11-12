@@ -57,10 +57,10 @@ void registerConverteNodeOperators()
         cache->pushData(vec.a);
     };
 
-    DataCache::addProcessor("COLOR", "FLOATTOCOLOR", new CacheProcessor(floatToColor));
-    DataCache::addProcessor("VECTOR3D", "FLOATTOVECTOR3D", new CacheProcessor(floatToVector3D));
-    DataCache::addProcessor("VECTOR2D", "FLOATTOVECTOR2D", new CacheProcessor(floatToVector2D));
-    DataCache::addProcessor("FLOAT", "COLORTOFLOAT", new CacheProcessor(colorToFloat));
-    DataCache::addProcessor("FLOAT", "VECTOR3DTOFLOAT", new CacheProcessor(vector3DToFloat));
-    DataCache::addProcessor("FLOAT", "VECTOR2DTOFLOAT", new CacheProcessor(vector2DToFloat));
+    DataCache::addProcessor(new CacheProcessor("COLOR", "FLOATTOCOLOR", floatToColor));
+    DataCache::addProcessor(new CacheProcessor("VECTOR3D", "FLOATTOVECTOR3D", floatToVector3D));
+    DataCache::addProcessor(new CacheProcessor("VECTOR2D", "FLOATTOVECTOR2D", floatToVector2D));
+    DataCache::addProcessor(new CacheProcessor("FLOAT", "COLORTOFLOAT", colorToFloat));
+    DataCache::addProcessor(new CacheProcessor("FLOAT", "VECTOR3DTOFLOAT", vector3DToFloat));
+    DataCache::addProcessor(new CacheProcessor("FLOAT", "VECTOR2DTOFLOAT", vector2DToFloat));
 }

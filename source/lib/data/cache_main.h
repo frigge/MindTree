@@ -65,20 +65,31 @@ class AbstractCacheProcessor
 {
 public:
     typedef TypeDispatcher<NodeType, AbstractCacheProcessor*> CacheList;
-    AbstractCacheProcessor();
+    AbstractCacheProcessor(SocketType st, NodeType nt);
     virtual ~AbstractCacheProcessor();
     virtual void operator()(DataCache*)=0;
+
+private:
+    SocketType m_socketType;
+    NodeType m_nodeType;
 };
 
 class CacheProcessor : public AbstractCacheProcessor
 {
 public:
-    CacheProcessor(std::function<void(DataCache*)> fn);
+    CacheProcessor(SocketType st, NodeType nt, std::function<void(DataCache*)> fn);
     virtual ~CacheProcessor();
     void operator()(DataCache* cache);
 
 private:
     std::function<void(DataCache*)> processor;
+};
+
+class GenericCacheProcessor : public CacheProcessor
+{
+public:
+    GenericCacheProcessor(NodeType nt, std::function<void(DataCache*)> fn) :
+        CacheProcessor("", nt, fn) {}
 };
 
 class DataCache
@@ -110,8 +121,8 @@ public:
     const MindTree::DoutSocket *getStart()const;
     void setStart(const DoutSocket *socket);
 
-    static void addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc);
-    static void addGenericProcessor(NodeType nt, AbstractCacheProcessor *proc);
+    static void addProcessor(AbstractCacheProcessor *proc);
+    static void addGenericProcessor(NodeType nt, Generic *proc);
     static const std::vector<AbstractCacheProcessor::CacheList>& getProcessors();
     static std::vector<Property>& getCachedOutputs(const DNode *node);
     static void invalidate(const DNode *node);
