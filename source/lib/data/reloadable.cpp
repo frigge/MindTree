@@ -7,7 +7,7 @@ Library::Library(std::string path) :
 {
 }
 
-Library::Library(const Library &&lib) :
+Library::Library(Library &&lib) :
     m_path(lib.m_path), m_handle(lib.m_handle)
 {
     lib.m_handle = nullptr;
@@ -19,18 +19,20 @@ Library::~Library()
     unload();
 }
 
-Library& Library::operator=(const Library &&other)
+Library& Library::operator=(Library &&other)
 {
+    if(m_handle) unload();
     m_handle = other.m_handle;
     m_path = other.m_path;
     other.m_handle = nullptr;
     other.m_path = "";
 }
 
-void Library::load()
+bool Library::load()
 {
-    if(m_path)
-        m_handle = dlopen(m_path);
+    if(!m_path.empty())
+        m_handle = dlopen(m_path.c_str(), RTLD_LAZY);
+    return m_handle;
 }
 
 void Library::unload()
@@ -38,3 +40,12 @@ void Library::unload()
     if(m_handle) dlclose(m_handle);
     m_handle = nullptr;
 }
+
+HotProcessor::HotProcessor(std::string path) :
+    m_lib(path)
+{
+    if(m_lib.load()) {
+        auto loadFn = m_lib.getFunction<void(DataCache*)>("load");
+    }
+}
+

@@ -18,6 +18,7 @@ set(LIB_SRC
     data/python/wrapper.cpp
     data/python/pyutils.cpp
     data/python/system.cpp
+    data/reloadable.cpp
     data/signal.cpp
     data/windowfactory.cpp
     data/raytracing/ray.cpp

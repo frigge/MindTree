@@ -1,8 +1,11 @@
 #ifndef MT_BASE_RELOADABLE
 #define MT_BASE_RELOADABLE
 
-#include "string"
+#include <string>
+#include <functional>
 #include <dlfcn.h>
+
+#include "cache_main.h"
 
 namespace MindTree {
 class Library
@@ -10,13 +13,15 @@ class Library
 public:
     Library(std::string path);
     Library(const Library &lib) = delete;
-    Library(const Library &&lib);
+    Library(Library &&lib);
+
+    ~Library();
 
     void load();
     void unload();
 
     Library& operator=(const Library&) = delete;
-    Library& operator=(const Library&&);
+    Library& operator=(Library&&);
 
     template<typename T>
     std::function<T> getFunction(std::string symbol)
@@ -26,9 +31,17 @@ public:
     }
 
 private:
-    void getFunction();
     std::string m_path;
     void *m_handle{nullptr};
+};
+
+class HotProcessor
+{
+public:
+    HotProcessor(std::string path);
+
+private:
+    Library m_lib;
 };
 
 }
