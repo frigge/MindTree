@@ -445,11 +445,10 @@ private:
 };
 
 }
+} /* MindTree */
  MindTree::PropertyMap::Iterator begin(MindTree::PropertyMap&);
  MindTree::PropertyMap::Iterator end(MindTree::PropertyMap&);
- MindTree::PropertyMap::Iterator begin(const MindTree::PropertyMap&);
- MindTree::PropertyMap::Iterator end(const MindTree::PropertyMap&);
-
-} /* MindTree */
+ MindTree::PropertyMap::CIterator begin(const MindTree::PropertyMap&);
+ MindTree::PropertyMap::CIterator end(const MindTree::PropertyMap&);
 
 #endif /* end of include guard: PROPERTIES_K7LMQN2D */
