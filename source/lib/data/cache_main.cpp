@@ -107,8 +107,18 @@ AbstractCacheProcessor::~AbstractCacheProcessor()
 {
 }
 
+const SocketType& AbstractCacheProcessor::getSocketType() const
+{
+    return m_socketType;
+}
+
+const NodeType& AbstractCacheProcessor::getNodeType() const
+{
+    return m_nodeType;
+}
+
 CacheProcessor::CacheProcessor(SocketType st, NodeType nt, std::function<void(DataCache*)> fn)
-    : processor(fn)
+    : AbstractCacheProcessor(st, nt), processor(fn)
 {
 }
 
@@ -264,23 +274,24 @@ DataType DataCache::getType() const
     return type;
 }
 
-void DataCache::addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc)
+void DataCache::addProcessor(AbstractCacheProcessor *proc)
 {
-    processors[st][nt] = proc;
+    processors[proc->getSocketType()][proc->getNodeType()] = proc;
 }
 
 void DataCache::removeProcessor(AbstractCacheProcessor *proc)
 {
+    processors[proc->getSocketType()][proc>getNodeType()].reset(nullptr);
 }
 
-void DataCache::addGenericProcessor(NodeType nt, AbstractCacheProcessor *proc)
+void DataCache::addGenericProcessor(GenericCacheProcessor *proc)
 {
-    _genericProcessors.add(nt, proc);
+    _genericProcessors.add(proc->getNodeType(), proc);
 }
 
 const std::vector<AbstractCacheProcessor::CacheList>& DataCache::getProcessors()
 {
-    return processors.getAll(); 
+    return processors.getAll();
 }
 
 //computes the value of the given input socket

@@ -47,8 +47,8 @@ void regContainer()
         }
     };
 
-    DataCache::addGenericProcessor("CONTAINER", new CacheProcessor(stepIn));
-    DataCache::addGenericProcessor("INSOCKETS", new CacheProcessor(stepOut));
+    DataCache::addGenericProcessor(new CacheProcessor("CONTAINER", stepIn));
+    DataCache::addGenericProcessor(new CacheProcessor("INSOCKETS", stepOut));
 }
 
 void regForLoop()
@@ -140,9 +140,9 @@ void regForLoop()
         }
     };
 
-    DataCache::addGenericProcessor("FOR", new CacheProcessor(forloopproc));
-    DataCache::addGenericProcessor("LOOPINPUTS", new CacheProcessor(loopinproc));
-    DataCache::addGenericProcessor("LOOPINSOCKETS", new CacheProcessor(loopedproc));
+    DataCache::addGenericProcessor(new CacheProcessor("FOR", forloopproc));
+    DataCache::addGenericProcessor(new CacheProcessor("LOOPINPUTS", loopinproc));
+    DataCache::addGenericProcessor(new CacheProcessor("LOOPINSOCKETS", loopedproc));
 }
 
 void regWhileLoop()
@@ -160,7 +160,7 @@ void regWhileLoop()
 
     };
 
-    DataCache::addGenericProcessor("WHILE", new CacheProcessor(whileproc));
+    DataCache::addGenericProcessor(new CacheProcessor("WHILE", whileproc));
 }
 
 void regForeachLoop()
@@ -208,7 +208,7 @@ void regForeachLoop()
         }
     };
 
-    DataCache::addGenericProcessor("FOREACH", new CacheProcessor(foreachproc));
+    DataCache::addGenericProcessor(new CacheProcessor("FOREACH", foreachproc));
 }
 
 void regCreateList()
@@ -222,8 +222,8 @@ void regCreateList()
         cache->pushData(list);
     };
 
-    DataCache::addGenericProcessor("CREATELIST",
-                                   new CacheProcessor(createListProc));
+    DataCache::addGenericProcessor(new CacheProcessor("CREATELIST",
+                                                      createListProc));
 
     NodeDataBase::registerNodeType(
                     std::make_unique<BuildInDecorator>("CREATELIST",

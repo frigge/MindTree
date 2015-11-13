@@ -57,18 +57,18 @@ public:
     virtual ~PyWrapCache(){}
 };
 
-class DinSocketPyWrapper; 
+class DinSocketPyWrapper;
 
-class PyCacheProcessor : public AbstractCacheProcessor
-{
-public:
-    PyCacheProcessor(BPy::object);
-    virtual ~PyCacheProcessor();
-    void operator()(DataCache* cache);
-
-private:
-    BPy::object processor;
-};
+//class PyCacheProcessor : public AbstractCacheProcessor
+//{
+//public:
+//    PyCacheProcessor(BPy::object);
+//    virtual ~PyCacheProcessor();
+//    void operator()(DataCache* cache);
+//
+//private:
+//    BPy::object processor;
+//};
 
 
 } /* MindTree */

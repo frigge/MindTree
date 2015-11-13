@@ -64,10 +64,15 @@ private:
 class AbstractCacheProcessor
 {
 public:
-    typedef TypeDispatcher<NodeType, AbstractCacheProcessor*> CacheList;
+    typedef TypeDispatcher<NodeType, std::unique_ptr<AbstractCacheProcessor>> CacheList;
+
     AbstractCacheProcessor(SocketType st, NodeType nt);
     virtual ~AbstractCacheProcessor();
+
     virtual void operator()(DataCache*)=0;
+
+    const SocketType& getSocketType() const;
+    const NodeType& getNodeType() const;
 
 private:
     SocketType m_socketType;
@@ -122,7 +127,8 @@ public:
     void setStart(const DoutSocket *socket);
 
     static void addProcessor(AbstractCacheProcessor *proc);
-    static void addGenericProcessor(NodeType nt, Generic *proc);
+    static void removeProcessor(AbstractCacheProcessor *proc);
+    static void addGenericProcessor(GenericCacheProcessor *proc);
     static const std::vector<AbstractCacheProcessor::CacheList>& getProcessors();
     static std::vector<Property>& getCachedOutputs(const DNode *node);
     static void invalidate(const DNode *node);

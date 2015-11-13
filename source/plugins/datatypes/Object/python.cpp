@@ -236,18 +236,10 @@ void materialProcs()
 
 BOOST_PYTHON_MODULE(object){
     DataCache::addProcessor(new CacheProcessor("GROUPDATA", "GROUP", groupProc));
-
-    proc = new CacheProcessor(transformProc);
-    DataCache::addProcessor("TRANSFORMABLE", "TRANSFORM", proc);
-
-    proc = new CacheProcessor(parentProc);
-    DataCache::addProcessor("TRANSFORMABLE", "PARENTOBJECT", proc);
-
-    proc = new CacheProcessor(emptyProc);
-    DataCache::addProcessor("TRANSFORMABLE", "EMPTY", proc);
-
-    proc = new CacheProcessor(cameraProc);
-    DataCache::addProcessor("TRANSFORMABLE", "CAMERA", proc);
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "TRANSFORM", transformProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "PARENTOBJECT", parentProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "EMPTY",  emptyProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "CAMERA", cameraProc));
 
     NodeDataBase::setNotConvertible("TRANSFORMABLE");
 

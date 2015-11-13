@@ -40,7 +40,7 @@ void regSwitchNode()
         cache->pushData(cache->getData(sw));
     };
 
-    DataCache::addGenericProcessor("SWITCH", new CacheProcessor(switchProc));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("SWITCH", switchProc));
 }
 
 void SwitchNode::incVarSocket()
@@ -92,13 +92,13 @@ BOOST_PYTHON_MODULE(utilities) {
         cache->pushData(new_grp);
     };
 
-    DataCache::addProcessor("GROUPDATA",
-                            "ADDPROPERTIES",
-                            new CacheProcessor(addPropertiesProc));
+    DataCache::addProcessor(new CacheProcessor("GROUPDATA",
+                                               "ADDPROPERTIES",
+                                               addPropertiesProc));
 
-    DataCache::addProcessor("PROPERTYMAP",
-                            "SETPROPERTYMAP",
-                            new CacheProcessor(setPropertyMap));
+    DataCache::addProcessor(new CacheProcessor("PROPERTYMAP",
+                                               "SETPROPERTYMAP",
+                                               setPropertyMap));
 
     regSwitchNode();
 }

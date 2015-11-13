@@ -21,19 +21,19 @@
 #include "data/nodes/data_node.h"
 #include "pycache_main.h"
 
-MindTree::PyCacheProcessor::PyCacheProcessor(BPy::object obj)
-    : processor(obj)
-{
-}
-
-MindTree::PyCacheProcessor::~PyCacheProcessor()
-{
-}
-
-void MindTree::PyCacheProcessor::operator()(MindTree::DataCache* cache)
-{
-    processor(BPy::ptr(cache));
-}
+//MindTree::PyCacheProcessor::PyCacheProcessor(BPy::object obj)
+//    : processor(obj)
+//{
+//}
+//
+//MindTree::PyCacheProcessor::~PyCacheProcessor()
+//{
+//}
+//
+//void MindTree::PyCacheProcessor::operator()(MindTree::DataCache* cache)
+//{
+//    processor(BPy::ptr(cache));
+//}
 
 MindTree::DNodePyWrapper* MindTree::wrap_DataCache_getNode(MindTree::DataCache *cache)
 {
