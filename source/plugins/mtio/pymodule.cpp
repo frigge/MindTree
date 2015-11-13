@@ -25,7 +25,7 @@ BOOST_PYTHON_MODULE(objio)
         cache->pushData(objio.getGroup());
     };
 
-    DataCache::addProcessor(SocketType("GROUPDATA"), 
-                            NodeType("OBJIMPORT"), 
-                            new CacheProcessor(proc));
+    DataCache::addProcessor(new CacheProcessor(SocketType("GROUPDATA"),
+                                               NodeType("OBJIMPORT"),
+                                               proc));
 }

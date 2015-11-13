@@ -98,7 +98,8 @@ int LoopCache::getStep()const
     return stepValue;
 }
 
-AbstractCacheProcessor::AbstractCacheProcessor()
+AbstractCacheProcessor::AbstractCacheProcessor(SocketType st, NodeType nt) :
+    m_socketType(st), m_nodeType(nt)
 {
 }
 
@@ -106,7 +107,7 @@ AbstractCacheProcessor::~AbstractCacheProcessor()
 {
 }
 
-CacheProcessor::CacheProcessor(std::function<void(DataCache*)> fn)
+CacheProcessor::CacheProcessor(SocketType st, NodeType nt, std::function<void(DataCache*)> fn)
     : processor(fn)
 {
 }
@@ -266,6 +267,10 @@ DataType DataCache::getType() const
 void DataCache::addProcessor(SocketType st, NodeType nt, AbstractCacheProcessor *proc)
 {
     processors[st][nt] = proc;
+}
+
+void DataCache::removeProcessor(AbstractCacheProcessor *proc)
+{
 }
 
 void DataCache::addGenericProcessor(NodeType nt, AbstractCacheProcessor *proc)
