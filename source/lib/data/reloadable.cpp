@@ -1,3 +1,4 @@
+#include "cache_main.h"
 #include "reloadable.h"
 
 using namespace MindTree;
@@ -42,10 +43,12 @@ void Library::unload()
 }
 
 HotProcessor::HotProcessor(std::string path) :
-    m_lib(path)
+    m_lib(path), m_proc(nullptr)
 {
     if(m_lib.load()) {
         auto loadFn = m_lib.getFunction<void(DataCache*)>("load");
+        m_proc = loadFn();
+        DataCache::addProcessor(m_proc);
     }
 }
 

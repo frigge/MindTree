@@ -42,6 +42,7 @@ public:
 
 private:
     Library m_lib;
+    CacheProcessor *m_proc;
 };
 
 }
