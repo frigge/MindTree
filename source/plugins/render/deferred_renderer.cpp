@@ -218,6 +218,9 @@ void GBufferRenderBlock::addRendererFromObject(std::shared_ptr<GeoObject> obj)
             _geometryPass.lock()->addGeometryRenderer(new EdgeRenderer(obj));
             _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
             break;
+        case ObjectData::POINTCLOUD:
+            _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
+            break;
     }
 }
 

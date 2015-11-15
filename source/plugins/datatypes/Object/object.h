@@ -143,7 +143,8 @@ class ObjectData : public MindTree::Object, public MindTree::PyExposable
 {
 public:
     enum eDataType {
-        MESH
+        MESH,
+        POINTCLOUD
     };
 
     ObjectData(eDataType t);
@@ -173,6 +174,11 @@ private:
     std::string name;
 };
 typedef std::shared_ptr<MeshData> MeshDataPtr;
+
+class PointCloud : public ObjectData
+{
+    PointCloud() : ObjectData(POINTCLOUD) {}
+};
 
 class GeoObject;
 typedef std::shared_ptr<GeoObject> GeoObjectPtr;
