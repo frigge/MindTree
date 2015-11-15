@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <cstdint>
 #include <unordered_map>
 
 #include "cache_main.h"
@@ -24,7 +25,7 @@ public:
     bool load();
     void unload();
 
-    int age() const;
+    int64_t age() const;
 
     Library& operator=(const Library&) = delete;
     Library& operator=(Library&&);
@@ -43,7 +44,7 @@ public:
 private:
     std::string m_path;
     void *m_handle{nullptr};
-    uint m_age;
+    int64_t m_age;
 };
 
 class HotProcessor
@@ -53,7 +54,7 @@ public:
 
     ~HotProcessor();
     CacheProcessor* getProcessor();
-    int age() const;
+    int64_t age() const;
 
     std::string getLibPath() const;
 
