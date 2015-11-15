@@ -141,6 +141,7 @@ target_link_libraries(mindTree
 set(PROJECT_ROOT ${PROJECT_BINARY_DIR})
 add_subdirectory(source/intern)
 add_subdirectory(source/plugins)
+add_subdirectory(source/processors)
 
 
 message("Binary Dir:" ${PROJECT_BINARY_DIR})
