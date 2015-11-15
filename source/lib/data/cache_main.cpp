@@ -133,6 +133,7 @@ void CacheProcessor::operator()(DataCache* cache)
 
 std::unordered_map<const DNode*, std::vector<Property>> DataCache::_cachedOutputs;
 std::recursive_mutex DataCache::_cachedOutputsMutex;
+std::mutex DataCache::_processorMutex;
 DataCache::DataCache(CacheContext *context)
     : node(nullptr),
     startsocket(nullptr),
@@ -276,17 +277,21 @@ DataType DataCache::getType() const
 
 void DataCache::addProcessor(AbstractCacheProcessor *proc)
 {
-    processors[proc->getSocketType()][proc->getNodeType()] = proc;
+    auto st = proc->getSocketType();
+    auto nt = proc->getNodeType();
+    std::lock_guard<std::mutex> lock(_processorMutex);
+    processors[st][nt].reset(proc);
 }
 
 void DataCache::removeProcessor(AbstractCacheProcessor *proc)
 {
-    processors[proc->getSocketType()][proc>getNodeType()].reset(nullptr);
+    std::lock_guard<std::mutex> lock(_processorMutex);
+    processors[proc->getSocketType()][proc->getNodeType()] = std::shared_ptr<AbstractCacheProcessor>();
 }
 
 void DataCache::addGenericProcessor(GenericCacheProcessor *proc)
 {
-    _genericProcessors.add(proc->getNodeType(), proc);
+    _genericProcessors[proc->getNodeType()].reset(proc);
 }
 
 const std::vector<AbstractCacheProcessor::CacheList>& DataCache::getProcessors()
@@ -428,7 +433,7 @@ void DataCache::cacheInputs()
     unsigned long nodeTypeID = ntype.id();
     std::string nodeName = node->getNodeName();
 
-    AbstractCacheProcessor* genericProcessor = _genericProcessors[ntype];
+    auto &genericProcessor = _genericProcessors[ntype];
     if(genericProcessor) {
         (*genericProcessor)(this);
         return;
@@ -455,7 +460,7 @@ void DataCache::cacheInputs()
                  << std::endl;
         return;
     }
-    auto datacache = list[node->getType()];
+    auto &datacache = list[node->getType()];
     if(!datacache) {
         std::cout<<"Node Type ID:" << nodeTypeID << std::endl;
         std::cout<<"Socket Type ID:" << type.id() << std::endl;

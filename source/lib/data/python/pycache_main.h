@@ -59,16 +59,16 @@ public:
 
 class DinSocketPyWrapper;
 
-//class PyCacheProcessor : public AbstractCacheProcessor
-//{
-//public:
-//    PyCacheProcessor(BPy::object);
-//    virtual ~PyCacheProcessor();
-//    void operator()(DataCache* cache);
-//
-//private:
-//    BPy::object processor;
-//};
+class PyCacheProcessor : public AbstractCacheProcessor
+{
+public:
+    PyCacheProcessor(SocketType st, NodeType nt, BPy::object);
+    virtual ~PyCacheProcessor();
+    void operator()(DataCache* cache);
+
+private:
+    BPy::object processor;
+};
 
 
 } /* MindTree */

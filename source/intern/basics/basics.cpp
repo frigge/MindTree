@@ -47,8 +47,8 @@ void regContainer()
         }
     };
 
-    DataCache::addGenericProcessor(new CacheProcessor("CONTAINER", stepIn));
-    DataCache::addGenericProcessor(new CacheProcessor("INSOCKETS", stepOut));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("CONTAINER", stepIn));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("INSOCKETS", stepOut));
 }
 
 void regForLoop()
@@ -140,9 +140,9 @@ void regForLoop()
         }
     };
 
-    DataCache::addGenericProcessor(new CacheProcessor("FOR", forloopproc));
-    DataCache::addGenericProcessor(new CacheProcessor("LOOPINPUTS", loopinproc));
-    DataCache::addGenericProcessor(new CacheProcessor("LOOPINSOCKETS", loopedproc));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("FOR", forloopproc));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("LOOPINPUTS", loopinproc));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("LOOPINSOCKETS", loopedproc));
 }
 
 void regWhileLoop()
@@ -160,7 +160,7 @@ void regWhileLoop()
 
     };
 
-    DataCache::addGenericProcessor(new CacheProcessor("WHILE", whileproc));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("WHILE", whileproc));
 }
 
 void regForeachLoop()
@@ -208,7 +208,7 @@ void regForeachLoop()
         }
     };
 
-    DataCache::addGenericProcessor(new CacheProcessor("FOREACH", foreachproc));
+    DataCache::addGenericProcessor(new GenericCacheProcessor("FOREACH", foreachproc));
 }
 
 void regCreateList()
@@ -222,7 +222,7 @@ void regCreateList()
         cache->pushData(list);
     };
 
-    DataCache::addGenericProcessor(new CacheProcessor("CREATELIST",
+    DataCache::addGenericProcessor(new GenericCacheProcessor("CREATELIST",
                                                       createListProc));
 
     NodeDataBase::registerNodeType(

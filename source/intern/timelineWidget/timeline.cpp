@@ -273,9 +273,9 @@ BOOST_PYTHON_MODULE(mttimeline) {
         cache->pushData(Timeline::frame());
     };
 
-    MindTree::DataCache::addProcessor("INTEGER",
-                                      "TIMELINE",
-                                      new MindTree::CacheProcessor(frameProc));
+    MindTree::DataCache::addProcessor(new MindTree::CacheProcessor("INTEGER",
+                                                                   "TIMELINE",
+                                                                   frameProc));
 
     Timeline::init();
     Python::Timeline::registerAPI();

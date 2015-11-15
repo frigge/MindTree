@@ -152,7 +152,11 @@ template<typename T, typename Content>
 class TypeDispatcher
 {
 public:
-    void add(T type, Content c)
+    TypeDispatcher()
+    {
+    }
+
+    void add(T type, Content &&c)
     {
         int typeID = type.id();
         if(typeID >= _contentList.size()) {
@@ -178,7 +182,7 @@ public:
     Content& operator[](T type)
     {
         if (type.id() >= _contentList.size())
-            add(type, Content());
+            add(type, std::move(Content()));
 
         return _contentList[type.id()];
     }

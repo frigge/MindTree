@@ -64,7 +64,7 @@ private:
 class AbstractCacheProcessor
 {
 public:
-    typedef TypeDispatcher<NodeType, std::unique_ptr<AbstractCacheProcessor>> CacheList;
+    typedef TypeDispatcher<NodeType, std::shared_ptr<AbstractCacheProcessor>> CacheList;
 
     AbstractCacheProcessor(SocketType st, NodeType nt);
     virtual ~AbstractCacheProcessor();
@@ -153,6 +153,7 @@ private:
     const DoutSocket *startsocket;
     static std::unordered_map<const DNode*, std::vector<Property>> _cachedOutputs;
     static std::recursive_mutex _cachedOutputsMutex;
+    static std::mutex _processorMutex;
 
     CacheContext *_context;
 };

@@ -12,9 +12,9 @@ using namespace MindTree;
 PROPERTY_TYPE_INFO(TextWatcherPtr, "TEXTWATCHER");
 
 TextWatcher::TextWatcher(DinSocket *socket, std::string filename)
-    : _filename(filename), 
-    _watching(false), 
-     _socket(socket), 
+    : _filename(filename),
+    _watching(false),
+     _socket(socket),
     _mtime(-1)
 {
     QFileInfo finfo(filename.c_str());

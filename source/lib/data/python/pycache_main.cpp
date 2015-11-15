@@ -21,19 +21,19 @@
 #include "data/nodes/data_node.h"
 #include "pycache_main.h"
 
-//MindTree::PyCacheProcessor::PyCacheProcessor(BPy::object obj)
-//    : processor(obj)
-//{
-//}
-//
-//MindTree::PyCacheProcessor::~PyCacheProcessor()
-//{
-//}
-//
-//void MindTree::PyCacheProcessor::operator()(MindTree::DataCache* cache)
-//{
-//    processor(BPy::ptr(cache));
-//}
+MindTree::PyCacheProcessor::PyCacheProcessor(SocketType st, NodeType nt, BPy::object obj)
+    : AbstractCacheProcessor(st, nt), processor(obj)
+{
+}
+
+MindTree::PyCacheProcessor::~PyCacheProcessor()
+{
+}
+
+void MindTree::PyCacheProcessor::operator()(MindTree::DataCache* cache)
+{
+    processor(BPy::ptr(cache));
+}
 
 MindTree::DNodePyWrapper* MindTree::wrap_DataCache_getNode(MindTree::DataCache *cache)
 {
@@ -68,9 +68,9 @@ MindTree::DoutSocketPyWrapper* MindTree::wrap_DataCache_getStart(DataCache *cach
 
 void MindTree::wrap_DataCache_addProcessor(BPy::object fn, std::string ntype, std::string stype)
 {
-    MindTree::DataCache::addProcessor(  MindTree::SocketType(stype),
-                                        MindTree::NodeType(ntype),
-                                        new MindTree::PyCacheProcessor(fn));
+    MindTree::DataCache::addProcessor(new MindTree::PyCacheProcessor(MindTree::SocketType(stype),
+                                                                       MindTree::NodeType(ntype),
+                                                                       fn));
 }
 
 std::string MindTree::wrap_DataCache_getType(DataCache *self)
