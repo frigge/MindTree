@@ -1,9 +1,13 @@
 #ifndef MT_BASE_RELOADABLE
 #define MT_BASE_RELOADABLE
 
-#include <string>
-#include <functional>
+#include <atomic>
 #include <dlfcn.h>
+#include <functional>
+#include <memory>
+#include <string>
+#include <thread>
+#include <unordered_map>
 
 #include "cache_main.h"
 
@@ -17,8 +21,10 @@ public:
 
     ~Library();
 
-    void load();
+    bool load();
     void unload();
+
+    int age() const;
 
     Library& operator=(const Library&) = delete;
     Library& operator=(Library&&);
@@ -26,13 +32,18 @@ public:
     template<typename T>
     std::function<T> getFunction(std::string symbol)
     {
-        if(!m_handle) return;
-        return std::function<T>(dlsym(m_handle, symbol.c_str()));
+        if(!m_handle) return std::function<T>();
+        CacheProcessor* (*fn)();
+        fn = reinterpret_cast<decltype(fn)>(dlsym(m_handle, symbol.c_str()));
+        return std::function<T>(fn);
     }
+
+    std::string getPath() const;
 
 private:
     std::string m_path;
     void *m_handle{nullptr};
+    uint m_age;
 };
 
 class HotProcessor
@@ -40,9 +51,29 @@ class HotProcessor
 public:
     HotProcessor(std::string path);
 
+    ~HotProcessor();
+    CacheProcessor* getProcessor();
+    int age() const;
+
+    std::string getLibPath() const;
+
 private:
-    Library m_lib;
+    std::unique_ptr<Library> m_lib;
+    std::function<void()> m_unloadFn;
     CacheProcessor *m_proc;
+};
+
+class HotProcessorManager
+{
+public:
+    static void start();
+    static void stop();
+    static void watch();
+
+private:
+    static std::thread m_watchThread;
+    static std::unordered_map<std::string, std::unique_ptr<HotProcessor>> m_processors;
+    static std::atomic<bool> m_watching;
 };
 
 }

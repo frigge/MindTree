@@ -4,6 +4,7 @@
 #include "data/python/pyutils.h"
 #include "data/project.h"
 #include "data/properties.h"
+#include "data/reloadable.h"
 
 #include "init.h"
 
@@ -19,6 +20,7 @@ void MindTree::initApp(int argc, char *argv[])
     MindTree::Python::init(argc, argv);
     MindTree::Python::loadIntern();
     MindTree::Python::loadPlugins();
+    MindTree::HotProcessorManager::start();
 
     MindTree::parseArguments(argc, argv);
 }
@@ -31,7 +33,7 @@ void MindTree::initGui()
         Project::load(loadFile);
 }
 
-void MindTree::finalizeApp()    
+void MindTree::finalizeApp()
 {
     MindTree::Python::finalize();
 }
@@ -73,7 +75,7 @@ void MindTree::parseArguments(int argc, char* argv[])
     }
 }
 
-void MindTree::runTests(std::vector<std::string> testlist)    
+void MindTree::runTests(std::vector<std::string> testlist)
 {
     MindTree::Python::GILLocker locker;
     std::vector<std::string> failedTests;
