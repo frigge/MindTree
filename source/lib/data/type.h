@@ -156,7 +156,7 @@ public:
     {
     }
 
-    void add(T type, Content &&c)
+    void add(T type, Content c)
     {
         int typeID = type.id();
         if(typeID >= _contentList.size()) {
@@ -182,7 +182,7 @@ public:
     Content& operator[](T type)
     {
         if (type.id() >= _contentList.size())
-            add(type, std::move(Content()));
+            add(type, Content());
 
         return _contentList[type.id()];
     }

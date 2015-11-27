@@ -146,7 +146,7 @@ QString MindTree::ViewerList::showViewer(DoutSocket *socket, unsigned int index)
         openViewers.insert({typestr + std::to_string(index), dock});
         showDock(dock);
     } else {
-        dock = openViewers[idstr];  
+        dock = openViewers[idstr];
         dock->setStart(socket);
     }
 
