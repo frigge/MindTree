@@ -16,7 +16,11 @@ CompositorPlane::CompositorPlane()
 
 CompositorPlane::CompositInfo& CompositorPlane::addLayer(std::weak_ptr<Texture2D> tx, float mix, CompositType type)
 {
-    _layers.push_back({type, mix, tx});
+    CompositInfo info;
+    info.type = type;
+    info.texture = tx;
+    info.mixValue = mix;
+    _layers.push_back(info);
     return _layers[_layers.size() - 1];
 }
 

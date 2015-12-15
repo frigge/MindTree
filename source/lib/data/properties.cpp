@@ -237,23 +237,31 @@ const Property& PropertyMap::at(const std::string &name) const
 
 Property& PropertyMap::operator[](const std::string &name)
 {
-    size_t pos = std::distance(_properties.begin(),
-                               std::find_if(_properties.begin(),
-                                            _properties.end(),
-                                            [&name](const Info& info) {
-                                                return info.first == name;
-                                            }));
+    auto it = std::find_if(_properties.begin(),
+                           _properties.end(),
+                           [&name](const Info& info) {
+                               return info.first == name;
+                           });
+    if (it == _properties.end()) {
+        _properties.push_back(std::make_pair(name, Property()));
+        return _properties.back().second;
+    }
+    size_t pos = std::distance(_properties.begin(), it);
     return _properties.at(pos).second;
 }
 
 Property& PropertyMap::operator[](std::string &&name)
 {
-    size_t pos = std::distance(_properties.begin(),
-                               std::find_if(_properties.begin(),
-                                            _properties.end(),
-                                            [&name](const Info& info) {
-                                                return info.first == name;
-                                            }));
+    auto it = std::find_if(_properties.begin(),
+                           _properties.end(),
+                           [&name](const Info& info) {
+                               return info.first == name;
+                           });
+    if (it == _properties.end()) {
+        _properties.emplace_back(std::make_pair(name, Property()));
+        return _properties.back().second;
+    }
+    size_t pos = std::distance(_properties.begin(), it);
     return _properties.at(pos).second;
 }
 

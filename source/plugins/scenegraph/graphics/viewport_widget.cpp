@@ -95,12 +95,12 @@ void ViewportViewer::createSettingsFromMap(DNode *node, PropertyMap props)
         if(prop.second.getType() == "PROPERTYMAP") {
             auto n = std::make_shared<DNode>();
             auto *out = new DoutSocket("Properties", "PROPERTYMAP", n.get());
-            socket->setCntdSocket(out);
 
             n->setName(prop.first);
             n->setType("SETPROPERTYMAP");
             socket->addChildNode(n);
             createSettingsFromMap(n.get(), prop.second.getData<PropertyMap>());
+            socket->setCntdSocket(out);
         }
         else {
             socket->setProperty(prop.second);

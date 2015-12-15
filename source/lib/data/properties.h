@@ -20,6 +20,7 @@
 
 #define PROPERTIES_K7LMQN2D
 
+#include <string>
 #include "type_traits"
 #include "data/python/wrapper.h"
 #include "unordered_map"
@@ -186,8 +187,36 @@ private:
         Property createList(int cnt, Property def) override { return Property(); }
     };
 
+    template<typename T>
+    struct ListTools<std::shared_ptr<std::vector<T>>> : public ListToolsBase {
+        Property getItem(const Property &list, int index) const override
+        {
+            const auto &vec = list.getDataRef<std::shared_ptr<std::vector<T>>>();
+            if(index >= vec->size())
+                return Property();
+
+            return vec->at(index);
+        }
+
+        void setItem(Property *list, int index, Property value) override
+        {
+            auto &vec = list->getDataRef<std::shared_ptr<std::vector<T>>>();
+            if(vec->size() <= index)
+                vec->resize(index + 1);
+
+            (*vec)[index] = value.getData<T>();
+        }
+
+        size_t getSize(const Property *list) const override
+        {
+            return list->getData<std::shared_ptr<std::vector<T>>>()->size();
+        }
+
+        Property createList(int cnt, Property def) override { return Property(); }
+    };
+
     struct Meta {
-        Meta() 
+        Meta()
             : cloneData([](Property &prop){prop._meta.deleteFunc();}),
              moveData([](Property &prop){prop._meta.deleteFunc();}),
              writeData([](IO::OutStream& stream, const Property &) { }),

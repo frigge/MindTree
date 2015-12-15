@@ -182,7 +182,7 @@ public:
     Content& operator[](T type)
     {
         if (type.id() >= _contentList.size())
-            add(type, Content());
+            _contentList.resize(type.id() + 1);
 
         return _contentList[type.id()];
     }

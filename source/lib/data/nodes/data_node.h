@@ -19,7 +19,6 @@
 #ifndef DATA_NODE_H
 #define DATA_NODE_H
 
-#include "data/datatypes.h"
 #include "data/nodes/data_node_socket.h"
 #include "data/python/pyexposable.h"
 #include "data/nodes/nodetype.h"

@@ -151,7 +151,7 @@ void RSMEvaluationBlock::init()
         { "RSM:lowresdistance", 0.1 },
         { "RSM:lowresangle", 0.5 },
     };
-    _config->addSettings("RSM Evaluation", settings);
+    //_config->addSettings("RSM Evaluation", settings);
 
     auto rsmIndirectLowResPass = addPass();
     _rsmIndirectLowResPass = rsmIndirectLowResPass;

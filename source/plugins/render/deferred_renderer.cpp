@@ -214,8 +214,10 @@ void GBufferRenderBlock::addRendererFromObject(std::shared_ptr<GeoObject> obj)
     auto data = obj->getData();
     switch(data->getType()){
         case ObjectData::MESH:
-            _gbufferNode->addRenderer(new PolygonRenderer(obj));
-            _geometryPass.lock()->addGeometryRenderer(new EdgeRenderer(obj));
+            if(obj->getData()->hasProperty("polygon")) {
+                _gbufferNode->addRenderer(new PolygonRenderer(obj));
+                _geometryPass.lock()->addGeometryRenderer(new EdgeRenderer(obj));
+            }
             _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
             break;
         case ObjectData::POINTCLOUD:
