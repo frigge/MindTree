@@ -587,7 +587,7 @@ void Camera::setFar(double far)
 
 glm::mat4 Camera::getProjection()
 {
-    return glm::perspective(_fov.load(), _aspect.load(), _near.load(), _far.load()); 
+    return glm::perspective(_fov.load(), _aspect.load(), _near.load(), _far.load());
 }
 
 glm::mat4 Camera::getViewMatrix()    

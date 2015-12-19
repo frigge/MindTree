@@ -240,7 +240,7 @@ HalfEdge* HalfEdgeAdapter::insertEdge(HalfEdge *edge)
     newNext->setNext(edge->next());
 
     newNext->setIncidentFace(edge->incidentFace());
-    newTwin->setIncidentFace(edge->twin()->incidentFace());
+    newNext->twin()->setIncidentFace(edge->twin()->incidentFace());
 
     return newNext;
 }
