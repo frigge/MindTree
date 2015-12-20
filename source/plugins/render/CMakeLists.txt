@@ -4,10 +4,12 @@ set(RENDER_SRC
     camera_renderer.cpp
     compositor_plane.cpp
     deferred_renderer.cpp
+    deferred_light_block.cpp
     empty_renderer.cpp
     forward_renderer.cpp
     geoobject_renderer.cpp
     glwrapper.cpp
+    gbuffer_block.cpp
     light_accumulation_plane.cpp
     light_renderer.cpp
     pixel_plane.cpp
@@ -42,7 +44,7 @@ link_directories(
 
 add_library(render SHARED ${RENDER_SRC})
 
-target_link_libraries(render 
+target_link_libraries(render
             objectlib
             mindtree_core
             ${OPENGL_LIBRARIES}
