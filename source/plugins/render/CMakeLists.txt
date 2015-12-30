@@ -5,6 +5,7 @@ set(RENDER_SRC
     compositor_plane.cpp
     deferred_renderer.cpp
     deferred_light_block.cpp
+    screenspace_reflection.cpp
     empty_renderer.cpp
     forward_renderer.cpp
     geoobject_renderer.cpp
