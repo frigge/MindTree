@@ -5,7 +5,7 @@ in vec3 sn;
 vec3 eye;
 
 uniform mat4 modelView;
-uniform bool defaultLighting = true;
+uniform bool GL_defaultLighting = true;
 
 vec3 Nn;
 uniform vec4 polygoncolor = vec4(1);
@@ -103,7 +103,7 @@ float value(vec3 col) {
 }
 
 void main(){
-    if (defaultLighting)
+    if (GL_defaultLighting)
         eye = vec3(0);
     else
         eye = (modelView * vec4(0, 0, 0, 1)).xyz;
@@ -115,11 +115,11 @@ void main(){
 
     //vec3 spectotal = mix(spec1, spec2, 0.5);
     //vec3 spectotal = vec3(value(spec1));
-    float specratio = 0.5 * value(spec1) / clamp(0.0001, 1., value(spec2));
+    float specratio = 0.5 * value(spec1) / clamp(value(spec2), 0.0001, 1.);
     vec3 spectotal = mix(spec1, spec2, specratio);
 
     vec3 diff = gamma(polygoncolor.rgb, GAMMA) * lambert()*diffint;
-    float diffspecratio = 0.5 * value(diff) / clamp(0.0001, 1., value(spectotal));
+    float diffspecratio = 0.5 * value(diff) / clamp(value(spectotal), 0.0001, 1.);
     vec3 diffspec = mix(diff, spectotal, diffspecratio);
     outcolor = vec4(gamma(
                     diffspec + 

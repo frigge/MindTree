@@ -15,6 +15,7 @@
 #include "../datatypes/Object/lights.h"
 #include "compositor_plane.h"
 #include "shader_render_node.h"
+#include "screenspace_reflection.h"
 #include "rsm_computation_plane.h"
 #include "deferred_light_block.h"
 #include "gbuffer_block.h"
@@ -59,6 +60,9 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     auto rsm = std::make_shared<RSMEvaluationBlock>(rsmGenerationBlock.get());
     addRenderBlock(rsm);
 
+    auto ssreflection = std::make_shared<ScreenSpaceReflectionBlock>();
+    addRenderBlock(ssreflection);
+
     auto overlayPass = std::make_shared<RenderPass>();
     _overlayPass = overlayPass;
     manager->addPass(overlayPass);
@@ -77,7 +81,8 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 
     auto compositor = std::make_shared<Compositor>();
     compositor->addLayer(deferred->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
-    compositor->addLayer(rsm->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
+    compositor->addLayer(ssreflection->getOutputs()[0], 1.0, CompositorPlane::CompositType::ADD);
+    compositor->addLayer(rsm->getOutputs()[0], 1.0, CompositorPlane::CompositType::ADD);
     compositor->addLayer(gbuffer->getOutputs()[1], 1.0, CompositorPlane::CompositType::ALPHAOVER);
     compositor->addLayer(overtx, 1.0, CompositorPlane::CompositType::ALPHAOVER);
     addRenderBlock(compositor);
@@ -111,7 +116,6 @@ void DeferredRenderer::setProperty(std::string name, Property prop)
 {
     RenderConfigurator::setProperty(name, prop);
 
-    dbout(name);
     if (name == "GL:showgrid") {
         auto value = prop.getData<bool>();
         _grid->setVisible(value);

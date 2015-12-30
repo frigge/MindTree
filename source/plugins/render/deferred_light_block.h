@@ -3,7 +3,9 @@
 
 #include "render_block.h"
 
-namespace MindTree::GL
+namespace MindTree
+{
+namespace GL
 {
 class LightAccumulationPlane;
 
@@ -27,5 +29,6 @@ private:
     std::vector<std::shared_ptr<Light>> _sceneLights;
 };
 
+}
 }
 #endif

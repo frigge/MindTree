@@ -3,7 +3,7 @@ uniform mat4 modelView;
 uniform mat4 model;
 uniform mat4 projection;
 
-uniform bool defaultLighting = false;
+uniform bool GL_defaultLighting = true;
 
 in vec3 P;
 in vec3 N;
@@ -23,7 +23,7 @@ void main(){
    cameraPos = (modelView * vec4(P, 1)).xyz;
    cameraNormal = (modelView * vec4(N, 0)).xyz;
 
-   if(defaultLighting) {
+   if(GL_defaultLighting) {
        pos = cameraPos;
        sn = cameraNormal;
    }

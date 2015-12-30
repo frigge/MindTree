@@ -73,7 +73,6 @@ std::weak_ptr<RenderPass> ShadowMappingRenderBlock::createShadowPass(SpotLightPt
     if(!info._enabled) return std::weak_ptr<RenderPass>();
 
     auto shadowPass = std::make_shared<RenderPass>();
-    size_t shadowCount = _shadowPasses.size();
 
     _shadowPasses[spot] = shadowPass;
 

@@ -4,7 +4,7 @@ vec3 Nn;
 
 vec3 eye;
 uniform mat4 view;
-uniform bool defaultLighting = true;
+uniform bool GL_defaultLighting = true;
 
 in vec2 st;
 uniform ivec2 resolution;
@@ -53,34 +53,34 @@ vec3 gamma(vec3 col, float g) {
 }
 
 vec4 gamma(vec4 col, float g) {
-    vec4 outcol;
+    vec4 outcol = vec4(1);
     outcol.r = _gamma(col.r, g);
     outcol.g = _gamma(col.g, g);
     outcol.b = _gamma(col.b, g);
     return outcol;
 }
 
-vec4 lambert() {
+vec3 lambert() {
     float cosine = dot(Nn, lvec);
     cosine = clamp(cosine, 0.0, 1.0);
-    vec4 col = vec4(gamma(light.color.rgb, GAMMA) * cosine * light.intensity * atten, 1);
+    vec3 col = gamma(light.color.rgb, GAMMA) * cosine * light.intensity * atten;
     return col;
 }
 
-vec4 phong(float rough) {
+vec3 phong(float rough) {
     vec3 Half = normalize(eye + lvec);
     float cosine = clamp(dot(Nn, Half), 0., 1.);
     cosine = pow(cosine, 1./rough);
-    vec4 col = vec4(gamma(light.color.rgb, GAMMA) * light.intensity * cosine * atten, 1);
+    vec3 col = gamma(light.color.rgb, GAMMA) * light.intensity * cosine * atten;
     return col;
 }
 
-float value(vec4 col) {
+float value(vec3 col) {
     return (col.r + col.g + col.b) / 3;
 }
 
 void main(){
-    if (defaultLighting)
+    if (GL_defaultLighting)
         eye = vec3(0, 0, 1);
     else
         eye = normalize((view * vec4(0, 0, 1, 0)).xyz);
@@ -127,11 +127,13 @@ void main(){
     }
 
     float specrough = .3;
-    vec4 spec = clamp(phong(specrough) * specint, vec4(0), vec4(1));
+    //vec3 spec = clamp(phong(specrough) * specint, vec3(0), vec3(1));
+    vec3 spec = phong(specrough) * specint;
 
-    vec4 diff = clamp(lambert()*diffint * diffuse_color, vec4(0), vec4(1));
-    float diffspecratio = 0.5 * value(diff) / clamp(0.0001, 1., value(spec));
-    vec4 diffspec = mix(diff, spec, diffspecratio);
+    vec3 diff = lambert()*diffint * diffuse_color.rgb;
+    //float diffspecratio = 0.5 * value(diff) / clamp(value(spec), 0.0001, 1.);
+    //vec3 diffspec = mix(diff, spec, diffspecratio);
+    vec3 diffspec = diff + spec;
     shading_out = vec4(diffspec.rgb, 1);
     shading_out *= angleMask;
     shading_out *= inLight;

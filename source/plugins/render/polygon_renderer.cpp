@@ -26,10 +26,10 @@ std::shared_ptr<ShaderProgram> PolygonRenderer::getProgram()
     if(_defaultProgram.expired()) {
         prog = std::make_shared<ShaderProgram>();
         prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert", 
+            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert",
                                 ShaderProgram::VERTEX);
         prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.frag", 
+            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.frag",
                                 ShaderProgram::FRAGMENT);
         _defaultProgram = prog;
     }

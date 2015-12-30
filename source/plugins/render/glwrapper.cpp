@@ -6,13 +6,14 @@
 #include "fstream"
 #include "rendertree.h"
 #include "data/debuglog.h"
+#include <regex>
 
 #include "glwrapper.h"
 
 using namespace MindTree::GL;
 
 //#define DEBUG_GL_WRAPPER
-#define DEBUG_GL_WRAPPER_SHADER
+//#define DEBUG_GL_WRAPPER_SHADER
 //#define DEBUG_GL_WRAPPER1
 
 bool MindTree::GL::getGLFramebufferError(std::string location)
@@ -636,7 +637,7 @@ int ShaderProgram::getUniformLocation(std::string name) const
     return loc;
 }
 
-void ShaderProgram::setUniform(std::string name, const glm::ivec2 &value)    
+void ShaderProgram::setUniform(std::string name, const glm::ivec2 &value)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -696,8 +697,11 @@ void ShaderProgram::setUniform(std::string name, float value)
     if(MTGLERROR) dbout(name);
 }
 
-void ShaderProgram::setUniform(std::string name, int value)    
+void ShaderProgram::setUniform(std::string name, int value)
 {
+#ifdef DEBUG_GL_WRAPPER_SHADER
+    dbout("setting uniform of type int named " << name);
+#endif
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
 
@@ -708,7 +712,7 @@ void ShaderProgram::setUniform(std::string name, int value)
     if(MTGLERROR) dbout(name);
 }
 
-void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)    
+void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -793,6 +797,11 @@ glm::mat4 ShaderProgram::getUniformf4x4(std::string name) const
 
 void ShaderProgram::setUniformFromProperty(std::string name, Property prop)
 {
+    name = std::regex_replace(name, std::regex(":"), "_");
+
+#ifdef DEBUG_GL_WRAPPER_SHADER
+    dbout("setting uniform from property of type " << prop.getType().toStr() << " named " << name);
+#endif
     if(prop.getType() == "FLOAT")
     {
         setUniform(name, static_cast<float>(prop.getData<double>()));
@@ -1018,18 +1027,19 @@ std::string ShaderProgram::getFileName(int shaderType)
 
     return _fileNameMap[shaderType];
 }
-UniformState::UniformState(std::weak_ptr<ShaderProgram> prog, std::string name, Property value) : 
-    _name(name), 
-    _program(prog)
+UniformState::UniformState(std::weak_ptr<ShaderProgram> prog, std::string name, Property value) :
+    _program(prog),
+    _name(name)
 {
     if(prog.expired())
         return;
 
-    _valid = prog.lock()->getUniformLocation(name) > -1;
+    _valid = prog.lock()->getUniformLocation(_name) > -1;
 
     if(_valid) {
-        _oldValue = prog.lock()->getUniformAsProperty(name, value.getType());
-        prog.lock()->setUniformFromProperty(name, value);
+        std::string n = std::regex_replace(name, std::regex(":"), "_");
+        _oldValue = prog.lock()->getUniformAsProperty(n, value.getType());
+        prog.lock()->setUniformFromProperty(n, value);
     }
 }
 

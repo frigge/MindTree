@@ -19,6 +19,7 @@ void main(){
     vec4 checker = mix(col1, col2, pattern);
 
     vec4 col = texture(output, st);
+    col.a = clamp(col.a, 0, 1);
     color = col;
-    //    color = mix(checker, col, col.a);
+    //color = mix(checker, col, col.a);
 };

@@ -39,6 +39,7 @@ PROPERTY_TYPE_INFO(CameraPtr, "TRANSFORMABLE");
 
 PROPERTY_TYPE_INFO(VertexListPtr, "VERTEXLIST");
 PROPERTY_TYPE_INFO(PolygonListPtr, "POLYGONLIST");
+PROPERTY_TYPE_INFO(Polygon, "POLYGON");
 
 AbstractTransformable::AbstractTransformable(eObjType t)
     : center(0, 0, 0), type(t), _parent(nullptr)

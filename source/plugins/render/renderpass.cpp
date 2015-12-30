@@ -15,11 +15,11 @@ RenderPass::RenderPass() :
     _initialized(false),
     _enabled(true),
     _blendColorSource(GL_SRC_ALPHA),
-    _blendAlphaSource(GL_SRC_ALPHA),
+    _blendAlphaSource(GL_ONE),
     _blendColorDest(GL_ONE_MINUS_SRC_ALPHA),
-    _blendAlphaDest(GL_ONE_MINUS_SRC_ALPHA),
-    _depthOutput(NONE),
+    _blendAlphaDest(GL_ZERO),
     _blending(true),
+    _depthOutput(NONE),
     _bgColor(0),
     _depth(1),
     _tree(nullptr)
@@ -605,7 +605,8 @@ void RenderPass::render(const RenderConfig &config)
         MTGLERROR;
 
         {
-            glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
             std::lock_guard<std::mutex> lock(_blendLock);
             if(_blendColorSource == _blendAlphaSource
                && _blendColorDest == _blendAlphaDest) {
@@ -613,7 +614,7 @@ void RenderPass::render(const RenderConfig &config)
                 glBlendFunc(_blendColorSource, _blendColorDest);
             } else {
                 glBlendFunc(GL_ONE, GL_ZERO);
-                glBlendFuncSeparate(_blendColorSource, _blendAlphaSource,  _blendColorDest, _blendAlphaDest);
+                glBlendFuncSeparate(_blendColorSource, _blendColorDest,  _blendAlphaSource, _blendAlphaDest);
             }
             MTGLERROR;
 

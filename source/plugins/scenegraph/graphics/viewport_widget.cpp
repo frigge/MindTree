@@ -81,8 +81,10 @@ void ViewportViewer::setupSettingsNode()
 
 void ViewportViewer::createSettingsFromMap(DNode *node, PropertyMap props)
 {
-    std::string first_prop = begin(props)->first;
-    dbout(first_prop);
+    if (!node) return;
+
+    auto b = begin(props);
+    std::string first_prop = b != end(props) ? b->first : "";
     auto prop_start = first_prop.find_first_of(":");
     if(prop_start != std::string::npos) {
         std::string category_name = first_prop.substr(0, prop_start);

@@ -95,8 +95,6 @@ void GBufferRenderBlock::addRendererFromObject(std::shared_ptr<GeoObject> obj)
 
 void GBufferRenderBlock::setProperty(std::string name, Property prop)
 {
-    if(name == "defaultLighting") {
-        _geometryPass.lock()->setProperty(name, prop);
-    }
+    _geometryPass.lock()->setProperty(name, prop);
 }
 

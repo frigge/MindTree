@@ -4,7 +4,9 @@
 #include "render_setup.h"
 #include "render_block.h"
 
-namespace MindTree::GL
+namespace MindTree
+{
+namespace GL
 {
 class GBufferRenderBlock : public GeometryRenderBlock
 {
@@ -23,5 +25,6 @@ private:
 
     std::shared_ptr<ShaderRenderNode> _gbufferNode;
 };
+}
 }
 #endif

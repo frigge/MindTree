@@ -87,6 +87,7 @@ void LightAccumulationPlane::draw(const CameraPtr /* camera */,
                                   std::shared_ptr<ShaderProgram> program)
 {
     glBlendEquation(GL_FUNC_ADD);
+    glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
     std::lock_guard<std::mutex> lock(_lightsLock);
     for (const LightPtr light : _lights) {
         drawLight(light, program);

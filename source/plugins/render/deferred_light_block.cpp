@@ -14,7 +14,7 @@ DeferredLightingRenderBlock::DeferredLightingRenderBlock(ShadowMappingRenderBloc
 void DeferredLightingRenderBlock::setProperty(std::string name, Property prop)
 {
     RenderBlock::setProperty(name, prop);
-    if(name == "defaultLighting") {
+    if(name == "GL:defaultLighting") {
         if(prop.getData<bool>()) {
             _deferredRenderer->setLights(_defaultLights);
         }
@@ -28,7 +28,7 @@ void DeferredLightingRenderBlock::setGeometry(std::shared_ptr<Group> grp)
 {
     _sceneLights = grp->getLights();
 
-    if(hasProperty("defaultLighting") && !getProperty("defaultLighting").getData<bool>())
+    if(hasProperty("GL:defaultLighting") && !getProperty("GL:defaultLighting").getData<bool>())
         _deferredRenderer->setLights(_sceneLights);
     else
         _deferredRenderer->setLights(_defaultLights);
@@ -61,7 +61,7 @@ void DeferredLightingRenderBlock::init()
                                                 Texture::RGBA16F));
     _deferredRenderer = new LightAccumulationPlane();
     deferredPass->addRenderer(_deferredRenderer);
-    deferredPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+    deferredPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 
     setupDefaultLights();
 

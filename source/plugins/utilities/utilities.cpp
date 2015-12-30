@@ -58,7 +58,8 @@ void setPropertyMap(DataCache *cache) {
 
     auto node_name = cache->getNode()->getNodeName();
     for(int i = 0; i < prop_cnt; ++i) {
-        auto prop_name = node_name + ":" + sockets[i]->getName();
+        std::string prefix{node_name.empty() ? "" : node_name + ":"};
+        auto prop_name = prefix + sockets[i]->getName();
         auto prop_value = cache->getData(i);
         auto type = prop_value.getType();
 

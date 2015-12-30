@@ -36,25 +36,31 @@ void CompositorPlane::draw(const CameraPtr camera, const RenderConfig &config, s
         else program->setUniform("last_type", -1);
         switch(layer.type) {
         case CompositType::ADD:
-            glBlendFunc(GL_ONE, GL_ZERO);
-            glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
+            glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+            glBlendFunc(GL_ONE, GL_ONE);
             glBlendEquation(GL_FUNC_ADD);
-            glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+            glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
             break;
         case CompositType::MULTIPLY:
             glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
             glBlendFunc(GL_DST_COLOR, GL_ZERO);
+            //glBlendFuncSeparate(GL_DST_COLOR, GL_ZERO, GL_DST_ALPHA, GL_ZERO);
             glBlendEquation(GL_FUNC_ADD);
+            glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
             break;
         case CompositType::MIX:
             glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
             glBlendFunc(GL_ONE, GL_ONE);
+            //glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
             glBlendEquation(GL_FUNC_ADD);
+            glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
             break;
         case CompositType::ALPHAOVER:
             glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
             glBlendEquation(GL_FUNC_ADD);
+            glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
             break;
         }
         PixelPlane::draw(camera, config, program);
