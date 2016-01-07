@@ -128,13 +128,13 @@ void main(){
 
     float specrough = .3;
     //vec3 spec = clamp(phong(specrough) * specint, vec3(0), vec3(1));
-    vec3 spec = phong(specrough) * specint;
+    vec3 spec = phong(specrough);
 
-    vec3 diff = lambert()*diffint * diffuse_color.rgb;
+    vec3 diff = lambert() * diffuse_color.rgb;
     //float diffspecratio = 0.5 * value(diff) / clamp(value(spec), 0.0001, 1.);
     //vec3 diffspec = mix(diff, spec, diffspecratio);
     vec3 diffspec = diff + spec;
     shading_out = vec4(diffspec.rgb, 1);
-    shading_out *= angleMask;
-    shading_out *= inLight;
+    shading_out.rgb *= angleMask;
+    shading_out.rgb *= inLight;
 }
