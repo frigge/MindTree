@@ -181,6 +181,9 @@ std::vector<std::string> RenderTree::getAllOutputs() const
         for(const auto &tex : textures) {
             outputs.push_back(tex->getName());
         }
+        auto depth = pass->getOutDepthTexture();
+        if(depth)
+            outputs.push_back(depth->getName());
     }
     return outputs;
 }
