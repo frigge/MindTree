@@ -80,6 +80,11 @@ const std::vector<CompositorPlane::CompositInfo>& CompositorPlane::getLayers() c
     return _layers;
 }
 
+std::vector<CompositorPlane::CompositInfo>& CompositorPlane::getLayers()
+{
+    return _layers;
+}
+
 Compositor::Compositor() :
     _plane{new CompositorPlane()}
 {
@@ -108,9 +113,32 @@ void Compositor::init()
 
 void Compositor::setProperty(std::string name, Property prop)
 {
+    std::string layername;
+    std::string setting;
+    auto pos = name.find(":");
+
+    if (pos != std::string::npos) {
+        layername = name.substr(0, pos);
+        setting = name.substr(pos + 1, std::string::npos);
+    }
+
+    auto &layers = _plane->getLayers();
+    auto it = std::find_if(begin(layers),
+                           end(layers),
+                           [&name=layername] (const CompositorPlane::CompositInfo &info) {
+                               return info.texture.lock()->getName() == name;
+                           });
+    if (it == end(layers)) return;
+
+    if(setting == "enabled")
+        it->enabled = prop.getData<bool>();
+    else if(setting == "mixValue")
+        it->mixValue = prop.getData<double>();
 }
 
-void Compositor::addLayer(std::weak_ptr<Texture2D> tx, float mix, CompositorPlane::CompositType type)
+void Compositor::addLayer(std::weak_ptr<Texture2D> tx,
+                          float mix,
+                          CompositorPlane::CompositType type)
 {
     _plane->addLayer(tx, mix, type);
 }

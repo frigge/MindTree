@@ -30,6 +30,7 @@ public:
     CompositInfo& getInfo(std::string txName);
 
     const std::vector<CompositorPlane::CompositInfo>& getLayers() const;
+    std::vector<CompositorPlane::CompositInfo>& getLayers();
 
 protected:
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
