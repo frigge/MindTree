@@ -37,6 +37,7 @@ public:
     std::shared_ptr<RenderPass> addPass();
     void setEnabled(bool enable);
     std::vector<std::weak_ptr<Texture2D>> getOutputs() const;
+    void setProperty(std::string name, Property prop);
 
 protected:
     virtual void setRenderersFromGroup(std::shared_ptr<Group> group);

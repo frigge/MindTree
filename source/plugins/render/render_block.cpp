@@ -74,6 +74,12 @@ void RenderBlock::setCamera(std::shared_ptr<Camera> camera)
         pass.lock()->setCamera(camera);
 }
 
+void RenderBlock::setProperty(std::string name, Property prop)
+{
+    for(auto p : _passes)
+        p.lock()->setProperty(name, prop);
+}
+
 void RenderBlock::setGeometry(std::shared_ptr<Group> grp)
 {
     setRenderersFromGroup(grp);
