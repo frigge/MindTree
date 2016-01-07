@@ -1028,18 +1028,17 @@ std::string ShaderProgram::getFileName(int shaderType)
     return _fileNameMap[shaderType];
 }
 UniformState::UniformState(std::weak_ptr<ShaderProgram> prog, std::string name, Property value) :
-    _program(prog),
-    _name(name)
+    _program(prog)
 {
     if(prog.expired())
         return;
 
+    _name = std::regex_replace(name, std::regex(":"), "_");
     _valid = prog.lock()->getUniformLocation(_name) > -1;
 
     if(_valid) {
-        std::string n = std::regex_replace(name, std::regex(":"), "_");
-        _oldValue = prog.lock()->getUniformAsProperty(n, value.getType());
-        prog.lock()->setUniformFromProperty(n, value);
+        _oldValue = prog.lock()->getUniformAsProperty(_name, value.getType());
+        prog.lock()->setUniformFromProperty(_name, value);
     }
 }
 
