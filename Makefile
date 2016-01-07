@@ -30,7 +30,7 @@ create_clang_release_project:
 debug_address_sanitizer: create_cmake_address_sanitizer_project
 	cmake --build build/debug_address_sanitizer --target install -- -j4
 
-debug_thread_sanitizer: create_cmake_address_sanitizer_project
+debug_thread_sanitizer: create_cmake_thread_sanitizer_project
 	cmake --build build/debug_thread_sanitizer --target install -- -j4
 
 create_clang_debug_project:
