@@ -88,7 +88,10 @@ public:
             std::cout<<"Type not registered: "<<id<<std::endl;
             return Type();
         }
-        return Type(id_map[id]);
+        {
+            std::lock_guard<std::mutex> lock(_id_map_mutex);
+            return Type(id_map[id]);
+        }
     }
 
     static std::vector<std::string> getTypes()
