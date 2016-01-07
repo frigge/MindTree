@@ -305,6 +305,8 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
     pos.x = event->pos().x();
     pos.y = height() - event->pos().y();
 
+    _renderConfigurator->setProperty("mousePos", pos);
+
     auto viewportSize = glm::ivec2(width(), height());
 
     float xdist = lastpos.x()  - event->posF().x();
