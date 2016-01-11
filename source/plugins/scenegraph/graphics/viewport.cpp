@@ -84,6 +84,7 @@ void Viewport::exitFullscreen()
     dbout("exit");
     setWindowState(windowState() & ~Qt::WindowFullScreen);
     _viewportWidget->resetViewport();
+    MindTree::GL::RenderThread::update();
 }
 
 void Viewport::setOverride(std::string name)
@@ -138,6 +139,8 @@ void Viewport::setData(std::shared_ptr<Group> value)
 
         _lights[name] = light;
     }
+
+    MindTree::GL::RenderThread::updateOnce();
 }
 
 std::vector<std::string> Viewport::getCameras() const
@@ -177,6 +180,7 @@ void Viewport::resizeEvent(QResizeEvent *)
     activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
     activeCamera->setResolution(width(), height());
     _renderConfigurator->setCamera(activeCamera);
+    MindTree::GL::RenderThread::updateOnce();
 }
 
 void Viewport::paintEvent(QPaintEvent *)
@@ -251,6 +255,7 @@ void Viewport::paintGL()
 
 void Viewport::mousePressEvent(QMouseEvent *event)
 {
+    MindTree::GL::RenderThread::update();
     glm::ivec2 pos;
     pos.x = event->pos().x();
     pos.y = height() - event->pos().y();
@@ -287,6 +292,7 @@ void Viewport::mouseReleaseEvent(QMouseEvent *event)
 
     _widgetManager->mouseReleaseEvent();
     _renderConfigurator->setProperty("GL:camera:showcenter", false);
+    MindTree::GL::RenderThread::pause();
 }
 
 PropertyMap Viewport::getSettings() const
@@ -328,6 +334,7 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 void Viewport::wheelEvent(QWheelEvent *event)
 {
     zoomView(0, event->delta());
+    MindTree::GL::RenderThread::updateOnce();
 }
 
 void Viewport::rotateView(float xdist, float ydist)
