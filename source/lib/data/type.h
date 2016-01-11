@@ -113,9 +113,9 @@ public:
 
     static int getID(std::string name)
     {
+        if(name.empty()) return -1;
         {
             std::lock_guard<std::mutex> lock(_id_map_mutex);
-            if(name.empty()) return -1;
             int i = 0;
             for(auto s = id_map.begin(); s != id_map.end(); s++, i++){
                 if(name == *s) return i;
