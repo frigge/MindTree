@@ -28,7 +28,7 @@ void ShaderRenderNode::init()
     _initialized = true;
     _program->init();
     for (auto render : _renders)
-        render->_init(_program);
+        render->_init(_program.get());
 }
 
 void ShaderRenderNode::addRenderer(Renderer *renderer)

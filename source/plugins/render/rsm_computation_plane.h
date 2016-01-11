@@ -17,7 +17,7 @@ public:
     void setSamples(int samples);
 
 protected:
-    void init(std::shared_ptr<ShaderProgram> program);
+    void init(ShaderProgram* program);
     void drawLight(const LightPtr light, 
                    std::shared_ptr<ShaderProgram> program);
 

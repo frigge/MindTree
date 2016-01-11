@@ -63,14 +63,14 @@ bool RenderPass::isEnabled() const
 
 void RenderPass::setCamera(CameraPtr camera)
 {
-    std::lock_guard<std::mutex> lock(_cameraLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_cameraLock);
 
     _camera = camera;
 }
 
 void RenderPass::setBlendFunc(GLenum src, GLenum dst)
 {
-    std::lock_guard<std::mutex> lock(_blendLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_blendLock);
     _blendColorSource = src;
     _blendAlphaSource = src;
     _blendColorDest = dst;
@@ -79,7 +79,7 @@ void RenderPass::setBlendFunc(GLenum src, GLenum dst)
 
 void RenderPass::setBlendFuncSeparate(GLenum srcColor, GLenum srcAlpha, GLenum dstColor, GLenum dstAlpha)
 {
-    std::lock_guard<std::mutex> lock(_blendLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_blendLock);
     _blendColorSource = srcColor;
     _blendAlphaSource = srcAlpha;
     _blendColorDest = dstColor;
@@ -93,7 +93,7 @@ void RenderPass::setEnableBlending(bool value)
 
 void RenderPass::setOverrideProgram(std::shared_ptr<ShaderProgram> program)
 {
-    std::lock_guard<std::mutex> lock(_overrideProgramLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_overrideProgramLock);
     _overrideProgram = program;
 }
 
@@ -107,21 +107,20 @@ void RenderPass::init()
     _initialized = true;
 
     {
-        std::lock_guard<std::mutex> lock(_cameraLock);
+        std::shared_lock<std::shared_timed_mutex> lock(_cameraLock);
         _currentWidth = getCamera()->getWidth();
         _currentHeight = getCamera()->getHeight();
     }
-    
     //make sure shaderprograms are clean
     {
-        std::lock_guard<std::mutex> shapeLock(_shapesLock);
+        std::shared_lock<std::shared_timed_mutex> shapeLock(_shapesLock);
         for(auto shadernode : _shadernodes) {
             shadernode->init();
         }
     }
 
     {
-        std::lock_guard<std::mutex> geoLock(_geometryLock);
+        std::shared_lock<std::shared_timed_mutex> geoLock(_geometryLock);
         for(auto shadernode : _geometryShaderNodes) {
             shadernode->init();
         }
@@ -214,7 +213,7 @@ void RenderPass::setDirty()
 void RenderPass::setCustomTextureNameMapping(std::string realname, std::string newname)
 {
     {
-        std::lock_guard<std::mutex> lock(_textureNameMappingLock);
+        std::unique_lock<std::shared_timed_mutex> lock(_textureNameMappingLock);
         _textureNameMappings[realname] = newname;
     }
     _tree->setDirty();
@@ -223,7 +222,7 @@ void RenderPass::setCustomTextureNameMapping(std::string realname, std::string n
 void RenderPass::setCustomFragmentNameMapping(std::string realname, std::string newname)
 {
     {
-        std::lock_guard<std::mutex> lock(_fragmentNameMappingLock);
+        std::unique_lock<std::shared_timed_mutex> lock(_fragmentNameMappingLock);
         _fragmentNameMappings[realname] = newname;
     }
     _tree->setDirty();
@@ -231,7 +230,7 @@ void RenderPass::setCustomFragmentNameMapping(std::string realname, std::string 
 
 std::string RenderPass::getTextureName(std::shared_ptr<Texture2D> tex) const
 {
-    std::lock_guard<std::mutex> lock(_textureNameMappingLock);
+    std::shared_lock<std::shared_timed_mutex> lock(_textureNameMappingLock);
     std::string realName = tex->getName();
     if(_textureNameMappings.find(realName) != end(_textureNameMappings)) {
         std::string mappedName = _textureNameMappings.at(realName);
@@ -244,7 +243,7 @@ std::string RenderPass::getTextureName(std::shared_ptr<Texture2D> tex) const
 
 std::string RenderPass::getFragmentName(std::shared_ptr<Texture2D> tex) const
 {
-    std::lock_guard<std::mutex> lock(_fragmentNameMappingLock);
+    std::shared_lock<std::shared_timed_mutex> lock(_fragmentNameMappingLock);
     std::string realName = tex->getName();
     if(_fragmentNameMappings.find(realName) != end(_fragmentNameMappings))
         return _fragmentNameMappings.at(realName);
@@ -255,7 +254,7 @@ std::string RenderPass::getFragmentName(std::shared_ptr<Texture2D> tex) const
 void RenderPass::clearCustomTextureNameMapping()
 {
     {
-        std::lock_guard<std::mutex> lock(_textureNameMappingLock);
+        std::unique_lock<std::shared_timed_mutex> lock(_textureNameMappingLock);
         _textureNameMappings.clear();
     }
     _tree->setDirty();
@@ -264,7 +263,7 @@ void RenderPass::clearCustomTextureNameMapping()
 void RenderPass::clearCustomFragmentNameMapping()
 {
     {
-        std::lock_guard<std::mutex> lock(_textureNameMappingLock);
+        std::unique_lock<std::shared_timed_mutex> lock(_textureNameMappingLock);
         _textureNameMappings.clear();
     }
     _tree->setDirty();
@@ -283,14 +282,14 @@ void RenderPass::setTextures(std::vector<std::shared_ptr<Texture2D>> textures)
 std::vector<glm::vec4> RenderPass::readPixel(std::vector<std::string> names, glm::ivec2 pos)
 {
     {
-        std::lock_guard<std::mutex> locker(_pixelRequestsLock);
+        std::unique_lock<std::shared_timed_mutex> locker(_pixelRequestsLock);
         for(auto name : names)
             _pixelRequests.push(std::make_pair(name, pos));
     }
     bool request = true;
     while(request) {
         {
-            std::lock_guard<std::mutex> locker(_pixelRequestsLock);
+            std::shared_lock<std::shared_timed_mutex> locker(_pixelRequestsLock);
             request = _pixelRequests.size() > 0;
         }
         //wait for the pixels to be read
@@ -300,7 +299,7 @@ std::vector<glm::vec4> RenderPass::readPixel(std::vector<std::string> names, glm
 
 void RenderPass::processPixelRequests()
 {
-    std::lock_guard<std::mutex> locker(_pixelRequestsLock);
+    std::unique_lock<std::shared_timed_mutex> locker(_pixelRequestsLock);
     _requestedPixels.clear();
     while(_pixelRequests.size() > 0) {
         auto request = _pixelRequests.front();
@@ -467,20 +466,20 @@ std::shared_ptr<Texture2D> RenderPass::getOutDepthTexture()
 
 void RenderPass::addShaderNode(std::shared_ptr<ShaderRenderNode> node)
 {
-    std::lock_guard<std::mutex> lock(_shapesLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_shapesLock);
     _shadernodes.push_back(node);
 }
 
 void RenderPass::addGeometryShaderNode(std::shared_ptr<ShaderRenderNode> node)
 {
-    std::lock_guard<std::mutex> lock(_geometryLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_geometryLock);
     _geometryShaderNodes.push_back(node);
 }
 
 void RenderPass::addRenderer(Renderer *renderer)
 {
-    std::lock_guard<std::mutex> lock(_shapesLock);
-    std::lock_guard<std::mutex> lock2(_overrideProgramLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_shapesLock);
+    std::shared_lock<std::shared_timed_mutex> lock2(_overrideProgramLock);
     if(_overrideProgram) {
         if (_shadernodes.empty()) {
             auto newnode = std::make_shared<ShaderRenderNode>(_overrideProgram);
@@ -506,8 +505,8 @@ void RenderPass::addRenderer(Renderer *renderer)
 
 void RenderPass::addGeometryRenderer(Renderer *renderer)
 {
-    std::lock_guard<std::mutex> lock(_geometryLock);
-    std::lock_guard<std::mutex> lock2(_overrideProgramLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_geometryLock);
+    std::shared_lock<std::shared_timed_mutex> lock2(_overrideProgramLock);
 
     if(_overrideProgram) {
         if (_geometryShaderNodes.empty()) {
@@ -534,7 +533,7 @@ void RenderPass::addGeometryRenderer(Renderer *renderer)
 
 void RenderPass::clearRenderers()
 {
-    std::lock_guard<std::mutex> lock(_geometryLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_geometryLock);
     //clear all the nodes but leave the shaders there!!
     for (auto node : _geometryShaderNodes)
         node->clear();
@@ -543,7 +542,7 @@ void RenderPass::clearRenderers()
 
 void RenderPass::clearUnusedShaderNodes()
 {
-    std::lock_guard<std::mutex> lock(_geometryLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_geometryLock);
     //find out which shaders are still unused
     std::vector<std::shared_ptr<ShaderRenderNode>> obsolete;
     for (auto node : _geometryShaderNodes) {
@@ -583,7 +582,7 @@ void RenderPass::render(const RenderConfig &config)
     int width{0};
     int height{0};
     {
-        std::lock_guard<std::mutex> lock(_cameraLock);
+        std::shared_lock<std::shared_timed_mutex> lock(_cameraLock);
         if(!_camera) return;
         width = _camera->getWidth();
         height = _camera->getHeight();
@@ -607,7 +606,7 @@ void RenderPass::render(const RenderConfig &config)
         {
             glBlendEquation(GL_FUNC_ADD);
             glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-            std::lock_guard<std::mutex> lock(_blendLock);
+            std::shared_lock<std::shared_timed_mutex> lock(_blendLock);
             if(_blendColorSource == _blendAlphaSource
                && _blendColorDest == _blendAlphaDest) {
                 glBlendFuncSeparate(GL_ONE, GL_ZERO,  GL_ONE, GL_ZERO);
@@ -665,7 +664,8 @@ void RenderPass::render(const RenderConfig &config)
 
         if(_enabled) {
             {
-                std::lock_guard<std::mutex> lock(_geometryLock);
+                std::shared_lock<std::shared_timed_mutex> lock(_geometryLock);
+                std::shared_lock<std::shared_timed_mutex> shapeLock(_shapesLock);
                 //render nodes that do not have a corresponding objectdata element (grid, 3d widgets, etc.)
                 for(auto node : _shadernodes) {
                     node->init();
@@ -678,7 +678,7 @@ void RenderPass::render(const RenderConfig &config)
                             node->program()->setUniformFromProperty(p.first, p.second);
 
                         {
-                            std::lock_guard<std::mutex> lock(_cameraLock);
+                            std::shared_lock<std::shared_timed_mutex> lock(_cameraLock);
                             node->render(_camera, glm::ivec2(width, height), config);
                         }
                     }
@@ -694,7 +694,7 @@ void RenderPass::render(const RenderConfig &config)
                         for(const auto &p : config.getProperties())
                             node->program()->setUniformFromProperty(p.first, p.second);
                         {
-                            std::lock_guard<std::mutex> lock(_cameraLock);
+                            std::shared_lock<std::shared_timed_mutex> lock(_cameraLock);
                             node->render(_camera, glm::ivec2(width, height), config);
                         }
                     }

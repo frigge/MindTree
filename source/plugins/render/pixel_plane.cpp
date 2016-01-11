@@ -14,7 +14,7 @@ std::shared_ptr<ShaderProgram> PixelPlane::getProgram()
     return prog;
 }
 
-void PixelPlane::init(std::shared_ptr<ShaderProgram> prog)
+void PixelPlane::init(ShaderProgram* prog)
 {
     _vbo = std::make_shared<VBO>("P");
     _coord_vbo = std::make_shared<VBO>("st");

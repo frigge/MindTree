@@ -3,6 +3,9 @@
 
 #include "glm/glm.hpp"
 #include "mutex"
+#include "shared_mutex"
+
+#include "atomic"
 #include "thread"
 #include "memory"
 #include "queue"
@@ -45,13 +48,18 @@ public:
     static void removeManager(RenderTree *manager);
     inline static std::thread::id id() { return _renderThread.get_id(); }
     inline static void asrt() { assert(_renderThread.get_id() == std::this_thread::get_id()); }
+    static void update();
+    static void updateOnce();
+    static void pause();
 
 private:
     static void start();
     static void stop();
     static bool isRendering();
 
-    static bool _rendering;
+    static std::atomic_bool _rendering;
+    static std::atomic_bool _update;
+    static std::condition_variable _renderNotifier;
     static std::mutex _renderingLock;
     static std::thread _renderThread;
     static std::vector<RenderTree*> _renderQueue;
@@ -87,14 +95,14 @@ private:
     void draw();
     friend class RenderThread;
 
-    std::mutex _managerLock;
+    std::shared_timed_mutex _managerLock;
 
     glm::vec4 backgroundColor;
     std::vector<std::shared_ptr<RenderPass>> passes;
     static std::shared_ptr<ResourceManager> _resourceManager;
     RenderConfig config;
     QGLContext *_context;
-    bool _initialized;
+    std::atomic_bool _initialized;
     double renderTime;
 
     std::shared_ptr<Benchmark> _benchmark;

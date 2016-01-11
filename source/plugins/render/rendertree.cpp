@@ -52,22 +52,27 @@ bool RenderConfig::flatShading() const
     return _flatShading;
 }
 
-bool RenderThread::_rendering = false;
+std::atomic_bool RenderThread::_rendering{false};
+std::atomic_bool RenderThread::_update{false};
 std::mutex RenderThread::_renderingLock;
+std::condition_variable RenderThread::_renderNotifier;
 std::thread RenderThread::_renderThread;
 std::vector<RenderTree*> RenderThread::_renderQueue;
 
 void RenderThread::addManager(RenderTree* manager)
 {
+    std::unique_lock<std::mutex> lock(_renderingLock, std::defer_lock);
     auto it = std::find(begin(_renderQueue), end(_renderQueue), manager);
     if(it == end(_renderQueue))
         _renderQueue.push_back(manager);
 
     if(!isRendering()) start();
+    _update = true;
 }
 
 void RenderThread::removeManager(RenderTree *manager)
 {
+    std::unique_lock<std::mutex> lock(_renderingLock, std::defer_lock);
     auto it = std::find(begin(_renderQueue), end(_renderQueue), manager);
     if(it != end(_renderQueue))
         _renderQueue.erase(it);
@@ -76,8 +81,25 @@ void RenderThread::removeManager(RenderTree *manager)
 
 bool RenderThread::isRendering()
 {
-    std::lock_guard<std::mutex> lock(_renderingLock);
     return _rendering;
+}
+
+void RenderThread::updateOnce()
+{
+    _update = true;
+    _renderNotifier.notify_all();
+    _update = false;
+}
+
+void RenderThread::update()
+{
+    _update = true;
+    _renderNotifier.notify_all();
+}
+
+void RenderThread::pause()
+{
+    _update = false;
 }
 
 void RenderThread::start()
@@ -87,7 +109,9 @@ void RenderThread::start()
     _rendering = true;
 
     auto renderLoop = [] {
+        std::unique_lock<std::mutex> lock(_renderingLock, std::defer_lock);
         while(RenderThread::isRendering()) {
+            if(!_update) _renderNotifier.wait(lock);
             for(auto *manager : _renderQueue) {
                 manager->draw();
             }
@@ -101,10 +125,9 @@ void RenderThread::start()
 void RenderThread::stop()
 {
     std::cout << "stop rendering" << std::endl;
-    {
-        std::lock_guard<std::mutex> lock(_renderingLock);
-        _rendering = false;
-    }
+    _rendering = false;
+    _update = false;
+    _renderNotifier.notify_all();
     if (_renderThread.joinable()) _renderThread.join();
 }
 
@@ -137,7 +160,6 @@ std::shared_ptr<ResourceManager> RenderTree::getResourceManager()
 
 void RenderTree::setDirty()
 {
-    std::lock_guard<std::mutex> lock(_managerLock);
     _initialized = false;
 }
 
@@ -156,20 +178,23 @@ void RenderTree::init()
     glEnable(GL_CULL_FACE);
 
     //connect output textures to all following passes
-    uint i=0;
-    for(auto &pass : passes){
-        pass->init();
-        if(i > 0) {
-            for (uint j = 0; j < i; ++j){
-                auto lastPass = passes[j];
-                auto textures = lastPass->getOutputTextures();
-                if(lastPass->_depthOutput == RenderPass::TEXTURE)
-                    textures.push_back(lastPass->_depthTexture);
-                pass->setTextures(textures);
+    {
+        std::shared_lock<std::shared_timed_mutex> lock(_managerLock);
+        uint i=0;
+        for(auto &pass : passes){
+            pass->init();
+            if(i > 0) {
+                for (uint j = 0; j < i; ++j){
+                    auto lastPass = passes[j];
+                    auto textures = lastPass->getOutputTextures();
+                    if(lastPass->_depthOutput == RenderPass::TEXTURE)
+                        textures.push_back(lastPass->_depthTexture);
+                    pass->setTextures(textures);
 
+                }
             }
+            ++i;
         }
-        ++i;
     }
 }
 
@@ -190,19 +215,19 @@ std::vector<std::string> RenderTree::getAllOutputs() const
 
 void RenderTree::setConfig(RenderConfig cfg)
 {
-    std::lock_guard<std::mutex> lock(_managerLock);
+    std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     config = cfg;
 }
 
 RenderConfig RenderTree::getConfig()
 {
-    std::lock_guard<std::mutex> lock(_managerLock);
+    std::shared_lock<std::shared_timed_mutex> lock(_managerLock);
     return config;
 }
 
 void RenderTree::addPass(std::shared_ptr<RenderPass> pass)
 {
-    std::lock_guard<std::mutex> lock(_managerLock);
+    std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     pass->setTree(this);
     _initialized = false;
     passes.push_back(pass);
@@ -210,7 +235,7 @@ void RenderTree::addPass(std::shared_ptr<RenderPass> pass)
 
 void RenderTree::insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
 {
-    std::lock_guard<std::mutex> lock(_managerLock);
+    std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     pass->setTree(this);
     _initialized = false;
     auto it = std::find(begin(passes), end(passes), ref_pass.lock());
@@ -219,7 +244,7 @@ void RenderTree::insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::share
 
 void RenderTree::insertPassAfter(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
 {
-    std::lock_guard<std::mutex> lock(_managerLock);
+    std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     pass->setTree(this);
     _initialized = false;
     auto it = std::find(begin(passes), end(passes), ref_pass.lock());
@@ -229,7 +254,7 @@ void RenderTree::insertPassAfter(std::weak_ptr<RenderPass> ref_pass, std::shared
 
 void RenderTree::removePass(std::weak_ptr<RenderPass> pass)
 {
-    std::lock_guard<std::mutex> lock(_managerLock);
+    std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     auto it = std::find(begin(passes), end(passes), pass.lock());
     if(it != passes.end()) {
         passes.erase(it);
@@ -242,7 +267,7 @@ void RenderTree::removePass(std::weak_ptr<RenderPass> pass)
 
 RenderPass* RenderTree::getPass(uint index)
 {
-    std::lock_guard<std::mutex> lock(_managerLock);
+    std::shared_lock<std::shared_timed_mutex> lock(_managerLock);
     return std::next(begin(passes), index)->get();
 }
 
@@ -257,11 +282,11 @@ void RenderTree::draw()
 
     BenchmarkHandler handler(_benchmark);
 
+    if(!_initialized) {
+        init();
+    }
     {
-        std::lock_guard<std::mutex> lock(_managerLock);
-        if(!_initialized) {
-            init();
-        }
+        std::shared_lock<std::shared_timed_mutex> lock(_managerLock);
         int i = 0;
         for(auto &pass : passes){
             pass->render(config);

@@ -15,7 +15,7 @@ public:
 protected:
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
-    void init(std::shared_ptr<ShaderProgram> prog);
+    void init(ShaderProgram* prog);
     virtual void initCustom();
 
     std::shared_ptr<GeoObject> obj;

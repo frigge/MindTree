@@ -1535,7 +1535,6 @@ ResourceManager::~ResourceManager()
 
 void ResourceManager::cleanUp()
 {
-    std::lock_guard<std::mutex> lock(_resourceMutex);
     _scheduledResource.clear();
 }
 

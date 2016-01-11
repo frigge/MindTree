@@ -35,7 +35,7 @@ RSMIndirectPlane::RSMIndirectPlane() :
     setProvider<RSMProgram>();
 }
 
-void RSMIndirectPlane::init(std::shared_ptr<ShaderProgram> program)
+void RSMIndirectPlane::init(ShaderProgram* program)
 {
     PixelPlane::init(program);
     initSamplingTexture();

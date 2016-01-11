@@ -4,6 +4,7 @@
 #include "GL/glew.h"
 #include "memory"
 #include "mutex"
+#include "shared_mutex"
 #include "vector"
 #include "queue"
 #include "utility"
@@ -102,7 +103,7 @@ private:
 
     std::vector<glm::vec4> _requestedPixels;
     std::queue<std::pair<std::string, glm::ivec2>> _pixelRequests;
-    std::mutex _pixelRequestsLock;
+    std::shared_timed_mutex _pixelRequestsLock;
 
     friend class RenderTree;
 
@@ -111,9 +112,9 @@ private:
     std::shared_ptr<Camera> _camera;
     std::shared_ptr<FBO> _target;
 
-    std::mutex _geometryLock;
-    std::mutex _shapesLock;
-    std::mutex _cameraLock;
+    std::shared_timed_mutex _geometryLock;
+    std::shared_timed_mutex _shapesLock;
+    std::shared_timed_mutex _cameraLock;
 
     std::vector<std::shared_ptr<ShaderRenderNode>> _shadernodes;
     std::vector<std::shared_ptr<ShaderRenderNode>> _geometryShaderNodes;
@@ -124,7 +125,7 @@ private:
     std::shared_ptr<Texture2D> _depthTexture;
     std::shared_ptr<Renderbuffer> _depthRenderbuffer;
 
-    std::mutex _blendLock;
+    std::shared_timed_mutex _blendLock;
     GLenum _blendColorSource;
     GLenum _blendAlphaSource;
     GLenum _blendColorDest;
@@ -139,15 +140,15 @@ private:
 
     std::atomic<float> _depth;
 
-    std::mutex _overrideProgramLock;
+    std::shared_timed_mutex _overrideProgramLock;
     std::shared_ptr<ShaderProgram> _overrideProgram;
 
     int _currentWidth, _currentHeight;
 
-    mutable std::mutex _textureNameMappingLock;
+    mutable std::shared_timed_mutex _textureNameMappingLock;
     std::unordered_map<std::string, std::string> _textureNameMappings;
 
-    mutable std::mutex _fragmentNameMappingLock;
+    mutable std::shared_timed_mutex _fragmentNameMappingLock;
     std::unordered_map<std::string, std::string> _fragmentNameMappings;
 
     RenderTree *_tree;

@@ -7,6 +7,7 @@
 #include "thread"
 #include "deque"
 #include "mutex"
+#include "condition_variable"
 #include "memory"
 #include "atomic"
 
@@ -34,6 +35,7 @@ struct UpdateInfo {
     static bool needToUpdate();
     static void notifyUpdate(std::weak_ptr<UpdateInfo> info);
     static void removeViewer(Viewer *viewer);
+    static void update();
 
     static void start();
     static void stop();
@@ -43,6 +45,7 @@ private:
 
     static std::thread _updateThread;
     static std::mutex _updateMutex;
+    static std::condition_variable _needToUpdateCondition;
 
     static std::vector<std::weak_ptr<UpdateInfo>> _updateQueue;
     static std::atomic<bool> _running;

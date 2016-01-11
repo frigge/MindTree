@@ -24,7 +24,7 @@ void Renderer::setVisible(bool visible)
     _visible = visible;
 }
 
-void Renderer::_init(std::shared_ptr<ShaderProgram> program)    
+void Renderer::_init(ShaderProgram* program)    
 {
     RenderThread::asrt();
 
@@ -43,19 +43,19 @@ void Renderer::_init(std::shared_ptr<ShaderProgram> program)
 
 void Renderer::setTransformation(glm::mat4 trans)
 {
-    std::lock_guard<std::mutex> lock(_transformationLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_transformationLock);
     _transformation = trans;
 }
 
 glm::mat4 Renderer::getTransformation()
 {
-    std::lock_guard<std::mutex> lock(_transformationLock);
+    std::shared_lock<std::shared_timed_mutex> lock(_transformationLock);
     return _transformation;
 }
 
 glm::mat4 Renderer::getGlobalTransformation()
 {
-    std::lock_guard<std::mutex> lock(_transformationLock);
+    std::shared_lock<std::shared_timed_mutex> lock(_transformationLock);
     if(_parent) {
         return _parent->getGlobalTransformation() * _transformation;
     }
