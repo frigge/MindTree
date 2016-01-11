@@ -53,7 +53,7 @@ glm::mat4 ShapeRendererGroup::getStaticWorldTransformation() const
     return _staticTransformation;
 }
 
-void ShapeRendererGroup::init(std::shared_ptr<ShaderProgram> prog)
+void ShapeRendererGroup::init(ShaderProgram* prog)
 {
     /* nothing to do here */
 }
@@ -199,7 +199,7 @@ void LineRenderer::setPoints(std::initializer_list<glm::vec3> points)
     _points = points;
 }
 
-void LineRenderer::init(std::shared_ptr<ShaderProgram> prog)
+void LineRenderer::init(ShaderProgram* prog)
 {
     _vbo = std::make_shared<VBO>("P");
     _vbo->bind();
@@ -227,7 +227,7 @@ QuadRenderer::QuadRenderer(float width, float height, ShapeRendererGroup *parent
 {
 }
 
-void QuadRenderer::init(std::shared_ptr<ShaderProgram> prog)
+void QuadRenderer::init(ShaderProgram* prog)
 {
     _vbo = std::make_shared<VBO>("P");
     _vbo->bind();
@@ -263,7 +263,7 @@ GridRenderer::~GridRenderer()
 {
 }
 
-void GridRenderer::init(std::shared_ptr<ShaderProgram> prog)
+void GridRenderer::init(ShaderProgram* prog)
 {
     _vbo = std::make_shared<VBO>("P");
     _vbo->bind();
@@ -333,7 +333,7 @@ DiscRenderer::DiscRenderer(ShapeRendererGroup *parent)
 {
 }
 
-void DiscRenderer::init(std::shared_ptr<ShaderProgram> prog)
+void DiscRenderer::init(ShaderProgram* prog)
 {
     if(_vbo) {
         _vbo->bind();
@@ -372,7 +372,7 @@ CircleRenderer::CircleRenderer(ShapeRendererGroup *parent)
 {
 }
 
-void CircleRenderer::init(std::shared_ptr<ShaderProgram> prog)
+void CircleRenderer::init(ShaderProgram* prog)
 {
     if(_vbo) {
         _vbo->bind();
@@ -410,7 +410,7 @@ ConeRenderer::ConeRenderer(ShapeRendererGroup *parent)
     new DiscRenderer(this);
 }
 
-void ConeRenderer::init(std::shared_ptr<ShaderProgram> prog)
+void ConeRenderer::init(ShaderProgram* prog)
 {
     if(_vbo) {
         _vbo->bind();
@@ -453,7 +453,7 @@ SphereRenderer::SphereRenderer(int u, int v) :
     setFillColor(glm::vec4(1));
 }
 
-void SphereRenderer::init(std::shared_ptr<ShaderProgram> prog)
+void SphereRenderer::init(ShaderProgram* prog)
 {
     if(_vbo) {
         _vbo->bind();
@@ -532,7 +532,7 @@ int SinglePointRenderer::getPointSize() const
     return _pointSize;
 }
 
-void SinglePointRenderer::init(std::shared_ptr<ShaderProgram> prog)
+void SinglePointRenderer::init(ShaderProgram* prog)
 {
     if(_vbo) {
         _vbo->bind();

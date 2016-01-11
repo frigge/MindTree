@@ -24,7 +24,7 @@ void Renderer::setVisible(bool visible)
     _visible = visible;
 }
 
-void Renderer::_init(std::shared_ptr<ShaderProgram> program)    
+void Renderer::_init(ShaderProgram* program)    
 {
     RenderThread::asrt();
 

@@ -15,7 +15,7 @@ GeoObjectRenderer::~GeoObjectRenderer()
 {
 }
 
-void GeoObjectRenderer::init(std::shared_ptr<ShaderProgram> prog)    
+void GeoObjectRenderer::init(ShaderProgram* prog)    
 {
     auto data = obj->getData();
     auto propmap = data->getProperties();

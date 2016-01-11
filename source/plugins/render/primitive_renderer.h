@@ -39,7 +39,7 @@ public:
     glm::mat4 getStaticWorldTransformation()const;
 
 protected:
-    virtual void init(std::shared_ptr<ShaderProgram> prog);
+    virtual void init(ShaderProgram* prog);
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
     static std::weak_ptr<ShaderProgram> _defaultProgram;
@@ -82,7 +82,7 @@ public:
     void setPoints(std::initializer_list<glm::vec3> points);
 
 protected:
-    virtual void init(std::shared_ptr<ShaderProgram> prog);
+    virtual void init(ShaderProgram* prog);
     virtual void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
 private:
@@ -96,7 +96,7 @@ public:
     QuadRenderer(float width, float height, ShapeRendererGroup *parent=nullptr);
 
 protected:
-    void init(std::shared_ptr<ShaderProgram> prog);
+    void init(ShaderProgram* prog);
 
 private:
     float _width, _height;
@@ -112,7 +112,7 @@ public:
     void setAlternatingColor(glm::vec4 col);
 
 protected:
-    void init(std::shared_ptr<ShaderProgram> prog);
+    void init(ShaderProgram* prog);
     virtual void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
     std::shared_ptr<ShaderProgram> getProgram();
 
@@ -131,7 +131,7 @@ public:
 protected:
     void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
     void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    virtual void init(std::shared_ptr<ShaderProgram> prog);
+    virtual void init(ShaderProgram* prog);
 
 private:
     int _segments;
@@ -146,7 +146,7 @@ public:
 protected:
     void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
     void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    virtual void init(std::shared_ptr<ShaderProgram> prog);
+    virtual void init(ShaderProgram* prog);
 
 private:
     int _segments;
@@ -161,7 +161,7 @@ public:
 protected:
     void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
     void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    virtual void init(std::shared_ptr<ShaderProgram> prog);
+    virtual void init(ShaderProgram* prog);
 
 private:
     int _segments;
@@ -176,7 +176,7 @@ public:
 protected:
     void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
     void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    void init(std::shared_ptr<ShaderProgram> prog);
+    void init(ShaderProgram* prog);
 
 private:
     int _u_segments, _v_segments;
@@ -195,7 +195,7 @@ public:
 protected:
     void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
     void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    void init(std::shared_ptr<ShaderProgram> prog);
+    void init(ShaderProgram* prog);
 
 private:
     int _pointSize;

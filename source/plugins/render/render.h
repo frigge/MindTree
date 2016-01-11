@@ -48,18 +48,18 @@ public:
 protected:
     friend class ShaderRenderNode;
 
-    virtual void init(std::shared_ptr<ShaderProgram> program) = 0;
+    virtual void init(ShaderProgram* program) = 0;
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program) = 0;
 
     std::vector<std::shared_ptr<Renderer>> _children;
 
 private:
-    void _init(std::shared_ptr<ShaderProgram> program);
+    void _init(ShaderProgram* program);
     std::shared_ptr<VAO> _vao;
 
     std::atomic<bool> _initialized, _visible;
     glm::mat4 _transformation;
-    std::mutex _transformationLock;
+    std::shared_timed_mutex _transformationLock;
 
     Renderer* _parent;
 };

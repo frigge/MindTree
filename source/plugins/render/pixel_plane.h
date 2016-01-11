@@ -44,7 +44,7 @@ public:
     }
 
 protected:
-    virtual void init(std::shared_ptr<ShaderProgram> prog);
+    virtual void init(ShaderProgram* prog);
     virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
 
 private:
