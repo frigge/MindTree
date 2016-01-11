@@ -11,6 +11,7 @@ using namespace MindTree;
 
 std::thread WorkerThread::_updateThread;
 std::mutex WorkerThread::_updateMutex;
+std::condition_variable WorkerThread::_needToUpdateCondition;
 std::atomic<bool> WorkerThread::_running(false);
 
 std::vector<std::weak_ptr<WorkerThread::UpdateInfo>> WorkerThread::_updateQueue;
@@ -28,6 +29,11 @@ void WorkerThread::notifyUpdate(std::weak_ptr<WorkerThread::UpdateInfo> info)
         _updateQueue.push_back(info);
     }
     if(!_running) start();
+}
+
+void WorkerThread::update()
+{
+    _needToUpdateCondition.notify_all();
 }
 
 void WorkerThread::removeViewer(Viewer *viewer)
@@ -55,21 +61,20 @@ void WorkerThread::start()
         WorkerThread::_running = true;
         size_t i = 0;
         while(WorkerThread::needToUpdate()) {
-            {
-                std::lock_guard<std::mutex> lock(_updateMutex);
+            std::unique_lock<std::mutex> lock(_updateMutex);
+            _needToUpdateCondition.wait(lock);
 
-                std::weak_ptr<UpdateInfo> info = _updateQueue[i];
-                if(!info.expired()) {
-                    auto ptr = info.lock();
-                    if(!ptr->_update) continue;
+            std::weak_ptr<UpdateInfo> info = _updateQueue[i];
+            if(!info.expired()) {
+                auto ptr = info.lock();
+                if(!ptr->_update) continue;
 
-                    if(ptr->_node) DataCache::invalidate(ptr->_node);
-                    ptr->_viewer->cacheAndUpdate();
-                    ptr->_update = false;
-                }
-                ++i;
-                i = i % _updateQueue.size();
+                if(ptr->_node) DataCache::invalidate(ptr->_node);
+                ptr->_viewer->cacheAndUpdate();
+                ptr->_update = false;
             }
+            ++i;
+            i = i % _updateQueue.size();
         }
         WorkerThread::_running = false;
     };
@@ -143,6 +148,7 @@ void Viewer::update_viewer(DNode *node)
     if(connected) {
         _updateInfo->_node = node;
         _updateInfo->_update = true;
+        WorkerThread::update();
     }
 }
 
@@ -182,6 +188,7 @@ void Viewer::update_viewer(DinSocket *socket)
     if(connected) {
         _updateInfo->_node = node;
         _updateInfo->_update = true;
+        WorkerThread::update();
     }
 }
 
