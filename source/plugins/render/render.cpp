@@ -43,19 +43,19 @@ void Renderer::_init(ShaderProgram* program)
 
 void Renderer::setTransformation(glm::mat4 trans)
 {
-    std::lock_guard<std::mutex> lock(_transformationLock);
+    std::unique_lock<std::shared_timed_mutex> lock(_transformationLock);
     _transformation = trans;
 }
 
 glm::mat4 Renderer::getTransformation()
 {
-    std::lock_guard<std::mutex> lock(_transformationLock);
+    std::shared_lock<std::shared_timed_mutex> lock(_transformationLock);
     return _transformation;
 }
 
 glm::mat4 Renderer::getGlobalTransformation()
 {
-    std::lock_guard<std::mutex> lock(_transformationLock);
+    std::shared_lock<std::shared_timed_mutex> lock(_transformationLock);
     if(_parent) {
         return _parent->getGlobalTransformation() * _transformation;
     }
