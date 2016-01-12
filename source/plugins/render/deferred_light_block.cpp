@@ -28,10 +28,11 @@ void DeferredLightingRenderBlock::setGeometry(std::shared_ptr<Group> grp)
 {
     _sceneLights = grp->getLights();
 
-    if(hasProperty("GL:defaultLighting") && !getProperty("GL:defaultLighting").getData<bool>())
-        _deferredRenderer->setLights(_sceneLights);
-    else
-        _deferredRenderer->setLights(_defaultLights);
+    if(hasProperty("GL:defaultLighting"))
+        if(!getProperty("GL:defaultLighting").getData<bool>())
+            _deferredRenderer->setLights(_sceneLights);
+        else
+            _deferredRenderer->setLights(_defaultLights);
 
     setRenderersFromGroup(grp);
     if(_shadowBlock)
