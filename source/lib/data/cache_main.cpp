@@ -133,7 +133,7 @@ void CacheProcessor::operator()(DataCache* cache)
 
 std::unordered_map<const DNode*, std::vector<Property>> DataCache::_cachedOutputs;
 std::recursive_mutex DataCache::_cachedOutputsMutex;
-std::mutex DataCache::_processorMutex;
+std::recursive_mutex DataCache::_processorMutex;
 DataCache::DataCache(CacheContext *context)
     : node(nullptr),
     startsocket(nullptr),
@@ -277,15 +277,15 @@ DataType DataCache::getType() const
 
 void DataCache::addProcessor(AbstractCacheProcessor *proc)
 {
+    std::lock_guard<std::recursive_mutex> lock(_processorMutex);
     auto st = proc->getSocketType();
     auto nt = proc->getNodeType();
-    std::lock_guard<std::mutex> lock(_processorMutex);
     processors[st][nt].reset(proc);
 }
 
 void DataCache::removeProcessor(AbstractCacheProcessor *proc)
 {
-    std::lock_guard<std::mutex> lock(_processorMutex);
+    std::lock_guard<std::recursive_mutex> lock(_processorMutex);
     processors[proc->getSocketType()][proc->getNodeType()] = std::shared_ptr<AbstractCacheProcessor>();
 }
 
@@ -296,6 +296,7 @@ void DataCache::addGenericProcessor(GenericCacheProcessor *proc)
 
 const std::vector<AbstractCacheProcessor::CacheList>& DataCache::getProcessors()
 {
+    std::lock_guard<std::recursive_mutex> lock(_processorMutex);
     return processors.getAll();
 }
 
@@ -439,6 +440,7 @@ void DataCache::cacheInputs()
         return;
     }
 
+    std::lock_guard<std::recursive_mutex> lock(_processorMutex);
     if(type.id() >= static_cast<int>(processors.size())){
         std::cout<< "no processors defined for this data type ("
                  << type.toStr()

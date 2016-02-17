@@ -153,7 +153,7 @@ private:
     const DoutSocket *startsocket;
     static std::unordered_map<const DNode*, std::vector<Property>> _cachedOutputs;
     static std::recursive_mutex _cachedOutputsMutex;
-    static std::mutex _processorMutex;
+    static std::recursive_mutex _processorMutex;
 
     CacheContext *_context;
 };
