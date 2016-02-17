@@ -76,13 +76,20 @@ private:
     static TypeDispatcher<DataType, ConverterList> _converters;
 };
 
+class PropertyDataBase
+{
+ public:
+    virtual ~PropertyDataBase() {};
+};
+
 template<class T>
-class PropertyData
+class PropertyData : public PropertyDataBase
 {
 public:
     PropertyData(){}
     PropertyData(T data) : data(data) {}
     PropertyData(const PropertyData &prop) : data(prop.data){}
+    ~PropertyData() {}
 
     const T& getData()const
     {
@@ -217,17 +224,15 @@ private:
 
     struct Meta {
         Meta()
-            : cloneData([](Property &prop){prop._meta.deleteFunc();}),
-             moveData([](Property &prop){prop._meta.deleteFunc();}),
+            : cloneData([](Property &prop){}),
+             moveData([](Property &prop){}),
              writeData([](IO::OutStream& stream, const Property &) { }),
-             deleteFunc([]{}),
              pyconverter([]{return BPy::object();})
         {}
 
         std::function<void(Property&)> cloneData;
         std::function<void(Property&)> moveData;
         std::function<void(IO::OutStream&, const Property&)> writeData;
-        std::function<void()> deleteFunc;
         std::function<BPy::object()> pyconverter;
         std::unique_ptr<ListToolsBase> listTools;
     };
@@ -257,10 +262,9 @@ public:
     template<typename T,
         typename std::enable_if<!std::is_same<T, Property*>::value>::type* = nullptr>
     void setData(T d){
-        if(data) _meta.deleteFunc();
         setMetaData<T>();
 
-        data = new PropertyData<T>(d);
+        data = std::make_unique<PropertyData<T>>(d);
     }
 
     template<typename T,
@@ -269,7 +273,7 @@ public:
     {
         //initialize on demand with default value
         if(!data) {
-            data = new PropertyData<T>();
+            data = std::make_unique<PropertyData<T>>();
         }
         if(PropertyTypeInfo<T>::getType() != type) {
             if(!PropertyConverter::isConvertible(PropertyTypeInfo<T>::getType(), type))
@@ -277,11 +281,11 @@ public:
 
             auto converter = PropertyConverter::get(type, PropertyTypeInfo<T>::getType());
             T converted;
-            converter(data, reinterpret_cast<void*>(&converted));
+            converter(data.get(), reinterpret_cast<void*>(&converted));
 
             return converted;
         }
-        return reinterpret_cast<PropertyData<T>*>(data)->getData();
+        return static_cast<PropertyData<T>*>(data.get())->getData();
     }
 
     template<typename T,
@@ -290,9 +294,9 @@ public:
     {
         //initialize on demand with default value
         if(!data) {
-            data = new PropertyData<T>();
+            data = std::make_unique<PropertyData<T>>();
         }
-        return reinterpret_cast<PropertyData<T>*>(data)->getData();
+        return reinterpret_cast<PropertyData<T>*>(data.get())->getData();
     }
 
     template<typename T,
@@ -301,16 +305,16 @@ public:
     {
         //initialize on demand with default value
         if(!data) {
-            data = new PropertyData<T>();
+            data = std::make_unique<PropertyData<T>>();
         }
-        return reinterpret_cast<PropertyData<T>*>(data)->getData();
+        return reinterpret_cast<PropertyData<T>*>(data.get())->getData();
     }
 
     BPy::object toPython() const;
     const MindTree::DataType& getType() const;
     inline operator bool() const
     {
-        return data;
+        return data.get();
     }
     
     inline bool isList() const
@@ -355,29 +359,20 @@ private:
         };
 
         _meta.moveData = [this](Property &other) {
-            other._meta.deleteFunc();
-            other.data = this->data;
-            this->data = nullptr;
+            other.data = std::move(this->data);
             other.setMetaData<T>();
         };
 
         _meta.writeData = &IO::Writer<T>::write;
 
-        if(data)_meta.deleteFunc();
         _meta.pyconverter = [this]{ return PyConverter<T>::pywrap(this->getData<T>());};
         type = PropertyTypeInfo<T>::getType();
-        _meta.deleteFunc = [this]{
-            if(this->data) delete reinterpret_cast<PropertyData<T>*>(this->data); 
-            this->data=nullptr; 
-            this->type=DataType();
-        };
-
         _meta.listTools = std::unique_ptr<ListToolsBase>(new ListTools<T>());
     }
 
     friend IO::OutStream& MindTree::operator<<(IO::OutStream& stream, const Property &prop);
 
-    mutable void *data;
+    mutable std::unique_ptr<PropertyDataBase> data;
 
     Meta _meta;
     DataType type;

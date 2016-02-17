@@ -82,7 +82,6 @@ Property::Property(const Property &&other) noexcept
 
 Property::~Property() noexcept
 {
-    _meta.deleteFunc(); 
 }
 
 Property& Property::operator=(const Property &other)     noexcept
