@@ -87,6 +87,7 @@ void WorkerThread::stop()
     {
         std::lock_guard<std::mutex> lock(_updateMutex);
         _updateQueue.clear();
+        _needToUpdateCondition.notify_all();
     }
 
     if (_updateThread.joinable()) _updateThread.join();
