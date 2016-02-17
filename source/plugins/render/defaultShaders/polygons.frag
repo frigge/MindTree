@@ -2,6 +2,8 @@
 in vec3 pos;
 in vec3 sn;
 
+in vec3 poly_colors;
+
 vec3 eye;
 
 uniform mat4 modelView;

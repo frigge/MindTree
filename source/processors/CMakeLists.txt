@@ -12,10 +12,17 @@ link_directories(
 )
 
 add_library(pointcloud SHARED pointcloud.cpp)
+add_library(primitives SHARED primitives.cpp)
 
-target_link_libraries(pointcloud 
+target_link_libraries(pointcloud
+            objectlib
+            mindtree_core
+)
+
+target_link_libraries(primitives
             objectlib
             mindtree_core
 )
 
 install(TARGETS pointcloud LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
+install(TARGETS primitives LIBRARY DESTINATION ${PROJECT_ROOT}/processors)

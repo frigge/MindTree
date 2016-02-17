@@ -28,7 +28,10 @@ void main() {
     outnormal = vec4(Nn, 1);
     outposition = vec4(pos, 1);
     worldposition = vec4(worldPos, 1);
-    outdiffusecolor = diffuse_color;
+    //outdiffusecolor = diffuse_color * vec4(poly_color,1);
+    outdiffusecolor = vec4(mod(gl_PrimitiveID, 2),
+                           mod(gl_PrimitiveID + 1, 2),
+                           mod(gl_PrimitiveID + 2, 2),1);
     outdiffuseintensity = vec4(vec3(diffuse_intensity), 1);
     outspecintensity = vec4(vec3(specular_intensity), 1);
     //outcolor = vec4(0);
