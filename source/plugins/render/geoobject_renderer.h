@@ -13,7 +13,7 @@ public:
     virtual ~GeoObjectRenderer();
 
 protected:
-    virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    virtual void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
 
     void init(ShaderProgram* prog);
     virtual void initCustom();

@@ -20,20 +20,22 @@ class RenderConfig;
 class ShaderRenderNode
 {
 public:
-    ShaderRenderNode(std::shared_ptr<ShaderProgram> program);
-    ~ShaderRenderNode();
+    ShaderRenderNode(ShaderProgram *program);
 
     void addRenderer(Renderer *renderer);
     void render(CameraPtr camera, glm::ivec2 resolution, const RenderConfig &config);
-    std::shared_ptr<ShaderProgram> program();
+    ShaderProgram* program();
     const std::vector<std::shared_ptr<Renderer>>& renders();
+    void setResourceManager(ResourceManager *manager);
     void clear();
 
 private:
     friend class RenderPass;
     void init();
 
-    std::shared_ptr<ShaderProgram> _program;
+    ResourceManager *_resourceManager;
+
+    ShaderProgram *_program;
     std::vector<std::shared_ptr<Renderer>> _renders;
     std::mutex _rendersLock;
 

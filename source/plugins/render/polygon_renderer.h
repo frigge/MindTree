@@ -14,14 +14,19 @@ public:
     PolygonRenderer(std::shared_ptr<GeoObject> o);
     virtual ~PolygonRenderer();
 
-    std::shared_ptr<ShaderProgram> getProgram();
+    ShaderProgram* getProgram();
 
 protected:
-    void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
 
 private:
+    std::vector<uint> triangulate();
+
+    size_t _triangleCount;
     void initCustom();
-    static std::weak_ptr<ShaderProgram> _defaultProgram;
+    ResourceHandle<VBO> _polyColors;
+    ResourceHandle<IBO> _triangulatedIBO;
+    ResourceHandle<Texture> _polyColorTexture;
 };
 
 class EdgeRenderer : public GeoObjectRenderer
@@ -30,14 +35,13 @@ public:
     EdgeRenderer(std::shared_ptr<GeoObject> o);
     virtual ~EdgeRenderer();
 
-    std::shared_ptr<ShaderProgram> getProgram();
+    ShaderProgram* getProgram();
 
 protected:
-    void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
 
 private:
     void initCustom();
-    static std::weak_ptr<ShaderProgram> _defaultProgram;
 };
 
 class PointRenderer : public GeoObjectRenderer
@@ -46,13 +50,10 @@ public:
     PointRenderer(std::shared_ptr<GeoObject> o);
     virtual ~PointRenderer();
 
-    std::shared_ptr<ShaderProgram> getProgram();
+    ShaderProgram* getProgram();
 
 protected:
-    void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-
-private:
-    static std::weak_ptr<ShaderProgram> _defaultProgram;
+    void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
 };
 
 }

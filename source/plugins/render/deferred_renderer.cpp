@@ -26,11 +26,7 @@
 using namespace MindTree;
 using namespace GL;
 
-struct FinalOut;
-template<>
-const std::string
-PixelPlane::ShaderFiles<FinalOut>::
-fragmentShader = "../plugins/render/defaultShaders/finalout.frag";
+
 
 DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
     RenderConfigurator(context, camera)
@@ -68,10 +64,13 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     manager->addPass(overlayPass);
     auto overlay = _overlayPass.lock();
     overlay
-        ->setDepthOutput(std::make_shared<Renderbuffer>("depth",
-                                                        Renderbuffer::DEPTH));
-    auto overtx = std::make_shared<Texture2D>("overlay");
-    overlay->addOutput(overtx);
+        ->setDepthOutput(make_resource<Renderbuffer>(manager->getResourceManager(),
+                                                     "depth",
+                                                     Renderbuffer::DEPTH));
+    auto overtxptr = make_resource<Texture2D>(manager->getResourceManager(),
+                                           "overlay");
+    auto overtx = overtxptr.get();
+    overlay->addOutput(std::move(overtxptr));
     overlay->setCamera(camera);
     _viewCenter = new SinglePointRenderer();
     _viewCenter->setVisible(false);
@@ -92,9 +91,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     finalPass->setCamera(camera);
     manager->addPass(finalPass);
     finalPass->setCustomTextureNameMapping("final_out", "output");
-    PixelPlane *finalPlane = new PixelPlane();
-    finalPlane->setProvider<FinalOut>();
-    finalPass->addRenderer(finalPlane);
+    finalPass->addRenderer(new PixelPlane("../plugins/render/defaultShaders/finalout.frag"));
 
     setCamera(camera);
 }

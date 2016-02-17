@@ -10,8 +10,6 @@
 using namespace MindTree;
 using namespace MindTree::GL;
 
-std::weak_ptr<ShaderProgram> ShapeRendererGroup::_defaultProgram;
-
 ShapeRendererGroup::ShapeRendererGroup(ShapeRendererGroup *parent)
     : _fillColor(glm::vec4(1)),
     _borderColor(glm::vec4(1)),
@@ -58,7 +56,7 @@ void ShapeRendererGroup::init(ShaderProgram* prog)
     /* nothing to do here */
 }
 
-void ShapeRendererGroup::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void ShapeRendererGroup::draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
 }
 
@@ -126,30 +124,19 @@ bool ShapeRendererGroup::getScreenOriented() const
     return _screenOriented;
 }
 
-std::shared_ptr<ShaderProgram> ShapeRendererGroup::getProgram()
+template<>
+const std::string ShaderFiles<ShapeRendererGroup>::
+vertexShader = "../plugins/render/defaultShaders/primitive.vert";
+template<>
+const std::string ShaderFiles<ShapeRendererGroup>::
+fragmentShader = "../plugins/render/defaultShaders/primitive.frag";
+
+ShaderProgram* ShapeRendererGroup::getProgram()
 {
-    std::shared_ptr<ShaderProgram> prog;
-
-    if(_defaultProgram.expired()) {
-        prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/primitive.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/primitive.frag", 
-                                ShaderProgram::FRAGMENT);
-        _defaultProgram = prog;
-    }
-
-    return _defaultProgram.lock();
+    return getResourceManager()->shaderManager()->getProgram<ShapeRendererGroup>();
 }
 
-ShapeRenderer::~ShapeRenderer()
-{
-}
-
-void ShapeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void ShapeRenderer::draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     UniformStateManager uniformStates(program);
     uniformStates.addState("staticTransformation", getStaticWorldTransformation());
@@ -171,12 +158,12 @@ void ShapeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std
     }
 }
 
-void ShapeRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void ShapeRenderer::drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     glDrawArrays(GL_QUADS, 0, 4);
 }
 
-void ShapeRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void ShapeRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     glEnable(GL_LINE_SMOOTH);
     glDrawArrays(GL_LINE_LOOP, 0, 4);
@@ -201,9 +188,11 @@ void LineRenderer::setPoints(std::initializer_list<glm::vec3> points)
 
 void LineRenderer::init(ShaderProgram* prog)
 {
-    _vbo = std::make_shared<VBO>("P");
+    _vbo = make_resource<VBO>(getResourceManager(),
+                              "P");
+    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
     _vbo->bind();
-    prog->bindAttributeLocation(_vbo);
+    prog->bindAttributeLocation(_vbo.get());
 
     VertexList points;
     for(auto p : _points) {
@@ -213,14 +202,14 @@ void LineRenderer::init(ShaderProgram* prog)
     _vbo->setPointer();
 }
 
-void LineRenderer::drawBorder(const CameraPtr, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void LineRenderer::drawBorder(const CameraPtr&, const RenderConfig &config, ShaderProgram* program)
 {
     glEnable(GL_LINE_SMOOTH);
     glDrawArrays(GL_LINE_STRIP, 0, _points.size());
     glDisable(GL_LINE_SMOOTH);
 }
 
-QuadRenderer::QuadRenderer(float width, float height, ShapeRendererGroup *parent) : 
+QuadRenderer::QuadRenderer(float width, float height, ShapeRendererGroup *parent) :
     ShapeRenderer(parent),
     _width(width),
     _height(height)
@@ -229,9 +218,11 @@ QuadRenderer::QuadRenderer(float width, float height, ShapeRendererGroup *parent
 
 void QuadRenderer::init(ShaderProgram* prog)
 {
-    _vbo = std::make_shared<VBO>("P");
+    _vbo = make_resource<VBO>(getResourceManager(),
+                              "P");
+    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
     _vbo->bind();
-    prog->bindAttributeLocation(_vbo);
+    prog->bindAttributeLocation(_vbo.get());
 
     VertexList verts;
     verts.insert(begin(verts), {
@@ -244,8 +235,6 @@ void QuadRenderer::init(ShaderProgram* prog)
     _vbo->data(verts);
     _vbo->setPointer();
 }
-
-std::weak_ptr<ShaderProgram> GridRenderer::_defaultProgram;
 
 GridRenderer::GridRenderer(int width, int height, int xres, int yres, ShapeRendererGroup *parent) : 
     ShapeRenderer(parent),
@@ -265,9 +254,11 @@ GridRenderer::~GridRenderer()
 
 void GridRenderer::init(ShaderProgram* prog)
 {
-    _vbo = std::make_shared<VBO>("P");
+    _vbo = make_resource<VBO>(getResourceManager(),
+                              "P");
+    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
     _vbo->bind();
-    prog->bindAttributeLocation(_vbo);
+    prog->bindAttributeLocation(_vbo.get());
 
     VertexList verts;
 
@@ -293,7 +284,7 @@ void GridRenderer::init(ShaderProgram* prog)
     _vbo->setPointer();
 }
 
-void GridRenderer::drawBorder(const CameraPtr camera, const RenderConfig &/*config*/, std::shared_ptr<ShaderProgram> program)
+void GridRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &/*config*/, ShaderProgram* program)
 {
     UniformState(program, "alternatingColor", _alternatingColor);
     UniformState(program, "gridRes", glm::ivec2(_xres, _yres));
@@ -303,22 +294,16 @@ void GridRenderer::drawBorder(const CameraPtr camera, const RenderConfig &/*conf
     MTGLERROR;
 }
 
-std::shared_ptr<ShaderProgram> GridRenderer::getProgram()
+template<>
+const std::string ShaderFiles<GridRenderer>::
+vertexShader = "../plugins/render/defaultShaders/grid.vert";
+template<>
+const std::string ShaderFiles<GridRenderer>::
+fragmentShader = "../plugins/render/defaultShaders/grid.frag";
+
+ShaderProgram* GridRenderer::getProgram()
 {
-    std::shared_ptr<ShaderProgram> prog;
-    if(_defaultProgram.expired()) {
-        prog = std::make_shared<ShaderProgram>();
-
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/grid.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/grid.frag", 
-                                ShaderProgram::FRAGMENT);
-        _defaultProgram = prog;
-    }
-
-    return _defaultProgram.lock();
+    return getResourceManager()->shaderManager()->getProgram<GridRenderer>();
 }
 
 void GridRenderer::setAlternatingColor(glm::vec4 col)
@@ -340,9 +325,11 @@ void DiscRenderer::init(ShaderProgram* prog)
         _vbo->setPointer();
         return;
     }
-    _vbo = std::make_shared<VBO>("P");
+    _vbo = make_resource<VBO>(getResourceManager(),
+                              "P");
+    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
     _vbo->bind();
-    prog->bindAttributeLocation(_vbo);
+    prog->bindAttributeLocation(_vbo.get());
 
     VertexList verts;
 
@@ -357,12 +344,12 @@ void DiscRenderer::init(ShaderProgram* prog)
     _vbo->setPointer();
 }
 
-void DiscRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void DiscRenderer::drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     glDrawArrays(GL_TRIANGLE_FAN, 0, _segments + 2);
 }
 
-void DiscRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void DiscRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
 }
 
@@ -379,9 +366,11 @@ void CircleRenderer::init(ShaderProgram* prog)
         _vbo->setPointer();
         return;
     }
-    _vbo = std::make_shared<VBO>("P");
+    _vbo = make_resource<VBO>(getResourceManager(),
+                              "P");
+    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
     _vbo->bind();
-    prog->bindAttributeLocation(_vbo);
+    prog->bindAttributeLocation(_vbo.get());
 
     VertexList verts;
 
@@ -394,11 +383,11 @@ void CircleRenderer::init(ShaderProgram* prog)
     _vbo->setPointer();
 }
 
-void CircleRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void CircleRenderer::drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
 }
 
-void CircleRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void CircleRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     glDrawArrays(GL_LINE_LOOP, 0, _segments);
 }
@@ -417,9 +406,11 @@ void ConeRenderer::init(ShaderProgram* prog)
         _vbo->setPointer();
         return;
     }
-    _vbo = std::make_shared<VBO>("P");
+    _vbo = make_resource<VBO>(getResourceManager(),
+                              "P");
+    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
     _vbo->bind();
-    prog->bindAttributeLocation(_vbo);
+    prog->bindAttributeLocation(_vbo.get());
 
     VertexList verts;
 
@@ -434,12 +425,12 @@ void ConeRenderer::init(ShaderProgram* prog)
     _vbo->setPointer();
 }
 
-void ConeRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void ConeRenderer::drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     glDrawArrays(GL_TRIANGLE_FAN, 0, _segments + 2);
 }
 
-void ConeRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void ConeRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
 }
 
@@ -460,11 +451,13 @@ void SphereRenderer::init(ShaderProgram* prog)
         _vbo->setPointer();
         return;
     }
-    _vbo = std::make_shared<VBO>("P");
-    _ibo = std::make_shared<IBO>();
+    _vbo = make_resource<VBO>(getResourceManager(),
+                              "P");
+    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _ibo = make_resource<IBO>(getResourceManager());
     _vbo->bind();
     _ibo->bind();
-    prog->bindAttributeLocation(_vbo);
+    prog->bindAttributeLocation(_vbo.get());
 
     auto polygons = std::make_shared<PolygonList>();
 
@@ -478,8 +471,8 @@ void SphereRenderer::init(ShaderProgram* prog)
         float height = cos(PI * u);
         for(int j=0; j <= _v_segments; j++) {
             float pni = 2 * PI * float(j) / _v_segments;
-            verts.emplace_back(sin(pni) * circle_radius, 
-                               height, 
+            verts.emplace_back(sin(pni) * circle_radius,
+                               height,
                                cos(pni) * circle_radius);
         }
     }
@@ -495,12 +488,12 @@ void SphereRenderer::init(ShaderProgram* prog)
     _vbo->setPointer();
 }
 
-void SphereRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void SphereRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     //nothing
 }
 
-void SphereRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void SphereRenderer::drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     glDrawArrays(GL_POINTS, 0, (_u_segments - 2) * (_v_segments + 1) + 2);
     //glDrawArrays(GL_TRIANGLE_FAN, 0, (_u_segments - 2) * (_v_segments + 1) + 2);
@@ -539,9 +532,11 @@ void SinglePointRenderer::init(ShaderProgram* prog)
         _vbo->setPointer();
         return;
     }
-    _vbo = std::make_shared<VBO>("P");
+    _vbo = make_resource<VBO>(getResourceManager(),
+                              "P");
+    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
     _vbo->bind();
-    prog->bindAttributeLocation(_vbo);
+    prog->bindAttributeLocation(_vbo.get());
 
     VertexList verts;
     verts.emplace_back(0, 0, 0);
@@ -549,13 +544,13 @@ void SinglePointRenderer::init(ShaderProgram* prog)
     _vbo->setPointer();
 }
 
-void SinglePointRenderer::drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void SinglePointRenderer::drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     UniformState state(program, "point_size", _pointSize);
     glDrawArrays(GL_POINTS, 0, 1);
 }
 
-void SinglePointRenderer::drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void SinglePointRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     //nothing
 }

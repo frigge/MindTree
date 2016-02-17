@@ -16,7 +16,7 @@ public:
 
     virtual ~ShapeRendererGroup() {}
 
-    std::shared_ptr<ShaderProgram> getProgram();
+    ShaderProgram* getProgram();
 
     virtual void setFillColor(glm::vec4 color);
     virtual void setBorderColor(glm::vec4 color);
@@ -40,9 +40,7 @@ public:
 
 protected:
     virtual void init(ShaderProgram* prog);
-    virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-
-    static std::weak_ptr<ShaderProgram> _defaultProgram;
+    virtual void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
 
 private:
     std::vector<ShapeRendererGroup*> _childPrimitives;
@@ -61,15 +59,12 @@ private:
 
 class ShapeRenderer : public ShapeRendererGroup
 {
-public:
-    virtual ~ShapeRenderer();
-
 protected:
     ShapeRenderer(ShapeRendererGroup *parent=nullptr) : ShapeRendererGroup(parent) {}
 
-    virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    virtual void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    virtual void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    virtual void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    virtual void drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    virtual void drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
 };
 
 class LineRenderer : public ShapeRenderer
@@ -83,7 +78,7 @@ public:
 
 protected:
     virtual void init(ShaderProgram* prog);
-    virtual void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    virtual void drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
 
 private:
     VertexList _points;
@@ -113,13 +108,12 @@ public:
 
 protected:
     void init(ShaderProgram* prog);
-    virtual void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    std::shared_ptr<ShaderProgram> getProgram();
+    virtual void drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    ShaderProgram* getProgram();
 
 private:
     int _width, _height, _xres, _yres;
     glm::vec4 _alternatingColor;
-    static std::weak_ptr<ShaderProgram> _defaultProgram;
     std::shared_ptr<VBO> _vbo;
 };
 
@@ -129,8 +123,8 @@ public:
     DiscRenderer(ShapeRendererGroup *parent=nullptr);
 
 protected:
-    void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    void drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
     virtual void init(ShaderProgram* prog);
 
 private:
@@ -144,8 +138,8 @@ public:
     CircleRenderer(ShapeRendererGroup *parent=nullptr);
 
 protected:
-    void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    void drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
     virtual void init(ShaderProgram* prog);
 
 private:
@@ -159,8 +153,8 @@ public:
     ConeRenderer(ShapeRendererGroup *parent=nullptr);
 
 protected:
-    void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    void drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
     virtual void init(ShaderProgram* prog);
 
 private:
@@ -174,8 +168,8 @@ public:
     SphereRenderer(int u=8, int v=8);
 
 protected:
-    void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    void drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
     void init(ShaderProgram* prog);
 
 private:
@@ -193,8 +187,8 @@ public:
     void setPosition(glm::vec3 position);
 
 protected:
-    void drawBorder(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    void drawFill(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    void drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
     void init(ShaderProgram* prog);
 
 private:

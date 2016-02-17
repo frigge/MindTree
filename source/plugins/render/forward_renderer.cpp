@@ -27,7 +27,9 @@ ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3D
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
 
-    _geometryPass.lock()->setDepthOutput(std::make_shared<GL::Renderbuffer>("depth", GL::Renderbuffer::DEPTH));
+    _geometryPass.lock()->setDepthOutput(make_resource<Renderbuffer>(manager->getResourceManager(),
+                                                                     "depth",
+                                                                     Renderbuffer::DEPTH));
     if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(_geometryPass.lock());
 
     setupDefaultLights();

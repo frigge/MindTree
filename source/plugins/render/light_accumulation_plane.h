@@ -18,8 +18,8 @@ public:
     void setShadowPasses(std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> shadowPasses);
 
 protected:
-    virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
-    virtual void drawLight(const LightPtr light, std::shared_ptr<ShaderProgram> program);
+    virtual void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    virtual void drawLight(const LightPtr light, ShaderProgram* program);
 
     std::vector<LightPtr> getLight() const;
     std::unordered_map<LightPtr, std::weak_ptr<RenderPass>> getShadowPases() const;

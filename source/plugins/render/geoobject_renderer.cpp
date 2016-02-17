@@ -15,19 +15,18 @@ GeoObjectRenderer::~GeoObjectRenderer()
 {
 }
 
-void GeoObjectRenderer::init(ShaderProgram* prog)    
+void GeoObjectRenderer::init(ShaderProgram* prog)
 {
     auto data = obj->getData();
     auto propmap = data->getProperties();
     for(auto propPair : propmap){
         bool has_attr = prog->hasAttribute(propPair.first);
         if(has_attr) {
-            RenderTree::getResourceManager()->uploadData(data, propPair.first);
-            auto vbo = RenderTree::getResourceManager()->getVBO(data, propPair.first);
+            getResourceManager()->uploadData(data.get(), propPair.first);
+            auto vbo = getResourceManager()->getVBO(data.get(), propPair.first);
             prog->bindAttributeLocation(vbo);
         }
     }
-    
     initCustom();
 }
 
@@ -35,7 +34,7 @@ void GeoObjectRenderer::initCustom()
 {
 }
 
-void GeoObjectRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void GeoObjectRenderer::draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     //setting uniforms
     UniformStateManager uniformStates(program);

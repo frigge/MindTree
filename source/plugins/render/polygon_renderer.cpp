@@ -9,10 +9,9 @@
 
 using namespace MindTree::GL;
 
-std::weak_ptr<ShaderProgram> PolygonRenderer::_defaultProgram;
-
 PolygonRenderer::PolygonRenderer(std::shared_ptr<GeoObject> o)
-    : GeoObjectRenderer(o)
+    : GeoObjectRenderer(o),
+      _triangleCount(0)
 {
 }
 
@@ -20,32 +19,58 @@ PolygonRenderer::~PolygonRenderer()
 {
 }
 
-std::shared_ptr<ShaderProgram> PolygonRenderer::getProgram()
-{
-    std::shared_ptr<ShaderProgram> prog;
-    if(_defaultProgram.expired()) {
-        prog = std::make_shared<ShaderProgram>();
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert",
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.frag",
-                                ShaderProgram::FRAGMENT);
-        _defaultProgram = prog;
-    }
+template<>
+const std::string ShaderFiles<PolygonRenderer>::
+vertexShader = "../plugins/render/defaultShaders/polygons.vert";
+template<>
+const std::string ShaderFiles<PolygonRenderer>::
+fragmentShader = "../plugins/render/defaultShaders/polygons.frag";
 
-    return _defaultProgram.lock();
+ShaderProgram* PolygonRenderer::getProgram()
+{
+    return getResourceManager()->shaderManager()->getProgram<PolygonRenderer>();
+}
+
+std::vector<uint> PolygonRenderer::triangulate()
+{
+    auto data = obj->getData();
+    auto polygons = data->getProperty("polygon").getData<PolygonListPtr>();
+    std::vector<uint> triangles;
+    for(Polygon &poly : *polygons) {
+        uint first = poly.verts()[0];
+        for(size_t i = 1; i < poly.verts().size() - 1; ++i) {
+            triangles.push_back(first);
+            triangles.push_back(i);
+            triangles.push_back(i+1);
+        }
+    }
+    _triangleCount = triangles.size();
+    return triangles;
 }
 
 void PolygonRenderer::initCustom()
 {
     auto data = obj->getData();
-    auto ibo = RenderTree::getResourceManager()->getIBO(data);
-    ibo->bind();
-    ibo->data(data->getProperty("polygon").getData<PolygonListPtr>());
+    _triangulatedIBO = make_resource<IBO>(getResourceManager());
+    _triangulatedIBO->bind();
+    auto triangles = triangulate();
+    _triangulatedIBO->data(triangles);
+    if (std::static_pointer_cast<MeshData>(data)->hasProperty("polygon_color")) {
+        auto colProp = std::static_pointer_cast<MeshData>(data)->getProperty("polygon_color");
+        auto colors = colProp.getData<std::vector<glm::vec4>>();
+
+        //_polyColors = std::make_shared<VBO>("polygon_colors");
+        //_polyColors->bind();
+        //_polyColors->data(colors);
+
+        //_polyColorTexture = std::make_shared<Texture>("polygon_colors", Texture::RGBA8, Texture::TEXTURE_BUFFER);
+        //_polyColorTexture->init();
+        //_polyColorTexture->bind();
+        //glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA8, _polyColors->getID());
+    }
 }
 
-void PolygonRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void PolygonRenderer::draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     if(!config.drawPolygons()) return;
     GeoObjectRenderer::draw(camera, config, program);
@@ -57,23 +82,15 @@ void PolygonRenderer::draw(const CameraPtr camera, const RenderConfig &config, s
         manager.setFromPropertyMap(obj->getMaterial()->getProperties());
     }
 
-    auto ibo = RenderTree::getResourceManager()->getIBO(data);
-
-    auto polysizes = ibo->getSizes();
-    auto indexOffsets = ibo->getOffsets();
-
+    //program->setTexture(_polyColorTexture);
     glPolygonOffset(1.0, 1.0);
-
-    glMultiDrawElements(GL_TRIANGLE_FAN, //Primitive type
-                        (const GLsizei*)&polysizes[0], //polygon sizes
-                        GL_UNSIGNED_INT, //index datatype
-                        //(const GLvoid**)&polyindices[0],
-                        reinterpret_cast<const GLvoid**>(&indexOffsets[0]),
-                        polysizes.size()); //primitive count
+    MTGLERROR;
+    glDrawElements(GL_TRIANGLES, //Primitive type
+                   _triangleCount,
+                   GL_UNSIGNED_INT, //index datatype
+                   nullptr); //primitive count
     MTGLERROR;
 }
-
-std::weak_ptr<ShaderProgram> EdgeRenderer::_defaultProgram;
 
 EdgeRenderer::EdgeRenderer(std::shared_ptr<GeoObject> o)
     : GeoObjectRenderer(o)
@@ -84,32 +101,27 @@ EdgeRenderer::~EdgeRenderer()
 {
 }
 
-std::shared_ptr<ShaderProgram> EdgeRenderer::getProgram()
-{
-    std::shared_ptr<ShaderProgram> prog;
-    if(_defaultProgram.expired()) {
-        prog = std::make_shared<ShaderProgram>();
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/edges.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/edges.frag", 
-                                ShaderProgram::FRAGMENT);
-        _defaultProgram = prog;
-    }
+template<>
+const std::string ShaderFiles<EdgeRenderer>::
+vertexShader = "../plugins/render/defaultShaders/edges.vert";
+template<>
+const std::string ShaderFiles<EdgeRenderer>::
+fragmentShader = "../plugins/render/defaultShaders/edges.frag";
 
-    return _defaultProgram.lock();
+ShaderProgram* EdgeRenderer::getProgram()
+{
+    return getResourceManager()->shaderManager()->getProgram<EdgeRenderer>();
 }
 
 void EdgeRenderer::initCustom()
 {
     auto data = obj->getData();
-    auto ibo = RenderTree::getResourceManager()->getIBO(data);
+    auto ibo = getResourceManager()->getIBO(data.get());
     ibo->bind();
     ibo->data(data->getProperty("polygon").getData<PolygonListPtr>());
 }
 
-void EdgeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void EdgeRenderer::draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     if(!config.drawEdges()) return;
     GeoObjectRenderer::draw(camera, config, program);
@@ -120,7 +132,7 @@ void EdgeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std:
         lineWidth =  obj->getProperty("display.lineWidth").getData<double>();
 
     auto data = obj->getData();
-    auto ibo = RenderTree::getResourceManager()->getIBO(data);
+    auto ibo = getResourceManager()->getIBO(data.get());
 
     auto polysizes = ibo->getSizes();
     auto indexOffsets = ibo->getOffsets();
@@ -137,8 +149,6 @@ void EdgeRenderer::draw(const CameraPtr camera, const RenderConfig &config, std:
     glDisable(GL_LINE_SMOOTH);
 }
 
-std::weak_ptr<ShaderProgram> PointRenderer::_defaultProgram;
-
 PointRenderer::PointRenderer(std::shared_ptr<GeoObject> o)
     : GeoObjectRenderer(o)
 {
@@ -148,23 +158,19 @@ PointRenderer::~PointRenderer()
 {
 }
 
-std::shared_ptr<ShaderProgram> PointRenderer::getProgram()
+template<>
+const std::string ShaderFiles<PointRenderer>::
+vertexShader = "../plugins/render/defaultShaders/points.vert";
+template<>
+const std::string ShaderFiles<PointRenderer>::
+fragmentShader = "../plugins/render/defaultShaders/points.frag";
+
+ShaderProgram* PointRenderer::getProgram()
 {
-    std::shared_ptr<ShaderProgram> prog;
-    if(_defaultProgram.expired()) {
-        prog = std::make_shared<ShaderProgram>();
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/points.vert", 
-                                ShaderProgram::VERTEX);
-        prog
-            ->addShaderFromFile("../plugins/render/defaultShaders/points.frag", 
-                                ShaderProgram::FRAGMENT);
-        _defaultProgram = prog;
-    }
-    return _defaultProgram.lock();
+    return getResourceManager()->shaderManager()->getProgram<PointRenderer>();
 }
 
-void PointRenderer::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void PointRenderer::draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     if(!config.drawPoints()) return;
     GeoObjectRenderer::draw(camera, config, program);

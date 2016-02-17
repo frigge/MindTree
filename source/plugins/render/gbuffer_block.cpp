@@ -31,23 +31,33 @@ void GBufferRenderBlock::init()
 
     geopass->setEnableBlending(false);
 
-    auto depth = std::make_shared<Texture2D>("depth",
-                                             Texture::DEPTH);
-    geopass->setDepthOutput(depth);
-    geopass->addOutput(std::make_shared<Texture2D>("outdiffusecolor"));
-    geopass->addOutput(std::make_shared<Texture2D>("outcolor"));
-    geopass->addOutput(std::make_shared<Texture2D>("outdiffuseintensity"));
-    geopass->addOutput(std::make_shared<Texture2D>("outspecintensity"));
-    auto normal = std::make_shared<Texture2D>("outnormal",
-                                              Texture::RGBA16F);
+    auto depth = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                          "depth",
+                                          Texture::DEPTH);
+    geopass->setDepthOutput(std::move(depth));
+    geopass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                "outdiffusecolor"));
+    geopass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                "outcolor"));
+    geopass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                "outdiffuseintensity"));
+    geopass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                "outspecintensity"));
+    auto normalptr = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                           "outnormal",
+                                           Texture::RGBA16F);
+    auto *normal = normalptr.get();
     normal->generateMipmaps();
-    geopass->addOutput(normal);
-    auto position = std::make_shared<Texture2D>("outposition",
-                                                Texture::RGBA16F);
+    geopass->addOutput(std::move(normalptr));
+    auto positionptr = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                             "outposition",
+                                             Texture::RGBA16F);
+    auto *position = positionptr.get();
     position->generateMipmaps();
-    geopass->addOutput(position);
-    geopass->addOutput(std::make_shared<Texture2D>("worldposition",
-                                                   Texture::RGBA16F));
+    geopass->addOutput(std::move(positionptr));
+    geopass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                "worldposition",
+                                                Texture::RGBA16F));
 
     geopass->addPostRenderCallback([normal, position] (RenderPass *) {
                                        normal->generateMipmaps();
@@ -63,10 +73,14 @@ void GBufferRenderBlock::init()
 
 void GBufferRenderBlock::setupGBuffer()
 {
-    auto gbufferShader = std::make_shared<ShaderProgram>();
+    auto gbufferShader = _config->
+        getManager()->getResourceManager()->shaderManager()->getProgram<GBufferRenderBlock>();
     gbufferShader
         ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert",
                             ShaderProgram::VERTEX);
+    //    gbufferShader
+    //            ->addShaderFromFile("../plugins/render/defaultShaders/polygons.geo",
+    //                                ShaderProgram::GEOMETRY);
     gbufferShader
         ->addShaderFromFile("../plugins/render/defaultShaders/gbuffer.frag",
                             ShaderProgram::FRAGMENT);

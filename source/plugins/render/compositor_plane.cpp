@@ -1,20 +1,17 @@
 #include "renderpass.h"
 #include "render_setup.h"
+#include "rendertree.h"
 #include "compositor_plane.h"
 
 using namespace MindTree;
 using namespace MindTree::GL;
-template<>
-const std::string
-PixelPlane::ShaderFiles<CompositorPlane>::
-fragmentShader = "../plugins/render/defaultShaders/compositing.frag";
 
 CompositorPlane::CompositorPlane()
+    : PixelPlane("../plugins/render/defaultShaders/compositing.frag")
 {
-    setProvider<CompositorPlane>();
 }
 
-CompositorPlane::CompositInfo& CompositorPlane::addLayer(std::weak_ptr<Texture2D> tx, float mix, CompositType type)
+CompositorPlane::CompositInfo& CompositorPlane::addLayer(Texture2D *tx, float mix, CompositType type)
 {
     CompositInfo info;
     info.type = type;
@@ -24,14 +21,14 @@ CompositorPlane::CompositInfo& CompositorPlane::addLayer(std::weak_ptr<Texture2D
     return _layers[_layers.size() - 1];
 }
 
-void CompositorPlane::draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void CompositorPlane::draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     int i = -1;
     for(auto layer : _layers) {
-        if(!layer.enabled || layer.texture.expired())
+        if(!layer.enabled)
             continue;
         program->setUniform("mixValue", layer.mixValue);
-        program->setTexture(layer.texture.lock(), "layer");
+        program->setTexture(layer.texture, "layer");
         if(i > -1) program->setUniform("last_type", (int)_layers[i].type);
         else program->setUniform("last_type", -1);
         switch(layer.type) {
@@ -71,7 +68,7 @@ void CompositorPlane::draw(const CameraPtr camera, const RenderConfig &config, s
 CompositorPlane::CompositInfo& CompositorPlane::getInfo(std::string txName)
 {
     return *std::find_if(begin(_layers), end(_layers), [&txName] (const CompositInfo &info) {
-            return info.texture.lock()->getName() == txName;
+            return info.texture->getName() == txName;
         });
 }
 
@@ -96,7 +93,8 @@ void Compositor::init()
     _pixelPass = pixelPass.get();
     pixelPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
     pixelPass->addRenderer(_plane);
-    pixelPass->addOutput(std::make_shared<Texture2D>("final_out"));
+    pixelPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                  "final_out"));
 
     PropertyMap layer = {
         {"enabled", true},
@@ -105,7 +103,7 @@ void Compositor::init()
 
     PropertyMap layerSettings;
     for  (const auto &info : _plane->getLayers()) {
-        layerSettings[info.texture.lock()->getName()] = layer;
+        layerSettings[info.texture->getName()] = layer;
     }
 
     _config->addSettings("LayerSettings", layerSettings);
@@ -126,7 +124,7 @@ void Compositor::setProperty(std::string name, Property prop)
     auto it = std::find_if(begin(layers),
                            end(layers),
                            [&name=layername] (const CompositorPlane::CompositInfo &info) {
-                               return info.texture.lock()->getName() == name;
+                               return info.texture->getName() == name;
                            });
     if (it == end(layers)) return;
 
@@ -136,7 +134,7 @@ void Compositor::setProperty(std::string name, Property prop)
         it->mixValue = prop.getData<double>();
 }
 
-void Compositor::addLayer(std::weak_ptr<Texture2D> tx,
+void Compositor::addLayer(Texture2D *tx,
                           float mix,
                           CompositorPlane::CompositType type)
 {

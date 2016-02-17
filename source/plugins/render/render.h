@@ -7,6 +7,7 @@
 #include "shared_mutex"
 #include "vector"
 #include "unordered_set"
+#include "glwrapper.h"
 #include "../datatypes/Object/object.h"
 #include "glm/glm.hpp"
 
@@ -24,13 +25,14 @@ class ShaderProgram;
 class RenderConfig;
 
 class RenderTree;
+class ResourceManager;
 class Renderer
 {
 public:
     Renderer();
     virtual ~Renderer();
 
-    void render(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    void render(const CameraPtr camera, const RenderConfig &config, ShaderProgram* program);
 
     void setTransformation(glm::mat4 trans);
     glm::mat4 getTransformation();
@@ -44,13 +46,15 @@ public:
 
     void setVisible(bool visible);
 
-    virtual std::shared_ptr<ShaderProgram> getProgram() = 0;
+    virtual ShaderProgram* getProgram() = 0;
+    void setResourceManager(ResourceManager *manager);
 
 protected:
     friend class ShaderRenderNode;
+    ResourceManager* getResourceManager();
 
     virtual void init(ShaderProgram* program) = 0;
-    virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program) = 0;
+    virtual void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program) = 0;
 
     std::vector<std::shared_ptr<Renderer>> _children;
 
@@ -61,6 +65,7 @@ private:
     std::atomic<bool> _initialized, _visible;
     glm::mat4 _transformation;
     std::shared_timed_mutex _transformationLock;
+    ResourceManager *_resourceManager;
 
     Renderer* _parent;
 };

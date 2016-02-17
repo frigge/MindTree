@@ -17,8 +17,11 @@ ShadowMappingRenderBlock::ShadowMappingRenderBlock()
 
 void ShadowMappingRenderBlock::init()
 {
-    auto shadowShader = std::make_shared<ShaderProgram>();
+    auto shadowShader = _config->
+        getManager()->getResourceManager()->shaderManager()->getProgram<ShadowMappingRenderBlock>();
     _shadowNode = std::make_shared<ShaderRenderNode>(shadowShader);
+    _shadowNode->setResourceManager(_config->getManager()->getResourceManager());
+
     shadowShader
         ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert",
                             ShaderProgram::VERTEX);
@@ -84,8 +87,9 @@ std::weak_ptr<RenderPass> ShadowMappingRenderBlock::createShadowPass(SpotLightPt
     camera->setFar(info._far);
     shadowPass->setCamera(camera);
     shadowPass
-        ->setDepthOutput(std::make_shared<Texture2D>("shadow",
-                                                     Texture::DEPTH32F));
+        ->setDepthOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                  "shadow",
+                                                  Texture::DEPTH32F));
     shadowPass->addGeometryShaderNode(_shadowNode);
     shadowPass->setClearDepth(1.);
     static const float PI = 3.14159265359;

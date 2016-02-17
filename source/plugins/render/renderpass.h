@@ -9,6 +9,8 @@
 #include "queue"
 #include "utility"
 
+#include "glwrapper.h"
+
 #include "../datatypes/Object/object.h"
 #include "../datatypes/Object/lights.h"
 #include "data/mtobject.h"
@@ -38,8 +40,8 @@ public:
     void setBenchmark(std::shared_ptr<Benchmark> benchmark);
     void setCamera(CameraPtr camera);
 
-    void setTarget(std::shared_ptr<FBO> target);
-    std::shared_ptr<FBO> getTarget();
+    void setTarget(ResourceHandle<FBO> &&target);
+    FBO* getTarget();
 
     void addPostRenderCallback(std::function<void(RenderPass*)> cb);
 
@@ -49,14 +51,14 @@ public:
         NONE
     };
 
-    void setDepthOutput(std::shared_ptr<Texture2D> output);
-    void setDepthOutput(std::shared_ptr<Renderbuffer> output);
+    void setDepthOutput(ResourceHandle<Texture2D> &&output);
+    void setDepthOutput(ResourceHandle<Renderbuffer> &&output);
 
-    void addOutput(std::shared_ptr<Texture2D> tex);
-    void addOutput(std::shared_ptr<Renderbuffer> rb);
+    void addOutput(ResourceHandle<Texture2D> &&tex);
+    void addOutput(ResourceHandle<Renderbuffer> &&rb);
 
-    std::vector<std::shared_ptr<Texture2D>> getOutputTextures();
-    std::shared_ptr<Texture2D> getOutDepthTexture();
+    std::vector<Texture2D*> getOutputTextures();
+    Texture2D* getOutDepthTexture();
 
     std::vector<std::shared_ptr<ShaderRenderNode>> getShaderNodes();
 
@@ -71,7 +73,7 @@ public:
 
     std::vector<glm::vec4> readPixel(std::vector<std::string> name, glm::ivec2 pos);
 
-    void setOverrideProgram(std::shared_ptr<ShaderProgram> program);
+    void setOverrideProgram(ResourceHandle<ShaderProgram> &&program);
 
     void addShaderNode(std::shared_ptr<ShaderRenderNode> node);
     void addGeometryShaderNode(std::shared_ptr<ShaderRenderNode> node);
@@ -81,11 +83,11 @@ public:
 
     void clearRenderers();
     void clearUnusedShaderNodes();
-    void setTextures(std::vector<std::shared_ptr<Texture2D>> textures);
+    void setTextures(std::vector<Texture2D*> textures);
     void setCustomTextureNameMapping(std::string realname, std::string newname);
     void clearCustomTextureNameMapping();
     void setCustomFragmentNameMapping(std::string realname, std::string newname);
-    std::string getFragmentName(std::shared_ptr<Texture2D> tex) const;
+    std::string getFragmentName(Texture2D *tex) const;
     void clearCustomFragmentNameMapping();
 
     void setTree(RenderTree *tree);
@@ -99,7 +101,13 @@ private:
     void setDirty();
 
     void processPixelRequests();
-    std::string getTextureName(std::shared_ptr<Texture2D> tex) const;
+    void addShaderNodeNoLock(std::shared_ptr<ShaderRenderNode> node);
+    void addGeometryShaderNodeNoLock(std::shared_ptr<ShaderRenderNode> node);
+    std::pair<bool, std::shared_ptr<ShaderRenderNode>>
+        findNodeToInsert(Renderer *renderer,
+                         std::vector<std::shared_ptr<ShaderRenderNode>> nodes);
+
+    std::string getTextureName(Texture2D *tex) const;
 
     std::vector<glm::vec4> _requestedPixels;
     std::queue<std::pair<std::string, glm::ivec2>> _pixelRequests;
@@ -110,7 +118,7 @@ private:
     std::atomic<bool> _initialized;
     std::atomic<bool> _enabled;
     std::shared_ptr<Camera> _camera;
-    std::shared_ptr<FBO> _target;
+    ResourceHandle<FBO> _target;
 
     std::shared_timed_mutex _geometryLock;
     std::shared_timed_mutex _shapesLock;
@@ -119,11 +127,11 @@ private:
     std::vector<std::shared_ptr<ShaderRenderNode>> _shadernodes;
     std::vector<std::shared_ptr<ShaderRenderNode>> _geometryShaderNodes;
 
-    std::vector<std::shared_ptr<Texture2D>> _outputTextures;
-    std::vector<std::shared_ptr<Renderbuffer>> _outputRenderbuffers;
+    std::vector<ResourceHandle<Texture2D>> _outputTextures;
+    std::vector<ResourceHandle<Renderbuffer>> _outputRenderbuffers;
 
-    std::shared_ptr<Texture2D> _depthTexture;
-    std::shared_ptr<Renderbuffer> _depthRenderbuffer;
+    ResourceHandle<Texture2D> _depthTexture;
+    ResourceHandle<Renderbuffer> _depthRenderbuffer;
 
     std::shared_timed_mutex _blendLock;
     GLenum _blendColorSource;
@@ -141,7 +149,8 @@ private:
     std::atomic<float> _depth;
 
     std::shared_timed_mutex _overrideProgramLock;
-    std::shared_ptr<ShaderProgram> _overrideProgram;
+    ResourceHandle<ShaderProgram> _overrideProgram;
+    std::atomic_bool overrideProgramFlag_;
 
     int _currentWidth, _currentHeight;
 

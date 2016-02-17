@@ -4,6 +4,9 @@
 
 #include "vector"
 #include "memory"
+#include "unordered_map"
+#include "typeinfo"
+#include "typeindex"
 #include "GL/glew.h"
 
 #include "QGLFormat"
@@ -61,10 +64,10 @@ template<typename T>
 class GLObjectBinder
 {
 public:
-    GLObjectBinder(T glObj) : _glObj(glObj) 
-    { 
+    GLObjectBinder(T glObj) : _glObj(glObj)
+    {
         if(_glObj)
-            _glObj->bind(); 
+            _glObj->bind();
     }
     ~GLObjectBinder() { if(_glObj) _glObj->release(); }
 
@@ -98,6 +101,7 @@ public:
 
     virtual void bind();
     virtual void release();
+    int getID() const;
 
 private:
     GLenum _bufferType;
@@ -112,12 +116,13 @@ public:
 
     void bind();
 
-    std::string getName();
+    std::string getName() const;
     void data(std::shared_ptr<VertexList> l);
     void data(VertexList l);
     void data(std::vector<glm::vec2> l);
+    void data(std::vector<glm::vec4> l);
     void setPointer();
-    GLint getIndex();
+    GLint getIndex() const;
     void overrideIndex(uint index);
 
 private:
@@ -133,14 +138,13 @@ public:
     IBO();
     virtual ~IBO();
 
-    std::vector<uint> getSizes();
-    std::vector<intptr_t> getOffsets();
+    std::vector<uint> getSizes() const;
+    std::vector<intptr_t> getOffsets() const;
 
     void data(std::shared_ptr<PolygonList> l);
+    void data(const std::vector<uint32_t> &triangles);
 
 private:
-    void generateIndices();
-
     std::vector<uint> _polysizes;
     std::vector<intptr_t> _indexOffsets;
 };
@@ -160,26 +164,26 @@ public:
     FBO();
     virtual ~FBO();
 
-    GLuint getID();
+    GLuint getID() const;
 
     void bind();
     void release();
 
-    void attachColorTexture(std::weak_ptr<Texture2D> tex);
-    void attachDepthTexture(std::weak_ptr<Texture2D> tex);
+    void attachColorTexture(Texture2D *tex);
+    void attachDepthTexture(Texture2D *tex);
 
-    void attachColorRenderbuffer(std::weak_ptr<Renderbuffer> rb);
-    void attachDepthRenderbuffer(std::weak_ptr<Renderbuffer> rb);
+    void attachColorRenderbuffer(Renderbuffer *rb);
+    void attachDepthRenderbuffer(Renderbuffer *rb);
 
-    std::vector<std::string> getAttachments();
-    int getAttachmentPos(std::string name);
+    std::vector<std::string> getAttachments() const;
+    int getAttachmentPos(std::string name) const;
 
 private:
     uint color_attachments;
     GLuint id;
     std::vector<std::string> _attachments;
-    std::vector<std::weak_ptr<Texture2D>> _textures;
-    std::vector<std::weak_ptr<Renderbuffer>> _renderbuffers;
+    std::vector<Texture2D*> _textures;
+    std::vector<Renderbuffer*> _renderbuffers;
 };
 
 class Renderbuffer
@@ -206,13 +210,13 @@ public:
     void setWidth(int w);
     void setHeight(int h);
 
-    std::string getName();
-    GLuint getID();
+    std::string getName() const;
+    GLuint getID() const;
 
     void bind();
     void release();
 
-    Format getFormat();
+    Format getFormat() const;
 
 private:
     GLuint _id;
@@ -245,7 +249,7 @@ public:
     void addShaderFromSource(std::string src, ShaderType type);
     void addShaderFromFile(std::string filename, ShaderType type);
 
-    GLuint getID();
+    GLuint getID() const;
 
     int getUniformLocation(std::string name) const;
 
@@ -273,9 +277,9 @@ public:
 
     void setUniforms(PropertyMap map);
 
-    void setTexture(std::shared_ptr<Texture> texture, std::string name="");
+    void setTexture(Texture *texture, std::string name="");
 
-    void bindAttributeLocation(std::shared_ptr<VBO> vbo);
+    void bindAttributeLocation(VBO *vbo);
     void bindFragmentLocation(unsigned int index, std::string name);
 
     bool hasAttribute(std::string name);
@@ -288,16 +292,14 @@ public:
     void enableAttribute(std::string name);
     void disableAttribute(std::string name);
 
-    std::string getFileName(int shaderType);
+    std::string getFileName(int shaderType) const;
 
     void link();
     void init();
 
 private:
-    void cleanupTextures();
-
     struct TextureInfo {
-        std::weak_ptr<Texture> texture;
+        Texture *texture;
         std::string name;
     };
 
@@ -317,7 +319,7 @@ private:
 class UniformState
 {
 public:
-    UniformState(std::weak_ptr<ShaderProgram> prog, std::string name, Property value);
+    UniformState(ShaderProgram *prog, std::string name, Property value);
     UniformState(const UniformState &other) = delete;
     UniformState(const UniformState &&other);
     ~UniformState();
@@ -329,13 +331,13 @@ private:
     mutable bool _valid;
     std::string _name;
     Property _oldValue;
-    std::weak_ptr<ShaderProgram> _program;
+    ShaderProgram *_program;
 };
 
 class UniformStateManager
 {
 public:
-    UniformStateManager(std::weak_ptr<ShaderProgram> prog);
+    UniformStateManager(ShaderProgram *prog);
     ~UniformStateManager();
 
     void addState(std::string name, Property value);
@@ -343,7 +345,7 @@ public:
     void reset();
 
 private:
-    std::weak_ptr<ShaderProgram> _program;
+    ShaderProgram *_program;
     std::vector<UniformState> _states;
 };
 
@@ -374,7 +376,8 @@ public:
 
     enum Target {
         TEXTURE1D,
-        TEXTURE2D
+        TEXTURE2D,
+        TEXTURE_BUFFER
     };
 
     enum WrapMode {
@@ -392,7 +395,7 @@ public:
 
     int width();
 
-    std::string getName();
+    std::string getName() const;
     void setName(std::string name);
     virtual void bind();
     virtual void release();
@@ -417,7 +420,7 @@ public:
 
     void setWidth(int w);
 
-    GLenum getGLSize();
+    GLenum getGLSize() const;
 
     bool isInitialized() const;
     void generateMipmaps();
@@ -426,7 +429,7 @@ protected:
     GLenum getInternalFormat() const;
 
 private:
-    GLenum getGLTarget();
+    GLenum getGLTarget() const;
 
     GLuint _id;
     Format _format;
@@ -475,21 +478,17 @@ template<class T>
 class Resource : public AbstractResource
 {
 public:
-    Resource(std::shared_ptr<T> resource) :
-        AbstractResource(s_resource_name), 
-        _resource(resource) {};
-    ~Resource() 
-    {
-        if(_resource.use_count() > 1)
-            std::cout << "There are still " << _resource.use_count() << " references" << std::endl;
-        assert(_resource.use_count() <= 1);
-    }
+    explicit Resource(std::unique_ptr<T> &&resource) :
+        AbstractResource(s_resource_name),
+            _resource{std::forward<std::unique_ptr<T>>(resource)} {};
 
 private:
-    std::shared_ptr<T> _resource;
+    std::unique_ptr<T> _resource;
 
     static const std::string s_resource_name;
 };
+
+class ShaderManager;
 
 class ResourceManager
 {
@@ -497,32 +496,134 @@ public:
     ResourceManager();
     virtual ~ResourceManager();
 
-    std::shared_ptr<VBO> getVBO(ObjectDataPtr data, std::string name);
-    std::shared_ptr<IBO> getIBO(ObjectDataPtr data);
-    void uploadData(ObjectDataPtr data, std::string name);
+    VBO* getVBO(ObjectData *data, std::string name);
+    IBO* getIBO(ObjectData *data);
+    void uploadData(ObjectData *data, std::string name);
 
-    template<class T>
-    void scheduleCleanUp(std::shared_ptr<T> resource)
+    void scheduleCleanUp(IBO *resource)
     {
         std::lock_guard<std::mutex> lock(_resourceMutex);
-        auto res = std::make_unique<Resource<T>>(resource);
+        auto it = std::find_if(begin(_iboMap),
+                               end(_iboMap),
+                               [&resource](const auto &p){return p.second.get() == resource;});
+
+        if(it != end(_iboMap))
+            _iboMap.erase(it);
+
+        auto res = std::make_unique<Resource<IBO>>(std::unique_ptr<IBO>(resource));
+        _scheduledResource.push_back(std::move(res));
+    }
+
+    template<class T>
+    void scheduleCleanUp(T* resource)
+    {
+        std::lock_guard<std::mutex> lock(_resourceMutex);
+        auto res = std::make_unique<Resource<T>>(std::unique_ptr<T>(resource));
         _scheduledResource.push_back(std::move(res));
     }
     int getIndexForAttribute(std::string name);
 
+    inline ShaderManager* shaderManager() {return shaderManager_.get();}
+
 private:
     friend class RenderTree;
 
-    std::shared_ptr<VBO> createVBO(ObjectDataPtr data, std::string name);
-    std::shared_ptr<IBO> createIBO(ObjectDataPtr data);
+    VBO* createVBO(ObjectData *data, std::string name);
+    IBO* createIBO(ObjectData *data);
     void cleanUp();
+
+    std::unique_ptr<ShaderManager> shaderManager_;
 
     std::vector<std::unique_ptr<AbstractResource>> _scheduledResource;
 
     std::mutex _resourceMutex;
-    std::unordered_map<ObjectDataPtr, std::vector<std::shared_ptr<VBO>>> _vboMap;
-    std::unordered_map<ObjectDataPtr, std::shared_ptr<IBO>> _iboMap;
+    std::unordered_map<ObjectData*, std::vector<std::shared_ptr<VBO>>> _vboMap;
+    std::unordered_map<ObjectData*, std::shared_ptr<IBO>> _iboMap;
     std::unordered_map<std::string, int> _attributeIndexMap;
+};
+
+template<typename T>
+struct ResourceDeleter {
+    ResourceDeleter() : manager_(nullptr) {}
+    ResourceDeleter(ResourceManager *manager) : manager_(manager) {}
+
+    void operator()(T *p)
+    {
+        manager_->scheduleCleanUp(p);
+    }
+
+    ResourceManager *manager_;
+};
+
+//just as a compile-time guard to not accidentally create std::shared_ptr by hand
+// without custom deleter
+template<typename T>
+using ResourceHandle = std::unique_ptr<T, ResourceDeleter<T>>;
+
+template<typename T, typename ...Args>
+ResourceHandle<T> make_resource(ResourceManager *manager, Args ...args)
+{
+    auto *resource = new T(args...);
+    return ResourceHandle<T>(resource, ResourceDeleter<T>(manager));
+}
+
+template<typename T>
+struct ShaderFiles {
+    static const std::string vertexShader;
+    static const std::string geometryShader;
+    static const std::string fragmentShader;
+    static const std::string tessControlShader;
+    static const std::string tessEvalShader;
+};
+
+template<typename T>
+const std::string ShaderFiles<T>::vertexShader;
+template<typename T>         
+const std::string ShaderFiles<T>::geometryShader;
+template<typename T>         
+const std::string ShaderFiles<T>::fragmentShader;
+template<typename T>
+const std::string ShaderFiles<T>::tessControlShader;
+template<typename T>
+const std::string ShaderFiles<T>::tessEvalShader;
+
+template<typename T>
+struct ShaderProvider {
+    static ResourceHandle<ShaderProgram> provideProgram(ResourceManager *manager) {
+        auto prog = make_resource<ShaderProgram>(manager);
+        auto vert = ShaderFiles<T>::vertexShader;
+        auto frag = ShaderFiles<T>::fragmentShader;
+        auto geo = ShaderFiles<T>::geometryShader;
+        auto tessc = ShaderFiles<T>::tessControlShader;
+        auto tesse = ShaderFiles<T>::tessEvalShader;
+
+        if(vert != "")prog->addShaderFromFile(vert, ShaderProgram::VERTEX);
+        if(frag != "")prog->addShaderFromFile(frag, ShaderProgram::FRAGMENT);
+        if(geo != "")prog->addShaderFromFile(vert, ShaderProgram::GEOMETRY);
+        if(tessc != "")prog->addShaderFromFile(frag, ShaderProgram::TESSELATION_CONTROL);
+        if(tesse != "")prog->addShaderFromFile(frag, ShaderProgram::TESSELATION_EVALUATION);
+        return prog;
+    }
+};
+
+class ShaderManager
+{
+public:
+    ShaderManager(ResourceManager *manager) : manager_(manager) {}
+
+    template<typename T>
+    ShaderProgram *getProgram()
+    {
+        auto t = std::type_index(typeid(T));
+        if(programs_.find(t) == programs_.end()) {
+            programs_[t] = ShaderProvider<T>::provideProgram(manager_);
+        }
+        return programs_[t].get();
+    }
+
+private:
+    std::unordered_map<std::type_index, ResourceHandle<ShaderProgram>> programs_;
+    ResourceManager *manager_;
 };
 
 class ContextBinder

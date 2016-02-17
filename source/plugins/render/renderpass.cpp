@@ -22,23 +22,13 @@ RenderPass::RenderPass() :
     _depthOutput(NONE),
     _bgColor(0),
     _depth(1),
-    _tree(nullptr)
+    _tree(nullptr),
+    overrideProgramFlag_(false)
 {
 }
 
 RenderPass::~RenderPass()
 {
-    for (auto tx : _outputTextures) {
-        RenderTree::getResourceManager()->scheduleCleanUp(tx);
-    }
-
-    for (auto rb : _outputRenderbuffers) {
-        RenderTree::getResourceManager()->scheduleCleanUp(rb);
-    }
-
-    RenderTree::getResourceManager()->scheduleCleanUp(_depthTexture);
-    RenderTree::getResourceManager()->scheduleCleanUp(_depthRenderbuffer);
-    RenderTree::getResourceManager()->scheduleCleanUp(_target);
 }
 
 void RenderPass::addPostRenderCallback(std::function<void(RenderPass*)> cb)
@@ -91,10 +81,11 @@ void RenderPass::setEnableBlending(bool value)
     _blending = value;
 }
 
-void RenderPass::setOverrideProgram(std::shared_ptr<ShaderProgram> program)
+void RenderPass::setOverrideProgram(ResourceHandle<ShaderProgram> &&program)
 {
     std::unique_lock<std::shared_timed_mutex> lock(_overrideProgramLock);
-    _overrideProgram = program;
+    _overrideProgram = std::move(program);
+    overrideProgramFlag_ = true;
 }
 
 void RenderPass::setTree(RenderTree *tree)
@@ -114,14 +105,14 @@ void RenderPass::init()
     //make sure shaderprograms are clean
     {
         std::shared_lock<std::shared_timed_mutex> shapeLock(_shapesLock);
-        for(auto shadernode : _shadernodes) {
+        for(auto &shadernode : _shadernodes) {
             shadernode->init();
         }
     }
 
     {
         std::shared_lock<std::shared_timed_mutex> geoLock(_geometryLock);
-        for(auto shadernode : _geometryShaderNodes) {
+        for(auto &shadernode : _geometryShaderNodes) {
             shadernode->init();
         }
     }
@@ -132,37 +123,37 @@ void RenderPass::init()
        && _depthOutput == NONE)
         return;
 
-    _target = std::make_shared<FBO>();
+    _target = make_resource<FBO>(_tree->getResourceManager());
 
     {
-        GLObjectBinder<std::shared_ptr<FBO>> binder(_target);
+        GLObjectBinder<FBO*> binder(_target.get());
         uint i = 0;
-        for (auto texture : _outputTextures) {
+        for (auto &texture : _outputTextures) {
             texture->setWidth(_currentWidth);
             texture->setHeight(_currentHeight);
             texture->init();
             {
-                GLObjectBinder<std::shared_ptr<Texture2D>> binder(texture);
-                _target->attachColorTexture(texture);
+                GLObjectBinder<Texture2D*> binder(texture.get());
+                _target->attachColorTexture(texture.get());
 
                 //init shader programs
-                for(auto shadernode : _shadernodes) {
-                    shadernode->program()->bindFragmentLocation(i, getFragmentName(texture));
+                for(auto &shadernode : _shadernodes) {
+                    shadernode->program()->bindFragmentLocation(i, getFragmentName(texture.get()));
                 }
-                for(auto shadernode : _geometryShaderNodes) {
-                    shadernode->program()->bindFragmentLocation(i, getFragmentName(texture));
+                for(auto &shadernode : _geometryShaderNodes) {
+                    shadernode->program()->bindFragmentLocation(i, getFragmentName(texture.get()));
                 }
             }
             ++i;
         }
 
-        for (auto renderbuffer : _outputRenderbuffers) {
+        for (auto &renderbuffer : _outputRenderbuffers) {
             renderbuffer->setWidth(_currentWidth);
             renderbuffer->setHeight(_currentHeight);
             renderbuffer->init();
             {
-                GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(renderbuffer);
-                _target->attachColorRenderbuffer(renderbuffer);
+                GLObjectBinder<Renderbuffer*> binder(renderbuffer.get());
+                _target->attachColorRenderbuffer(renderbuffer.get());
 
                 //init shader programs
                 for(auto shadernode : _shadernodes) {
@@ -182,8 +173,8 @@ void RenderPass::init()
                     _depthTexture->setHeight(_currentHeight);
                     _depthTexture->init();
                     {
-                        GLObjectBinder<std::shared_ptr<Texture2D>> binder(_depthTexture);
-                        _target->attachDepthTexture(_depthTexture);
+                        GLObjectBinder<Texture2D*> binder(_depthTexture.get());
+                        _target->attachDepthTexture(_depthTexture.get());
                     }
                     break;
                 }
@@ -194,14 +185,15 @@ void RenderPass::init()
                     _depthRenderbuffer->setHeight(_currentHeight);
                     _depthRenderbuffer->init();
                     {
-                        GLObjectBinder<std::shared_ptr<Renderbuffer>> binder(_depthRenderbuffer);
-                        _target->attachDepthRenderbuffer(_depthRenderbuffer);
+                        GLObjectBinder<Renderbuffer*> binder(_depthRenderbuffer.get());
+                        _target->attachDepthRenderbuffer(_depthRenderbuffer.get());
                     }
                     break;
                 }
             default:
                 break;
         }
+        getGLFramebufferError(__PRETTY_FUNCTION__);
     }
 }
 
@@ -228,7 +220,7 @@ void RenderPass::setCustomFragmentNameMapping(std::string realname, std::string 
     _tree->setDirty();
 }
 
-std::string RenderPass::getTextureName(std::shared_ptr<Texture2D> tex) const
+std::string RenderPass::getTextureName(Texture2D *tex) const
 {
     std::shared_lock<std::shared_timed_mutex> lock(_textureNameMappingLock);
     std::string realName = tex->getName();
@@ -241,7 +233,7 @@ std::string RenderPass::getTextureName(std::shared_ptr<Texture2D> tex) const
         return realName;
 }
 
-std::string RenderPass::getFragmentName(std::shared_ptr<Texture2D> tex) const
+std::string RenderPass::getFragmentName(Texture2D *tex) const
 {
     std::shared_lock<std::shared_timed_mutex> lock(_fragmentNameMappingLock);
     std::string realName = tex->getName();
@@ -269,7 +261,7 @@ void RenderPass::clearCustomFragmentNameMapping()
     _tree->setDirty();
 }
 
-void RenderPass::setTextures(std::vector<std::shared_ptr<Texture2D>> textures)
+void RenderPass::setTextures(std::vector<Texture2D*> textures)
 {
     for (auto shadernode : _shadernodes) {
         for(auto texture : textures) {
@@ -320,7 +312,7 @@ void RenderPass::processPixelRequests()
         //find out whether name is a renderbuffer or a taxture
         GLenum datasize = GL_UNSIGNED_BYTE;
         GLenum format = GL_RGBA;
-        for(auto tex : _outputTextures) {
+        for(const auto &tex : _outputTextures) {
             if (tex->getName() == name){
                 switch(tex->getFormat()) {
                     case Texture::RGB:
@@ -349,7 +341,7 @@ void RenderPass::processPixelRequests()
             }
         }
 
-        for(auto renderbuffer : _outputRenderbuffers) {
+        for(const auto &renderbuffer : _outputRenderbuffers) {
             if (renderbuffer->getName() == name){
                 switch(renderbuffer->getFormat()) {
                     case Renderbuffer::RGB:
@@ -422,113 +414,134 @@ void RenderPass::processPixelRequests()
     }
 }
 
-void RenderPass::setTarget(std::shared_ptr<FBO> target)
+void RenderPass::setTarget(ResourceHandle<FBO> &&target)
 {
-    _target = target;
+    _target = std::move(target);
 }
 
-std::shared_ptr<FBO> RenderPass::getTarget()
+FBO* RenderPass::getTarget()
 {
-    return _target;
+    return _target.get();
 }
 
-void RenderPass::addOutput(std::shared_ptr<Texture2D> tex)
+void RenderPass::addOutput(ResourceHandle<Texture2D> &&tex)
 {
-    _outputTextures.push_back(tex);
+    _outputTextures.push_back(std::move(tex));
 }
 
-void RenderPass::addOutput(std::shared_ptr<Renderbuffer> rb)
+void RenderPass::addOutput(ResourceHandle<Renderbuffer> &&rb)
 {
-    _outputRenderbuffers.push_back(rb);
+    _outputRenderbuffers.push_back(std::move(rb));
 }
 
-void RenderPass::setDepthOutput(std::shared_ptr<Texture2D> output)
+void RenderPass::setDepthOutput(ResourceHandle<Texture2D> &&output)
 {
-    _depthTexture = output;
+    _depthTexture = std::move(output);
     _depthOutput = TEXTURE;
 }
 
-void RenderPass::setDepthOutput(std::shared_ptr<Renderbuffer> output)
+void RenderPass::setDepthOutput(ResourceHandle<Renderbuffer> &&output)
 {
-    _depthRenderbuffer = output;
+    _depthRenderbuffer = std::move(output);
     _depthOutput = RENDERBUFFER;
 }
 
-std::vector<std::shared_ptr<Texture2D>> RenderPass::getOutputTextures()
+std::vector<Texture2D*> RenderPass::getOutputTextures()
 {
-    return _outputTextures;
+    std::vector<Texture2D*> ret(_outputTextures.size());
+    for(size_t i = 0; i < ret.size(); ++i)
+        ret[i] = _outputTextures[i].get();
+    return ret;
 }
 
-std::shared_ptr<Texture2D> RenderPass::getOutDepthTexture()
+Texture2D* RenderPass::getOutDepthTexture()
 {
-    return _depthTexture;
+    return _depthTexture.get();
+}
+
+void RenderPass::addShaderNodeNoLock(std::shared_ptr<ShaderRenderNode> node)
+{
+    node->setResourceManager(_tree->getResourceManager());
+    _shadernodes.push_back(node);
 }
 
 void RenderPass::addShaderNode(std::shared_ptr<ShaderRenderNode> node)
 {
     std::unique_lock<std::shared_timed_mutex> lock(_shapesLock);
+    node->setResourceManager(_tree->getResourceManager());
     _shadernodes.push_back(node);
+}
+
+void RenderPass::addGeometryShaderNodeNoLock(std::shared_ptr<ShaderRenderNode> node)
+{
+    node->setResourceManager(_tree->getResourceManager());
+    _geometryShaderNodes.push_back(node);
 }
 
 void RenderPass::addGeometryShaderNode(std::shared_ptr<ShaderRenderNode> node)
 {
     std::unique_lock<std::shared_timed_mutex> lock(_geometryLock);
+    node->setResourceManager(_tree->getResourceManager());
     _geometryShaderNodes.push_back(node);
+}
+
+std::pair<bool, std::shared_ptr<ShaderRenderNode>>
+    RenderPass::findNodeToInsert(Renderer *renderer,
+                                 std::vector<std::shared_ptr<ShaderRenderNode>> nodes)
+{
+    {
+        std::shared_lock<std::shared_timed_mutex> lock2(_overrideProgramLock);
+        if(overrideProgramFlag_) {
+            if(nodes.empty()) {
+                auto n = std::make_shared<ShaderRenderNode>(_overrideProgram.get());
+                return std::make_pair(true, n);
+            }
+            else {
+                return std::make_pair(false, nodes[0]);
+            }
+        }
+    }
+
+    ShaderProgram* prog = renderer->getProgram();
+    assert(prog);
+    for(auto shaderNode : nodes) {
+        if(shaderNode->program() == prog) {
+            return std::make_pair(false, shaderNode);
+        }
+    }
+    auto newnode = std::make_shared<ShaderRenderNode>(prog);
+    return std::make_pair(true, newnode);
+
 }
 
 void RenderPass::addRenderer(Renderer *renderer)
 {
-    std::unique_lock<std::shared_timed_mutex> lock(_shapesLock);
-    std::shared_lock<std::shared_timed_mutex> lock2(_overrideProgramLock);
-    if(_overrideProgram) {
-        if (_shadernodes.empty()) {
-            auto newnode = std::make_shared<ShaderRenderNode>(_overrideProgram);
-            _shadernodes.push_back(newnode);
-        }
-        _shadernodes[0]->addRenderer(renderer);
-        return;
+    renderer->setResourceManager(_tree->getResourceManager());
+    std::pair<bool, std::shared_ptr<ShaderRenderNode>> shaderNode;
+    {
+        std::shared_lock<std::shared_timed_mutex> lock(_shapesLock);
+        shaderNode = findNodeToInsert(renderer, _shadernodes);
     }
-
-    std::shared_ptr<ShaderProgram> prog = renderer->getProgram();
-    assert(prog);
-    for(auto shaderNode : _shadernodes) {
-        if(shaderNode->program() == prog) {
-            shaderNode->addRenderer(renderer);
-            return;
-        }
+    {
+        std::unique_lock<std::shared_timed_mutex> lock(_shapesLock);
+        if(shaderNode.first) addShaderNodeNoLock(shaderNode.second);
+        shaderNode.second->addRenderer(renderer);
     }
-
-    auto newnode = std::make_shared<ShaderRenderNode>(prog);
-    newnode->addRenderer(renderer);
-    _shadernodes.push_back(newnode);
 }
 
 void RenderPass::addGeometryRenderer(Renderer *renderer)
 {
-    std::unique_lock<std::shared_timed_mutex> lock(_geometryLock);
-    std::shared_lock<std::shared_timed_mutex> lock2(_overrideProgramLock);
-
-    if(_overrideProgram) {
-        if (_geometryShaderNodes.empty()) {
-            auto newnode = std::make_shared<ShaderRenderNode>(_overrideProgram);
-            _geometryShaderNodes.push_back(newnode);
-        }
-        _geometryShaderNodes[0]->addRenderer(renderer);
-        return;
+    renderer->setResourceManager(_tree->getResourceManager());
+    std::pair<bool, std::shared_ptr<ShaderRenderNode>> shaderNode;
+    {
+        std::shared_lock<std::shared_timed_mutex> lock(_geometryLock);
+        shaderNode = findNodeToInsert(renderer, _geometryShaderNodes);
     }
-
-    std::shared_ptr<ShaderProgram> prog = renderer->getProgram();
-    assert(prog);
-    for(auto shaderNode : _geometryShaderNodes) {
-        if(shaderNode->program() == prog) {
-            shaderNode->addRenderer(renderer);
-            return;
-        }
+    {
+        std::unique_lock<std::shared_timed_mutex> lock(_geometryLock);
+        if(shaderNode.first) addGeometryShaderNodeNoLock(shaderNode.second);
+        shaderNode.second->addRenderer(renderer);
     }
-
-    auto newnode = std::make_shared<ShaderRenderNode>(prog);
-    newnode->addRenderer(renderer);
-    _geometryShaderNodes.push_back(newnode);
 }
 
 void RenderPass::clearRenderers()
@@ -623,7 +636,7 @@ void RenderPass::render(const RenderConfig &config)
                 glDisable(GL_BLEND);
         }
 
-        GLObjectBinder<std::shared_ptr<FBO>> fbobinder(_target);
+        GLObjectBinder<FBO*> fbobinder(_target.get());
 
         {
             std::lock_guard<std::mutex> lock(_bgColorLock);
@@ -670,7 +683,7 @@ void RenderPass::render(const RenderConfig &config)
                 for(auto node : _shadernodes) {
                     node->init();
                     {
-                        GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
+                        GLObjectBinder<ShaderProgram*> binder(node->program());
                         for(const auto &p : getProperties())
                             node->program()->setUniformFromProperty(p.first, p.second);
 
@@ -687,7 +700,7 @@ void RenderPass::render(const RenderConfig &config)
                 for(auto node : _geometryShaderNodes) {
                     node->init();
                     {
-                        GLObjectBinder<std::shared_ptr<ShaderProgram>> binder(node->program());
+                        GLObjectBinder<ShaderProgram*> binder(node->program());
                         for(const auto &p : getProperties())
                             node->program()->setUniformFromProperty(p.first, p.second);
 

@@ -18,13 +18,12 @@ public:
 
 protected:
     void init(ShaderProgram* program);
-    void drawLight(const LightPtr light, 
-                   std::shared_ptr<ShaderProgram> program);
+    void drawLight(const LightPtr &light, ShaderProgram *program);
 
 private:
     void initSamplingTexture();
 
-    std::shared_ptr<Texture> _samplingPattern;
+    ResourceHandle<Texture> _samplingPattern;
     std::atomic<double> _searchRadius;
     std::atomic<double> _intensity;
     std::atomic<int> _numSamples;

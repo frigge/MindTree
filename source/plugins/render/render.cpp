@@ -9,14 +9,15 @@
 using namespace MindTree::GL;
 
 Renderer::Renderer()
-    : _initialized(false), _visible(true), _parent(nullptr)
+    : _initialized(false),
+      _visible(true),
+      _parent(nullptr),
+      _resourceManager(nullptr)
 {
 }
 
 Renderer::~Renderer()
 {
-    auto manager = RenderTree::getResourceManager();
-    manager->scheduleCleanUp(std::move(_vao));
 }
 
 void Renderer::setVisible(bool visible)
@@ -24,14 +25,28 @@ void Renderer::setVisible(bool visible)
     _visible = visible;
 }
 
-void Renderer::_init(ShaderProgram* program)    
+void Renderer::setResourceManager(ResourceManager *manager)
+{
+    assert(manager != nullptr);
+    _resourceManager = manager;
+
+    for(auto &child : _children)
+        child->setResourceManager(manager);
+}
+
+ResourceManager* Renderer::getResourceManager()
+{
+    return _resourceManager;
+}
+
+void Renderer::_init(ShaderProgram* program)
 {
     RenderThread::asrt();
 
     for (auto &child : _children)
         child->_init(program);
 
-    _vao = std::make_shared<VAO>();
+    _vao = make_resource<VAO>(_resourceManager);
 
     {
         GLObjectBinder<std::shared_ptr<VAO>> binder(_vao);
@@ -79,6 +94,7 @@ void Renderer::addChild(Renderer *child)
         if(ch.get() == child)
             return;
 
+    if(_resourceManager) child->setResourceManager(_resourceManager);
     _children.push_back(std::shared_ptr<Renderer>(child));
 }
 
@@ -90,6 +106,7 @@ void Renderer::addChild(std::shared_ptr<Renderer>(child))
         if(ch == child)
             return;
 
+    if(_resourceManager) child->setResourceManager(_resourceManager);
     _children.push_back(child);
 }
 
@@ -103,7 +120,7 @@ Renderer* Renderer::getParent()
     return _parent;
 }
 
-void Renderer::render(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program)
+void Renderer::render(const CameraPtr camera, const RenderConfig &config, ShaderProgram* program)
 {
     RenderThread::asrt();
     if(!_visible) return;

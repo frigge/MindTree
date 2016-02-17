@@ -5,14 +5,9 @@
 using namespace MindTree;
 using namespace GL;
 
-template<>
-const std::string
-PixelPlane::ShaderFiles<LightAccumulationPlane>::
-fragmentShader = "../plugins/render/defaultShaders/deferredshading.frag";
-
 LightAccumulationPlane::LightAccumulationPlane()
+    : PixelPlane("../plugins/render/defaultShaders/deferredshading.frag")
 {
-    setProvider<LightAccumulationPlane>();
 }
 
 LightAccumulationPlane::~LightAccumulationPlane()
@@ -30,7 +25,7 @@ std::vector<LightPtr> LightAccumulationPlane::getLight() const
     std::lock_guard<std::mutex> lock(_lightsLock);
     return _lights;
 }
-void LightAccumulationPlane::setShadowPasses(std::unordered_map<std::shared_ptr<Light>, 
+void LightAccumulationPlane::setShadowPasses(std::unordered_map<std::shared_ptr<Light>,
                                              std::weak_ptr<RenderPass>> shadowPasses)
 {
     std::lock_guard<std::mutex> lock(_shadowPassesLock);
@@ -43,8 +38,8 @@ std::unordered_map<LightPtr, std::weak_ptr<RenderPass>> LightAccumulationPlane::
 }
 
 
-void LightAccumulationPlane::drawLight(const LightPtr light, 
-                                       std::shared_ptr<ShaderProgram> program)
+void LightAccumulationPlane::drawLight(const LightPtr light,
+                                       ShaderProgram *program)
 {
     std::lock_guard<std::mutex> lock2(_shadowPassesLock);
     static const float PI = 3.14159265359;
@@ -56,7 +51,7 @@ void LightAccumulationPlane::drawLight(const LightPtr light,
         auto shadowmap = shadowPass->getOutDepthTexture();
         program->setTexture(shadowmap);
         auto shadowcam = shadowPass->getCamera();
-        glm::mat4 mvp = shadowcam->getProjection() 
+        glm::mat4 mvp = shadowcam->getProjection()
             * shadowcam->getViewMatrix();
         states.addState("light.shadowmvp", mvp);
     }
@@ -82,9 +77,9 @@ void LightAccumulationPlane::drawLight(const LightPtr light,
     MTGLERROR;
 }
 
-void LightAccumulationPlane::draw(const CameraPtr /* camera */, 
-                                  const RenderConfig& /* config */, 
-                                  std::shared_ptr<ShaderProgram> program)
+void LightAccumulationPlane::draw(const CameraPtr& /* camera */,
+                                  const RenderConfig& /* config */,
+                                  ShaderProgram *program)
 {
     glBlendEquation(GL_FUNC_ADD);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);

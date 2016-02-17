@@ -87,7 +87,7 @@ public:
     RenderConfig getConfig();
     void setDirty();
 
-    static std::shared_ptr<ResourceManager> getResourceManager();
+    ResourceManager *getResourceManager();
 
 
 private:
@@ -99,7 +99,7 @@ private:
 
     glm::vec4 backgroundColor;
     std::vector<std::shared_ptr<RenderPass>> passes;
-    static std::shared_ptr<ResourceManager> _resourceManager;
+    std::unique_ptr<ResourceManager> _resourceManager;
     RenderConfig config;
     QGLContext *_context;
     std::atomic_bool _initialized;

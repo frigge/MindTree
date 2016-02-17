@@ -3,26 +3,28 @@
 using namespace MindTree;
 using namespace GL;
 
-std::shared_ptr<ShaderProgram> PixelPlane::getProgram()
-{
-    std::shared_ptr<ShaderProgram> prog;
-    if(_program.expired() && _provider) {
-        prog = _provider->provideProgram();
+template<>
+const std::string ShaderFiles<PixelPlane>::
+vertexShader{ "../plugins/render/defaultShaders/fullscreenquad.vert"};
 
-        _program = prog;
-    }
-    return prog;
+ShaderProgram* PixelPlane::getProgram() {
+    _program =  ShaderProvider<PixelPlane>::provideProgram(getResourceManager());
+    _program->addShaderFromFile(fragmentShader_, ShaderProgram::FRAGMENT);
+    return _program.get();
 }
 
 void PixelPlane::init(ShaderProgram* prog)
 {
-    _vbo = std::make_shared<VBO>("P");
-    _coord_vbo = std::make_shared<VBO>("st");
+    _vbo = make_resource<VBO>(getResourceManager(),
+                              "P");
+    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _coord_vbo = make_resource<VBO>(getResourceManager(),
+                                    "st");
     _coord_vbo->overrideIndex(1);
 
     _vbo->bind();
-    prog->bindAttributeLocation(_vbo);
-    
+    prog->bindAttributeLocation(_vbo.get());
+
     VertexList verts;
     verts.insert(verts.begin(), {
                     glm::vec3(1, 1, 0),
@@ -43,16 +45,16 @@ void PixelPlane::init(ShaderProgram* prog)
     _vbo->setPointer();
 
     _coord_vbo->bind();
-    prog->bindAttributeLocation(_coord_vbo);
+    prog->bindAttributeLocation(_coord_vbo.get());
     _coord_vbo->data(coords);
     _coord_vbo->setPointer();
 }
 
-void PixelPlane::draw(const CameraPtr /* camera */, 
-                                  const RenderConfig& /* config */, 
-                                  std::shared_ptr<ShaderProgram> program)
+void PixelPlane::draw(const CameraPtr& /* camera */,
+                                  const RenderConfig& /* config */,
+                                  ShaderProgram *program)
 {
-    UniformState(program, "bgcolor", glm::vec4(.275, .275, .275, 1.));
+    UniformState state(program, "bgcolor", glm::vec4(.275, .275, .275, 1.));
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     MTGLERROR;
 }

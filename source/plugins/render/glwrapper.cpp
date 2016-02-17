@@ -65,7 +65,7 @@ VAO::~VAO()
     MTGLERROR;
 }
 
-void VAO::bind()    
+void VAO::bind()
 {
     glBindVertexArray(id);
     MTGLERROR;
@@ -73,7 +73,7 @@ void VAO::bind()
     bound = true;
 }
 
-void VAO::release()    
+void VAO::release()
 {
     glBindVertexArray(0);
     MTGLERROR;
@@ -96,23 +96,28 @@ Buffer::~Buffer()
     MTGLERROR;
 }
 
+int Buffer::getID() const
+{
+    return id;
+}
+
 void Buffer::bind()
 {
     glBindBuffer(_bufferType, id);
     MTGLERROR;
 }
 
-void Buffer::release()    
+void Buffer::release()
 {
     glBindBuffer(_bufferType, 0);
     MTGLERROR;
 }
 
-VBO::VBO(std::string name) : 
+VBO::VBO(std::string name) :
     Buffer(GL_ARRAY_BUFFER),
     _name(name),
-    _index(RenderTree::getResourceManager()->getIndexForAttribute(name)),
-    _size(0), 
+    _index(-1),
+    _size(0),
     _datatype(GL_FLOAT)
 {
 #ifdef DEBUG_GL_WRAPPER
@@ -129,7 +134,7 @@ void VBO::overrideIndex(uint index)
     _index = index;
 }
 
-std::string VBO::getName()    
+std::string VBO::getName() const
 {
     return _name;
 }
@@ -171,7 +176,15 @@ void VBO::data(std::vector<glm::vec2> l)
     glBufferData(GL_ARRAY_BUFFER, l.size() * _size * sizeof(float), &l[0], GL_STATIC_DRAW);
 }
 
-GLint VBO::getIndex()    
+void VBO::data(std::vector<glm::vec4> l)
+{
+    _datatype = GL_FLOAT;
+    _size = 4;
+
+    glBufferData(GL_ARRAY_BUFFER, l.size() * _size * sizeof(float), &l[0], GL_STATIC_DRAW);
+}
+
+GLint VBO::getIndex() const
 {
     return _index;
 }
@@ -185,16 +198,24 @@ IBO::~IBO()
 {
 }
 
+void IBO::data(const std::vector<uint32_t> &triangles)
+{
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 triangles.size() * sizeof(uint32_t),
+                 (GLvoid*)triangles.data(),
+                 GL_STATIC_DRAW);
+    MTGLERROR;
+}
 
 void IBO::data(std::shared_ptr<PolygonList> l)
 {
     int size = 0;
-    
+
     //find out size of index buffer by adding together polygon sizes
 
     _polysizes.clear();
     _indexOffsets.clear();
-    
+
     std::vector<uint> data;
 
     intptr_t offset = 0;
@@ -208,19 +229,19 @@ void IBO::data(std::shared_ptr<PolygonList> l)
         _polysizes.push_back(p.size());
         offset += p.size() * sizeof(uint);
     }
-    
+
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, size * sizeof(uint), &data[0], GL_STATIC_DRAW);
     MTGLERROR;
 
     //cache indices for glMultiDrawElements
 }
 
-std::vector<intptr_t> IBO::getOffsets()
+std::vector<intptr_t> IBO::getOffsets() const
 {
     return _indexOffsets;
 }
 
-std::vector<uint> IBO::getSizes()
+std::vector<uint> IBO::getSizes() const
 {
     return _polysizes;
 }
@@ -247,99 +268,95 @@ FBO::~FBO()
     MTGLERROR;
 }
 
-GLuint FBO::getID()
+GLuint FBO::getID() const
 {
     return id;
 }
 
-void FBO::bind()    
+void FBO::bind()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, id);
     MTGLERROR;
 }
 
-void FBO::release()    
+void FBO::release()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     MTGLERROR;
 }
 
-void FBO::attachColorTexture(std::weak_ptr<Texture2D> tex)    
+void FBO::attachColorTexture(Texture2D *tex)
 {
-    for(auto tx : _textures)
-        if(tx.lock() == tex.lock())
-            return;
+    if(std::find(begin(_textures), end(_textures), tex) != end(_textures))
+        return;
 
     _textures.push_back(tex);
-    _attachments.push_back(tex.lock()->getName());
+    _attachments.push_back(tex->getName());
 
 #ifdef DEBUG_GL_WRAPPER
-    dbout("attaching texture: " << tex.lock()->getName() << " to color attachment: " << color_attachments);
+    dbout("attaching texture: " << tex->getName() << " to color attachment: " << color_attachments);
 #endif
 
     MTGLERROR;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, 
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0 + color_attachments++,
         GL_TEXTURE_2D,
-        tex.lock()->getID(),
+        tex->getID(),
         0);
     MTGLERROR;
 
 }
 
-void FBO::attachColorRenderbuffer(std::weak_ptr<Renderbuffer> rb)
+void FBO::attachColorRenderbuffer(Renderbuffer *rb)
 {
-    for(auto r : _renderbuffers)
-        if(r.lock() == rb.lock())
-            return;
+    if(std::find(begin(_renderbuffers), end(_renderbuffers), rb) == end(_renderbuffers))
+        return;
 
     _renderbuffers.push_back(rb);
-    _attachments.push_back(rb.lock()->getName());
+    _attachments.push_back(rb->getName());
 
     MTGLERROR;
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, 
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0 + color_attachments++,
         GL_RENDERBUFFER,
-        rb.lock()->getID());
+        rb->getID());
     MTGLERROR;
 
 }
 
-int FBO::getAttachmentPos(std::string name)
+int FBO::getAttachmentPos(std::string name) const
 {
-    int index = 0;
-    for(auto attachment : _attachments) {
-        if(attachment == name)
-            break;
-        ++index;
-    }
+    int index = std::distance(begin(_attachments),
+                              std::find_if(begin(_attachments),
+                                           end(_attachments),
+                                           [&name] (const auto &n) {return n == name;}));
 
     std::cout << "attachment: " << name << " is at pos: " << index << std::endl;
     return index;
 }
 
-void FBO::attachDepthTexture(std::weak_ptr<Texture2D> tex)    
+void FBO::attachDepthTexture(Texture2D *tex)
 {
     MTGLERROR;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, 
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_TEXTURE_2D,
-        tex.lock()->getID(),
+        tex->getID(),
         0);
     MTGLERROR;
 }
 
-void FBO::attachDepthRenderbuffer(std::weak_ptr<Renderbuffer> rb)
+void FBO::attachDepthRenderbuffer(Renderbuffer *rb)
 {
     MTGLERROR;
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, 
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
         GL_RENDERBUFFER,
-        rb.lock()->getID());
+        rb->getID());
     MTGLERROR;
 }
 
-std::vector<std::string> FBO::getAttachments()
+std::vector<std::string> FBO::getAttachments() const
 {
     return _attachments;
 }
@@ -419,12 +436,12 @@ void Renderbuffer::init()
     MTGLERROR;
 }
 
-std::string Renderbuffer::getName()
+std::string Renderbuffer::getName() const
 {
     return _name;
 }
 
-GLuint Renderbuffer::getID()
+GLuint Renderbuffer::getID() const
 {
     return _id;
 }
@@ -440,7 +457,7 @@ void Renderbuffer::release()
     glBindRenderbuffer(GL_RENDERBUFFER, _id);
 }
 
-Renderbuffer::Format Renderbuffer::getFormat()
+Renderbuffer::Format Renderbuffer::getFormat() const
 {
     return _format;
 }
@@ -494,6 +511,7 @@ std::string ShaderProgram::shaderTypeStr(int type)
         case COMPUTE:
             return "COMPUTE";
     }
+    return "";
 }
 
 void ShaderProgram::bind()
@@ -506,10 +524,8 @@ void ShaderProgram::bind()
 
     for (size_t i = 0; i < _textures.size(); ++i) {
         auto tx = _textures[i].texture;
-        if(!tx.expired()) {
-            glActiveTexture(GL_TEXTURE0 + i);
-            tx.lock()->bind();
-        }
+        glActiveTexture(GL_TEXTURE0 + i);
+        tx->bind();
     }
 }
 
@@ -560,7 +576,7 @@ void ShaderProgram::_addShaderFromSource(std::string src, ShaderProgram::ShaderT
             t = GL_VERTEX_SHADER;
             shadertype = "Vertex Shader";
             break;
-        case FRAGMENT:
+        case FRAGMENT:       
             t = GL_FRAGMENT_SHADER;
             shadertype = "Fragment Shader";
             break;
@@ -625,7 +641,7 @@ void ShaderProgram::addShaderFromFile(std::string filename, ShaderProgram::Shade
     addShaderFromSource(content, type);
 }
 
-GLuint ShaderProgram::getID()
+GLuint ShaderProgram::getID() const
 {
     return _id;
 }
@@ -647,7 +663,7 @@ void ShaderProgram::setUniform(std::string name, const glm::ivec2 &value)
     if(MTGLERROR) dbout(name);
 }
 
-void ShaderProgram::setUniform(std::string name, const glm::ivec3 &value)    
+void ShaderProgram::setUniform(std::string name, const glm::ivec3 &value)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -657,7 +673,7 @@ void ShaderProgram::setUniform(std::string name, const glm::ivec3 &value)
     if(MTGLERROR) dbout(name);
 }
 
-void ShaderProgram::setUniform(std::string name, const glm::vec2 &value)    
+void ShaderProgram::setUniform(std::string name, const glm::vec2 &value)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -667,7 +683,7 @@ void ShaderProgram::setUniform(std::string name, const glm::vec2 &value)
     if(MTGLERROR) dbout(name);
 }
 
-void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)    
+void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -677,7 +693,7 @@ void ShaderProgram::setUniform(std::string name, const glm::vec3 &value)
     if(MTGLERROR) dbout(name);
 }
 
-void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)    
+void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -687,7 +703,7 @@ void ShaderProgram::setUniform(std::string name, const glm::vec4 &value)
     if(MTGLERROR) dbout(name);
 }
 
-void ShaderProgram::setUniform(std::string name, float value)    
+void ShaderProgram::setUniform(std::string name, float value)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -872,16 +888,8 @@ void ShaderProgram::setUniforms(PropertyMap map)
     }
 }
 
-void ShaderProgram::cleanupTextures()
+void ShaderProgram::setTexture(Texture *texture, std::string name)
 {
-    _textures.erase(std::remove_if(begin(_textures), end(_textures), [](TextureInfo tx) {
-        return tx.texture.expired();
-    }), end(_textures));
-}
-
-void ShaderProgram::setTexture(std::shared_ptr<Texture> texture, std::string name)
-{
-    cleanupTextures();
     assert(RenderThread::id() == std::this_thread::get_id());
 
     assert(_initialized);
@@ -892,15 +900,15 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture> texture, std::string nam
     else
         n = name;
     int textureSlot;
-    auto it = std::find_if(begin(_textures), 
-                           end(_textures), 
-                           [texture] (TextureInfo other){ 
-                               if(other.texture.expired()) return false;
-                               return other.texture.lock()->getID() == texture->getID(); 
+    auto it = std::find_if(begin(_textures),
+                           end(_textures),
+                           [texture] (const TextureInfo &other){
+                               return other.texture->getID() == texture->getID();
                            });
 
     if(it != end(_textures)) {
         textureSlot = std::distance(begin(_textures), it);
+        it->texture = texture;
     }
     else {
         textureSlot = _textures.size();
@@ -927,7 +935,7 @@ void ShaderProgram::setTexture(std::shared_ptr<Texture> texture, std::string nam
     if(wasntbound) release();
 }
 
-void ShaderProgram::bindAttributeLocation(std::shared_ptr<VBO> vbo)
+void ShaderProgram::bindAttributeLocation(VBO *vbo)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -967,7 +975,7 @@ void ShaderProgram::bindFragmentLocation(unsigned int index, std::string name)
     if(wasntbound) release();
 }
 
-bool ShaderProgram::hasAttribute(std::string name)    
+bool ShaderProgram::hasAttribute(std::string name)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -1002,7 +1010,7 @@ bool ShaderProgram::hasFragmentOutput(std::string name)
     return location > -1;
 }
 
-void ShaderProgram::enableAttribute(std::string name)    
+void ShaderProgram::enableAttribute(std::string name)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -1011,7 +1019,7 @@ void ShaderProgram::enableAttribute(std::string name)
     MTGLERROR;
 }
 
-void ShaderProgram::disableAttribute(std::string name)    
+void ShaderProgram::disableAttribute(std::string name)
 {
     assert(RenderThread::id() == std::this_thread::get_id());
     assert(_initialized);
@@ -1020,25 +1028,22 @@ void ShaderProgram::disableAttribute(std::string name)
     MTGLERROR;
 }
 
-std::string ShaderProgram::getFileName(int shaderType)
+std::string ShaderProgram::getFileName(int shaderType) const
 {
     if(_fileNameMap.find(shaderType) == _fileNameMap.end())
         return "";
 
-    return _fileNameMap[shaderType];
+    return _fileNameMap.at(shaderType);
 }
-UniformState::UniformState(std::weak_ptr<ShaderProgram> prog, std::string name, Property value) :
+UniformState::UniformState(ShaderProgram *prog, std::string name, Property value) :
     _program(prog)
 {
-    if(prog.expired())
-        return;
-
     _name = std::regex_replace(name, std::regex(":"), "_");
-    _valid = prog.lock()->getUniformLocation(_name) > -1;
+    _valid = prog->getUniformLocation(_name) > -1;
 
     if(_valid) {
-        _oldValue = prog.lock()->getUniformAsProperty(_name, value.getType());
-        prog.lock()->setUniformFromProperty(_name, value);
+        _oldValue = prog->getUniformAsProperty(_name, value.getType());
+        prog->setUniformFromProperty(_name, value);
     }
 }
 
@@ -1063,11 +1068,11 @@ UniformState& UniformState::operator=(const UniformState&& other)
 
 UniformState::~UniformState()
 {
-    assert(_program.lock()->isBound());
-    if(_valid) _program.lock()->setUniformFromProperty(_name, _oldValue);
+    assert(_program->isBound());
+    if(_valid) _program->setUniformFromProperty(_name, _oldValue);
 }
 
-UniformStateManager::UniformStateManager(std::weak_ptr<ShaderProgram> prog) :
+UniformStateManager::UniformStateManager(ShaderProgram *prog) :
     _program(prog)
 {
 }
@@ -1094,16 +1099,18 @@ void UniformStateManager::setFromPropertyMap(PropertyMap map)
 }
 
 Texture::Texture(std::string name, Texture::Format format, Target target)
-    : _format(format), 
-    _initialized(false), 
-    _target(target), 
-    _name(name), 
+    : _format(format),
+    _initialized(false),
+    _target(target),
+    _name(name),
     _id(0),
     _wrapMode(CLAMP_TO_EDGE),
     _width(0),
     _filter(LINEAR),
     _genMipmaps(false)
 {
+    if (target == TEXTURE_BUFFER)
+        _filter = NEAREST;
 }
 
 Texture::~Texture()
@@ -1111,11 +1118,11 @@ Texture::~Texture()
 #ifdef DEBUG_GL_WRAPPER
     dbout("delete texture: " << _id);
 #endif
-    glDeleteTextures(1, &_id); 
+    glDeleteTextures(1, &_id);
     MTGLERROR;
 }
 
-std::string Texture::getName()
+std::string Texture::getName() const
 {
     return _name;
 }
@@ -1166,13 +1173,15 @@ void Texture::release()
     glBindTexture(getGLTarget(), 0);
 }
 
-GLenum Texture::getGLTarget()
+GLenum Texture::getGLTarget() const
 {
     switch(_target) {
         case TEXTURE2D:
             return GL_TEXTURE_2D;
         case TEXTURE1D:
             return GL_TEXTURE_1D;
+        case TEXTURE_BUFFER:
+            return GL_TEXTURE_BUFFER;
     }
 }
 
@@ -1195,7 +1204,7 @@ void Texture::init()
 
 GLuint Texture::getID() const
 {
-    return _id; 
+    return _id;
 }
 
 Texture::Format Texture::getFormat() const
@@ -1505,6 +1514,9 @@ AbstractResource::~AbstractResource()
 #endif
 }
 template<>
+const std::string Resource<Texture>::s_resource_name("Texture");
+
+template<>
 const std::string Resource<Texture2D>::s_resource_name("Texture2D");
 
 template<>
@@ -1525,7 +1537,8 @@ const std::string Resource<VAO>::s_resource_name("VAO");
 template<>
 const std::string Resource<Renderbuffer>::s_resource_name("Renderbuffer");
 
-ResourceManager::ResourceManager()
+ResourceManager::ResourceManager() :
+    shaderManager_(std::make_unique<ShaderManager>(this))
 {
 }
 
@@ -1547,34 +1560,36 @@ int ResourceManager::getIndexForAttribute(std::string name)
     }
     else
         index = _attributeIndexMap.at(name);
-    
+
     return index;
 }
 
-std::shared_ptr<VBO> ResourceManager::createVBO(ObjectDataPtr data, std::string name)    
+VBO* ResourceManager::createVBO(ObjectData *data, std::string name)
 {
     auto &vbos = _vboMap[data];
-    auto vbo = std::make_shared<VBO>(name);
-    vbos.push_back(vbo);
-    return vbo;
+    auto vbo = make_resource<VBO>(this, name);
+    vbo->overrideIndex(getIndexForAttribute(name));
+    auto *ret = vbo.get();
+    vbos.push_back(std::move(vbo));
+    return ret;
 }
 
-std::shared_ptr<VBO> ResourceManager::getVBO(ObjectDataPtr data, std::string name)    
+VBO* ResourceManager::getVBO(ObjectData *data, std::string name)
 {
     auto &vbos = _vboMap[data];
-    for(auto vbo : vbos) 
+    for(auto &vbo : vbos)
         if(vbo->getName() == name)
-            return vbo; 
+            return vbo.get();
 
     auto vbo = createVBO(data, name);
     return vbo;
 }
 
-void ResourceManager::uploadData(ObjectDataPtr data, std::string name)
+void ResourceManager::uploadData(ObjectData *data, std::string name)
 {
     auto &vbos = _vboMap[data];
 
-    for(auto vbo : vbos) 
+    for(auto &vbo : vbos)
         if(vbo->getName() == name) {
             vbo->bind();
             vbo->setPointer();
@@ -1582,24 +1597,25 @@ void ResourceManager::uploadData(ObjectDataPtr data, std::string name)
         }
 
     auto vbo = createVBO(data, name);
-    
+
     vbo->bind();
     vbo->data(data->getProperty(name).getData<std::shared_ptr<VertexList>>());
     vbo->setPointer();
 }
 
-std::shared_ptr<IBO> ResourceManager::createIBO(ObjectDataPtr data)
+IBO* ResourceManager::createIBO(ObjectData *data)
 {
-    auto ibo = std::make_shared<IBO>();    
-    _iboMap.insert({data, ibo});
+    auto ibo = make_resource<IBO>(this);
+    auto *ptr = ibo.get();
+    _iboMap[data] = std::move(ibo);
 
-    return ibo;
+    return ptr;
 }
 
-std::shared_ptr<IBO> ResourceManager::getIBO(ObjectDataPtr data)
+IBO* ResourceManager::getIBO(ObjectData *data)
 {
     if(_iboMap.find(data) != _iboMap.end())
-        return _iboMap[data];
+        return _iboMap[data].get();
 
     return createIBO(data);
 }

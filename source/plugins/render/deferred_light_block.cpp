@@ -1,6 +1,10 @@
+#include "glwrapper.h"
+#include "rendertree.h"
+#include "render_setup.h"
 #include "light_accumulation_plane.h"
 #include "shadow_mapping.h"
 #include "benchmark.h"
+
 #include "deferred_light_block.h"
 
 using namespace MindTree;
@@ -57,8 +61,9 @@ void DeferredLightingRenderBlock::init()
     auto deferredPass = addPass();
     _deferredPass = deferredPass;
     deferredPass
-        ->addOutput(std::make_shared<Texture2D>("shading_out",
-                                                Texture::RGBA16F));
+        ->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                             "shading_out",
+                                             Texture::RGBA16F));
     _deferredRenderer = new LightAccumulationPlane();
     deferredPass->addRenderer(_deferredRenderer);
     deferredPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);

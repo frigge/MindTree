@@ -131,12 +131,11 @@ void RenderThread::stop()
     if (_renderThread.joinable()) _renderThread.join();
 }
 
-std::shared_ptr<ResourceManager> RenderTree::_resourceManager;
-
 RenderTree::RenderTree(QGLContext *context)
-    : _initialized(false), _context(context)
+    : _initialized(false),
+      _context(context),
+      _resourceManager(std::make_unique<ResourceManager>())
 {
-    if(!_resourceManager) _resourceManager = std::make_shared<ResourceManager>();
 }
 
 RenderTree::~RenderTree()
@@ -153,9 +152,9 @@ std::weak_ptr<Benchmark> RenderTree::getBenchmark() const
     return _benchmark;
 }
 
-std::shared_ptr<ResourceManager> RenderTree::getResourceManager()
+ResourceManager *RenderTree::getResourceManager()
 {
-    return _resourceManager;
+    return _resourceManager.get();
 }
 
 void RenderTree::setDirty()
@@ -188,7 +187,7 @@ void RenderTree::init()
                     auto lastPass = passes[j];
                     auto textures = lastPass->getOutputTextures();
                     if(lastPass->_depthOutput == RenderPass::TEXTURE)
-                        textures.push_back(lastPass->_depthTexture);
+                        textures.push_back(lastPass->_depthTexture.get());
                     pass->setTextures(textures);
 
                 }

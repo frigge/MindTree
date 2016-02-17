@@ -22,18 +22,18 @@ public:
     struct CompositInfo {
         CompositType type;
         float mixValue;
-        std::weak_ptr<Texture2D> texture;
+        Texture2D *texture;
         bool enabled=true;
     };
 
-    CompositInfo& addLayer(std::weak_ptr<Texture2D> tx, float mix, CompositType type);
+    CompositInfo& addLayer(Texture2D *tx, float mix, CompositType type);
     CompositInfo& getInfo(std::string txName);
 
     const std::vector<CompositorPlane::CompositInfo>& getLayers() const;
     std::vector<CompositorPlane::CompositInfo>& getLayers();
 
 protected:
-    virtual void draw(const CameraPtr camera, const RenderConfig &config, std::shared_ptr<ShaderProgram> program);
+    virtual void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
 
 private:
     std::vector<CompositInfo> _layers;
@@ -45,7 +45,7 @@ public:
     Compositor();
 
     void setProperty(std::string name, Property prop);
-    void addLayer(std::weak_ptr<Texture2D> tx, float mix, CompositorPlane::CompositType type);
+    void addLayer(Texture2D *tx, float mix, CompositorPlane::CompositType type);
     void init();
 
  private:
