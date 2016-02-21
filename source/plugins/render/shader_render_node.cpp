@@ -28,7 +28,7 @@ void ShaderRenderNode::init()
     RenderThread::asrt();
     _initialized = true;
     _program->init();
-    for (auto render : _renders)
+    for (auto &render : _renders)
         render->_init(_program);
 }
 
@@ -36,7 +36,7 @@ void ShaderRenderNode::addRenderer(Renderer *renderer)
 {
     std::lock_guard<std::mutex> lock(_rendersLock);
     renderer->setResourceManager(_resourceManager);
-    _renders.push_back(std::shared_ptr<Renderer>(renderer));
+    _renders.push_back(std::unique_ptr<Renderer>(renderer));
     _initialized = false;
 }
 
@@ -65,9 +65,11 @@ void ShaderRenderNode::clear()
     _renders.clear();
 }
 
-const std::vector<std::shared_ptr<Renderer>>& ShaderRenderNode::renders()
+std::vector<Renderer*> ShaderRenderNode::renders()
 {
     std::lock_guard<std::mutex> lock(_rendersLock);
-    return _renders;
+    std::vector<Renderer*> ret;
+    for(auto &render : _renders)
+        ret.push_back(render.get());
+    return ret;
 }
-

@@ -27,10 +27,10 @@ ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3D
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
 
-    _geometryPass.lock()->setDepthOutput(make_resource<Renderbuffer>(manager->getResourceManager(),
+    _geometryPass->setDepthOutput(make_resource<Renderbuffer>(manager->getResourceManager(),
                                                                      "depth",
                                                                      Renderbuffer::DEPTH));
-    if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(_geometryPass.lock());
+    if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(_geometryPass);
 
     setupDefaultLights();
 }
@@ -39,39 +39,39 @@ void ForwardRenderer::setupDefaultLights()
 {
     static const double coneangle = 2 * 3.14159265359;
     //light0
-    _geometryPass.lock()->setProperty("light0.intensity", .8);
-    _geometryPass.lock()->setProperty("light0.color", glm::vec4(1));
-    _geometryPass.lock()->setProperty("light0.pos", glm::vec4(-50, -50, -50, 0));
-    _geometryPass.lock()->setProperty("light0.coneangle", coneangle);
-    _geometryPass.lock()->setProperty("light0.directional", true);
+    _geometryPass->setProperty("light0.intensity", .8);
+    _geometryPass->setProperty("light0.color", glm::vec4(1));
+    _geometryPass->setProperty("light0.pos", glm::vec4(-50, -50, -50, 0));
+    _geometryPass->setProperty("light0.coneangle", coneangle);
+    _geometryPass->setProperty("light0.directional", true);
 
     //light1
-    _geometryPass.lock()->setProperty("light1.intensity", .3);
-    _geometryPass.lock()->setProperty("light1.color", glm::vec4(1));
-    _geometryPass.lock()->setProperty("light1.pos", glm::vec4(50, 10, -10, 0));
-    _geometryPass.lock()->setProperty("light1.coneangle", coneangle);
-    _geometryPass.lock()->setProperty("light1.directional", true);
+    _geometryPass->setProperty("light1.intensity", .3);
+    _geometryPass->setProperty("light1.color", glm::vec4(1));
+    _geometryPass->setProperty("light1.pos", glm::vec4(50, 10, -10, 0));
+    _geometryPass->setProperty("light1.coneangle", coneangle);
+    _geometryPass->setProperty("light1.directional", true);
 
     //light2
-    _geometryPass.lock()->setProperty("light2.intensity", .1);
-    _geometryPass.lock()->setProperty("light2.color", glm::vec4(1));
-    _geometryPass.lock()->setProperty("light2.pos", glm::vec4(0, 0, -50, 0));
-    _geometryPass.lock()->setProperty("light2.coneangle", coneangle);
-    _geometryPass.lock()->setProperty("light2.directional", true);
+    _geometryPass->setProperty("light2.intensity", .1);
+    _geometryPass->setProperty("light2.color", glm::vec4(1));
+    _geometryPass->setProperty("light2.pos", glm::vec4(0, 0, -50, 0));
+    _geometryPass->setProperty("light2.coneangle", coneangle);
+    _geometryPass->setProperty("light2.directional", true);
 
     //light3
-    _geometryPass.lock()->setProperty("light3.intensity", .0);
-    _geometryPass.lock()->setProperty("light3.color", glm::vec4(1));
-    _geometryPass.lock()->setProperty("light3.pos", glm::vec4(0, 0, 0, 0));
-    _geometryPass.lock()->setProperty("light3.coneangle", coneangle);
-    _geometryPass.lock()->setProperty("light3.directional", true);
+    _geometryPass->setProperty("light3.intensity", .0);
+    _geometryPass->setProperty("light3.color", glm::vec4(1));
+    _geometryPass->setProperty("light3.pos", glm::vec4(0, 0, 0, 0));
+    _geometryPass->setProperty("light3.coneangle", coneangle);
+    _geometryPass->setProperty("light3.directional", true);
 
     //light4
-    _geometryPass.lock()->setProperty("light4.intensity", .0);
-    _geometryPass.lock()->setProperty("light4.color", glm::vec4(1));
-    _geometryPass.lock()->setProperty("light4.pos", glm::vec4(0, 0, 0, 0));
-    _geometryPass.lock()->setProperty("light4.coneangle", coneangle);
-    _geometryPass.lock()->setProperty("light4.directional", true);
+    _geometryPass->setProperty("light4.intensity", .0);
+    _geometryPass->setProperty("light4.color", glm::vec4(1));
+    _geometryPass->setProperty("light4.pos", glm::vec4(0, 0, 0, 0));
+    _geometryPass->setProperty("light4.coneangle", coneangle);
+    _geometryPass->setProperty("light4.directional", true);
 }
 
 void ForwardRenderer::setGeometry(std::shared_ptr<Group> grp)

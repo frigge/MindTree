@@ -22,8 +22,8 @@ void GeoObjectRenderer::init(ShaderProgram* prog)
     for(auto propPair : propmap){
         bool has_attr = prog->hasAttribute(propPair.first);
         if(has_attr) {
-            getResourceManager()->uploadData(data.get(), propPair.first);
-            auto vbo = getResourceManager()->getVBO(data.get(), propPair.first);
+            getResourceManager()->geometryCache()->uploadData(data.get(), propPair.first);
+            auto vbo = getResourceManager()->geometryCache()->getVBO(data.get(), propPair.first);
             prog->bindAttributeLocation(vbo);
         }
     }

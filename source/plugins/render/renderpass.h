@@ -10,6 +10,7 @@
 #include "utility"
 
 #include "glwrapper.h"
+#include "resource_handling.h"
 
 #include "../datatypes/Object/object.h"
 #include "../datatypes/Object/lights.h"
@@ -22,13 +23,8 @@ namespace GL {
 
 class ShaderRenderNode;
 
-class Texture2D;
 class Renderer;
-class VAO;
-class FBO;
-class Renderbuffer;
 class RenderConfig;
-class ShaderProgram;
 class RenderTree;
 
 class RenderPass : public Object

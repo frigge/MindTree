@@ -30,6 +30,8 @@ class RenderConfigurator : public Object
 {
 public:
     RenderConfigurator(QGLContext *context, std::shared_ptr<Camera> camera);
+    ~RenderConfigurator();
+
     void startRendering();
     void stopRendering();
 
@@ -44,11 +46,11 @@ public:
     virtual void clearOverrideOutput();
     virtual glm::vec4 getPosition(glm::vec2 pixel) const;
 
-    void addRenderBlock(std::shared_ptr<RenderBlock> block);
+    void addRenderBlock(std::unique_ptr<RenderBlock> &&block);
 
     void setProperty(std::string name, Property prop);
 
-    std::weak_ptr<RenderPass> getGeometryPass() const;
+    RenderPass* getGeometryPass() const;
 
     int getPolygonCount() const;
     int getVertexCount() const;
@@ -57,14 +59,14 @@ public:
     PropertyMap getSettings() const;
 
 protected:
-    std::weak_ptr<RenderPass> _geometryPass;
+    RenderPass* _geometryPass;
     GridRenderer* _grid;
 
 private:
     int _vertexCount;
     int _polyCount;
-    std::shared_ptr<RenderTree> _rendertree;
-    std::vector<std::shared_ptr<RenderBlock>> _renderBlocks;
+    std::unique_ptr<RenderTree> _rendertree;
+    std::vector<std::unique_ptr<RenderBlock>> _renderBlocks;
     std::shared_ptr<Camera> _camera;
     PropertyMap _settings;
 };

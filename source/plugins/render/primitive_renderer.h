@@ -82,7 +82,7 @@ protected:
 
 private:
     VertexList _points;
-    std::shared_ptr<VBO> _vbo;
+    ResourceHandle<VBO> _vbo;
 };
 
 class QuadRenderer : public ShapeRenderer
@@ -95,7 +95,7 @@ protected:
 
 private:
     float _width, _height;
-    std::shared_ptr<VBO> _vbo;
+    ResourceHandle<VBO> _vbo;
 };
 
 class GridRenderer : public ShapeRenderer
@@ -114,7 +114,7 @@ protected:
 private:
     int _width, _height, _xres, _yres;
     glm::vec4 _alternatingColor;
-    std::shared_ptr<VBO> _vbo;
+    ResourceHandle<VBO> _vbo;
 };
 
 class DiscRenderer : public ShapeRenderer
@@ -129,7 +129,7 @@ protected:
 
 private:
     int _segments;
-    static std::shared_ptr<VBO> _vbo;
+    ResourceHandle<VBO> _vbo;
 };
 
 class CircleRenderer : public ShapeRenderer
@@ -144,7 +144,7 @@ protected:
 
 private:
     int _segments;
-    static std::shared_ptr<VBO> _vbo;
+    ResourceHandle<VBO> _vbo;
 };
 
 class ConeRenderer : public ShapeRenderer
@@ -159,7 +159,7 @@ protected:
 
 private:
     int _segments;
-    static std::shared_ptr<VBO> _vbo;
+    ResourceHandle<VBO> _vbo;
 };
 
 class SphereRenderer : public ShapeRenderer
@@ -174,8 +174,8 @@ protected:
 
 private:
     int _u_segments, _v_segments;
-    static std::shared_ptr<VBO> _vbo;
-    static std::shared_ptr<IBO> _ibo;
+    ResourceHandle<VBO> _vbo;
+    ResourceHandle<IBO> _ibo;
 };
 
 class SinglePointRenderer : public ShapeRenderer
@@ -193,7 +193,7 @@ protected:
 
 private:
     int _pointSize;
-    static std::shared_ptr<VBO> _vbo;
+    ResourceHandle<VBO> _vbo;
 };
 
 class ArrowRenderer : public ShapeRendererGroup

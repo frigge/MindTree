@@ -40,7 +40,10 @@ public:
     ViewportViewer(MindTree::DoutSocket *socket);
     virtual ~ViewportViewer();
 
-    void update();
+    void update() override;
+
+protected:
+    void init() override;
 
 private:
     void createSettingsFromMap(MindTree::DNode *node, MindTree::PropertyMap props);

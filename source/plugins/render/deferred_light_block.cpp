@@ -58,21 +58,20 @@ glm::mat4 createTransFromZVec(glm::vec3 z)
 
 void DeferredLightingRenderBlock::init()
 {
-    auto deferredPass = addPass();
-    _deferredPass = deferredPass;
-    deferredPass
+    auto _deferredPass = addPass();
+    _deferredPass
         ->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                              "shading_out",
                                              Texture::RGBA16F));
     _deferredRenderer = new LightAccumulationPlane();
-    deferredPass->addRenderer(_deferredRenderer);
-    deferredPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+    _deferredPass->addRenderer(_deferredRenderer);
+    _deferredPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 
     setupDefaultLights();
 
     setBenchmark(std::make_shared<Benchmark>("Deferred Shading"));
 
-    for(auto tx : deferredPass->getOutputTextures())
+    for(auto tx : _deferredPass->getOutputTextures())
         addOutput(tx);
 }
 

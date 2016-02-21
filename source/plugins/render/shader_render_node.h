@@ -25,7 +25,7 @@ public:
     void addRenderer(Renderer *renderer);
     void render(CameraPtr camera, glm::ivec2 resolution, const RenderConfig &config);
     ShaderProgram* program();
-    const std::vector<std::shared_ptr<Renderer>>& renders();
+    std::vector<Renderer*> renders();
     void setResourceManager(ResourceManager *manager);
     void clear();
 
@@ -36,7 +36,7 @@ private:
     ResourceManager *_resourceManager;
 
     ShaderProgram *_program;
-    std::vector<std::shared_ptr<Renderer>> _renders;
+    std::vector<std::unique_ptr<Renderer>> _renders;
     std::mutex _rendersLock;
 
     std::atomic<bool> _initialized;

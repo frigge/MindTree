@@ -49,7 +49,7 @@ void Renderer::_init(ShaderProgram* program)
     _vao = make_resource<VAO>(_resourceManager);
 
     {
-        GLObjectBinder<std::shared_ptr<VAO>> binder(_vao);
+        GLObjectBinder<VAO*> binder(_vao.get());
 
         _initialized = true;
         init(program);
@@ -95,10 +95,10 @@ void Renderer::addChild(Renderer *child)
             return;
 
     if(_resourceManager) child->setResourceManager(_resourceManager);
-    _children.push_back(std::shared_ptr<Renderer>(child));
+    _children.push_back(std::unique_ptr<Renderer>(child));
 }
 
-void Renderer::addChild(std::shared_ptr<Renderer>(child))
+void Renderer::addChild(std::unique_ptr<Renderer> &&child)
 {
     child->setParent(this);
 
@@ -107,7 +107,7 @@ void Renderer::addChild(std::shared_ptr<Renderer>(child))
             return;
 
     if(_resourceManager) child->setResourceManager(_resourceManager);
-    _children.push_back(child);
+    _children.push_back(std::move(child));
 }
 
 const Renderer* Renderer::getParent() const
@@ -127,7 +127,7 @@ void Renderer::render(const CameraPtr camera, const RenderConfig &config, Shader
     assert(_initialized);
 
     {
-        GLObjectBinder<std::shared_ptr<VAO>> vaoBinder(_vao);
+        GLObjectBinder<VAO*> vaoBinder(_vao.get());
         UniformStateManager uniformStates(program);
 
         if(camera) {

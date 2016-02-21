@@ -86,12 +86,12 @@ RSMGenerationBlock::RSMGenerationBlock()
     setBenchmark(shadowBench);
 }
 
-std::weak_ptr<RenderPass> RSMGenerationBlock::createShadowPass(SpotLightPtr spot)
+RenderPass* RSMGenerationBlock::createShadowPass(SpotLightPtr spot)
 {
-    auto shadowPass = ShadowMappingRenderBlock::createShadowPass(spot).lock();
+    auto shadowPass = ShadowMappingRenderBlock::createShadowPass(spot);
 
     if(!shadowPass)
-        return std::weak_ptr<RenderPass>();
+        return nullptr;
 
     if(_benchmark) {
         std::string name = _benchmark->getName();
@@ -124,7 +124,13 @@ std::weak_ptr<RenderPass> RSMGenerationBlock::createShadowPass(SpotLightPtr spot
 }
 
 RSMEvaluationBlock::RSMEvaluationBlock(RSMGenerationBlock *shadowBlock) :
-    _shadowBlock(shadowBlock), _downSampling(2)
+    _rsmIndirectHighResPlane(nullptr),
+    _rsmIndirectLowResPlane(nullptr),
+    _rsmIndirectPass(nullptr),
+    _rsmIndirectLowResPass(nullptr),
+    _rsmInterpolatePass(nullptr),
+    _downSampling(2),
+    _shadowBlock(shadowBlock)
 {
 }
 
@@ -154,32 +160,30 @@ void RSMEvaluationBlock::init()
     rsmIndirectLowResPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     _rsmInterpolatePass = addPass();
-    auto rsmInterpolatePass = _rsmInterpolatePass.lock();
-    rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                            "rsm_indirect_out_interpolated",
                                                            Texture::RGBA16F));
-    rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                            "rsm_indirect_interpolate_mask",
                                                            Texture::RGBA8));
-    rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                            "rsm_indirect_lowres_pixels",
                                                            Texture::RGBA8));
-    rsmInterpolatePass->setProperty("downsampling", _downSampling.load());
+    _rsmInterpolatePass->setProperty("downsampling", _downSampling.load());
     auto rsmInterpolatePlane = new PixelPlane("../plugins/render/defaultShaders/rsm_interpolate.frag");
-    rsmInterpolatePass->addRenderer(rsmInterpolatePlane);
+    _rsmInterpolatePass->addRenderer(rsmInterpolatePlane);
 
-    auto rsmIndirectHighResPass = addPass();
-    _rsmIndirectPass = rsmIndirectHighResPass;
-    rsmIndirectHighResPass ->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
-                                                                "rsm_indirect_out_highres",
-                                                                Texture::RGBA16F));
-    rsmIndirectHighResPass->setCustomFragmentNameMapping("rsm_indirect_out_highres", "rsm_indirect_out");
-    rsmIndirectHighResPass->setProperty("highres", true);
+    _rsmIndirectPass = addPass();
+    _rsmIndirectPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                         "rsm_indirect_out_highres",
+                                                         Texture::RGBA16F));
+    _rsmIndirectPass->setCustomFragmentNameMapping("rsm_indirect_out_highres", "rsm_indirect_out");
+    _rsmIndirectPass->setProperty("highres", true);
 
     _rsmIndirectHighResPlane = new RSMIndirectPlane();
-    rsmIndirectHighResPass->addRenderer(_rsmIndirectHighResPlane);
-    rsmIndirectHighResPass->setBlendFunc(GL_ONE, GL_ONE);
-    rsmIndirectHighResPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+    _rsmIndirectPass->addRenderer(_rsmIndirectHighResPlane);
+    _rsmIndirectPass->setBlendFunc(GL_ONE, GL_ONE);
+    _rsmIndirectPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     auto rsmFinalPass = addPass();
     rsmFinalPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
@@ -195,13 +199,13 @@ void RSMEvaluationBlock::init()
 void RSMEvaluationBlock::setCamera(std::shared_ptr<Camera> cam)
 {
     RenderBlock::setCamera(cam);
-    _rsmIndirectPass.lock()->setCamera(cam);
+    _rsmIndirectPass->setCamera(cam);
     auto lowrescam = std::dynamic_pointer_cast<Camera>(cam->clone());
     int downres = pow(2, _downSampling.load());
     int w = cam->getWidth() / downres;
     int h = cam->getHeight() / downres;
     lowrescam->setResolution(w, h);
-    _rsmIndirectLowResPass.lock()->setCamera(lowrescam);
+    _rsmIndirectLowResPass->setCamera(lowrescam);
 }
 
 void RSMEvaluationBlock::setGeometry(std::shared_ptr<Group> grp)
@@ -237,14 +241,14 @@ void RSMEvaluationBlock::setGeometry(std::shared_ptr<Group> grp)
     }
     if (grp->hasProperty("RSM:downsampling")) {
         _downSampling = grp->getProperty("RSM:downsampling").getData<int>();
-        _rsmInterpolatePass.lock()->setProperty("downsampling", _downSampling.load());
+        _rsmInterpolatePass->setProperty("downsampling", _downSampling.load());
         setCamera(getCamera().lock());
     }
     if (auto prop = grp->getProperty("RSM:lowresdistance")) {
-        _rsmInterpolatePass.lock()->setProperty("distanceTolerance", prop);
+        _rsmInterpolatePass->setProperty("distanceTolerance", prop);
     }
     if (auto prop = grp->getProperty("RSM:lowresangle")) {
-        _rsmInterpolatePass.lock()->setProperty("cosAngleTolerance", prop);
+        _rsmInterpolatePass->setProperty("cosAngleTolerance", prop);
     }
 }
 

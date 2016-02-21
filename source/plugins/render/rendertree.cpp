@@ -184,7 +184,7 @@ void RenderTree::init()
             pass->init();
             if(i > 0) {
                 for (uint j = 0; j < i; ++j){
-                    auto lastPass = passes[j];
+                    auto *lastPass = passes[j].get();
                     auto textures = lastPass->getOutputTextures();
                     if(lastPass->_depthOutput == RenderPass::TEXTURE)
                         textures.push_back(lastPass->_depthTexture.get());
@@ -224,37 +224,43 @@ RenderConfig RenderTree::getConfig()
     return config;
 }
 
-void RenderTree::addPass(std::shared_ptr<RenderPass> pass)
+void RenderTree::addPass(std::unique_ptr<RenderPass> &&pass)
 {
     std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     pass->setTree(this);
     _initialized = false;
-    passes.push_back(pass);
+    passes.push_back(std::move(pass));
 }
 
-void RenderTree::insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
+void RenderTree::insertPassBefore(RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass)
 {
     std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     pass->setTree(this);
     _initialized = false;
-    auto it = std::find(begin(passes), end(passes), ref_pass.lock());
-    passes.insert(it, pass);
+    auto it = std::find_if(begin(passes),
+                           end(passes),
+                           [&p=ref_pass] (const std::unique_ptr<RenderPass> &pass) { return pass.get() == p; });
+    passes.insert(it, std::move(pass));
 }
 
-void RenderTree::insertPassAfter(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass)
+void RenderTree::insertPassAfter(RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass)
 {
     std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     pass->setTree(this);
     _initialized = false;
-    auto it = std::find(begin(passes), end(passes), ref_pass.lock());
+    auto it = std::find_if(begin(passes),
+                           end(passes),
+                           [&p=ref_pass] (const std::unique_ptr<RenderPass> &pass) { return pass.get() == p; });
     ++it;
-    passes.insert(it, pass);
+    passes.insert(it, std::move(pass));
 }
 
-void RenderTree::removePass(std::weak_ptr<RenderPass> pass)
+void RenderTree::removePass(RenderPass *pass)
 {
     std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
-    auto it = std::find(begin(passes), end(passes), pass.lock());
+    auto it = std::find_if(begin(passes),
+                           end(passes),
+                           [&p=pass] (const std::unique_ptr<RenderPass> &pass) { return pass.get() == p; });
     if(it != passes.end()) {
         passes.erase(it);
         _initialized = false;

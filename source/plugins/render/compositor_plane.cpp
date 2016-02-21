@@ -89,11 +89,10 @@ Compositor::Compositor() :
 
 void Compositor::init()
 {
-    auto pixelPass = addPass();
-    _pixelPass = pixelPass.get();
-    pixelPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
-    pixelPass->addRenderer(_plane);
-    pixelPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _pixelPass = addPass();
+    _pixelPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+    _pixelPass->addRenderer(_plane);
+    _pixelPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                   "final_out"));
 
     PropertyMap layer = {

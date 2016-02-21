@@ -190,7 +190,7 @@ void LineRenderer::init(ShaderProgram* prog)
 {
     _vbo = make_resource<VBO>(getResourceManager(),
                               "P");
-    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
     _vbo->bind();
     prog->bindAttributeLocation(_vbo.get());
 
@@ -220,7 +220,7 @@ void QuadRenderer::init(ShaderProgram* prog)
 {
     _vbo = make_resource<VBO>(getResourceManager(),
                               "P");
-    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
     _vbo->bind();
     prog->bindAttributeLocation(_vbo.get());
 
@@ -256,7 +256,7 @@ void GridRenderer::init(ShaderProgram* prog)
 {
     _vbo = make_resource<VBO>(getResourceManager(),
                               "P");
-    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
     _vbo->bind();
     prog->bindAttributeLocation(_vbo.get());
 
@@ -311,8 +311,6 @@ void GridRenderer::setAlternatingColor(glm::vec4 col)
     _alternatingColor = col;
 }
 
-std::shared_ptr<VBO> DiscRenderer::_vbo;
-
 DiscRenderer::DiscRenderer(ShapeRendererGroup *parent)
     : ShapeRenderer(parent), _segments(8)
 {
@@ -327,7 +325,7 @@ void DiscRenderer::init(ShaderProgram* prog)
     }
     _vbo = make_resource<VBO>(getResourceManager(),
                               "P");
-    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
     _vbo->bind();
     prog->bindAttributeLocation(_vbo.get());
 
@@ -353,7 +351,6 @@ void DiscRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &confi
 {
 }
 
-std::shared_ptr<VBO> CircleRenderer::_vbo;
 CircleRenderer::CircleRenderer(ShapeRendererGroup *parent)
     : ShapeRenderer(parent), _segments(8)
 {
@@ -368,7 +365,7 @@ void CircleRenderer::init(ShaderProgram* prog)
     }
     _vbo = make_resource<VBO>(getResourceManager(),
                               "P");
-    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
     _vbo->bind();
     prog->bindAttributeLocation(_vbo.get());
 
@@ -392,7 +389,6 @@ void CircleRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &con
     glDrawArrays(GL_LINE_LOOP, 0, _segments);
 }
 
-std::shared_ptr<VBO> ConeRenderer::_vbo;
 ConeRenderer::ConeRenderer(ShapeRendererGroup *parent)
     : ShapeRenderer(parent), _segments(8)
 {
@@ -408,7 +404,7 @@ void ConeRenderer::init(ShaderProgram* prog)
     }
     _vbo = make_resource<VBO>(getResourceManager(),
                               "P");
-    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
     _vbo->bind();
     prog->bindAttributeLocation(_vbo.get());
 
@@ -434,9 +430,6 @@ void ConeRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &confi
 {
 }
 
-std::shared_ptr<VBO> SphereRenderer::_vbo;
-std::shared_ptr<IBO> SphereRenderer::_ibo;
-
 SphereRenderer::SphereRenderer(int u, int v) :
     _u_segments(u),
     _v_segments(v)
@@ -453,7 +446,7 @@ void SphereRenderer::init(ShaderProgram* prog)
     }
     _vbo = make_resource<VBO>(getResourceManager(),
                               "P");
-    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
     _ibo = make_resource<IBO>(getResourceManager());
     _vbo->bind();
     _ibo->bind();
@@ -500,8 +493,6 @@ void SphereRenderer::drawFill(const CameraPtr &camera, const RenderConfig &confi
     glDrawArrays(GL_TRIANGLES, 0, _v_segments);
 }
 
-std::shared_ptr<VBO> SinglePointRenderer::_vbo;
-
 SinglePointRenderer::SinglePointRenderer(ShapeRendererGroup *parent) :
     ShapeRenderer(parent),
     _pointSize(10)
@@ -534,7 +525,7 @@ void SinglePointRenderer::init(ShaderProgram* prog)
     }
     _vbo = make_resource<VBO>(getResourceManager(),
                               "P");
-    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
     _vbo->bind();
     prog->bindAttributeLocation(_vbo.get());
 

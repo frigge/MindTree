@@ -116,7 +116,7 @@ ShaderProgram* EdgeRenderer::getProgram()
 void EdgeRenderer::initCustom()
 {
     auto data = obj->getData();
-    auto ibo = getResourceManager()->getIBO(data.get());
+    auto ibo = getResourceManager()->geometryCache()->getIBO(data.get());
     ibo->bind();
     ibo->data(data->getProperty("polygon").getData<PolygonListPtr>());
 }
@@ -132,7 +132,7 @@ void EdgeRenderer::draw(const CameraPtr &camera, const RenderConfig &config, Sha
         lineWidth =  obj->getProperty("display.lineWidth").getData<double>();
 
     auto data = obj->getData();
-    auto ibo = getResourceManager()->getIBO(data.get());
+    auto ibo = getResourceManager()->geometryCache()->getIBO(data.get());
 
     auto polysizes = ibo->getSizes();
     auto indexOffsets = ibo->getOffsets();

@@ -16,15 +16,15 @@ public:
     void init();
 
     void setGeometry(std::shared_ptr<Group> grp);
-    std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> getShadowPasses() const;
+    std::unordered_map<std::shared_ptr<Light>, RenderPass*> getShadowPasses() const;
 
 protected:
     virtual void addRendererFromLight(std::shared_ptr<Light> obj);
     void addRendererFromObject(std::shared_ptr<GeoObject> obj) override;
-    virtual std::weak_ptr<RenderPass> createShadowPass(std::shared_ptr<SpotLight> spot);
+    virtual RenderPass* createShadowPass(std::shared_ptr<SpotLight> spot);
 
 private:
-    std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> _shadowPasses;
+    std::unordered_map<std::shared_ptr<Light>, RenderPass*> _shadowPasses;
     std::shared_ptr<ShaderRenderNode> _shadowNode;
 };
 

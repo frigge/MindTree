@@ -30,12 +30,10 @@ void RenderBlock::setBenchmark(std::shared_ptr<Benchmark> benchmark)
     std::string name_base = _benchmark->getName();
     for (int i = 0; i < _passes.size(); ++i) {
         auto pass = _passes[i];
-        if(pass.expired())
-            continue;
 
         std::string name = name_base + std::to_string(i + 1);
         auto bench = std::make_shared<Benchmark>(name);
-        pass.lock()->setBenchmark(bench);
+        pass->setBenchmark(bench);
         _benchmark->addBenchmark(bench);
     }
 }
@@ -57,8 +55,8 @@ std::weak_ptr<Benchmark> RenderBlock::getBenchmark() const
 
 void RenderBlock::setEnabled(bool enable)
 {
-    for (auto pass : _passes) {
-        pass.lock()->setEnabled(enable);
+    for (auto &pass : _passes) {
+        pass->setEnabled(enable);
     }
 }
 
@@ -70,14 +68,14 @@ std::weak_ptr<Camera> RenderBlock::getCamera() const
 void RenderBlock::setCamera(std::shared_ptr<Camera> camera)
 {
     _camera = camera;
-    for (auto pass : _passes)
-        pass.lock()->setCamera(camera);
+    for (auto &pass : _passes)
+        pass->setCamera(camera);
 }
 
 void RenderBlock::setProperty(std::string name, Property prop)
 {
-    for(auto p : _passes)
-        p.lock()->setProperty(name, prop);
+    for(auto &p : _passes)
+        p->setProperty(name, prop);
 }
 
 void RenderBlock::setGeometry(std::shared_ptr<Group> grp)
@@ -133,17 +131,18 @@ void RenderBlock::addRendererFromEmpty(EmptyPtr obj)
 {
 }
 
-std::shared_ptr<RenderPass> RenderBlock::addPass()
+RenderPass* RenderBlock::addPass()
 {
-    auto pass = std::make_shared<RenderPass>();
-    _passes.push_back(pass);
+    auto pass = std::make_unique<RenderPass>();
+    auto pass_ptr = pass.get();
+    _passes.push_back(pass_ptr);
 
-    _config->getManager()->addPass(pass);
+    _config->getManager()->addPass(std::move(pass));
 
-    return pass;
+    return pass_ptr;
 }
 
-GeometryRenderBlock::GeometryRenderBlock(std::weak_ptr<RenderPass> geopass)
+GeometryRenderBlock::GeometryRenderBlock(RenderPass *geopass)
     : _geometryPass(geopass)
 {
 }
@@ -155,9 +154,9 @@ void GeometryRenderBlock::setGeometry(std::shared_ptr<Group> grp)
 
 void GeometryRenderBlock::setRenderersFromGroup(std::shared_ptr<Group> group)
 {
-    _geometryPass.lock()->clearRenderers();
+    _geometryPass->clearRenderers();
     addRenderersFromGroup(group->getMembers());
-    _geometryPass.lock()->clearUnusedShaderNodes();
+    _geometryPass->clearUnusedShaderNodes();
 }
 
 void GeometryRenderBlock::addRenderersFromGroup(std::vector<std::shared_ptr<AbstractTransformable>> group)
@@ -192,12 +191,12 @@ void GeometryRenderBlock::addRendererFromObject(GeoObjectPtr obj)
     auto data = obj->getData();
     switch(data->getType()){
         case ObjectData::MESH:
-            _geometryPass.lock()->addGeometryRenderer(new PolygonRenderer(obj));
-            _geometryPass.lock()->addGeometryRenderer(new EdgeRenderer(obj));
-            _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
+            _geometryPass->addGeometryRenderer(new PolygonRenderer(obj));
+            _geometryPass->addGeometryRenderer(new EdgeRenderer(obj));
+            _geometryPass->addGeometryRenderer(new PointRenderer(obj));
             break;
         case ObjectData::POINTCLOUD:
-            _geometryPass.lock()->addGeometryRenderer(new PointRenderer(obj));
+            _geometryPass->addGeometryRenderer(new PointRenderer(obj));
             break;
     }
 }
@@ -207,13 +206,13 @@ void GeometryRenderBlock::addRendererFromLight(LightPtr obj)
     assert(obj);
     switch(obj->getLightType()) {
         case Light::POINT:
-            _geometryPass.lock()->addGeometryRenderer(new PointLightRenderer(std::dynamic_pointer_cast<PointLight>(obj)));
+            _geometryPass->addGeometryRenderer(new PointLightRenderer(std::dynamic_pointer_cast<PointLight>(obj)));
             break;
         case Light::SPOT:
-            _geometryPass.lock()->addGeometryRenderer(new SpotLightRenderer(std::dynamic_pointer_cast<SpotLight>(obj)));
+            _geometryPass->addGeometryRenderer(new SpotLightRenderer(std::dynamic_pointer_cast<SpotLight>(obj)));
             break;
         case Light::DISTANT:
-            _geometryPass.lock()->addGeometryRenderer(new DistantLightRenderer(std::dynamic_pointer_cast<DistantLight>(obj)));
+            _geometryPass->addGeometryRenderer(new DistantLightRenderer(std::dynamic_pointer_cast<DistantLight>(obj)));
             break;
     }
 
@@ -221,15 +220,15 @@ void GeometryRenderBlock::addRendererFromLight(LightPtr obj)
 
 void GeometryRenderBlock::addRendererFromCamera(CameraPtr obj)
 {
-    _geometryPass.lock()->addGeometryRenderer(new CameraRenderer(obj));
+    _geometryPass->addGeometryRenderer(new CameraRenderer(obj));
 }
 
 void GeometryRenderBlock::addRendererFromEmpty(EmptyPtr obj)
 {
-    _geometryPass.lock()->addGeometryRenderer(new EmptyRenderer(obj));
+    _geometryPass->addGeometryRenderer(new EmptyRenderer(obj));
 }
 
-std::weak_ptr<RenderPass> GeometryRenderBlock::getGeometryPass() const
+RenderPass* GeometryRenderBlock::getGeometryPass() const
 {
     return _geometryPass;
 }

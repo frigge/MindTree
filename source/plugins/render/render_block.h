@@ -26,6 +26,9 @@ class RenderBlock : public Object
 {
 public:
     RenderBlock();
+    RenderBlock(const RenderBlock &other) = delete;
+    RenderBlock& operator=(const RenderBlock &other) = delete;
+
     virtual void init() = 0;
     void setBenchmark(std::shared_ptr<Benchmark> benchmark);
     std::weak_ptr<Benchmark> getBenchmark() const;
@@ -34,7 +37,7 @@ public:
     std::weak_ptr<Camera> getCamera() const;
 
     virtual void setGeometry(std::shared_ptr<Group> grp);
-    std::shared_ptr<RenderPass> addPass();
+    RenderPass* addPass();
     void setEnabled(bool enable);
     std::vector<Texture2D*> getOutputs() const;
     void setProperty(std::string name, Property prop);
@@ -54,7 +57,7 @@ protected:
 
 private:
     friend class RenderConfigurator;
-    std::vector<std::weak_ptr<RenderPass>> _passes;
+    std::vector<RenderPass*> _passes;
     std::weak_ptr<Camera> _camera;
     std::vector<Texture2D*> _outputs;
 };
@@ -62,10 +65,10 @@ private:
 class GeometryRenderBlock : public RenderBlock
 {
 public:
-    GeometryRenderBlock(std::weak_ptr<RenderPass> geopass);
+    GeometryRenderBlock(RenderPass *geopass);
     virtual void setGeometry(std::shared_ptr<Group> grp);
 
-    std::weak_ptr<RenderPass> getGeometryPass() const;
+    RenderPass* getGeometryPass() const;
 
 protected:
     virtual void setRenderersFromGroup(std::shared_ptr<Group> group);
@@ -76,10 +79,10 @@ protected:
     virtual void addRendererFromCamera(std::shared_ptr<Camera> obj);
     virtual void addRendererFromEmpty(std::shared_ptr<Empty> obj);
 
-    std::weak_ptr<RenderPass> _geometryPass;
+    RenderPass *_geometryPass;
 
 private:
-    std::weak_ptr<RenderTree> _rendertree;
+    RenderTree *_rendertree;
 };
 
 }

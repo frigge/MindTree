@@ -26,19 +26,19 @@ std::vector<LightPtr> LightAccumulationPlane::getLight() const
     return _lights;
 }
 void LightAccumulationPlane::setShadowPasses(std::unordered_map<std::shared_ptr<Light>,
-                                             std::weak_ptr<RenderPass>> shadowPasses)
+                                             RenderPass*> shadowPasses)
 {
     std::lock_guard<std::mutex> lock(_shadowPassesLock);
     _shadowPasses = shadowPasses;
 }
 
-std::unordered_map<LightPtr, std::weak_ptr<RenderPass>> LightAccumulationPlane::getShadowPases() const
+std::unordered_map<LightPtr, RenderPass*> LightAccumulationPlane::getShadowPases() const
 {
     return _shadowPasses;
 }
 
 
-void LightAccumulationPlane::drawLight(const LightPtr light,
+void LightAccumulationPlane::drawLight(const LightPtr &light,
                                        ShaderProgram *program)
 {
     std::lock_guard<std::mutex> lock2(_shadowPassesLock);
@@ -46,8 +46,8 @@ void LightAccumulationPlane::drawLight(const LightPtr light,
     UniformStateManager states(program);
     states.addState("light.shadow", static_cast<int>(light->getShadowInfo()._enabled));
     states.addState("light.bias", light->getShadowInfo()._bias);
-    if(_shadowPasses.find(light) != _shadowPasses.end() && !_shadowPasses.at(light).expired()) {
-        auto shadowPass = _shadowPasses.at(light).lock();
+    if(_shadowPasses.find(light) != _shadowPasses.end()) {
+        auto shadowPass = _shadowPasses.at(light);
         auto shadowmap = shadowPass->getOutDepthTexture();
         program->setTexture(shadowmap);
         auto shadowcam = shadowPass->getCamera();

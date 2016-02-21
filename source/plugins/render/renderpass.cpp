@@ -22,8 +22,8 @@ RenderPass::RenderPass() :
     _depthOutput(NONE),
     _bgColor(0),
     _depth(1),
-    _tree(nullptr),
-    overrideProgramFlag_(false)
+    overrideProgramFlag_(false),
+    _tree(nullptr)
 {
 }
 

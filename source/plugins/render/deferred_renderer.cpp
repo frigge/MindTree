@@ -47,51 +47,54 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     //                           }
     //                       });
 
-    auto rsmGenerationBlock = std::make_shared<RSMGenerationBlock>();
-    auto gbuffer = std::make_shared<GBufferRenderBlock>(_geometryPass);
-    addRenderBlock(gbuffer);
-    addRenderBlock(rsmGenerationBlock);
-    auto deferred = std::make_shared<DeferredLightingRenderBlock>(rsmGenerationBlock.get());
-    addRenderBlock(deferred);
-    auto rsm = std::make_shared<RSMEvaluationBlock>(rsmGenerationBlock.get());
-    addRenderBlock(rsm);
+    auto rsm_generation_block = std::make_unique<RSMGenerationBlock>();
+    auto gbuffer_block = std::make_unique<GBufferRenderBlock>(_geometryPass);
+    auto gbuffer = gbuffer_block.get();
+    auto rsm_generation = rsm_generation_block.get();
+    addRenderBlock(std::move(gbuffer_block));
+    addRenderBlock(std::move(rsm_generation_block));
+    auto deferred_block = std::make_unique<DeferredLightingRenderBlock>(rsm_generation);
+    auto deferred = deferred_block.get();
+    addRenderBlock(std::move(deferred_block));
+    auto rsm_block = std::make_unique<RSMEvaluationBlock>(rsm_generation);
+    auto rsm = rsm_block.get();
+    addRenderBlock(std::move(rsm_block));
 
     //auto ssreflection = std::make_shared<ScreenSpaceReflectionBlock>();
     //addRenderBlock(ssreflection);
 
-    auto overlayPass = std::make_shared<RenderPass>();
-    _overlayPass = overlayPass;
-    manager->addPass(overlayPass);
-    auto overlay = _overlayPass.lock();
-    overlay
+    auto overlayPass = std::make_unique<RenderPass>();
+    _overlayPass = overlayPass.get();
+    manager->addPass(std::move(overlayPass));
+    _overlayPass
         ->setDepthOutput(make_resource<Renderbuffer>(manager->getResourceManager(),
                                                      "depth",
                                                      Renderbuffer::DEPTH));
     auto overtxptr = make_resource<Texture2D>(manager->getResourceManager(),
                                            "overlay");
     auto overtx = overtxptr.get();
-    overlay->addOutput(std::move(overtxptr));
-    overlay->setCamera(camera);
+    _overlayPass->addOutput(std::move(overtxptr));
+    _overlayPass->setCamera(camera);
     _viewCenter = new SinglePointRenderer();
     _viewCenter->setVisible(false);
-    overlay->addRenderer(_viewCenter);
+    _overlayPass->addRenderer(_viewCenter);
 
-    if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(overlay);
+    if(widgetManager) widgetManager->insertWidgetsIntoRenderPass(_overlayPass);
 
-    auto compositor = std::make_shared<Compositor>();
+    auto compositor = std::make_unique<Compositor>();
     compositor->addLayer(deferred->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
     //compositor->addLayer(ssreflection->getOutputs()[0], 1.0, CompositorPlane::CompositType::ADD);
     compositor->addLayer(rsm->getOutputs()[0], 1.0, CompositorPlane::CompositType::ADD);
     compositor->addLayer(gbuffer->getOutputs()[1], 1.0, CompositorPlane::CompositType::ALPHAOVER);
     compositor->addLayer(overtx, 1.0, CompositorPlane::CompositType::ALPHAOVER);
-    addRenderBlock(compositor);
+    addRenderBlock(std::move(compositor));
 
-    auto finalPass = std::make_shared<RenderPass>();
-    _finalPass = finalPass;
+    auto finalPass = std::make_unique<RenderPass>();
+    _finalPass = finalPass.get();
     finalPass->setCamera(camera);
-    manager->addPass(finalPass);
-    finalPass->setCustomTextureNameMapping("final_out", "output");
-    finalPass->addRenderer(new PixelPlane("../plugins/render/defaultShaders/finalout.frag"));
+    manager->addPass(std::move(finalPass));
+    _finalPass->setCustomTextureNameMapping("final_out", "output");
+    _finalPass->addRenderer(new PixelPlane("../plugins/render/defaultShaders/finalout.frag"));
 
     setCamera(camera);
 }
@@ -99,14 +102,14 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 void DeferredRenderer::setCamera(std::shared_ptr<Camera> cam)
 {
     RenderConfigurator::setCamera(cam);
-    _overlayPass.lock()->setCamera(cam);
-    _finalPass.lock()->setCamera(cam);
+    _overlayPass->setCamera(cam);
+    _finalPass->setCamera(cam);
 }
 
 glm::vec4 DeferredRenderer::getPosition(glm::vec2 pixel) const
 {
     std::vector<std::string> values = {"worldposition"};
-    return _geometryPass.lock()->readPixel(values, pixel)[0];
+    return _geometryPass->readPixel(values, pixel)[0];
 }
 
 void DeferredRenderer::setProperty(std::string name, Property prop)
@@ -127,19 +130,19 @@ void DeferredRenderer::setProperty(std::string name, Property prop)
     }
     if (name == "GL:backgroundColor") {
         auto value = prop.getData<glm::vec4>();
-        _finalPass.lock()->setBackgroundColor(value);
+        _finalPass->setBackgroundColor(value);
     }
 }
 
 void DeferredRenderer::setOverrideOutput(std::string output)
 {
-    _finalPass.lock()->clearCustomTextureNameMapping();
-    _finalPass.lock()->setCustomTextureNameMapping(output, "output");
+    _finalPass->clearCustomTextureNameMapping();
+    _finalPass->setCustomTextureNameMapping(output, "output");
     dbout("outputting: " << output);
 }
 
 void DeferredRenderer::clearOverrideOutput()
 {
-    _finalPass.lock()->clearCustomTextureNameMapping();
-    _finalPass.lock()->setCustomTextureNameMapping("final_out", "output");
+    _finalPass->clearCustomTextureNameMapping();
+    _finalPass->setCustomTextureNameMapping("final_out", "output");
 }

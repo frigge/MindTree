@@ -62,7 +62,10 @@ private:
     virtual void update();
     void updateTransformation();
     void setNode(MindTree::DNode *node);
-    bool intersectShapes(const std::shared_ptr<Camera> cam, glm::ivec2 pixel, glm::ivec2 viewportSize, glm::vec3 *hitpoint);
+    bool intersectShapes(const std::shared_ptr<Camera> &cam,
+                         glm::ivec2 pixel,
+                         glm::ivec2 viewportSize,
+                         glm::vec3 *hitpoint);
 
     MindTree::NodeType _type;
     bool _visible, _hover, _pressed;
@@ -78,7 +81,7 @@ class Widget3DManager
 public:
     Widget3DManager();
 
-    void insertWidgetsIntoRenderPass(std::shared_ptr<MindTree::GL::RenderPass> pass);
+    void insertWidgetsIntoRenderPass(MindTree::GL::RenderPass *pass);
     bool mousePressEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewportSize);
     bool mouseMoveEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewportSize);
     void mouseReleaseEvent();

@@ -8,6 +8,7 @@
 #include "vector"
 #include "unordered_set"
 #include "glwrapper.h"
+#include "resource_handling.h"
 #include "../datatypes/Object/object.h"
 #include "glm/glm.hpp"
 
@@ -16,12 +17,6 @@ namespace MindTree
 {
 namespace GL
 {
-
-class VAO;
-class FBO;
-
-class ShaderProgram;
-
 class RenderConfig;
 
 class RenderTree;
@@ -42,7 +37,7 @@ public:
     const Renderer* getParent() const;
     Renderer* getParent();
     void addChild(Renderer *child);
-    void addChild(std::shared_ptr<Renderer>(child));
+    void addChild(std::unique_ptr<Renderer> &&child);
 
     void setVisible(bool visible);
 
@@ -56,11 +51,11 @@ protected:
     virtual void init(ShaderProgram* program) = 0;
     virtual void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program) = 0;
 
-    std::vector<std::shared_ptr<Renderer>> _children;
+    std::vector<std::unique_ptr<Renderer>> _children;
 
 private:
     void _init(ShaderProgram* program);
-    std::shared_ptr<VAO> _vao;
+    ResourceHandle<VAO> _vao;
 
     std::atomic<bool> _initialized, _visible;
     glm::mat4 _transformation;

@@ -37,7 +37,7 @@ public:
     RSMGenerationBlock();
 
 protected:
-    virtual std::weak_ptr<RenderPass> createShadowPass(std::shared_ptr<SpotLight> spot);
+    virtual RenderPass* createShadowPass(std::shared_ptr<SpotLight> spot);
 
 private:
 };
@@ -56,9 +56,9 @@ private:
     RSMIndirectPlane *_rsmIndirectHighResPlane;
     RSMIndirectPlane *_rsmIndirectLowResPlane;
 
-    std::weak_ptr<RenderPass> _rsmIndirectPass;
-    std::weak_ptr<RenderPass> _rsmIndirectLowResPass;
-    std::weak_ptr<RenderPass> _rsmInterpolatePass;
+    RenderPass *_rsmIndirectPass;
+    RenderPass *_rsmIndirectLowResPass;
+    RenderPass *_rsmInterpolatePass;
 
     std::atomic<int> _downSampling;
 

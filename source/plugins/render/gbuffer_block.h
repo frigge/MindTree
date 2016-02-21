@@ -11,11 +11,11 @@ namespace GL
 class GBufferRenderBlock : public GeometryRenderBlock
 {
 public:
-    GBufferRenderBlock(std::weak_ptr<RenderPass> geopass);
+    GBufferRenderBlock(RenderPass *geopass);
     ~GBufferRenderBlock();
-    void init();
+    void init() override;
 
-    void setProperty(std::string name, Property prop);
+    void setProperty(std::string name, Property prop) override;
 
 protected:
     void addRendererFromObject(std::shared_ptr<GeoObject> obj) override;

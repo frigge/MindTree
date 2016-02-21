@@ -20,6 +20,7 @@ set(RENDER_SRC
     render_setup.cpp
     renderpass.cpp
     rendertree.cpp
+    resource_handling.cpp
     rsm_computation_plane.cpp
     shader_render_node.cpp
     shadow_mapping.cpp

@@ -22,16 +22,16 @@ public:
 
     void setOverrideOutput(std::string output) override;
     void clearOverrideOutput() override;
-    glm::vec4 getPosition(glm::vec2 pixel) const;
+    glm::vec4 getPosition(glm::vec2 pixel) const override;
 
-    void setCamera(std::shared_ptr<Camera> cam);
+    void setCamera(std::shared_ptr<Camera> cam) override;
 
     void setProperty(std::string name, Property prop) override;
 
 private:
-    std::weak_ptr<RenderPass> _overlayPass;
-    std::weak_ptr<RenderPass> _pixelPass;
-    std::weak_ptr<RenderPass> _finalPass;
+    RenderPass *_overlayPass;
+    RenderPass *_pixelPass;
+    RenderPass *_finalPass;
 
     SinglePointRenderer *_viewCenter;
 };

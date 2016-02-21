@@ -17,7 +17,7 @@ void PixelPlane::init(ShaderProgram* prog)
 {
     _vbo = make_resource<VBO>(getResourceManager(),
                               "P");
-    _vbo->overrideIndex(getResourceManager()->getIndexForAttribute("P"));
+    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
     _coord_vbo = make_resource<VBO>(getResourceManager(),
                                     "st");
     _coord_vbo->overrideIndex(1);

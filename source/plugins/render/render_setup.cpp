@@ -27,10 +27,10 @@ RenderConfigurator::RenderConfigurator(QGLContext *context, CameraPtr camera) :
     _vertexCount(0),
     _polyCount(0)
 {
-    auto geometryPass = std::make_shared<RenderPass>();
-    _geometryPass = geometryPass;
-    _rendertree->addPass(geometryPass);
-    _geometryPass.lock()->setCamera(camera);
+    auto geometryPass = std::make_unique<RenderPass>();
+    _geometryPass = geometryPass.get();
+    _rendertree->addPass(std::move(geometryPass));
+    _geometryPass->setCamera(camera);
 
     _grid = new GL::GridRenderer(100, 100, 100, 100);
     auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
@@ -40,7 +40,10 @@ RenderConfigurator::RenderConfigurator(QGLContext *context, CameraPtr camera) :
     _grid->setAlternatingColor(glm::vec4(.8, .8, .8, .8));
     _grid->setBorderWidth(2.);
 
-    _geometryPass.lock()->addRenderer(_grid);
+    _geometryPass->addRenderer(_grid);
+}
+RenderConfigurator::~RenderConfigurator()
+{
 }
 
 void RenderConfigurator::startRendering()
@@ -53,12 +56,12 @@ void RenderConfigurator::stopRendering()
     MindTree::GL::RenderThread::removeManager(_rendertree.get());
 }
 
-std::weak_ptr<RenderPass> RenderConfigurator::getGeometryPass() const
+RenderPass* RenderConfigurator::getGeometryPass() const
 {
     return _geometryPass;
 }
 
-void RenderConfigurator::addRenderBlock(std::shared_ptr<RenderBlock> block)
+void RenderConfigurator::addRenderBlock(std::unique_ptr<RenderBlock> &&block)
 {
     block->_config = this;
     block->init();
@@ -68,7 +71,7 @@ void RenderConfigurator::addRenderBlock(std::shared_ptr<RenderBlock> block)
     }
 
     block->setCamera(_camera);
-    _renderBlocks.push_back(block);
+    _renderBlocks.push_back(std::move(block));
 }
 
 glm::vec4 RenderConfigurator::getPosition(glm::vec2 pixel) const
@@ -92,7 +95,7 @@ void RenderConfigurator::clearOverrideOutput()
 void RenderConfigurator::setProperty(std::string name, Property prop)
 {
     Object::setProperty(name, prop);
-    for(auto block : _renderBlocks) {
+    for(auto &block : _renderBlocks) {
         block->setProperty(name, prop);
     }
 }
@@ -111,7 +114,7 @@ void RenderConfigurator::setGeometry(std::shared_ptr<Group> grp)
 {
     _vertexCount = grp->getVertexCount();
     _polyCount = grp->getPolygonCount();
-    for(auto block : _renderBlocks) {
+    for(auto &block : _renderBlocks) {
         block->setGeometry(grp);
     }
 
@@ -131,7 +134,7 @@ PropertyMap RenderConfigurator::getSettings() const
 
 void RenderConfigurator::setCamera(std::shared_ptr<Camera> camera)
 {
-    for(auto block : _renderBlocks) {
+    for(auto &block : _renderBlocks) {
         block->setCamera(camera);
     }
     _camera = camera;

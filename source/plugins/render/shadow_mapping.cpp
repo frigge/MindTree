@@ -65,19 +65,18 @@ void ShadowMappingRenderBlock::addRendererFromObject(std::shared_ptr<GeoObject> 
     }
 }
 
-std::unordered_map<std::shared_ptr<Light>, std::weak_ptr<RenderPass>> ShadowMappingRenderBlock::getShadowPasses() const
+std::unordered_map<std::shared_ptr<Light>, RenderPass*> ShadowMappingRenderBlock::getShadowPasses() const
 {
     return _shadowPasses;
 }
 
-std::weak_ptr<RenderPass> ShadowMappingRenderBlock::createShadowPass(SpotLightPtr spot)
+RenderPass* ShadowMappingRenderBlock::createShadowPass(SpotLightPtr spot)
 {
     Light::ShadowInfo info = spot->getShadowInfo();
-    if(!info._enabled) return std::weak_ptr<RenderPass>();
+    if(!info._enabled) return nullptr;
 
-    auto shadowPass = std::make_shared<RenderPass>();
-
-    _shadowPasses[spot] = shadowPass;
+    auto shadow_pass = std::make_unique<RenderPass>();
+    _shadowPasses[spot] = shadow_pass.get();
 
     auto camera = std::make_shared<Camera>();
     camera->setResolution(info._size.x, info._size.y);
@@ -85,19 +84,19 @@ std::weak_ptr<RenderPass> ShadowMappingRenderBlock::createShadowPass(SpotLightPt
     camera->setFov(spot->getConeAngle() * 2);
     camera->setNear(info._near);
     camera->setFar(info._far);
-    shadowPass->setCamera(camera);
-    shadowPass
+    shadow_pass->setCamera(camera);
+    shadow_pass
         ->setDepthOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                   "shadow",
                                                   Texture::DEPTH32F));
-    shadowPass->addGeometryShaderNode(_shadowNode);
-    shadowPass->setClearDepth(1.);
+    shadow_pass->addGeometryShaderNode(_shadowNode);
+    shadow_pass->setClearDepth(1.);
     static const float PI = 3.14159265359;
-    shadowPass->setProperty("coneangle", spot->getConeAngle() * PI /180);
-    shadowPass->setProperty("intensity", spot->getIntensity());
+    shadow_pass->setProperty("coneangle", spot->getConeAngle() * PI /180);
+    shadow_pass->setProperty("intensity", spot->getIntensity());
 
-    _config->getManager()->insertPassAfter(_config->getGeometryPass(), shadowPass);
+    auto *ret = shadow_pass.get();
+    _config->getManager()->insertPassAfter(_config->getGeometryPass(), std::move(shadow_pass));
 
-    return shadowPass;
+    return ret;
 }
-

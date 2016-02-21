@@ -35,11 +35,15 @@ ViewportViewer::ViewportViewer(DoutSocket *socket)
     : Viewer(socket)
 {
     setWidget(new ViewportWidget(this));
-    setupSettingsNode();
 }
 
 ViewportViewer::~ViewportViewer()
 {
+}
+
+void ViewportViewer::init()
+{
+    setupSettingsNode();
 }
 
 void ViewportViewer::setupSettingsNode()
@@ -145,7 +149,6 @@ ViewportWidget::ViewportWidget(ViewportViewer *viewer)
 
 ViewportWidget::~ViewportWidget()
 {
-    delete _viewer;
 }
 
 void ViewportWidget::setCameras()

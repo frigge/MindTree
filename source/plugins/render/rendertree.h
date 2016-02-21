@@ -77,10 +77,10 @@ public:
 
     std::vector<std::string> getAllOutputs() const;
 
-    void addPass(std::shared_ptr<RenderPass> pass);
-    void insertPassBefore(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass);
-    void insertPassAfter(std::weak_ptr<RenderPass> ref_pass, std::shared_ptr<RenderPass> pass);
-    void removePass(std::weak_ptr<RenderPass> pass);
+    void addPass(std::unique_ptr<RenderPass> &&pass);
+    void insertPassBefore(RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass);
+    void insertPassAfter(RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass);
+    void removePass(RenderPass *pass);
     RenderPass* getPass(uint index);
 
     void setConfig(RenderConfig cfg);
@@ -98,8 +98,8 @@ private:
     std::shared_timed_mutex _managerLock;
 
     glm::vec4 backgroundColor;
-    std::vector<std::shared_ptr<RenderPass>> passes;
     std::unique_ptr<ResourceManager> _resourceManager;
+    std::vector<std::unique_ptr<RenderPass>> passes;
     RenderConfig config;
     QGLContext *_context;
     std::atomic_bool _initialized;
