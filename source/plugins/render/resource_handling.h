@@ -3,7 +3,8 @@
 
 #include "glwrapper.h"
 
-namespace MindTree::GL {
+namespace MindTree {
+namespace GL {
 
 class AbstractResource
 {
@@ -167,5 +168,6 @@ private:
     ResourceManager *manager_;
 };
 
+}
 }
 #endif

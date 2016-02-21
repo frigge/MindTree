@@ -57,7 +57,7 @@ public:
     virtual ~PyViewerBase();
     void init() override;
     static void wrap();
-    void update();
+    void update() override;
     void setWidget(BPy::object widget);
     DoutSocketPyWrapper* getSocket();
     DataCache getCache() const;
