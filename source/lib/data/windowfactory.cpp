@@ -24,6 +24,7 @@
 #endif
 
 #include "windowfactory.h"
+#include "../graphics/viewer.h"
 
 using namespace MindTree;
 
@@ -107,9 +108,10 @@ void ViewerFactory::setWindowFunc(std::function<Viewer*(DoutSocket*)> fn)
     windowFunc = fn;
 }
 
-MindTree::ViewerDockBase* ViewerFactory::createViewer(DoutSocket *socket)    
+MindTree::ViewerDockBase* ViewerFactory::createViewer(DoutSocket *socket)
 {
     auto *viewer = windowFunc(socket);
+    viewer->initBase();
     if(!viewer) std::cout<<"could not create the viewer"<<std::endl;
     _dock = new MindTree::ViewerDockBase(getName(), this);
     _dock->setViewer(viewer);
@@ -129,7 +131,7 @@ ViewerDockBase* ViewerFactory::getActive() const
 
 MindTree::ViewerDockBase* ViewerFactory::getViewer(DoutSocket *socket)
 {
-    if(!_dock) 
+    if(!_dock)
         return createViewer(socket);
 
     return _dock;

@@ -156,4 +156,3 @@ QString MindTree::ViewerList::showViewer(DoutSocket *socket, unsigned int index)
 
     return dock->objectName();
 }
-

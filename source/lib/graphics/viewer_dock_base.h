@@ -24,6 +24,8 @@
 #include "boost/python.hpp"
 #endif
 
+#include <memory>
+
 #include "QDockWidget"
 #include "QToolBar"
 #include "QToolButton"
@@ -76,6 +78,7 @@ class ViewerDockBase : public QDockWidget
 public:
     ViewerDockBase(QString name, AbstractGuiFactory *factory);
     virtual ~ViewerDockBase();
+
     void setViewer(Viewer *view);
     Viewer* getViewer();
     virtual void setFocusNode(DNode* node);
@@ -106,11 +109,10 @@ private:
     DoutSocket *startSocket;
     AbstractGuiFactory *_factory;
     DNode *node;
-    Viewer *viewer;
+    std::unique_ptr<Viewer> viewer_;
     QWidget *_viewerWidget;
     bool pinned;
 };
 
-    
 } /* MindTree */
 #endif /* end of include guard: VIEWER_DOCK_BASE_3EFJLTLO */

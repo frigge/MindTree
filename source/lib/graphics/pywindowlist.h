@@ -55,6 +55,7 @@ class PyViewerBase : public Viewer, public BPy::wrapper<Viewer>
 public:
     PyViewerBase(DoutSocketPyWrapper *start);
     virtual ~PyViewerBase();
+    void init() override;
     static void wrap();
     void update();
     void setWidget(BPy::object widget);

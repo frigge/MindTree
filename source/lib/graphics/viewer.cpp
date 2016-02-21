@@ -120,13 +120,17 @@ Viewer::Viewer(DoutSocket *start)
     cbhandlers.push_back(cbhandler);
     cbhandlers.push_back(cbhandler2);
     cbhandlers.push_back(cbhandler3);
-
-    WorkerThread::notifyUpdate(_updateInfo);
 }
 
 Viewer::~Viewer()
 {
     WorkerThread::removeViewer(this);
+}
+
+void Viewer::initBase()
+{
+    init();
+    WorkerThread::notifyUpdate(_updateInfo);
 }
 
 void Viewer::update_viewer(DNode *node)

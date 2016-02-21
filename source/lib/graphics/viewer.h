@@ -62,8 +62,10 @@ public:
     QWidget* getWidget();
     void setWidget(QWidget* value);
     DNode* getSettings();
+    void initBase();
 
 protected:
+    virtual void init() = 0;
     QWidget *widget;
     MindTree::DataCache dataCache;
     MindTree::DataCache settingsCache;

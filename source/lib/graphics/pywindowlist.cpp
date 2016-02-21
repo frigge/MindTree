@@ -64,6 +64,10 @@ PyViewerBase::~PyViewerBase()
 {
 }
 
+void PyViewerBase::init()
+{
+}
+
 void PyViewerBase::wrap()
 {
     BPy::class_<PyViewerBase, boost::noncopyable>("Viewer", BPy::init<DoutSocketPyWrapper*>())

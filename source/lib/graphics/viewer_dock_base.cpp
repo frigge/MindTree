@@ -116,8 +116,10 @@ QSize ViewerDockHeaderWidget::sizeHint()    const
     return QSize(20, 20);
 }
 
-ViewerDockBase::ViewerDockBase(QString name, AbstractGuiFactory *factory)
-    : startSocket(nullptr), pinned(false), viewer(nullptr), _factory(factory)
+ViewerDockBase::ViewerDockBase(QString name, AbstractGuiFactory *factory) :
+    startSocket(nullptr),
+    _factory(factory),
+    pinned(false)
 {
     setObjectName(name);
     setWindowTitle(name);
@@ -148,7 +150,7 @@ void ViewerDockBase::focusInEvent(QFocusEvent *event)
 
 void ViewerDockBase::setViewer(Viewer *view)
 {
-    viewer = view;
+    viewer_.reset(view);
     setViewerWidget(view->getWidget());
 }
 
@@ -158,13 +160,12 @@ void ViewerDockBase::setViewerWidget(QWidget *widget)
     w->addWidget(widget);
 
     DNode* settings{nullptr};
-    if(viewer) settings = viewer->getSettings();
+    if(viewer_) settings = viewer_->getSettings();
     //setting Node Editor for settings
     if(settings) {
         WId id;
         Python::GILLocker locker;
         try{
-
             BPy::object module = BPy::import("properties_editor");
             BPy::object settingsObj = utils::getPyObject(settings);
             BPy::object nodeEditorClass = module.attr("Editor");
@@ -182,7 +183,7 @@ void ViewerDockBase::setViewerWidget(QWidget *widget)
 
 Viewer* ViewerDockBase::getViewer()
 {
-    return viewer;
+    return viewer_.get();
 }
 
 void ViewerDockBase::deleteThis(bool del)
@@ -245,7 +246,7 @@ DoutSocket* ViewerDockBase::getStart()
 void ViewerDockBase::setStart(DoutSocket* value)
 {
     startSocket = value;
-    viewer->setStart(value);
+    viewer_->setStart(value);
 }
 
 void ViewerDockBase::setFocusNode(DNode* node)
@@ -272,4 +273,3 @@ void ViewerDockBase::destroy()
 {
     delete this;
 }
-
