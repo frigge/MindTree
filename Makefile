@@ -46,4 +46,4 @@ create_cmake_address_sanitizer_project:
 	test -d build/debug_address_sanitizer || mkdir -p build/debug_address_sanitizer; cd build/debug_address_sanitizer; C=clang CXX=clang++ cmake -DCMAKE_BUILD_TYPE=Debug -DCLANG_SANITIZE_ADDRESS=ON ../..
 
 create_cmake_thread_sanitizer_project:
-	test -d build/debug_thread_sanitizer || mkdir -p build/debug_thread_sanitizer; cd build/debug_thread_sanitizer; C=clang CXX=clang++ cmake -DCMAKE_BUILD_TYPE=Release -DCLANG_SANITIZE_THREAD=ON ../..
+	test -d build/debug_thread_sanitizer || mkdir -p build/debug_thread_sanitizer; cd build/debug_thread_sanitizer; C=clang CXX=clang++ cmake -DCMAKE_BUILD_TYPE=Debug -DCLANG_SANITIZE_THREAD=ON ../..
