@@ -195,8 +195,8 @@ public:
     MaterialInstancePtr getMaterial();
     void setMaterial(MaterialInstancePtr material);
 
-    int getVertexCount() const;
-    int getPolygonCount() const;
+    int getVertexCount() const override;
+    int getPolygonCount() const override;
 
 protected:
     GeoObject(const GeoObject &other);

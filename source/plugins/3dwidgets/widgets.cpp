@@ -46,9 +46,9 @@ void Widget3D::update()
     updateTransformation();
 }
 
-bool Widget3D::intersectShapes(const std::shared_ptr<Camera> cam, 
-                               glm::ivec2 pixel, 
-                               glm::ivec2 viewportSize, 
+bool Widget3D::intersectShapes(const std::shared_ptr<Camera> &cam,
+                               glm::ivec2 pixel,
+                               glm::ivec2 viewportSize,
                                glm::vec3 *hitpoint)
 {
     if(!_visible) return false;
@@ -335,7 +335,7 @@ Widget3DManager::Widget3DManager()
         _widgets.push_back(factory());
 }
 
-void Widget3DManager::insertWidgetsIntoRenderPass(std::shared_ptr<MindTree::GL::RenderPass> pass)
+void Widget3DManager::insertWidgetsIntoRenderPass(MindTree::GL::RenderPass *pass)
 {
     for(auto &widget : _widgets) {
         pass->addRenderer(widget->renderer());
