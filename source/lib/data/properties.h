@@ -21,10 +21,12 @@
 #define PROPERTIES_K7LMQN2D
 
 #include <string>
-#include "type_traits"
+#include <type_traits>
+#include <unordered_map>
+#include <vector>
+#include <shared_mutex>
+
 #include "data/python/wrapper.h"
-#include "unordered_map"
-#include "vector"
 #include "data/type.h"
 #include "data/io.h"
 
@@ -73,6 +75,7 @@ public:
     static ConverterFunctor get(DataType from, DataType to);
 
 private:
+    static std::shared_timed_mutex converter_mutex_;
     static TypeDispatcher<DataType, ConverterList> _converters;
 };
 

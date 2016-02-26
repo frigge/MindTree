@@ -41,14 +41,17 @@ PROPERTY_TYPE_INFO(glm::vec4, "COLOR");
 PROPERTY_TYPE_INFO(glm::mat4, "MAT4");
 
 TypeDispatcher<DataType, ConverterList> PropertyConverter::_converters;
+std::shared_timed_mutex PropertyConverter::converter_mutex_;
 
 void PropertyConverter::registerConverter(DataType from, DataType to, ConverterFunctor fn)
 {
-    _converters[from][to] = fn; 
+    std::unique_lock<std::shared_timed_mutex> lock(converter_mutex_);
+    _converters[from][to] = fn;
 }
 
 bool PropertyConverter::isConvertible(DataType from, DataType to)
 {
+    std::shared_lock<std::shared_timed_mutex> lock(converter_mutex_);
     auto fn = _converters[from][to];
     if(fn)
         return true;
@@ -57,6 +60,7 @@ bool PropertyConverter::isConvertible(DataType from, DataType to)
 
 ConverterFunctor PropertyConverter::get(DataType from, DataType to)
 {
+    std::shared_lock<std::shared_timed_mutex> lock(converter_mutex_);
     return _converters[from][to];
 }
 
