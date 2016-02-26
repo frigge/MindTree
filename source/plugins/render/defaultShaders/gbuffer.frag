@@ -21,6 +21,8 @@ out vec4 outcolor;
 
 uniform int flatShading = 0;
 
+uniform sampler1D polygon_colors;
+
 vec3 Nn;
 
 void main() {
@@ -29,9 +31,7 @@ void main() {
     outposition = vec4(pos, 1);
     worldposition = vec4(worldPos, 1);
     //outdiffusecolor = diffuse_color * vec4(poly_color,1);
-    outdiffusecolor = vec4(mod(gl_PrimitiveID, 2),
-                           mod(gl_PrimitiveID + 1, 2),
-                           mod(gl_PrimitiveID + 2, 2),1);
+    outdiffusecolor = texelFetch(polygon_colors, gl_PrimitiveID, 0);
     outdiffuseintensity = vec4(vec3(diffuse_intensity), 1);
     outspecintensity = vec4(vec3(specular_intensity), 1);
     //outcolor = vec4(0);
