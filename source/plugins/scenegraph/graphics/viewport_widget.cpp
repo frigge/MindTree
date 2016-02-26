@@ -132,6 +132,9 @@ void ViewportViewer::update()
         grp = std::make_shared<Group>();
         grp->addMember(obj);
     }
+    else {
+        return;
+    }
     for(auto prop : properties) {
         viewport->setOption(prop.first, prop.second);
         grp->setProperty(prop.first, prop.second);
