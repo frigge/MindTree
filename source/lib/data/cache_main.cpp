@@ -128,7 +128,7 @@ CacheProcessor::~CacheProcessor()
 
 void CacheProcessor::operator()(DataCache* cache)
 {
-    processor(cache); 
+    processor(cache);
 }
 
 std::unordered_map<const DNode*, std::vector<Property>> DataCache::_cachedOutputs;
@@ -286,7 +286,7 @@ void DataCache::addProcessor(AbstractCacheProcessor *proc)
 void DataCache::removeProcessor(AbstractCacheProcessor *proc)
 {
     std::lock_guard<std::recursive_mutex> lock(_processorMutex);
-    processors[proc->getSocketType()][proc->getNodeType()] = std::shared_ptr<AbstractCacheProcessor>();
+    processors[proc->getSocketType()][proc->getNodeType()].reset();
 }
 
 void DataCache::addGenericProcessor(GenericCacheProcessor *proc)

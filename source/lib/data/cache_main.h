@@ -64,7 +64,7 @@ private:
 class AbstractCacheProcessor
 {
 public:
-    typedef TypeDispatcher<NodeType, std::shared_ptr<AbstractCacheProcessor>> CacheList;
+    typedef TypeDispatcher<NodeType, std::unique_ptr<AbstractCacheProcessor>> CacheList;
 
     AbstractCacheProcessor(SocketType st, NodeType nt);
     virtual ~AbstractCacheProcessor();
