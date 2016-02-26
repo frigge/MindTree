@@ -273,26 +273,19 @@ void RenderPass::setTextures(std::vector<Texture2D*> textures)
 
 std::vector<glm::vec4> RenderPass::readPixel(std::vector<std::string> names, glm::ivec2 pos)
 {
-    {
-        std::unique_lock<std::shared_timed_mutex> locker(_pixelRequestsLock);
-        for(auto name : names)
-            _pixelRequests.push(std::make_pair(name, pos));
-    }
-    bool request = true;
-    while(request) {
-        {
-            std::shared_lock<std::shared_timed_mutex> locker(_pixelRequestsLock);
-            request = _pixelRequests.size() > 0;
-        }
-        //wait for the pixels to be read
-    }
+    std::unique_lock<std::mutex> lock(_pixelRequestsLock);
+    for(auto name : names)
+        _pixelRequests.push(std::make_pair(name, pos));
+
+    pixelRequestsCondition_.wait(lock);
     return _requestedPixels;
 }
 
 void RenderPass::processPixelRequests()
 {
-    std::unique_lock<std::shared_timed_mutex> locker(_pixelRequestsLock);
+    std::unique_lock<std::mutex> locker(_pixelRequestsLock);
     _requestedPixels.clear();
+    if (_pixelRequests.empty()) return;
     while(_pixelRequests.size() > 0) {
         auto request = _pixelRequests.front();
         _pixelRequests.pop();
@@ -315,28 +308,28 @@ void RenderPass::processPixelRequests()
         for(const auto &tex : _outputTextures) {
             if (tex->getName() == name){
                 switch(tex->getFormat()) {
-                    case Texture::RGB:
-                        format = GL_RGB;
-                        datasize = GL_UNSIGNED_BYTE;
-                        break;
-                    case Texture::RGB8:
-                        format = GL_RGB;
-                        datasize = GL_UNSIGNED_BYTE;
-                        break;
-                    case Texture::RGBA:
-                        format = GL_RGBA;
-                        datasize = GL_UNSIGNED_BYTE;
-                        break;
-                    case Texture::RGBA8:
-                        format = GL_RGBA;
-                        datasize = GL_UNSIGNED_BYTE;
-                        break;
-                    case Texture::RGBA16F:
-                        format = GL_RGBA;
-                        datasize = GL_FLOAT;
-                        break;
-                    default:
-                        break;
+                case Texture::RGB:
+                    format = GL_RGB;
+                    datasize = GL_UNSIGNED_BYTE;
+                    break;
+                case Texture::RGB8:
+                    format = GL_RGB;
+                    datasize = GL_UNSIGNED_BYTE;
+                    break;
+                case Texture::RGBA:
+                    format = GL_RGBA;
+                    datasize = GL_UNSIGNED_BYTE;
+                    break;
+                case Texture::RGBA8:
+                    format = GL_RGBA;
+                    datasize = GL_UNSIGNED_BYTE;
+                    break;
+                case Texture::RGBA16F:
+                    format = GL_RGBA;
+                    datasize = GL_FLOAT;
+                    break;
+                default:
+                    break;
                 }
             }
         }
@@ -344,28 +337,28 @@ void RenderPass::processPixelRequests()
         for(const auto &renderbuffer : _outputRenderbuffers) {
             if (renderbuffer->getName() == name){
                 switch(renderbuffer->getFormat()) {
-                    case Renderbuffer::RGB:
-                        format = GL_RGB;
-                        datasize = GL_UNSIGNED_BYTE;
-                        break;
-                    case Renderbuffer::RGB8:
-                        format = GL_RGB;
-                        datasize = GL_UNSIGNED_BYTE;
-                        break;
-                    case Renderbuffer::RGBA:
-                        format = GL_RGBA;
-                        datasize = GL_UNSIGNED_BYTE;
-                        break;
-                    case Renderbuffer::RGBA8:
-                        format = GL_RGBA;
-                        datasize = GL_UNSIGNED_BYTE;
-                        break;
-                    case Renderbuffer::RGBA16F:
-                        format = GL_RGBA;
-                        datasize = GL_FLOAT;
-                        break;
-                    default:
-                        break;
+                case Renderbuffer::RGB:
+                    format = GL_RGB;
+                    datasize = GL_UNSIGNED_BYTE;
+                    break;
+                case Renderbuffer::RGB8:
+                    format = GL_RGB;
+                    datasize = GL_UNSIGNED_BYTE;
+                    break;
+                case Renderbuffer::RGBA:
+                    format = GL_RGBA;
+                    datasize = GL_UNSIGNED_BYTE;
+                    break;
+                case Renderbuffer::RGBA8:
+                    format = GL_RGBA;
+                    datasize = GL_UNSIGNED_BYTE;
+                    break;
+                case Renderbuffer::RGBA16F:
+                    format = GL_RGBA;
+                    datasize = GL_FLOAT;
+                    break;
+                default:
+                    break;
                 }
             }
         }
@@ -386,32 +379,33 @@ void RenderPass::processPixelRequests()
 
         glm::vec4 color;
         if(format == GL_RGB) {
-                GLubyte* raw_color = reinterpret_cast<GLubyte*>(data);
-                color = glm::vec4(raw_color[0] / 255.0,
-                                  raw_color[1] / 255.0,
-                                  raw_color[2] / 255.0,
-                                  1);
-                delete [] raw_color;
+            GLubyte* raw_color = reinterpret_cast<GLubyte*>(data);
+            color = glm::vec4(raw_color[0] / 255.0,
+                              raw_color[1] / 255.0,
+                              raw_color[2] / 255.0,
+                              1);
+            delete [] raw_color;
         }
         else if(format == GL_RGBA && datasize == GL_UNSIGNED_BYTE) {
-                GLubyte* raw_color = reinterpret_cast<GLubyte*>(data);
-                color = glm::vec4(raw_color[0] / 255.0,
-                                  raw_color[1] / 255.0,
-                                  raw_color[2] / 255.0,
-                                  raw_color[3] / 255.0);
-                delete [] raw_color;
+            GLubyte* raw_color = reinterpret_cast<GLubyte*>(data);
+            color = glm::vec4(raw_color[0] / 255.0,
+                              raw_color[1] / 255.0,
+                              raw_color[2] / 255.0,
+                              raw_color[3] / 255.0);
+            delete [] raw_color;
         }
         else if(format == GL_RGBA && datasize == GL_FLOAT) {
-                GLfloat* raw_color = reinterpret_cast<GLfloat*>(data);
-                color = glm::vec4(raw_color[0],
-                                  raw_color[1],
-                                  raw_color[2],
-                                  raw_color[3]);
-                delete [] raw_color;
+            GLfloat* raw_color = reinterpret_cast<GLfloat*>(data);
+            color = glm::vec4(raw_color[0],
+                              raw_color[1],
+                              raw_color[2],
+                              raw_color[3]);
+            delete [] raw_color;
         }
 
         _requestedPixels.push_back(color);
     }
+    pixelRequestsCondition_.notify_all();
 }
 
 void RenderPass::setTarget(ResourceHandle<FBO> &&target)

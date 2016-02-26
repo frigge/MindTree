@@ -131,10 +131,10 @@ void RenderThread::stop()
     if (_renderThread.joinable()) _renderThread.join();
 }
 
-RenderTree::RenderTree(QGLContext *context)
-    : _initialized(false),
-      _context(context),
-      _resourceManager(std::make_unique<ResourceManager>())
+RenderTree::RenderTree(QGLContext *context) :
+    _resourceManager(std::make_unique<ResourceManager>()),
+    _context(context),
+    _initialized(false)
 {
 }
 

@@ -1098,15 +1098,15 @@ void UniformStateManager::setFromPropertyMap(PropertyMap map)
     }
 }
 
-Texture::Texture(std::string name, Texture::Format format, Target target)
-    : _format(format),
-    _initialized(false),
-    _target(target),
-    _name(name),
+Texture::Texture(std::string name, Texture::Format format, Target target) :
     _id(0),
+    _format(format),
+    _target(target),
     _wrapMode(CLAMP_TO_EDGE),
-    _width(0),
     _filter(LINEAR),
+    _initialized(false),
+    _name(name),
+    _width(0),
     _genMipmaps(false)
 {
     if (target == TEXTURE_BUFFER)
@@ -1355,52 +1355,6 @@ Texture::Filter Texture::getFilter() const
 Texture::WrapMode Texture::getWrapMode() const
 {
     return _wrapMode;
-}
-
-void Texture::init(std::vector<unsigned char> data)
-{
-    Texture::init();
-
-    GLenum format = getGLFormat();
-    GLenum internalFormat = getGLInternalFormat();
-    GLenum type = getGLDataType();
-
-    bind();
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glTexImage1D(GL_TEXTURE_1D,
-                 0,
-                 internalFormat,
-                 width(),
-                 0,
-                 format,
-                 type,
-                 data.data());
-    MTGLERROR;
-}
-
-void Texture::init(std::vector<glm::vec2> data)
-{
-    Texture::init();
-
-    GLenum format = getGLFormat();
-    GLenum internalFormat = getGLInternalFormat();
-    GLenum type = getGLDataType();
-
-    bind();
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glTexImage1D(GL_TEXTURE_1D,
-                 0,
-                 internalFormat,
-                 width(),
-                 0,
-                 format,
-                 type,
-                 data.data());
-    MTGLERROR;
 }
 
 void Texture::setWidth(int width)

@@ -107,7 +107,8 @@ private:
 
     std::vector<glm::vec4> _requestedPixels;
     std::queue<std::pair<std::string, glm::ivec2>> _pixelRequests;
-    std::shared_timed_mutex _pixelRequestsLock;
+    std::condition_variable pixelRequestsCondition_;
+    std::mutex _pixelRequestsLock;
 
     friend class RenderTree;
 

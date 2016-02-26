@@ -401,8 +401,30 @@ public:
     virtual void release();
 
     virtual void init();
-    void init(std::vector<glm::vec2> data);
-    void init(std::vector<unsigned char> data);
+
+    template<typename T>
+    void init(std::vector<T> data)
+    {
+        Texture::init();
+
+        GLenum format = getGLFormat();
+        GLenum internalFormat = getGLInternalFormat();
+        GLenum type = getGLDataType();
+
+        bind();
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        glTexImage1D(GL_TEXTURE_1D,
+                     0,
+                     internalFormat,
+                     width(),
+                     0,
+                     format,
+                     type,
+                     data.data());
+        MTGLERROR;
+    }
 
     GLuint getID() const;
     void setFormat(Texture::Format format);
