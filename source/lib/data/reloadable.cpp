@@ -1,11 +1,16 @@
-#include "cache_main.h"
 #include <chrono>
 #include <QDir>
 #include <QFileInfo>
 #include <QDateTime>
+#include "reloadable_plugin.h"
 #include "reloadable.h"
 
 using namespace MindTree;
+
+Library::Library() :
+    m_handle(nullptr), m_age(0)
+{
+}
 
 Library::Library(std::string path) :
     m_path(path), m_handle(nullptr), m_age(0)
@@ -15,7 +20,9 @@ Library::Library(std::string path) :
 }
 
 Library::Library(Library &&lib) :
-    m_path(lib.m_path), m_handle(lib.m_handle)
+    m_path(lib.m_path),
+    m_handle(lib.m_handle),
+    m_age(lib.m_age)
 {
     lib.m_handle = nullptr;
     lib.m_path = "";
@@ -23,7 +30,7 @@ Library::Library(Library &&lib) :
 
 Library::~Library()
 {
-    unload();
+    if(m_handle) unload();
 }
 
 Library& Library::operator=(Library &&other)
@@ -31,8 +38,10 @@ Library& Library::operator=(Library &&other)
     if(m_handle) unload();
     m_handle = other.m_handle;
     m_path = other.m_path;
+    m_age = other.m_age;
     other.m_handle = nullptr;
     other.m_path = "";
+    other.m_age = 0;
     return *this;
 }
 
@@ -63,20 +72,40 @@ int64_t Library::age() const
 }
 
 HotProcessor::HotProcessor(std::string path) :
-    m_lib(std::make_unique<Library>(path)), m_proc(nullptr)
+    m_lib(path), m_proc(nullptr)
 {
-    if(m_lib->load()) {
-        auto loadFn = m_lib->getFunction<CacheProcessor*()>("load");
-        m_unloadFn = m_lib->getFunction<void()>("unload");
-        m_proc = loadFn();
+    if(m_lib.load()) {
+        auto loadFn = m_lib.getFunction<plugin::CacheProcessorInfo()>("load");
+        m_unloadFn = m_lib.getFunction<void()>("unload");
+
+        auto info = loadFn();
+        m_proc = new CacheProcessor(info.socket_type, info.node_type, info.cache_proc);
         DataCache::addProcessor(m_proc);
     }
+}
+
+HotProcessor::HotProcessor(HotProcessor &&other) :
+    m_lib(std::move(other.m_lib)),
+    m_unloadFn(other.m_unloadFn),
+    m_proc(other.m_proc)
+{
+    other.m_proc = nullptr;
+    other.m_unloadFn = []{};
 }
 
 HotProcessor::~HotProcessor()
 {
     m_unloadFn();
-    DataCache::removeProcessor(m_proc);
+    if(m_proc)
+        DataCache::removeProcessor(m_proc);
+}
+
+HotProcessor& HotProcessor::operator=(HotProcessor &&other)
+{
+    m_lib = std::move(other.m_lib);
+    m_unloadFn = other.m_unloadFn;
+    m_proc = other.m_proc;
+    return *this;
 }
 
 CacheProcessor *HotProcessor::getProcessor()
@@ -86,16 +115,16 @@ CacheProcessor *HotProcessor::getProcessor()
 
 std::string HotProcessor::getLibPath() const
 {
-    return m_lib->getPath();
+    return m_lib.getPath();
 }
 
 int64_t HotProcessor::age() const
 {
-    return m_lib->age();
+    return m_lib.age();
 }
 
 std::thread HotProcessorManager::m_watchThread;
-std::unordered_map<std::string, std::unique_ptr<HotProcessor>> HotProcessorManager::m_processors;
+std::unordered_map<std::string, HotProcessor> HotProcessorManager::m_processors;
 std::atomic<bool> HotProcessorManager::m_watching{false};
 
 void HotProcessorManager::watch()
@@ -111,16 +140,14 @@ void HotProcessorManager::watch()
             auto it = m_processors.find(fp);
             if (it == m_processors.end()) {
                 std::cout << "new library" << std::endl;
-                auto prc = std::make_unique<HotProcessor>(fp);
-                m_processors.insert(std::make_pair(fp, std::move(prc)));
+                m_processors.emplace(std::make_pair(fp, HotProcessor(fp)));
             }
-            else if (info.lastModified().toMSecsSinceEpoch() > it->second->age()) {
+            else if (info.lastModified().toMSecsSinceEpoch() > it->second.age()) {
                 std::cout << "library changed" << std::endl;
-                std::cout << "old age: " << it->second->age() << "\n"
+                std::cout << "old age: " << it->second.age() << "\n"
                           << "new age: " << info.lastModified().toMSecsSinceEpoch() << std::endl;
                 m_processors.erase(fp);
-                auto prc = std::make_unique<HotProcessor>(fp);
-                m_processors.insert(std::make_pair(fp, std::move(prc)));
+                m_processors[fp] = HotProcessor(fp);
             }
         }
 

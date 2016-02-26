@@ -16,6 +16,7 @@ namespace MindTree {
 class Library
 {
 public:
+    Library();
     Library(std::string path);
     Library(const Library &lib) = delete;
     Library(Library &&lib);
@@ -50,16 +51,19 @@ private:
 class HotProcessor
 {
 public:
-    HotProcessor(std::string path);
+    HotProcessor(std::string path="");
+    HotProcessor(HotProcessor &&other);
 
     ~HotProcessor();
+
+    HotProcessor& operator=(HotProcessor &&other);
     CacheProcessor* getProcessor();
     int64_t age() const;
 
     std::string getLibPath() const;
 
 private:
-    std::unique_ptr<Library> m_lib;
+    Library m_lib;
     std::function<void()> m_unloadFn;
     CacheProcessor *m_proc;
 };
@@ -73,7 +77,7 @@ public:
 
 private:
     static std::thread m_watchThread;
-    static std::unordered_map<std::string, std::unique_ptr<HotProcessor>> m_processors;
+    static std::unordered_map<std::string, HotProcessor> m_processors;
     static std::atomic<bool> m_watching;
 };
 
