@@ -24,9 +24,8 @@ private:
 
     size_t _triangleCount;
     void initCustom();
-    ResourceHandle<VBO> _polyColors;
+    ResourceHandle<Texture> _polyColors;
     ResourceHandle<IBO> _triangulatedIBO;
-    ResourceHandle<Texture> _polyColorTexture;
 };
 
 class EdgeRenderer : public GeoObjectRenderer

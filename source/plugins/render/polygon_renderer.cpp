@@ -59,14 +59,9 @@ void PolygonRenderer::initCustom()
         auto colProp = std::static_pointer_cast<MeshData>(data)->getProperty("polygon_color");
         auto colors = colProp.getData<std::vector<glm::vec4>>();
 
-        //_polyColors = std::make_shared<VBO>("polygon_colors");
-        //_polyColors->bind();
-        //_polyColors->data(colors);
-
-        //_polyColorTexture = std::make_shared<Texture>("polygon_colors", Texture::RGBA8, Texture::TEXTURE_BUFFER);
-        //_polyColorTexture->init();
-        //_polyColorTexture->bind();
-        //glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA8, _polyColors->getID());
+        _polyColors = make_resource<Texture>(getResourceManager(), "polygon_colors", Texture::RGBA8);
+        _polyColors->setWidth(colors.size());
+        _polyColors->init(colors);
     }
 }
 
@@ -78,6 +73,9 @@ void PolygonRenderer::draw(const CameraPtr &camera, const RenderConfig &config, 
     auto data = obj->getData();
     UniformStateManager manager(program);
     manager.addState("flatShading", (int)config.flatShading());
+
+    if(_polyColors) program->setTexture(_polyColors.get());
+
     if(obj->getMaterial()) {
         manager.setFromPropertyMap(obj->getMaterial()->getProperties());
     }
