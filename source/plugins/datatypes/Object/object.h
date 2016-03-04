@@ -20,8 +20,6 @@
 
 #define OBJECT
 
-#include "data/nodes/data_node.h"
-#include "data/cache_main.h"
 #include "data/mtobject.h"
 #include "glm/glm.hpp"
 #include "QMatrix4x4"
