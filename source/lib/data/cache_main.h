@@ -129,7 +129,7 @@ public:
     static void addProcessor(AbstractCacheProcessor *proc);
     static void removeProcessor(AbstractCacheProcessor *proc);
     static void addGenericProcessor(GenericCacheProcessor *proc);
-    static const std::vector<AbstractCacheProcessor::CacheList>& getProcessors();
+    static std::vector<AbstractCacheProcessor*> getProcessors();
     static std::vector<Property>& getCachedOutputs(const DNode *node);
     static void invalidate(const DNode *node);
     static bool isCached(const DNode *node);

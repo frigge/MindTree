@@ -280,7 +280,11 @@ void DataCache::addProcessor(AbstractCacheProcessor *proc)
     std::lock_guard<std::recursive_mutex> lock(_processorMutex);
     auto st = proc->getSocketType();
     auto nt = proc->getNodeType();
-    processors[st][nt].reset(proc);
+
+    if (processors.find(st) == processors.end())
+        processors[st] = AbstractCacheProcessor::CacheList();
+
+    processors[st][nt] = std::unique_ptr<AbstractCacheProcessor>(proc);
 }
 
 void DataCache::removeProcessor(AbstractCacheProcessor *proc)
@@ -291,13 +295,17 @@ void DataCache::removeProcessor(AbstractCacheProcessor *proc)
 
 void DataCache::addGenericProcessor(GenericCacheProcessor *proc)
 {
-    _genericProcessors[proc->getNodeType()].reset(proc);
+    _genericProcessors[proc->getNodeType()] = std::unique_ptr<AbstractCacheProcessor>(proc);
 }
 
-const std::vector<AbstractCacheProcessor::CacheList>& DataCache::getProcessors()
+std::vector<AbstractCacheProcessor*> DataCache::getProcessors()
 {
     std::lock_guard<std::recursive_mutex> lock(_processorMutex);
-    return processors.getAll();
+    std::vector<AbstractCacheProcessor*> ret;
+    for(auto &p : processors)
+        for(auto &p_ : p.second)
+            ret.push_back(p_.second.get());
+    return ret;
 }
 
 //computes the value of the given input socket
@@ -434,14 +442,14 @@ void DataCache::cacheInputs()
     unsigned long nodeTypeID = ntype.id();
     std::string nodeName = node->getNodeName();
 
-    auto &genericProcessor = _genericProcessors[ntype];
+    const auto &genericProcessor = _genericProcessors[ntype];
     if(genericProcessor) {
         (*genericProcessor)(this);
         return;
     }
 
     std::lock_guard<std::recursive_mutex> lock(_processorMutex);
-    if(type.id() >= static_cast<int>(processors.size())){
+    if(processors.find(type) == processors.end()){
         std::cout<< "no processors defined for this data type ("
                  << type.toStr()
                  << " id:"
@@ -450,8 +458,8 @@ void DataCache::cacheInputs()
                  << std::endl;
         return;
     }
-    auto list = processors[type];
-    if(nodeTypeID >= list.size()){
+    const auto &list = processors[type];
+    if(list.find(ntype) == list.end()){
         std::cout<< "no processors defined for this node type ("
                  << node->getType().toStr()
                  << " id:"
@@ -462,7 +470,7 @@ void DataCache::cacheInputs()
                  << std::endl;
         return;
     }
-    auto &datacache = list[node->getType()];
+    const auto &datacache = list.at(node->getType());
     if(!datacache) {
         std::cout<<"Node Type ID:" << nodeTypeID << std::endl;
         std::cout<<"Socket Type ID:" << type.id() << std::endl;
