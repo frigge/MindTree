@@ -65,7 +65,7 @@ ConverterFunctor PropertyConverter::get(DataType from, DataType to)
 }
 
 Property::Property()
-    : data(nullptr),
+    : data_(nullptr),
      type("undefined")
      /* default fn objects to avoid std::bad_function_call*/
      //by default reset property value as this property is empty as well
@@ -73,7 +73,7 @@ Property::Property()
 }
 
 Property::Property(const Property &other) noexcept
-    : data(nullptr),
+    : data_(nullptr),
     type("undefined")
 {
     other._meta.cloneData(*this);
@@ -182,7 +182,7 @@ const MindTree::DataType& Property::getType() const
 
 BPy::object Property::toPython() const
 {
-    if(!data) {
+    if(!data_) {
         return BPy::object();
     }
     return _meta.pyconverter();

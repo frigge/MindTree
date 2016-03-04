@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <vector>
 #include <shared_mutex>
+#include <stdexcept>
 
 #include "data/python/wrapper.h"
 #include "data/type.h"
@@ -267,28 +268,27 @@ public:
     void setData(T d){
         setMetaData<T>();
 
-        data = std::make_unique<PropertyData<T>>(d);
+        data_ = std::make_unique<PropertyData<T>>(d);
     }
 
     template<typename T,
         typename std::enable_if<!std::is_same<T, Property*>::value>::type* = nullptr>
     T getData() const
     {
+        if (!data_) return T();
+
         //initialize on demand with default value
-        if(!data) {
-            data = std::make_unique<PropertyData<T>>();
-        }
         if(PropertyTypeInfo<T>::getType() != type) {
             if(!PropertyConverter::isConvertible(PropertyTypeInfo<T>::getType(), type))
                 return T();
 
             auto converter = PropertyConverter::get(type, PropertyTypeInfo<T>::getType());
             T converted;
-            converter(data.get(), reinterpret_cast<void*>(&converted));
+            converter(data_.get(), reinterpret_cast<void*>(&converted));
 
             return converted;
         }
-        return static_cast<PropertyData<T>*>(data.get())->getData();
+        return static_cast<PropertyData<T>*>(data_.get())->getData();
     }
 
     template<typename T,
@@ -296,30 +296,27 @@ public:
     T& getDataRef()
     {
         //initialize on demand with default value
-        if(!data) {
-            data = std::make_unique<PropertyData<T>>();
+        if(!data_) {
+            data_ = std::make_unique<PropertyData<T>>();
         }
-        return reinterpret_cast<PropertyData<T>*>(data.get())->getData();
+        return reinterpret_cast<PropertyData<T>*>(data_.get())->getData();
     }
 
     template<typename T,
         typename std::enable_if<!std::is_same<T, Property*>::value>::type* = nullptr>
     const T& getDataRef() const
     {
-        //initialize on demand with default value
-        if(!data) {
-            data = std::make_unique<PropertyData<T>>();
-        }
-        return reinterpret_cast<PropertyData<T>*>(data.get())->getData();
+        throw std::runtime_error("property is empty");
+        return reinterpret_cast<PropertyData<T>*>(data_.get())->getData();
     }
 
     BPy::object toPython() const;
     const MindTree::DataType& getType() const;
     inline operator bool() const
     {
-        return data.get();
+        return data_.get();
     }
-    
+
     inline bool isList() const
     {
         return _meta.listTools.get();
@@ -362,7 +359,7 @@ private:
         };
 
         _meta.moveData = [this](Property &other) {
-            other.data = std::move(this->data);
+            other.data_ = std::move(this->data_);
             other.setMetaData<T>();
         };
 
@@ -375,7 +372,7 @@ private:
 
     friend IO::OutStream& MindTree::operator<<(IO::OutStream& stream, const Property &prop);
 
-    mutable std::unique_ptr<PropertyDataBase> data;
+    std::unique_ptr<PropertyDataBase> data_;
 
     Meta _meta;
     DataType type;
@@ -462,10 +459,10 @@ public:
             return prop;
         };
 
-        _readers.add(PropertyTypeInfo<T>::getType(), reader);
+        _readers[PropertyTypeInfo<T>::getType()] = reader;
     }
     static Property read(IO::InStream &stream) noexcept;
-        
+
 private:
     static ReaderList _readers;
 
