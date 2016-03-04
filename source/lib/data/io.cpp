@@ -23,7 +23,7 @@ OutStream::OutStream(std::string filename)
 {
     auto container = _nodeStreamDispatcher["CONTAINER"];
     if(!container) {
-        _nodeStreamDispatcher.add("CONTAINER", dispatchedOutStreamer<ContainerNode>);
+        _nodeStreamDispatcher["CONTAINER"] = dispatchedOutStreamer<ContainerNode>;
     }
 }
 
@@ -209,7 +209,7 @@ InStream::InStream(std::string filename)
 {
     auto container = _nodeStreamDispatcher["CONTAINER"];
     if(!container) {
-        _nodeStreamDispatcher.add("CONTAINER", dispatchedInStreamer<ContainerNode>);
+        _nodeStreamDispatcher["CONTAINER"] = dispatchedInStreamer<ContainerNode>;
     }
 }
 

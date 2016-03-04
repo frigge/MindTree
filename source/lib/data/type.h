@@ -1,11 +1,12 @@
 #ifndef MT_TYPEINFO_H
 #define MT_TYPEINFO_H
 
-#include "string"
-#include "vector"
-#include "iostream"
-#include "mutex"
-#include "atomic"
+#include <string>
+#include <vector>
+#include <iostream>
+#include <mutex>
+#include <atomic>
+#include <unordered_map>
 
 namespace MindTree {
 
@@ -22,7 +23,7 @@ public:
         return typeString;
     }
 
-    int id()const
+    int id() const
     {
         return _id;
     }
@@ -70,10 +71,11 @@ public:
         : TypeBase(typeStr, getID(typeStr))
     { }
 
-    void operator=(const Type<T> &t)
+    Type<T>& operator=(const Type<T> &t)
     {
         typeString = t.typeString;
         _id = getID(typeString);
+        return *this;
     }
 
     static Type byID(int id)
@@ -100,18 +102,18 @@ public:
         return id_map;
     }
 
-    static int registerType(std::string name)
+    static int registerType(const std::string &name)
     {
         std::lock_guard<std::mutex> lock(_id_map_mutex);
         id_map.push_back(name);
         return ++id_cnt;
     }
 
-    static void unregisterType(std::string name)
+    static void unregisterType(const std::string &name)
     {
     }
 
-    static int getID(std::string name)
+    static int getID(const std::string &name)
     {
         if(name.empty()) return -1;
         {
@@ -151,53 +153,16 @@ std::mutex Type<T>::_id_map_mutex;
 template<typename T>
 std::atomic<int> Type<T>::id_cnt{-1};
 
-template<typename T, typename Content>
-class TypeDispatcher
-{
-public:
-    TypeDispatcher()
-    {
+template<typename T>
+struct type_hash {
+    size_t operator()(const T &type) const {
+        return type.id();
     }
-
-    void add(T type, Content c)
-    {
-        int typeID = type.id();
-        if(typeID >= _contentList.size()) {
-            _contentList.resize(typeID + 1);
-        }
-
-        _contentList[typeID] = c;
-    }
-
-    const std::vector<Content>& getAll()
-    {
-        return _contentList;
-    }
-
-    Content* get(T type)
-    {
-        if (type.id() < _contentList.size())
-            return &_contentList[type.id()];
-        else
-            return nullptr;
-    }
-
-    Content& operator[](T type)
-    {
-        if (type.id() >= _contentList.size())
-            _contentList.resize(type.id() + 1);
-
-        return _contentList[type.id()];
-    }
-
-    size_t size() const
-    {
-        return _contentList.size();
-    }
-
-private:
-    std::vector<Content> _contentList;
 };
+
+template<typename Type, typename Content>
+using TypeDispatcher = std::unordered_map<Type, Content, type_hash<Type>>;
+
 }
 
 #endif

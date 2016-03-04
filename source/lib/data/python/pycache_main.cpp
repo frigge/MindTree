@@ -88,14 +88,13 @@ BPy::dict MindTree::wrap_DataCache_getProcessors()
 {
     const auto &processors = DataCache::getProcessors();
     BPy::dict dict;
-    for(ulong i=0; i<processors.size(); i++){
-        ulong size = processors[i].size();
-        BPy::list l;
-        for(ulong j=0; j<size; j++) {
-            auto node_str = NodeType::byID(j).toStr();
-            l.append(NodeType::byID(j).toStr());
-        }
-        dict[SocketType::byID(i).toStr()] = l;
+    for(const auto *proc : processors){
+        std::string socket_type = proc->getSocketType().toStr();
+        std::string node_type = proc->getNodeType().toStr();
+        if (dict.has_key(socket_type))
+            dict[socket_type] = BPy::list();
+        BPy::list l = BPy::extract<BPy::list>(dict.get(socket_type));
+        l.append(node_type);
     }
     return dict;
 }

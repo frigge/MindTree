@@ -38,18 +38,6 @@ BPy::dict wrap_DataCache_getProcessors();
 std::string wrap_DataCache_getType(DataCache *self);
 void wrap_DataCache_invalidate(DNodePyWrapper *node);
 
-//template<typename T>
-//class PyWrapCache : public T
-//{
-//    typedef typename CacheMap<T>::Type datatype_t;
-//public:
-//    PyWrapCache(DoutSocketPyWrapper* socket) : T(socket->getWrapped<DoutSocket>()) {}
-//    virtual ~PyWrapCache(){}
-//    static void wrap(){
-//        BPy::class_<PyWrapCache<T>, BPy::bases<DataCache>>(CacheMap<T>::str.c_str(), BPy::init<DoutSocketPyWrapper*>());
-//    }
-//};
-
 class PyWrapCache : public DataCache
 {
 public:
