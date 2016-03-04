@@ -12,10 +12,11 @@ Library::Library() :
 {
 }
 
-Library::Library(std::string path) :
-    m_path(path), m_handle(nullptr), m_age(0)
+Library::Library(const std::string &path, int64_t age) :
+    m_path(path),
+    m_handle(nullptr),
+    m_age(age ? age : QFileInfo(path.c_str()).lastModified().toMSecsSinceEpoch())
 {
-    m_age = QFileInfo(path.c_str()).lastModified().toMSecsSinceEpoch();
     std::cout << "created lib with age: " << m_age << std::endl;
 }
 
@@ -71,11 +72,11 @@ int64_t Library::age() const
     return m_age;
 }
 
-HotProcessor::HotProcessor(std::string path) :
-    m_lib(path), m_proc(nullptr)
+HotProcessor::HotProcessor(const std::string &path, int64_t age) :
+    m_lib(path, age), m_proc(nullptr)
 {
     if(m_lib.load()) {
-        auto loadFn = m_lib.getFunction<plugin::CacheProcessorInfo()>("load");
+        auto loadFn = m_lib.getFunction<CacheProcessorInfo()>("load");
         m_unloadFn = m_lib.getFunction<void()>("unload");
 
         auto info = loadFn();
@@ -90,14 +91,14 @@ HotProcessor::HotProcessor(HotProcessor &&other) :
     m_proc(other.m_proc)
 {
     other.m_proc = nullptr;
-    other.m_unloadFn = []{};
+    other.m_unloadFn = nullptr;
 }
 
 HotProcessor::~HotProcessor()
 {
-    m_unloadFn();
     if(m_proc)
         DataCache::removeProcessor(m_proc);
+    if(m_unloadFn) m_unloadFn();
 }
 
 HotProcessor& HotProcessor::operator=(HotProcessor &&other)
@@ -129,25 +130,25 @@ std::atomic<bool> HotProcessorManager::m_watching{false};
 
 void HotProcessorManager::watch()
 {
-    QDir libdir("../processors/");
     while(m_watching.load()) {
-        libdir.refresh();
+        QDir libdir("../processors/");
         auto infos = libdir.entryInfoList();
         for (auto info : infos) {
-            if(!info.isFile()) continue;
+           if(!info.isFile()) continue;
 
             auto fp = info.filePath().toStdString();
             auto it = m_processors.find(fp);
+            int64_t age = info.lastModified().toMSecsSinceEpoch();
             if (it == m_processors.end()) {
                 std::cout << "new library" << std::endl;
                 m_processors.emplace(std::make_pair(fp, HotProcessor(fp)));
             }
-            else if (info.lastModified().toMSecsSinceEpoch() > it->second.age()) {
+            else if (age > it->second.age()) {
                 std::cout << "library changed" << std::endl;
                 std::cout << "old age: " << it->second.age() << "\n"
-                          << "new age: " << info.lastModified().toMSecsSinceEpoch() << std::endl;
+                          << "new age: " << age << std::endl;
                 m_processors.erase(fp);
-                m_processors[fp] = HotProcessor(fp);
+                m_processors.emplace(std::make_pair(fp, HotProcessor(fp, age)));
             }
         }
 

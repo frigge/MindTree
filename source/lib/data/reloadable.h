@@ -3,7 +3,6 @@
 
 #include <atomic>
 #include <dlfcn.h>
-#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
@@ -17,7 +16,7 @@ class Library
 {
 public:
     Library();
-    Library(std::string path);
+    Library(const std::string &path, int64_t age=0);
     Library(const Library &lib) = delete;
     Library(Library &&lib);
 
@@ -32,12 +31,10 @@ public:
     Library& operator=(Library&&);
 
     template<typename T>
-    std::function<T> getFunction(std::string symbol)
+    T* getFunction(const std::string &symbol)
     {
-        if(!m_handle) return std::function<T>();
-        CacheProcessor* (*fn)();
-        fn = reinterpret_cast<decltype(fn)>(dlsym(m_handle, symbol.c_str()));
-        return std::function<T>(fn);
+        if(!m_handle) return nullptr;
+        return reinterpret_cast<T*>(dlsym(m_handle, symbol.c_str()));
     }
 
     std::string getPath() const;
@@ -51,7 +48,7 @@ private:
 class HotProcessor
 {
 public:
-    HotProcessor(std::string path="");
+    HotProcessor(const std::string &path="", int64_t age=0);
     HotProcessor(HotProcessor &&other);
 
     ~HotProcessor();
@@ -64,7 +61,7 @@ public:
 
 private:
     Library m_lib;
-    std::function<void()> m_unloadFn;
+    void (*m_unloadFn)();
     CacheProcessor *m_proc;
 };
 

@@ -29,8 +29,8 @@ void runIcosphere(DataCache* cache)
     polygon_color.emplace_back(1, 0, 0, 1);
     polys->push_back({8, 2, 1});
     polygon_color.emplace_back(0, 1, 0, 1);
-    polys->push_back({8, 1, 3});
-    polygon_color.emplace_back(1, 1, 0, 1);
+    //polys->push_back({8, 1, 3});
+    //polygon_color.emplace_back(1, 1, 0, 1);
     //polys->push_back({7, 3, 1});
     //polygon_color.emplace_back(0, 0, 1, 1);
     //polys->push_back({1, 0, 7});
@@ -48,9 +48,9 @@ void runIcosphere(DataCache* cache)
 }
 
 extern "C" {
-plugin::CacheProcessorInfo load()
+CacheProcessorInfo load()
 {
-    plugin::CacheProcessorInfo info;
+    CacheProcessorInfo info;
     info.socket_type = "TRANSFORMABLE";
     info.node_type = "CREATEICOSPHERE";
     info.cache_proc = runIcosphere;

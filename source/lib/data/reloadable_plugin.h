@@ -3,15 +3,12 @@
 
 #include "cache_main.h"
 
-namespace MindTree {
-namespace plugin {
-
+extern "C" {
 struct CacheProcessorInfo {
-    std::string socket_type;
-    std::string node_type;
-    void (*cache_proc)(DataCache*);
+    const char* socket_type;
+    const char* node_type;
+    void (*cache_proc)(MindTree::DataCache*);
 };
+}
 
-}
-}
 #endif

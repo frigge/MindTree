@@ -1,5 +1,6 @@
 #include "data/debuglog.h"
 #include "../plugins/datatypes/Object/object.h"
+#include "data/reloadable_plugin.h"
 #include "data/cache_main.h"
 
 using namespace MindTree;
@@ -27,10 +28,13 @@ void run(DataCache* cache)
 }
 
 extern "C" {
-CacheProcessor* load()
+CacheProcessorInfo load()
 {
-    dbout("new hot reloadable plugin loaded");
-    return new CacheProcessor("TRANSFORMABLE", "CREATEPCPLANE", run);
+    CacheProcessorInfo info;
+    info.socket_type = "TRANSFORMABLE";
+    info.node_type = "CREATEPCPLANE";
+    info.cache_proc = run;
+    return info;
 }
 
 void unload()
