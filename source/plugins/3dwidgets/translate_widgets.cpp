@@ -1,5 +1,6 @@
 #define GLM_SWIZZLE
 #include "glm/gtc/matrix_transform.hpp"
+#include "data/nodes/data_node.h"
 #include "translate_widgets.h"
 
 using namespace MindTree;
