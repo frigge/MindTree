@@ -66,7 +66,7 @@ ConverterFunctor PropertyConverter::get(DataType from, DataType to)
 
 Property::Property()
     : data_(nullptr),
-     type("undefined")
+     type_("undefined")
      /* default fn objects to avoid std::bad_function_call*/
      //by default reset property value as this property is empty as well
 {
@@ -74,14 +74,16 @@ Property::Property()
 
 Property::Property(const Property &other) noexcept
     : data_(nullptr),
-    type("undefined")
+    type_("undefined")
 {
-    other._meta.cloneData(*this);
+    if(!other.traits_) return;
+    other.traits_->cloneData(*this);
 }
 
 Property::Property(const Property &&other) noexcept
 {
-    other._meta.moveData(*this);
+    if(!other.traits_) return;
+    other.traits_->moveData(*this);
 }
 
 Property::~Property() noexcept
@@ -90,28 +92,30 @@ Property::~Property() noexcept
 
 Property& Property::operator=(const Property &other)     noexcept
 {
-    other._meta.cloneData(*this);
+    if(!other.traits_) return *this;
+    other.traits_->cloneData(*this);
     return *this;
 }
 
 Property& Property::operator=(const Property &&other) noexcept
 {
-    other._meta.moveData(*this);
+    if(!other.traits_) return *this;
+    other.traits_->moveData(*this);
     return *this;
 }
 
-Property Property::createPropertyFromPython(const BPy::object &pyobj)    
+Property Property::createPropertyFromPython(const BPy::object &pyobj)
 {
     auto t = MindTree::Python::type(pyobj);
-    if(t == "int") { 
+    if(t == "int") {
         int val = BPy::extract<int>(pyobj);
         return Property(val);
-    }        
+    }
     else if(t == "str" || t == "unicode") {
         std::string val = BPy::extract<std::string>(pyobj);
         return Property(val);
     }
-    else if(t == "float") { 
+    else if(t == "float") {
         double val = BPy::extract<float>(pyobj);
         return Property(val);
     }
@@ -119,7 +123,7 @@ Property Property::createPropertyFromPython(const BPy::object &pyobj)
         bool val = BPy::extract<bool>(pyobj);
         return Property(val);
     }
-    else if(t == "long") { 
+    else if(t == "long") {
         long val = BPy::extract<long>(pyobj);
         return Property(val);
     }
@@ -127,21 +131,21 @@ Property Property::createPropertyFromPython(const BPy::object &pyobj)
         BPy::tuple tuple(pyobj);
         if(BPy::len(tuple) == 2) {
             std::string elemType = Python::type(pyobj[0]);
-            if(elemType == "int") { 
+            if(elemType == "int") {
                 int x, y;
                 x = BPy::extract<int>(pyobj[0]);
                 y = BPy::extract<int>(pyobj[1]);
                 glm::ivec2 val(x, y);
                 return Property(val);
-            }        
-            else if(elemType == "float") { 
+            }
+            else if(elemType == "float") {
                 double x, y;
                 x = BPy::extract<float>(pyobj[0]);
                 y = BPy::extract<float>(pyobj[1]);
                 glm::vec2 val(x, y);
                 return Property(val);
             }
-            else if(elemType == "long") { 
+            else if(elemType == "long") {
                 long x, y;
                 x = BPy::extract<long>(pyobj[0]);
                 y = BPy::extract<long>(pyobj[1]);
@@ -177,7 +181,7 @@ Property Property::clone()const
 
 const MindTree::DataType& Property::getType() const
 {
-    return type;
+    return type_;
 }
 
 BPy::object Property::toPython() const
@@ -185,7 +189,7 @@ BPy::object Property::toPython() const
     if(!data_) {
         return BPy::object();
     }
-    return _meta.pyconverter();
+    return traits_->pyconverter();
 }
 
 PropertyMap::PropertyMap(std::initializer_list<Info> init)
@@ -349,7 +353,7 @@ IO::OutStream& MindTree::operator<<(IO::OutStream &stream, const Property &prop)
 {
     stream.beginBlock("Property");
     stream << static_cast<const TypeBase&>(prop.getType());
-    prop._meta.writeData(stream, prop);
+    if(prop.traits_) prop.traits_->writeData(stream, prop);
     stream.endBlock("Property");
     return stream;
 }

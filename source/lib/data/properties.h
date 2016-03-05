@@ -134,113 +134,41 @@ template<class T> struct Writer;
 IO::OutStream& operator<<(IO::OutStream &stream, const Property &prop);
 IO::InStream& operator>>(IO::InStream &stream, Property &prop);
 
+template<typename T>
+struct isSTDVectorTrait {
+    static const bool value = false;
+};
+
+template<typename T>
+struct isSTDVectorTrait<std::vector<T>> {
+    static const bool value = true;
+};
+
+struct PropertyDataTraits {
+    PropertyDataTraits(Property *self) : self_(self) {}
+
+    //general traits
+    virtual void cloneData(Property &other) = 0;
+    virtual void moveData(Property &other) = 0;
+    virtual BPy::object pyconverter() = 0;
+
+    virtual void writeData(IO::OutStream&, const Property&) = 0;
+
+    //vector traits
+    virtual Property createList(int cnt, Property def) const = 0;
+    virtual Property getItem(int) const = 0;
+    virtual void setItem(int index, Property) = 0;
+    virtual size_t getSize() const = 0;
+    virtual bool isList() const = 0;
+
+    Property *self_ = nullptr;
+};
+
+template<typename T>
+struct PropertyTypeTraits;
+
 class Property
 {
-private:
-    template<typename T>
-    struct isSTDVectorTrait {
-        static const bool value = false;
-    };
-
-    template<typename T>
-    struct isSTDVectorTrait<std::vector<T>> {
-        static const bool value = true;
-    };
-
-    struct ListToolsBase {
-        virtual Property createList(int cnt, Property def) = 0;
-        virtual Property getItem(const Property &list, int index) const = 0;
-        virtual void setItem(Property *list, int index, Property value) = 0;
-        virtual size_t getSize(const Property *list) const = 0;
-    };
-
-    template<typename T>
-    struct ListTools : public ListToolsBase {
-        virtual Property createList(int cnt, Property def) override
-        {
-            T value = def.getData<T>();
-
-            std::vector<T> vec(cnt, value);
-            auto prop = MindTree::Property(vec);
-            return prop;
-        }
-
-        virtual Property getItem(const Property &, int) const override { return Property(); }
-        virtual void setItem(Property *, int, Property) override {}
-        virtual size_t getSize(const Property *) const override { return 1; }
-    };
-
-    template<typename T>
-    struct ListTools<std::vector<T>> : public ListToolsBase {
-        Property getItem(const Property &list, int index) const override
-        {
-            const auto &vec = list.getDataRef<std::vector<T>>();
-            if(index >= vec.size())
-                return Property();
-
-            return vec.at(index);
-        }
-
-        void setItem(Property *list, int index, Property value) override
-        {
-            auto &vec = list->getDataRef<std::vector<T>>();
-            if(vec.size() <= index)
-                vec.resize(index + 1);
-
-            vec[index] = value.getData<T>();
-        }
-
-        size_t getSize(const Property *list) const override
-        {
-            return list->getData<std::vector<T>>().size();
-        }
-
-        Property createList(int cnt, Property def) override { return Property(); }
-    };
-
-    template<typename T>
-    struct ListTools<std::shared_ptr<std::vector<T>>> : public ListToolsBase {
-        Property getItem(const Property &list, int index) const override
-        {
-            const auto &vec = list.getDataRef<std::shared_ptr<std::vector<T>>>();
-            if(index >= vec->size())
-                return Property();
-
-            return vec->at(index);
-        }
-
-        void setItem(Property *list, int index, Property value) override
-        {
-            auto &vec = list->getDataRef<std::shared_ptr<std::vector<T>>>();
-            if(vec->size() <= index)
-                vec->resize(index + 1);
-
-            (*vec)[index] = value.getData<T>();
-        }
-
-        size_t getSize(const Property *list) const override
-        {
-            return list->getData<std::shared_ptr<std::vector<T>>>()->size();
-        }
-
-        Property createList(int cnt, Property def) override { return Property(); }
-    };
-
-    struct Meta {
-        Meta()
-            : cloneData([](Property &prop){}),
-             moveData([](Property &prop){}),
-             writeData([](IO::OutStream& stream, const Property &) { }),
-             pyconverter([]{return BPy::object();})
-        {}
-
-        std::function<void(Property&)> cloneData;
-        std::function<void(Property&)> moveData;
-        std::function<void(IO::OutStream&, const Property&)> writeData;
-        std::function<BPy::object()> pyconverter;
-        std::unique_ptr<ListToolsBase> listTools;
-    };
-
 public:
     Property();
 
@@ -266,9 +194,15 @@ public:
     template<typename T,
         typename std::enable_if<!std::is_same<T, Property*>::value>::type* = nullptr>
     void setData(T d){
-        setMetaData<T>();
-
         data_ = std::make_unique<PropertyData<T>>(d);
+        setMetaData<T>();
+    }
+
+    template<typename T>
+    void setMetaData()
+    {
+        traits_ = std::make_unique<PropertyTypeTraits<T>>(this);
+        type_ = PropertyTypeInfo<T>::getType();
     }
 
     template<typename T,
@@ -278,11 +212,11 @@ public:
         if (!data_) return T();
 
         //initialize on demand with default value
-        if(PropertyTypeInfo<T>::getType() != type) {
-            if(!PropertyConverter::isConvertible(PropertyTypeInfo<T>::getType(), type))
+        if(PropertyTypeInfo<T>::getType() != type_) {
+            if(!PropertyConverter::isConvertible(PropertyTypeInfo<T>::getType(), type_))
                 return T();
 
-            auto converter = PropertyConverter::get(type, PropertyTypeInfo<T>::getType());
+            auto converter = PropertyConverter::get(type_, PropertyTypeInfo<T>::getType());
             T converted;
             converter(data_.get(), reinterpret_cast<void*>(&converted));
 
@@ -306,7 +240,7 @@ public:
         typename std::enable_if<!std::is_same<T, Property*>::value>::type* = nullptr>
     const T& getDataRef() const
     {
-        throw std::runtime_error("property is empty");
+        if(!data_) throw std::runtime_error("property is empty");
         return reinterpret_cast<PropertyData<T>*>(data_.get())->getData();
     }
 
@@ -319,65 +253,173 @@ public:
 
     inline bool isList() const
     {
-        return _meta.listTools.get();
+        if(!traits_) return false;
+        return traits_->isList();
     }
 
     inline static Property getItem(const Property &list, int index)
     {
-        if(!list._meta.listTools) return Property();
-        return list._meta.listTools->getItem(list, index);
+        if(!list.isList()) return Property();
+        return list.traits_->getItem(index);
     }
 
     inline static void setItem(Property &list, int index, Property value)
     {
-        if(!list._meta.listTools) return;
-        list._meta.listTools->setItem(&list, index, value);
+        if(!list.isList()) return;
+        list.traits_->setItem(index, value);
     }
 
     inline size_t size() const
     {
-        if(!_meta.listTools.get()) {
+        if(!isList()) {
             return 1;
         }
 
-        return _meta.listTools->getSize(this);
+        return traits_->getSize();
     }
 
     inline Property createList(size_t cnt)
     {
-        if(!_meta.listTools) return Property();
-        return _meta.listTools->createList(cnt, *this);
+        if(isList()) return *this;
+        return traits_->createList(cnt, *this);
     }
 
 private:
-    template<typename T,
-        typename std::enable_if<!std::is_same<T, Property*>::value>::type* = nullptr>
-    void setMetaData()
-    {
-        _meta.cloneData = [this](Property &other) {
-            other.setData<T>(this->getData<T>());
-        };
-
-        _meta.moveData = [this](Property &other) {
-            other.data_ = std::move(this->data_);
-            other.setMetaData<T>();
-        };
-
-        _meta.writeData = &IO::Writer<T>::write;
-
-        _meta.pyconverter = [this]{ return PyConverter<T>::pywrap(this->getData<T>());};
-        type = PropertyTypeInfo<T>::getType();
-        _meta.listTools = std::unique_ptr<ListToolsBase>(new ListTools<T>());
-    }
+    template<typename T>
+    friend struct PropertyTypeTraits;
 
     friend IO::OutStream& MindTree::operator<<(IO::OutStream& stream, const Property &prop);
 
     std::unique_ptr<PropertyDataBase> data_;
-
-    Meta _meta;
-    DataType type;
+    std::unique_ptr<PropertyDataTraits> traits_;
+    DataType type_;
 };
 
+template<typename T>
+struct PropertyListTraits {
+    static Property getItem(const Property &, int) { return Property(); }
+    static void setItem(Property &, int, Property) {}
+    static size_t getSize(const Property &) { return 1; }
+    static bool isList() { return false; }
+    static Property createList(int cnt, Property def)
+    {
+        T value = def.getData<T>();
+
+        std::vector<T> vec(cnt, value);
+        auto prop = MindTree::Property(vec);
+        return prop;
+    }
+};
+
+template<typename T>
+struct PropertyListTraits<std::vector<T>> {
+    static Property getItem(const Property &self, int index)
+    {
+        const auto &vec = self.getDataRef<std::vector<T>>();
+        if(index >= vec.size())
+            return Property();
+
+        return vec.at(index);
+    }
+
+    static void setItem(Property &self, int index, Property value)
+    {
+        auto &vec = self.getDataRef<std::vector<T>>();
+        if(vec.size() <= index)
+            vec.resize(index + 1);
+
+        vec[index] = value.getData<T>();
+    }
+
+    static size_t getSize(const Property &self)
+    {
+        return self.getDataRef<std::vector<T>>().size();
+    }
+
+    static Property createList(int cnt, Property def) { return Property(); }
+    static bool isList() { return true; }
+};
+
+template<typename T>
+struct PropertyListTraits<std::shared_ptr<std::vector<T>>> {
+    static Property getItem(const Property &self, int index)
+    {
+        const auto &vec = self.getDataRef<std::shared_ptr<std::vector<T>>>();
+        if(index >= vec->size())
+            return Property();
+
+        return vec->at(index);
+    }
+
+    static void setItem(Property &self, int index, Property value)
+    {
+        auto &vec = self.getDataRef<std::shared_ptr<std::vector<T>>>();
+        if(vec->size() <= index)
+            vec->resize(index + 1);
+
+        (*vec)[index] = value.getData<T>();
+    }
+
+    static size_t getSize(const Property &self)
+    {
+        return self.getDataRef<std::shared_ptr<std::vector<T>>>()->size();
+    }
+
+    static bool isList() { return true; }
+    static Property createList(int cnt, Property def) { return Property(); }
+};
+
+template<typename T>
+struct PropertyTypeTraits : public PropertyDataTraits {
+
+    PropertyTypeTraits(Property *self) : PropertyDataTraits(self) {}
+    void cloneData(Property &other) override
+    {
+        other.setData<T>(self_->getData<T>());
+    }
+
+    void moveData(Property &other) override
+    {
+        other.data_ = std::move(self_->data_);
+        other.setMetaData<T>();
+    }
+
+    void writeData(IO::OutStream &stream, const Property &prop) override
+    {
+        IO::Writer<T>::write(stream, prop);
+    }
+
+    BPy::object pyconverter() override
+    {
+        return PyConverter<T>::pywrap(self_->getData<T>());
+    }
+
+    Property createList(int cnt, Property def) const override
+    {
+        return PropertyListTraits<T>::createList(cnt, def);
+    }
+
+    Property getItem(int index) const override
+    {
+        return PropertyListTraits<T>::getItem(*self_, index);
+    }
+
+    void setItem(int index, Property value) override
+    {
+        return PropertyListTraits<T>::setItem(*self_, index, value);
+    }
+
+    size_t getSize() const override
+    {
+        return PropertyListTraits<T>::getSize(*self_);
+    }
+
+    bool isList() const override
+    {
+        return PropertyListTraits<T>::isList();
+    }
+
+};
 
 class PropertyMap {
 public:
