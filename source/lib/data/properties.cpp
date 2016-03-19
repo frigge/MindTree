@@ -31,6 +31,7 @@ template<class T> const MindTree::DataType MindTree::PropertyTypeInfo<T>::_type;
 PROPERTY_TYPE_INFO(float, "FLOAT");
 PROPERTY_TYPE_INFO(double, "FLOAT");
 PROPERTY_TYPE_INFO(int, "INTEGER");
+PROPERTY_TYPE_INFO(uint8_t, "INTEGER");
 PROPERTY_TYPE_INFO(bool, "BOOLEAN");
 PROPERTY_TYPE_INFO(PropertyMap, "PROPERTYMAP");
 PROPERTY_TYPE_INFO(std::string, "STRING");
