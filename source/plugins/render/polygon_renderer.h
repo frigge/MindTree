@@ -53,6 +53,9 @@ public:
 
 protected:
     void draw(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+
+private:
+    bool per_vertex_color_{false};
 };
 
 }

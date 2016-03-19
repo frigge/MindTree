@@ -10,6 +10,7 @@
 using namespace MindTree::GL;
 
 PolygonRenderer::PolygonRenderer(std::shared_ptr<GeoObject> o)
+
     : GeoObjectRenderer(o),
       _triangleCount(0)
 {
@@ -37,11 +38,19 @@ std::vector<uint> PolygonRenderer::triangulate()
     auto polygons = data->getProperty("polygon").getData<PolygonListPtr>();
     std::vector<uint> triangles;
     for(Polygon &poly : *polygons) {
-        uint first = poly.verts()[0];
-        for(size_t i = 1; i < poly.verts().size() - 1; ++i) {
-            triangles.push_back(first);
-            triangles.push_back(i);
-            triangles.push_back(i+1);
+        auto verts = poly.verts();
+        if(verts.size() == 3) {
+            triangles.push_back(verts[0]);
+            triangles.push_back(verts[1]);
+            triangles.push_back(verts[2]);
+        }
+        else {
+            uint first = verts[0];
+            for(size_t i = 1; i < verts.size() - 1; ++i) {
+                triangles.push_back(first);
+                triangles.push_back(i);
+                triangles.push_back(i+1);
+            }
         }
     }
     _triangleCount = triangles.size();
@@ -53,14 +62,13 @@ void PolygonRenderer::initCustom()
     auto data = obj->getData();
     _triangulatedIBO = make_resource<IBO>(getResourceManager());
     _triangulatedIBO->bind();
-    auto triangles = triangulate();
-    _triangulatedIBO->data(triangles);
+    _triangulatedIBO->data(triangulate());
     if (std::static_pointer_cast<MeshData>(data)->hasProperty("polygon_color")) {
         auto colProp = std::static_pointer_cast<MeshData>(data)->getProperty("polygon_color");
-        auto colors = colProp.getData<std::vector<glm::vec4>>();
+        auto colors = colProp.getData<std::vector<uint8_t>>();
 
-        _polyColors = make_resource<Texture>(getResourceManager(), "polygon_colors", Texture::RGBA8);
-        _polyColors->setWidth(colors.size());
+        _polyColors = make_resource<Texture>(getResourceManager(), "polygon_color", Texture::RGB8);
+        _polyColors->setWidth(colors.size() / 3);
         _polyColors->init(colors);
     }
 }
@@ -150,6 +158,8 @@ void EdgeRenderer::draw(const CameraPtr &camera, const RenderConfig &config, Sha
 PointRenderer::PointRenderer(std::shared_ptr<GeoObject> o)
     : GeoObjectRenderer(o)
 {
+    auto props = std::static_pointer_cast<MeshData>(o->getData())->getProperties();
+    per_vertex_color_ = props.find("C") != props.end();
 }
 
 PointRenderer::~PointRenderer()
@@ -173,9 +183,10 @@ void PointRenderer::draw(const CameraPtr &camera, const RenderConfig &config, Sh
     if(!config.drawPoints()) return;
     GeoObjectRenderer::draw(camera, config, program);
 
+    UniformStateManager manager(program);
+    manager.addState("has_vertex_color", per_vertex_color_);
     auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
     auto verts = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
     glDrawArrays(GL_POINTS, 0, verts->size());
     MTGLERROR;
 }
-
