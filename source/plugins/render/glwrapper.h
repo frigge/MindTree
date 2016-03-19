@@ -403,7 +403,7 @@ public:
     virtual void init();
 
     template<typename T>
-    void init(std::vector<T> data)
+    void init(const std::vector<T> &data)
     {
         Texture::init();
 

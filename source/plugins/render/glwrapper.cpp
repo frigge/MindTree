@@ -202,7 +202,7 @@ void IBO::data(const std::vector<uint32_t> &triangles)
 {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                  triangles.size() * sizeof(uint32_t),
-                 (GLvoid*)triangles.data(),
+                 triangles.data(),
                  GL_STATIC_DRAW);
     MTGLERROR;
 }
