@@ -12,7 +12,7 @@ class NodeDesigner:
         painter.setPen(Qt.NoPen)
         painter.setBrush(socket.color)
 
-        painter.drawRect(0, 0, socket.width, socket.height)
+        painter.drawRect(0, 0, socket._width, socket.height)
 
 
 class NodeLink(QGraphicsItem):
@@ -247,20 +247,24 @@ class NodeName(QGraphicsTextItem):
 
         self.setTextInteractionFlags(Qt.NoTextInteraction)
         self.textCursor().clearSelection()
-        self.parentItem().nameBG.width = self.boundingRect().width()
+        self.parentItem().nameBG._width = self.boundingRect().width()
         self.parentItem().nameBG.height = self.boundingRect().height()
 
 class NodeOutSocket(QGraphicsItem):
-
-    def __init__(self, parent):
+    def __init__(self, parent, socket, alt_color=False):
         QGraphicsItem.__init__(self, parent)
         self.setFlag(QGraphicsItem.ItemIsMovable, False)
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
-        self.width = 21
+        self._width = 21
         self.height = 25
-        self.setPos(parent.width, 0)
-        self.out_color = QColor(50, 160, 50)
-        self.over_color = QColor(137, 255, 132)
+        self.setPos(parent._width, 0)
+        self.socket = socket
+        if alt_color:
+            self.out_color = QColor(50, 50, 160)
+            self.over_color = QColor(137, 132, 255)
+        else:
+            self.out_color = QColor(50, 160, 50)
+            self.over_color = QColor(137, 255, 132)
         self.color = self.out_color
         self.setAcceptHoverEvents(True)
 
@@ -271,7 +275,7 @@ class NodeOutSocket(QGraphicsItem):
         NodeDesigner.paint_outsocket(self, painter)
 
     def boundingRect(self):
-        return QRectF(0, 0, self.width, self.height)
+        return QRectF(0, 0, self._width, self.height)
 
     def hoverEnterEvent(self, event):
         self.color = self.over_color
@@ -290,15 +294,7 @@ class NodeOutSocket(QGraphicsItem):
 
         self.dragStartPos = event.screenPos()
         self.scene().showTmpLink(self)
-        if len(self.parentItem().data.outsockets) > 1:
-            menu = QMenu()
-            for s in self.parentItem().data.outsockets:
-                action = menu.addAction(s.name)
-                def triggered():
-                    self.scene().tmpLink.outsocket = s
-                action.triggered.connect(triggered)
-        else:
-            self.scene().tmpLink.outsocket = self.parentItem().data.outsockets[0]
+        self.scene().tmpLink.outsocket = self.socket
 
 
     def mouseMoveEvent(self, event):
@@ -379,17 +375,17 @@ class NodeOptionsButton(QGraphicsSvgItem):
 class NodeNameBG(QGraphicsItem):
     def __init__(self, parent=None):
         QGraphicsItem.__init__(self, parent)
-        self.width = 10
+        self._width = 10
         self.height = 10
         self.setPos(0, -30)
 
     def paint(self, painter, options, widget):
         painter.setBrush(QBrush(QColor(20, 20, 20, 100)))
         painter.setPen(Qt.NoPen)
-        painter.drawRoundedRect(0, 0, self.width, self.height, 8, 8)
+        painter.drawRoundedRect(0, 0, self._width, self.height, 8, 8)
 
     def boundingRect(self):
-        return QRectF(0, 0, self.width, self.height)
+        return QRectF(0, 0, self._width, self.height)
 
 class NodeItem(QGraphicsSvgItem):
     def __init__(self,
@@ -401,7 +397,7 @@ class NodeItem(QGraphicsSvgItem):
         QGraphicsSvgItem.__init__(self, parent)
         self.data = data
 
-        self.width = width
+        self._width = width
         self.height = height
 
         self.viewed = False
@@ -421,16 +417,35 @@ class NodeItem(QGraphicsSvgItem):
 
         self.nameBG = NodeNameBG(self)
         self.name = NodeName(self)
-        self.nameBG.width = self.name.boundingRect().width()
+        self.nameBG._width = self.name.boundingRect().width()
         self.nameBG.height = self.name.boundingRect().height()
 
-        self.out = NodeOutSocket(self)
+        self.out = []
+        pos = width;
+        colors = QColor()
+        altcolor = False
+        for out in self.data.outsockets:
+            vis = NodeOutSocket(self, out, altcolor)
+            altcolor = not altcolor
+            vis.setPos(QPoint(pos, 0))
+            pos += vis._width + 2 #slight margin
+            self.out.append(vis)
+
+        self.addsocketcb = MT.attachToBoundSignal(data, "outSocketAdded", self.newOutSocket)
+
         if options:
             self.nodeOptions = NodeOptionsButton(self)
         self.posCB = MT.attachToBoundSignal(data, "nodePositionChanged", self.updatePositionFromData)
 
     def __del__(self):
         print("deleting node vis")
+
+    def newOutSocket(self):
+        altcolor = bool(len(self.out) % 2)
+        vis = NodeOutSocket(self, self.data.outsockets[-1], altcolor)
+        pos = self.out[-1].pos().x() + vis._width + 2 #slight margin
+        vis.setPos(QPoint(pos, 0))
+        self.out.append(vis)
 
     def setViewed(self, viewed):
         self.viewed = viewed
@@ -477,10 +492,10 @@ class NodeItem(QGraphicsSvgItem):
             painter.setBrush(brush)
 
         painter.setPen(Qt.NoPen)
-        painter.drawRect(0, 0, self.width, self.height)
+        painter.drawRect(0, 0, self._width, self.height)
 
     def boundingRect(self):
-        return QRectF(0, 0, self.width, self.height)
+        return QRectF(0, 0, self._width, self.height)
 
     def mouseDoubleClickEvent(self, event):
         if type(self.data) == MT.pytypes.ContainerNode:
@@ -529,7 +544,7 @@ class NodeItem(QGraphicsSvgItem):
 
             for i, outsocket in enumerate(self.data.outsockets):
                 socket = QGraphicsEllipseItem(0, 0, 10, 10, self)
-                socket.setPos(self.width - 10, i * 10 + 5)
+                socket.setPos(self._width - 10, i * 10 + 5)
                 socket.setBrush(QBrush(QColor(80, 80, 255)))
                 socket.setPen(Qt.NoPen)
                 self._visibleSockets.append(socket)

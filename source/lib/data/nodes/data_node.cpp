@@ -254,11 +254,18 @@ void DNode::setName(std::string name)
 void DNode::addSocket(DSocket *socket)
 {
     setSocketIDName(socket);
-    if(socket->getDir()== DSocket::IN) inSockets.push_back(socket);
-    else outSockets.push_back(socket);
+    if(socket->getDir()== DSocket::IN) {
+        inSockets.push_back(socket);
+        MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime.get(), "inSocketAdded");
+    }
+    else {
+        outSockets.push_back(socket);
+        MT_CUSTOM_BOUND_SIGNAL_EMITTER(_signalLiveTime.get(), "outSocketAdded");
+    }
+
 }
 
-void DNode::setSocketIDName(DSocket *socket)    
+void DNode::setSocketIDName(DSocket *socket)
 {
     std::vector<std::string> socketNames = getSocketNames();
     auto b = socketNames.begin();
@@ -275,7 +282,7 @@ void DNode::setSocketIDName(DSocket *socket)
     if (idname != oldidname) socket->setIDName(idname);
 }
 
-std::vector<std::string> DNode::getSocketNames()    
+std::vector<std::string> DNode::getSocketNames()
 {
     std::vector<std::string> names;
 
