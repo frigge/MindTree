@@ -12,6 +12,7 @@ class CustomNodeWidget(QWidget):
 class NodeDecorator:
     type=""
     label=""
+    base=""
 
     insockets=[]
     outsockets=[]

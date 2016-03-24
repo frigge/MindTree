@@ -149,6 +149,7 @@ public:
 
 private:
     BPy::object cls;
+    std::string base_;
 };
 
 class PyExposable;

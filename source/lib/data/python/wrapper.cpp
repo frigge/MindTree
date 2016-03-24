@@ -85,6 +85,7 @@ PythonNodeDecorator::PythonNodeDecorator(BPy::object cls)
 {
     setType(BPy::extract<std::string>(cls.attr("type")));
     setLabel(BPy::extract<std::string>(cls.attr("label")));
+    base_ = BPy::extract<std::string>(cls.attr("base"));
 }
 
 PythonNodeDecorator::~PythonNodeDecorator()
@@ -94,7 +95,11 @@ PythonNodeDecorator::~PythonNodeDecorator()
 NodePtr  PythonNodeDecorator::createNode(bool raw)
 {
     GILLocker releaser;
-    auto node = std::make_shared<DNode>();
+    NodePtr node;
+    if(base_ == "")
+        node = std::make_shared<DNode>();
+    else
+        node = NodeDataBase::createNode(base_);
     node->setType(getType());
     try{
         cls(utils::getPyObject(node), raw);
