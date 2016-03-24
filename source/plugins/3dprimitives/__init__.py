@@ -18,7 +18,7 @@ class IcosphereNodeDecorator(MT.pytypes.NodeDecorator):
     type="CREATEICOSPHERE"
     label="Objects.Primitives.Icosphere"
     insockets = [ ("Scale", "FLOAT", 1.), ("Subdivisions", "INTEGER", 1)]
-    outsockets = [("Sphere", "TRANSFORMABLE")]
+    outsockets = [("Sphere", "OBJECTDATA")]
 
 MT.registerNode(CubeNodeDecorator)
 MT.registerNode(PlaneNodeDecorator)

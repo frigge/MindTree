@@ -10,14 +10,34 @@ class GroupObjectsNodeDecorator(MT.pytypes.NodeDecorator):
         super().__init__(node, raw)
         node.setDynamicInSockets()
 
-class TransformObjectNodeDecorator(MT.pytypes.NodeDecorator):
-    label = "Objects.Transform"
+class ObjectNodeDecorator(MT.pytypes.NodeDecorator):
+    label = "Objects.Object"
+    type = "OBJECTNODE"
+
+    insockets = [
+            ("Data", "OBJECTDATA"),
+            ("Transform", "MAT4"),
+            ("Material", "MATERIAL"),
+            ("Child(ren)", "GROUPDATA")
+        ]
+    outsockets = [("Object", "TRANSFORMABLE")]
+
+class CreateTransformationNodeDecorator(MT.pytypes.NodeDecorator):
+    label = "Objects.Transfomation"
     type = "TRANSFORM"
     insockets = [
-            ("Object", "TRANSFORMABLE"),
             ("Translate", "VECTOR3D"),
             ("Rotate", "VECTOR3D"),
             ("Scale", "VECTOR3D", (1.0, 1.0, 1.0)),
+            ]
+    outsockets = [("Transformation", "MAT4")]
+
+class TransformObjectNodeDecorator(MT.pytypes.NodeDecorator):
+    label = "Objects.Transform"
+    type = "TRANSFORMOBJECT"
+    insockets = [
+            ("Object", "TRANSFORMABLE"),
+            ("Transform", "MAT4"),
             ]
     outsockets = [("Object", "TRANSFORMABLE")]
 
@@ -82,7 +102,7 @@ class CameraNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Camera"
     type = "CAMERA"
 
-    insockets = [ 
+    insockets = [
             ("FOV", "FLOAT", 45),
             ("Resolution", "INTVEC2", (1024, 1024)),
             ("Near Clipping", "FLOAT", 0.1),
@@ -123,3 +143,5 @@ MT.registerNode(MaterialInstanceNodeDecorator)
 MT.registerNode(SetMaterialInstanceNodeDecorator)
 MT.registerNode(EmptyNodeDecortator)
 MT.registerNode(CameraNodeDecorator)
+MT.registerNode(ObjectNodeDecorator)
+MT.registerNode(CreateTransformationNodeDecorator)

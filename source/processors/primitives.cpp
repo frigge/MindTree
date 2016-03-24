@@ -6,7 +6,6 @@ using namespace MindTree;
 
 void runIcosphere(DataCache* cache)
 {
-    auto obj = std::make_shared<GeoObject>();
     auto mesh = std::make_shared<MeshData>();
     auto verts = std::make_shared<VertexList>();
     auto base_polys = PolygonList();
@@ -78,15 +77,14 @@ void runIcosphere(DataCache* cache)
 
     mesh->setProperty("P", verts);
     mesh->setProperty("polygon", polys);
-    obj->setData(mesh);
-    cache->pushData(obj);
+    cache->pushData(mesh);
 }
 
 extern "C" {
 CacheProcessorInfo load()
 {
     CacheProcessorInfo info;
-    info.socket_type = "TRANSFORMABLE";
+    info.socket_type = "OBJECTDATA";
     info.node_type = "CREATEICOSPHERE";
     info.cache_proc = runIcosphere;
     return info;

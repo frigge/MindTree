@@ -68,7 +68,7 @@ void groupProc(MindTree::DataCache *cache)
             else if (data.getType() == "GROUPDATA")
                 grp->addMembers(data.getData<GroupPtr>()->getMembers());
         }
-            
+
     }
 
     cache->pushData(grp);
@@ -76,29 +76,34 @@ void groupProc(MindTree::DataCache *cache)
 
 void transformProc(MindTree::DataCache *cache)
 {
-    auto transformable = cache->getData(0).getData<AbstractTransformablePtr>();
-    if(!transformable)
-        return;
-
-    glm::vec3 translate = cache->getData(1).getData<glm::vec3>();
-    glm::vec3 rotation = cache->getData(2).getData<glm::vec3>();
-    glm::vec3 scale = cache->getData(3).getData<glm::vec3>();
-
-    auto newtransformable = transformable->clone();
+    glm::vec3 translate = cache->getData(0).getData<glm::vec3>();
+    glm::vec3 rotation = cache->getData(1).getData<glm::vec3>();
+    glm::vec3 scale = cache->getData(2).getData<glm::vec3>();
 
     glm::mat4 rotx = glm::rotate(glm::mat4(), rotation.x, glm::vec3(1, 0, 0));
     glm::mat4 roty = glm::rotate(glm::mat4(), rotation.y, glm::vec3(0, 1, 0));
     glm::mat4 rotz = glm::rotate(glm::mat4(), rotation.z, glm::vec3(0, 0, 1));
 
     glm::mat4 rot = rotz * roty * rotx;
-    
+
     glm::mat4 scalemat = glm::scale(glm::mat4(), scale);
     glm::mat4 trans = glm::translate(glm::mat4(), translate);
     glm::mat4 newtrans;
     newtrans = trans * scalemat * rot;
 
-    newtransformable->applyTransform(newtrans);
-    
+    cache->pushData(newtrans);
+}
+
+void transformObjProc(MindTree::DataCache *cache)
+{
+    auto transformable = cache->getData(0).getData<AbstractTransformablePtr>();
+    auto trans = cache->getData(1).getData<glm::mat4>();
+    if(!transformable)
+        return;
+
+    auto newtransformable = transformable->clone();
+    newtransformable->applyTransform(trans);
+
     cache->pushData(newtransformable);
 }
 
@@ -110,7 +115,7 @@ void parentProc(MindTree::DataCache *cache)
 
     auto parent = oldparent->clone();
     Property childOrChildren = cache->getData(1);
-    
+
     if(childOrChildren.getType() == "GROUPDATA") {
         auto grp = childOrChildren.getData<GroupPtr>();
         for (auto &oldchild : grp->getMembers()) {
@@ -234,12 +239,36 @@ void materialProcs()
     DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "SETMATERIALINSTANCE", setMaterialProc));
 }
 
+void objectProc(DataCache *cache)
+{
+    auto data = cache->getData(0).getData<ObjectDataPtr>();
+    auto trans = cache->getData(1).getData<glm::mat4>();
+    auto mat = cache->getData(2).getData<MaterialPtr>();
+    auto children = cache->getData(3).getData<GroupPtr>();
+
+    auto obj = std::make_shared<GeoObject>();
+    obj->setData(data);
+    obj->setTransformation(trans);
+    if (mat) {
+        auto instance = std::make_shared<MaterialInstance>(mat);
+        obj->setMaterial(instance);
+    }
+
+    if(children)
+        for (const auto &child : children->getMembers())
+            obj->addChild(child);
+
+    cache->pushData(obj);
+}
+
 BOOST_PYTHON_MODULE(object){
     DataCache::addProcessor(new CacheProcessor("GROUPDATA", "GROUP", groupProc));
-    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "TRANSFORM", transformProc));
+    DataCache::addProcessor(new CacheProcessor("MAT4", "TRANSFORM", transformProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFOMRABLE", "TRANSFORMOBJECT", transformObjProc));
     DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "PARENTOBJECT", parentProc));
     DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "EMPTY",  emptyProc));
     DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "CAMERA", cameraProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "OBJECTNODE", objectProc));
 
     NodeDataBase::setNotConvertible("TRANSFORMABLE");
 
