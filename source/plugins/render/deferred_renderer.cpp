@@ -60,8 +60,8 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     auto rsm = rsm_block.get();
     addRenderBlock(std::move(rsm_block));
 
-    auto ssreflection = std::make_shared<ScreenSpaceReflectionBlock>();
-    addRenderBlock(ssreflection);
+    //auto ssreflection = std::make_shared<ScreenSpaceReflectionBlock>();
+    //addRenderBlock(ssreflection);
 
     auto overlayPass = std::make_unique<RenderPass>();
     _overlayPass = overlayPass.get();
@@ -83,7 +83,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
 
     auto compositor = std::make_unique<Compositor>();
     compositor->addLayer(deferred->getOutputs()[0], 1.0, CompositorPlane::CompositType::ALPHAOVER);
-    compositor->addLayer(ssreflection->getOutputs()[0], 1.0, CompositorPlane::CompositType::ADD);
+    //compositor->addLayer(ssreflection->getOutputs()[0], 1.0, CompositorPlane::CompositType::ADD);
     compositor->addLayer(rsm->getOutputs()[0], 1.0, CompositorPlane::CompositType::ADD);
     compositor->addLayer(gbuffer->getOutputs()[1], 1.0, CompositorPlane::CompositType::ALPHAOVER);
     compositor->addLayer(overtx, 1.0, CompositorPlane::CompositType::ALPHAOVER);
