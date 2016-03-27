@@ -299,7 +299,8 @@ public:
 
 private:
     struct TextureInfo {
-        Texture *texture;
+        GLuint texture;
+        GLenum target;
         std::string name;
     };
 
@@ -446,13 +447,12 @@ public:
 
     bool isInitialized() const;
     void generateMipmaps();
+    GLenum getGLTarget() const;
 
 protected:
     GLenum getInternalFormat() const;
 
 private:
-    GLenum getGLTarget() const;
-
     GLuint _id;
     Format _format;
     Target _target;

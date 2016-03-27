@@ -221,7 +221,7 @@ void IBO::data(std::shared_ptr<PolygonList> l)
     intptr_t offset = 0;
     for(const auto &p : *l) {
         size += p.size();
-        for(auto v : p.verts())
+        for(auto v : p)
             data.push_back(v);
 
         //get the size of each polygon
@@ -522,10 +522,23 @@ void ShaderProgram::bind()
     glUseProgram(_id);
     _isBound  = !MTGLERROR;
 
+    std::vector<GLint> garbage;
     for (size_t i = 0; i < _textures.size(); ++i) {
-        auto tx = _textures[i].texture;
+        const auto &tx = _textures[i];
+        if(!glIsTexture(tx.texture)) {
+            garbage.push_back(tx.texture);
+            continue;
+        }
         glActiveTexture(GL_TEXTURE0 + i);
-        tx->bind();
+        glBindTexture(tx.target, tx.texture);
+    }
+
+    for (const auto &t : garbage) {
+        _textures.erase(std::remove_if(_textures.begin(),
+                                       _textures.end(),
+                                       [&t](const TextureInfo &tx) {
+                                           return tx.texture == t;
+                                       }), _textures.end());
     }
 }
 
@@ -899,20 +912,25 @@ void ShaderProgram::setTexture(Texture *texture, std::string name)
         n = texture->getName();
     else
         n = name;
+
+    GLint location = getUniformLocation(n);
+    if(location < 0) return;
+
     int textureSlot;
     auto it = std::find_if(begin(_textures),
                            end(_textures),
                            [texture] (const TextureInfo &other){
-                               return other.texture->getID() == texture->getID();
+                               return other.texture == texture->getID();
                            });
 
     if(it != end(_textures)) {
         textureSlot = std::distance(begin(_textures), it);
-        it->texture = texture;
+        it->texture = texture->getID();
+        it->target = texture->getGLTarget();
     }
     else {
         textureSlot = _textures.size();
-        _textures.push_back({texture, n});
+        _textures.push_back({texture->getID(), texture->getGLTarget(), n});
     }
 
     bool wasntbound = false;
