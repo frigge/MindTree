@@ -76,6 +76,7 @@ RenderPass* ShadowMappingRenderBlock::createShadowPass(SpotLightPtr spot)
     if(!info._enabled) return nullptr;
 
     auto shadow_pass = std::make_unique<RenderPass>();
+    shadow_pass->setTree(_config->getManager());
     _shadowPasses[spot] = shadow_pass.get();
 
     auto camera = std::make_shared<Camera>();
