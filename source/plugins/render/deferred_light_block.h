@@ -18,6 +18,9 @@ public:
     void setGeometry(std::shared_ptr<Group> grp);
     void setProperty(std::string name, Property prop);
 
+protected:
+    void addRendererFromLight(LightPtr obj) override;
+
 private:
     void setupDefaultLights();
     LightAccumulationPlane *_deferredRenderer;

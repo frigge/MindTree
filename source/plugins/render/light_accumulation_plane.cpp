@@ -88,4 +88,3 @@ void LightAccumulationPlane::draw(const CameraPtr& /* camera */,
         drawLight(light, program);
     }
 }
-

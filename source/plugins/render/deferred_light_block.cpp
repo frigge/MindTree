@@ -30,7 +30,8 @@ void DeferredLightingRenderBlock::setProperty(std::string name, Property prop)
 
 void DeferredLightingRenderBlock::setGeometry(std::shared_ptr<Group> grp)
 {
-    _sceneLights = grp->getLights();
+    _sceneLights.clear();
+    setRenderersFromGroup(grp);
 
     if(hasProperty("GL:defaultLighting"))
         if(!getProperty("GL:defaultLighting").getData<bool>())
@@ -38,10 +39,15 @@ void DeferredLightingRenderBlock::setGeometry(std::shared_ptr<Group> grp)
         else
             _deferredRenderer->setLights(_defaultLights);
 
-    setRenderersFromGroup(grp);
     if(_shadowBlock)
         _deferredRenderer->setShadowPasses(_shadowBlock->getShadowPasses());
 }
+
+void DeferredLightingRenderBlock::addRendererFromLight(LightPtr obj)
+{
+    _sceneLights.push_back(obj);
+}
+
 
 glm::mat4 createTransFromZVec(glm::vec3 z)
 {
@@ -78,7 +84,6 @@ void DeferredLightingRenderBlock::init()
 
 void DeferredLightingRenderBlock::setupDefaultLights()
 {
-    static const double coneangle = 2 * 3.14159265359;
     auto light1 = std::make_shared<DistantLight>(.8, glm::vec4(1));
     light1->setTransformation(createTransFromZVec(glm::vec3(-1, -1, -1)));
 
