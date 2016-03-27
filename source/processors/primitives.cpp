@@ -85,7 +85,7 @@ CacheProcessorInfo load()
 {
     CacheProcessorInfo info;
     info.socket_type = "OBJECTDATA";
-    info.node_type = "CREATEICOSPHERE";
+    info.node_type = "CREATEICOSPHEREDATA";
     info.cache_proc = runIcosphere;
     return info;
 }

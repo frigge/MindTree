@@ -3,7 +3,7 @@
 using namespace glm;
 using namespace MindTree;
 
-GeoObjectPtr prim3d::createPlane(float scale)
+ObjectDataPtr prim3d::createPlaneMesh(float scale)
 {
     auto obj = std::make_shared<GeoObject>();
     auto mesh = std::make_shared<MeshData>();
@@ -31,7 +31,5 @@ GeoObjectPtr prim3d::createPlane(float scale)
                      });
 
     polygons->push_back(Polygon{3, 2, 1, 0});
-
-    obj->setName("Plane");
-    return obj;
+    return mesh;
 }

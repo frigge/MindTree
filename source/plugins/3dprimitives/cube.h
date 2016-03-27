@@ -5,6 +5,6 @@
 
 namespace prim3d
 {
-    GeoObjectPtr createCube(float scale);
+    std::shared_ptr<ObjectData> createCubeMesh(float scale);
 };
 #endif

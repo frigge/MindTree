@@ -128,17 +128,31 @@ void parentProc(MindTree::DataCache *cache)
 void emptyProc(MindTree::DataCache *cache)
 {
     auto empty = std::make_shared<Empty>();
+    auto trans = cache->getData(0).getData<glm::mat4>();
+    auto children = cache->getData(1).getData<GroupPtr>();
+    empty->setTransformation(trans);
+    if(children)
+        for (const auto &child : children->getMembers())
+            empty->addChild(child);
     cache->pushData(empty);
 }
 
 void cameraProc(MindTree::DataCache *cache)
 {
-    auto fov = cache->getData(0).getData<double>();
-    auto res = cache->getData(1).getData<glm::ivec2>();
-    auto near = cache->getData(2).getData<double>();
-    auto far = cache->getData(3).getData<double>();
+    auto trans = cache->getData(0).getData<glm::mat4>();
+    auto children = cache->getData(1).getData<GroupPtr>();
+
+    auto fov = cache->getData(2).getData<double>();
+    auto res = cache->getData(3).getData<glm::ivec2>();
+    auto near = cache->getData(4).getData<double>();
+    auto far = cache->getData(5).getData<double>();
 
     auto cam = std::make_shared<Camera>();
+    cam->setTransformation(trans);
+    if(children)
+        for (const auto &child : children->getMembers())
+            cam->addChild(child);
+
     cam->setFov(fov);
     cam->setNear(near);
     cam->setFar(far);
@@ -168,24 +182,38 @@ void createTranslateWidget()
 void regLightProcs()
 {
     auto pointLightProc = [](DataCache *cache) {
-        float intensity = cache->getData(0).getData<double>();
-        glm::vec4 color = cache->getData(1).getData<glm::vec4>();
+        auto trans = cache->getData(0).getData<glm::mat4>();
+        auto children = cache->getData(1).getData<GroupPtr>();
+        float intensity = cache->getData(2).getData<double>();
+        glm::vec4 color = cache->getData(3).getData<glm::vec4>();
         auto light = std::make_shared<PointLight>(intensity, color);
+        light->setTransformation(trans);
+        if(children)
+            for (const auto &child : children->getMembers())
+                light->addChild(child);
         cache->pushData(light);
     };
 
     auto spotLightProc = [](DataCache *cache) {
-        auto intensity = cache->getData(0).getData<double>();
-        auto color = cache->getData(1).getData<glm::vec4>();
-        auto coneangle = cache->getData(2).getData<double>();
-        auto attenuation = cache->getData(3).getData<bool>();
-        auto shadowMapping = cache->getData(4).getData<bool>();
-        auto shadowSize = cache->getData(5).getData<int>();
-        auto shadowBias = cache->getData(6).getData<double>();
-        auto near = cache->getData(7).getData<double>();
-        auto far = cache->getData(8).getData<double>();
+        auto trans = cache->getData(0).getData<glm::mat4>();
+        auto children = cache->getData(1).getData<GroupPtr>();
+        auto intensity = cache->getData(2).getData<double>();
+        auto color = cache->getData(3).getData<glm::vec4>();
+        auto coneangle = cache->getData(4).getData<double>();
+        auto attenuation = cache->getData(5).getData<bool>();
+        auto shadowMapping = cache->getData(6).getData<bool>();
+        auto shadowSize = cache->getData(7).getData<int>();
+        auto shadowBias = cache->getData(8).getData<double>();
+        auto near = cache->getData(9).getData<double>();
+        auto far = cache->getData(10).getData<double>();
 
         auto light = std::make_shared<SpotLight>(intensity, color, coneangle);
+
+        light->setTransformation(trans);
+        if(children)
+            for (const auto &child : children->getMembers())
+                light->addChild(child);
+
         Light::ShadowInfo info{shadowMapping, glm::ivec2(shadowSize)};
         info._near = near;
         info._far = far;
@@ -195,9 +223,17 @@ void regLightProcs()
     };
 
     auto distantLightProc = [](DataCache *cache) {
-        float intensity = cache->getData(0).getData<double>();
-        glm::vec4 color = cache->getData(1).getData<glm::vec4>();
+        auto trans = cache->getData(0).getData<glm::mat4>();
+        auto children = cache->getData(1).getData<GroupPtr>();
+        float intensity = cache->getData(2).getData<double>();
+        glm::vec4 color = cache->getData(3).getData<glm::vec4>();
         auto light = std::make_shared<DistantLight>(intensity, color);
+
+        light->setTransformation(trans);
+        if(children)
+            for (const auto &child : children->getMembers())
+                light->addChild(child);
+
         cache->pushData(light);
     };
 
@@ -241,22 +277,23 @@ void materialProcs()
 
 void objectProc(DataCache *cache)
 {
-    auto data = cache->getData(0).getData<ObjectDataPtr>();
-    auto trans = cache->getData(1).getData<glm::mat4>();
-    auto mat = cache->getData(2).getData<MaterialPtr>();
-    auto children = cache->getData(3).getData<GroupPtr>();
-
     auto obj = std::make_shared<GeoObject>();
-    obj->setData(data);
+
+    auto trans = cache->getData(0).getData<glm::mat4>();
+    auto children = cache->getData(1).getData<GroupPtr>();
     obj->setTransformation(trans);
+    if(children)
+        for (const auto &child : children->getMembers())
+            obj->addChild(child);
+
+    auto data = cache->getData(2).getData<ObjectDataPtr>();
+    auto mat = cache->getData(3).getData<MaterialPtr>();
+
+    if(data) obj->setData(data);
     if (mat) {
         auto instance = std::make_shared<MaterialInstance>(mat);
         obj->setMaterial(instance);
     }
-
-    if(children)
-        for (const auto &child : children->getMembers())
-            obj->addChild(child);
 
     cache->pushData(obj);
 }

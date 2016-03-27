@@ -15,10 +15,10 @@ class ObjectNodeDecorator(MT.pytypes.NodeDecorator):
     type = "OBJECTNODE"
 
     insockets = [
-            ("Data", "OBJECTDATA"),
             ("Transform", "MAT4"),
-            ("Material", "MATERIAL"),
-            ("Child(ren)", "GROUPDATA")
+            ("Child(ren)", "GROUPDATA"),
+            ("Data", "OBJECTDATA"),
+            ("Material", "MATERIAL")
         ]
     outsockets = [("Object", "TRANSFORMABLE")]
 
@@ -56,6 +56,8 @@ class PointLightNodeDecorator(MT.pytypes.NodeDecorator):
     type = "POINTLIGHT"
 
     insockets = [
+            ("Transform", "MAT4"),
+            ("Child(ren)", "GROUPDATA"),
             ("Intensity", "FLOAT", 1.0),
             ("Color", "COLOR", (1, 1, 1, 1))
             ]
@@ -67,6 +69,8 @@ class SpotLightNodeDecorator(MT.pytypes.NodeDecorator):
     type = "SPOTLIGHT"
 
     insockets = [
+            ("Transform", "MAT4"),
+            ("Child(ren)", "GROUPDATA"),
             ("Intensity", "FLOAT", 1.0),
             ("Color", "COLOR", (1, 1, 1, 1)),
             ("Cone Angle", "FLOAT", 45.0),
@@ -85,6 +89,8 @@ class DistantLightNodeDecorator(MT.pytypes.NodeDecorator):
     type = "DISTANTLIGHT"
 
     insockets = [
+            ("Transform", "MAT4"),
+            ("Child(ren)", "GROUPDATA"),
             ("Intensity", "FLOAT", 1.0),
             ("Color", "COLOR", (1, 1, 1, 1))
             ]
@@ -95,6 +101,10 @@ class EmptyNodeDecortator(MT.pytypes.NodeDecorator):
     label = "Objects.Empty"
     type = "EMPTY"
 
+    insockets = [
+            ("Transform", "MAT4"),
+            ("Child(ren)", "GROUPDATA")
+            ]
     outsockets = [
             ("Object", "TRANSFORMABLE")]
 
@@ -103,6 +113,8 @@ class CameraNodeDecorator(MT.pytypes.NodeDecorator):
     type = "CAMERA"
 
     insockets = [
+            ("Transform", "MAT4"),
+            ("Child(ren)", "GROUPDATA"),
             ("FOV", "FLOAT", 45),
             ("Resolution", "INTVEC2", (1024, 1024)),
             ("Near Clipping", "FLOAT", 0.1),

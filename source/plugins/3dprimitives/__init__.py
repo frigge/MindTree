@@ -1,25 +1,71 @@
 from . import prim3d
+import datatypes
 
 import MT
 
-class CubeNodeDecorator(MT.pytypes.NodeDecorator):
+class PrimitiveNodeDecoratorBase(MT.pytypes.NodeDecorator):
+    base = "General.Container"
+    datanode = ""
+
+    def __init__(self, node, raw=False):
+        super().__init__(node, raw)
+        if raw:
+            return
+
+        data = MT.createNode(self.datanode)
+        obj = MT.createNode("Objects.Object")
+        node.graph.addNode(data)
+        node.graph.addNode(obj)
+
+        obj.insockets[0].connected = node.graph[0].outsockets[-1]
+        obj.insockets[1].connected = node.graph[0].outsockets[-1]
+        obj.insockets[2].connected = data.outsockets[0]
+        obj.insockets[3].connected = node.graph[0].outsockets[-1]
+
+        for s in data.insockets:
+            default = s.value
+            s.connected = node.graph[0].outsockets[-1]
+            node.insockets[-1].value = default
+
+        node.graph[1].insockets[0].connected = obj.outsockets[0]
+
+        node.graph[2].pos = (-70, 80)
+        node.graph[3].pos = (70, 80)
+        node.graph[1].pos = (70, 160)
+
+class CubeDataNodeDecorator(MT.pytypes.NodeDecorator):
     type="CUBE"
-    label="Objects.Primitives.Cube"
+    label="Objects.Data.Cube"
     insockets = [ ("Scale", "FLOAT", 1.)]
-    outsockets = [("Cube", "TRANSFORMABLE")]
+    outsockets = [("Cube", "OBJECTDATA")]
 
-class PlaneNodeDecorator(MT.pytypes.NodeDecorator):
+class PlaneDataNodeDecorator(MT.pytypes.NodeDecorator):
     type="PLANE"
-    label="Objects.Primitives.Plane"
-    insockets = [ ("Scale", "FLOAT", 1.)]
-    outsockets = [("Plane", "TRANSFORMABLE")]
+    label="Objects.Data.Plane"
+    insockets = [ ("Size", "FLOAT", 1.)]
+    outsockets = [("Plane", "OBJECTDATA")]
 
-class IcosphereNodeDecorator(MT.pytypes.NodeDecorator):
-    type="CREATEICOSPHERE"
-    label="Objects.Primitives.Icosphere"
+class IcosphereDataNodeDecorator(MT.pytypes.NodeDecorator):
+    type="CREATEICOSPHEREDATA"
+    label="Objects.Data.Icosphere"
     insockets = [ ("Scale", "FLOAT", 1.), ("Subdivisions", "INTEGER", 1)]
     outsockets = [("Sphere", "OBJECTDATA")]
 
+class CubeNodeDecorator(PrimitiveNodeDecoratorBase):
+    label="Objects.Primitive.Cube"
+    datanode = "Objects.Data.Cube"
+
+class PlaneNodeDecorator(PrimitiveNodeDecoratorBase):
+    label="Objects.Primitives.Plane"
+    datanode = "Objects.Data.Plane"
+
+class IcosphereNodeDecorator(PrimitiveNodeDecoratorBase):
+    label="Objects.Primitives.Icosphere"
+    datanode = "Objects.Data.Icosphere"
+
+MT.registerNode(CubeDataNodeDecorator)
+MT.registerNode(PlaneDataNodeDecorator)
 MT.registerNode(CubeNodeDecorator)
 MT.registerNode(PlaneNodeDecorator)
+MT.registerNode(IcosphereDataNodeDecorator)
 MT.registerNode(IcosphereNodeDecorator)

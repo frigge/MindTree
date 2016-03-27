@@ -5,7 +5,7 @@
 
 namespace prim3d
 {
-    GeoObjectPtr createPlane(float scale);
+    ObjectDataPtr createPlaneMesh(float scale);
 }
 
 #endif
