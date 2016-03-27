@@ -311,9 +311,9 @@ void MeshData::computeFaceNormals()
         glm::vec3 normal;
 
         for(int j=2; j<poly.size(); j++){
-            uint vec_prev_i = poly.verts()[j - 1];
-            uint vec_cur_i = poly.verts()[j];
-            uint vec_first_i = poly.verts()[0];
+            uint vec_prev_i = poly[j - 1];
+            uint vec_cur_i = poly[j];
+            uint vec_first_i = poly[0];
 
             glm::vec3 vec_prev = vertices->at(vec_prev_i);
             glm::vec3 vec_cur = vertices->at(vec_cur_i);
@@ -351,7 +351,7 @@ void MeshData::computeVertexNormals()
         //loop through all faces by index
         for(size_t j = 0; j < facenormals->size(); j++) {
             //if the polygon contains the currently looked at vertex
-            for(int pi : polygons->at(j).verts()) {
+            for(int pi : polygons->at(j)) {
                 if (pi == i) {
                     //add it to the normal vector
                     glm::vec3 vec2 = (*facenormals)[j];

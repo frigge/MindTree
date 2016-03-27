@@ -36,24 +36,21 @@ std::vector<uint> PolygonRenderer::triangulate()
 {
     auto data = obj->getData();
     auto polygons = data->getProperty("polygon").getData<PolygonListPtr>();
+
+    std::cout << "---------" << std::endl;
+    std::cout << "polygon count: " << polygons->size() << std::endl;
     std::vector<uint> triangles;
-    for(Polygon &poly : *polygons) {
-        auto verts = poly.verts();
-        if(verts.size() == 3) {
-            triangles.push_back(verts[0]);
-            triangles.push_back(verts[1]);
-            triangles.push_back(verts[2]);
-        }
-        else {
-            uint first = verts[0];
-            for(size_t i = 1; i < verts.size() - 1; ++i) {
-                triangles.push_back(first);
-                triangles.push_back(i);
-                triangles.push_back(i+1);
-            }
+    for(const Polygon &poly : *polygons) {
+        uint first = poly[0];
+        for(size_t i = 1; i < poly.size() - 1; ++i) {
+            triangles.push_back(first);
+            triangles.push_back(poly[i]);
+            triangles.push_back(poly[i+1]);
         }
     }
     _triangleCount = triangles.size();
+    std::cout << "traingle count: " << _triangleCount << std::endl;
+    std::cout << "---------" << std::endl;
     return triangles;
 }
 
@@ -88,13 +85,16 @@ void PolygonRenderer::draw(const CameraPtr &camera, const RenderConfig &config, 
         manager.setFromPropertyMap(obj->getMaterial()->getProperties());
     }
 
+    bool has_polys = _polyColors.get();
+    manager.addState("has_polygon_color", has_polys ? 1.0f : 0.0f);
+
     //program->setTexture(_polyColorTexture);
     glPolygonOffset(1.0, 1.0);
     MTGLERROR;
     glDrawElements(GL_TRIANGLES, //Primitive type
                    _triangleCount,
                    GL_UNSIGNED_INT, //index datatype
-                   nullptr); //primitive count
+                   nullptr); //offsets
     MTGLERROR;
 }
 
@@ -184,7 +184,7 @@ void PointRenderer::draw(const CameraPtr &camera, const RenderConfig &config, Sh
     GeoObjectRenderer::draw(camera, config, program);
 
     UniformStateManager manager(program);
-    manager.addState("has_vertex_color", per_vertex_color_);
+    manager.addState("has_vertex_color", (float)per_vertex_color_);
     auto mesh = std::static_pointer_cast<MeshData>(obj->getData());
     auto verts = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
     glDrawArrays(GL_POINTS, 0, verts->size());

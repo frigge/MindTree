@@ -172,15 +172,15 @@ HalfEdgeAdapter::HalfEdgeAdapter(std::shared_ptr<MeshData> mesh) :
     for(const Polygon &p : *polygons) {
         HalfEdge *prev{nullptr};
         std::vector<Edge> adjacent_edges;
-        std::adjacent_find(begin(p.verts()),
-                           end(p.verts()),
+        std::adjacent_find(begin(p),
+                           end(p),
                            [&adjacent_edges](const auto &a, const auto &b) {
                                adjacent_edges.push_back(Edge(a, b));
                                return false;
                            });
 
         int i = 0;
-        for (int i : p.verts()) {
+        for (int i : p) {
             HalfEdgeVertex *origin = m_vertices[i].get();
             m_edges.push_back(std::make_unique<HalfEdge>());
             auto newEdge = m_edges.back().get();

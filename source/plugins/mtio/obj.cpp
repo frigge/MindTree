@@ -127,18 +127,16 @@ void ObjImporter::addNormal(QString line, std::shared_ptr<GeoObject> obj)
 void ObjImporter::addFace(QString line, std::shared_ptr<GeoObject> obj)    
 {
     QStringList l = line.split(" ");
-    std::vector<uint> p;
+    Polygon p;
     l.takeFirst();
     for(QString vstr : l){
         QStringList tmp = vstr.split("/");
         p.push_back(tmp.at(0).toInt() - 1);
     }
-    Polygon poly;
-    poly.set(p);
     std::static_pointer_cast<MeshData>(obj->getData())
         ->getProperty("polygon")
         .getData<std::shared_ptr<PolygonList>>()
-        ->push_back(poly);
+        ->push_back(p);
 }
 
 void ObjImporter::addUV(QString line, std::shared_ptr<GeoObject> obj)    

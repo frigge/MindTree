@@ -22,7 +22,6 @@
 
 #include "data/mtobject.h"
 #include "glm/glm.hpp"
-#include "QMatrix4x4"
 #include "data/python/pyexposable.h"
 #include "data/properties.h"
 #include "material.h"
@@ -30,31 +29,11 @@
 #include "mutex"
 #include "atomic"
 
-class Polygon
-{
-public:
-    Polygon() {}
-    Polygon(std::initializer_list<uint> list) : vertices(list) {};
-    Polygon(const Polygon &poly){*this = poly;}
-    virtual ~Polygon() {}
-    Polygon &operator=(const Polygon& poly)
-    {
-        vertices = poly.vertices;
-        return *this;
-    }
-
-    void set(std::vector<uint> verts) { vertices = verts; }
-
-    const std::vector<uint>& verts() const { return vertices; }
-
-    int size() const { return vertices.size(); }
-
-private:
-    std::vector<uint> vertices;
-};
-
 typedef std::vector<glm::vec3> VertexList;
 typedef std::shared_ptr<VertexList> VertexListPtr;
+struct Polygon : public std::vector<uint> {
+    using std::vector<uint>::vector;
+};
 typedef std::vector<Polygon> PolygonList;
 typedef std::shared_ptr<PolygonList> PolygonListPtr;
 

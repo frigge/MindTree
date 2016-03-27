@@ -52,9 +52,9 @@ void runIcosphere(DataCache* cache)
             unsigned ofs = verts->size();
 
             //subdivide edges
-            unsigned vi0 = p.verts()[0];
-            unsigned vi1 = p.verts()[1];
-            unsigned vi2 = p.verts()[2];
+            unsigned vi0 = p[0];
+            unsigned vi1 = p[1];
+            unsigned vi2 = p[2];
             glm::vec3 v0 = verts->at(vi0);
             glm::vec3 v1 = verts->at(vi1);
             glm::vec3 v2 = verts->at(vi2);
