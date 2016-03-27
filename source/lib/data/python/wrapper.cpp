@@ -100,7 +100,8 @@ NodePtr  PythonNodeDecorator::createNode(bool raw)
         node = std::make_shared<DNode>();
     else
         node = NodeDataBase::createNode(base_);
-    node->setType(getType());
+    if(getType() != "")
+        node->setType(getType());
     try{
         cls(utils::getPyObject(node), raw);
     } catch (BPy::error_already_set){
