@@ -58,8 +58,7 @@ void NodeDataBase::registerNodeType(std::unique_ptr<AbstractNodeDecorator> &&fac
     NodePtr prototype = (*factory)(false);
     auto outsockets = prototype->getOutSockets();
     auto insockets = prototype->getInSockets();
-    if(outsockets.size() == 1
-       && insockets.size() > 1) {
+    if(outsockets.size() == 1) {
         auto p = [&outsockets](const DinSocket *socket) {
             return outsockets[0]->getType() != socket->getType();
         };
