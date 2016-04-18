@@ -130,16 +130,17 @@ public:
     static void removeProcessor(AbstractCacheProcessor *proc);
     static void addGenericProcessor(GenericCacheProcessor *proc);
     static std::vector<AbstractCacheProcessor*> getProcessors();
-    static std::vector<Property>& getCachedOutputs(const DNode *node);
     static void invalidate(const DNode *node);
     static bool isCached(const DNode *node);
 
     CacheContext* getContext();
     void setContext(CacheContext *context);
+    static Property getCachedData(const DNode *node, int output=0);
 
 private:
     static void invalidateNode(const DNode *node);
     std::vector<Property>& _getCachedOutputs();
+    static std::vector<Property>& getCachedOutputs(const DNode *node);
     void _pushInputData(Property prop, int index = -1);
 
     void cacheInputs();

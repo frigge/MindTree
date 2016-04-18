@@ -262,6 +262,16 @@ std::vector<Property>& DataCache::_getCachedOutputs()
     return getCachedOutputs(node);
 }
 
+Property DataCache::getCachedData(const DNode *node, int output)
+{
+    std::lock_guard<std::recursive_mutex> lock(_cachedOutputsMutex);
+    auto it = _cachedOutputs.find(node);
+    if(it == end(_cachedOutputs)
+       || it->second.size() <= output)
+        return Property();
+    return it->second[output];
+}
+
 std::vector<Property>& DataCache::getCachedOutputs(const DNode *node)
 {
     std::lock_guard<std::recursive_mutex> lock(_cachedOutputsMutex);
