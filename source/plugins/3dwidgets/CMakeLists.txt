@@ -3,6 +3,7 @@ project(pywidgets)
 
 set(w3d_src
     widgets.cpp
+    interactive.cpp
     translate_widgets.cpp
     )
 
@@ -24,7 +25,7 @@ add_library(pywidgets SHARED python.cpp)
 
 set_target_properties(widgets3d PROPERTIES PREFIX "")
 set_target_properties(pywidgets PROPERTIES PREFIX "")
-target_link_libraries(widgets3d 
+target_link_libraries(widgets3d
             render
             mindtree_core
             ${MINDTREE_CORE_LIB}

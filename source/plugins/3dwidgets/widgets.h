@@ -4,33 +4,36 @@
 #include "../render/primitive_renderer.h"
 #include "data/signal.h"
 #include "graphics/shapes.h"
-#include "data/nodes/nodetype.h"
+#include "data/nodes/data_node_socket.h"
+#include "interactive.h"
 #include "memory"
 
-class Widget3D;
 namespace MindTree {
 namespace GL {
 class RenderPass;
 }
-}
 
-typedef std::shared_ptr<Widget3D> Widget3DPtr;
-class Widget3D 
+class Widget3D
 {
-    typedef std::function<Widget3DPtr()> Factory_t;
+    typedef std::function<std::unique_ptr<Widget3D>()> Factory_t;
 public:
-    Widget3D(MindTree::NodeType type);
-    Widget3D(const Widget3D &other);
-    virtual ~Widget3D();
+    Widget3D(MindTree::SocketType type);
+    Widget3D(const Widget3D &other) = delete;
 
-    bool checkMousePressed(const std::shared_ptr<Camera> cam, glm::ivec2 pixel, glm::ivec2 viewportSize, float *depth=nullptr);
-    bool checkMouseMoved(const std::shared_ptr<Camera> cam, glm::ivec2 pixel, glm::ivec2 viewportSize, float *depth=nullptr);
-    bool checkMouseReleased(const std::shared_ptr<Camera> cam, glm::ivec2 pixel, glm::ivec2 viewportSize);
+    bool checkMousePressed(const std::shared_ptr<Camera> &cam,
+                           glm::ivec2 pixel,
+                           glm::ivec2 viewportSize,
+                           float *depth=nullptr);
+    bool checkMouseMoved(const std::shared_ptr<Camera> &cam,
+                         glm::ivec2 pixel,
+                         glm::ivec2 viewportSize,
+                         float *depth=nullptr);
+    bool checkMouseReleased(const std::shared_ptr<Camera> &cam,
+                            glm::ivec2 pixel,
+                            glm::ivec2 viewportSize);
 
     void toggleVisible();
-    virtual MindTree::GL::ShapeRendererGroup* createRenderer() = 0;
     MindTree::GL::ShapeRendererGroup* renderer();
-    void addShape(std::shared_ptr<Shape> shape);
 
     void forceHoverLeft();
     void forceMouseReleased();
@@ -38,6 +41,7 @@ public:
     static void registerWidget(Factory_t factory);
 
 protected:
+    virtual MindTree::GL::ShapeRendererGroup* createRenderer() = 0;
     void setVisible(bool visible);
 
     virtual void mousePressed(glm::vec3 point);
@@ -51,14 +55,16 @@ protected:
     MindTree::DNode *_node;
     MindTree::GL::ShapeRendererGroup *_renderer;
     MindTree::Signal::CallbackVector _callbacks;
-    std::vector<std::shared_ptr<Shape>> _shapes;
 
     glm::vec3 startPoint;
     glm::vec4 _hoverBorderColor, _hoverFillColor, _outBorderColor, _outFillColor;
-
-    bool _screenOriented, _screenSize;
+    Interactive::ShapeGroup shape_;
 
 private:
+    glm::mat4 computeTransformation(const std::shared_ptr<Camera> &cam,
+                                    glm::ivec2 pixel,
+                                    glm::ivec2 viewportSize) const;
+
     virtual void update();
     void updateTransformation();
     void setNode(MindTree::DNode *node);
@@ -67,11 +73,11 @@ private:
                          glm::ivec2 viewportSize,
                          glm::vec3 *hitpoint);
 
-    MindTree::NodeType _type;
+    MindTree::SocketType _type;
     bool _visible, _hover, _pressed;
 
     float _size;
-    
+
     static std::vector<Factory_t> _widget_factories;
     friend class Widget3DManager;
 };
@@ -82,28 +88,13 @@ public:
     Widget3DManager();
 
     void insertWidgetsIntoRenderPass(MindTree::GL::RenderPass *pass);
-    bool mousePressEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewportSize);
-    bool mouseMoveEvent(CameraPtr cam, glm::ivec2 pos, glm::ivec2 viewportSize);
+    bool mousePressEvent(const CameraPtr &cam, glm::ivec2 pos, glm::ivec2 viewportSize);
+    bool mouseMoveEvent(const CameraPtr &cam, glm::ivec2 pos, glm::ivec2 viewportSize);
     void mouseReleaseEvent();
 
 private:
-    std::vector<Widget3DPtr> _widgets;
+    std::vector<std::unique_ptr<Widget3D>> _widgets;
 
 };
-
-class TranslateWidget : public Widget3D {
-public:
-    enum Axis {
-        X, Y, Z, XY, XZ, YZ
-    };
-
-    TranslateWidget(Axis axis);
-    virtual ~TranslateWidget();
-
-protected:
-    void mouseDraged(glm::vec3 point);
-
-private:
-    Axis _axis;
-};
+}
 #endif

@@ -162,13 +162,13 @@ void cameraProc(MindTree::DataCache *cache)
 
 void createTranslateWidget()
 {
-    auto translater1 = [] () { return std::make_shared<TranslateXWidget>(); };
-    auto translater2 = [] () { return std::make_shared<TranslateYWidget>(); };
-    auto translater3 = [] () { return std::make_shared<TranslateZWidget>(); };
-    auto translater4 = [] () { return std::make_shared<TranslateXYPlaneWidget>(); };
-    auto translater5 = [] () { return std::make_shared<TranslateXZPlaneWidget>(); };
-    auto translater6 = [] () { return std::make_shared<TranslateYZPlaneWidget>(); };
-    auto screenPlaneTranslater = [] () { return std::make_shared<TranslateScreenPlaneWidget>(); };
+    auto translater1 = [] () { return std::make_unique<TranslateXWidget>(); };
+    auto translater2 = [] () { return std::make_unique<TranslateYWidget>(); };
+    auto translater3 = [] () { return std::make_unique<TranslateZWidget>(); };
+    auto translater4 = [] () { return std::make_unique<TranslateXYPlaneWidget>(); };
+    auto translater5 = [] () { return std::make_unique<TranslateXZPlaneWidget>(); };
+    auto translater6 = [] () { return std::make_unique<TranslateYZPlaneWidget>(); };
+    auto screenPlaneTranslater = [] () { return std::make_unique<TranslateScreenPlaneWidget>(); };
 
     Widget3D::registerWidget(translater1);
     Widget3D::registerWidget(translater2);

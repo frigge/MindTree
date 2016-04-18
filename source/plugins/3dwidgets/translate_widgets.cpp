@@ -5,21 +5,87 @@
 
 using namespace MindTree;
 
+TranslateWidget::TranslateWidget(Axis axis)
+    : Widget3D("MAT4"),
+    _axis(axis)
+{
+    switch(axis) {
+        case X:
+        case YZ:
+            {
+                _hoverBorderColor = glm::vec4(1, 0, 0, 1);
+                _outBorderColor = glm::vec4(.7, .2, .2, 1);
+                _hoverFillColor = glm::vec4(1, 0, 0, .8);
+                _outFillColor = glm::vec4(.8, .3, .3, .6);
+                break;
+            }
+        case Y:
+        case XZ:
+            {
+                _hoverBorderColor = glm::vec4(1, 0, 0, 1).grba();
+                _outBorderColor = glm::vec4(.7, .2, .2, 1).grba();
+                _hoverFillColor = glm::vec4(1, 0, 0, .8).grba();
+                _outFillColor = glm::vec4(.8, .3, .3, .6).grba();
+                break;
+            }
+        case Z:
+        case XY:
+            {
+                _hoverBorderColor = glm::vec4(1, 0, 0, 1).gbra();
+                _outBorderColor = glm::vec4(.7, .2, .2, 1).gbra();
+                _hoverFillColor = glm::vec4(1, 0, 0, .8).gbra();
+                _outFillColor = glm::vec4(.8, .3, .3, .6).gbra();
+                break;
+            }
+    }
+}
+
+void TranslateWidget::mouseDraged(glm::vec3 point)
+{
+    if (!_node) return;
+
+    glm::vec3 distance;
+    switch(_axis) {
+        case X:
+            distance.x = point.x - startPoint.x;
+            break;
+        case Y:
+            distance.y = point.y - startPoint.y;
+            break;
+        case Z:
+            distance.z = point.z - startPoint.z;
+            break;
+        case XY:
+        case XZ:
+        case YZ:
+            distance = point - startPoint;
+            break;
+    }
+
+    auto transsocket = _node->getInSockets()[0];
+    DoutSocket *cntd = transsocket->getCntdSocket();
+    if (cntd && cntd->getNode()->getType() == "TRANSFORM"){
+        auto *socket = cntd->getNode()->getInSockets()[0];
+        auto startVal = socket->getProperty().getData<glm::vec3>();
+        socket->setProperty(startVal + distance);
+        startPoint = point;
+    }
+    else if (!cntd) {
+        auto trans = transsocket->getProperty().getData<glm::mat4>();
+        trans = glm::translate(glm::mat4(), distance) * trans;
+        transsocket->setProperty(trans);
+        startPoint = point;
+    }
+}
 TranslateXWidget::TranslateXWidget()
     : TranslateWidget(X)
 {
-    auto hitrect = std::make_shared<Rectangle>(glm::vec3(1, -0.05, 0), 
-                                               glm::vec3(1.0, 0, 0), 
+    auto hitrect = std::make_shared<Rectangle>(glm::vec3(1, -0.05, 0),
+                                               glm::vec3(1.0, 0, 0),
                                                glm::vec3(0, 0.1, 0));
-    addShape(hitrect);
-    hitrect = std::make_shared<Rectangle>(glm::vec3(1, 0, -0.05), 
-                                          glm::vec3(1.0, 0, 0), 
+    hitrect = std::make_shared<Rectangle>(glm::vec3(1, 0, -0.05),
+                                          glm::vec3(1.0, 0, 0),
                                           glm::vec3(0, 0.0, .1));
-    addShape(hitrect);
-}
-
-TranslateXWidget::~TranslateXWidget()
-{
 }
 
 GL::ShapeRendererGroup* TranslateXWidget::createRenderer()
@@ -32,18 +98,12 @@ GL::ShapeRendererGroup* TranslateXWidget::createRenderer()
 TranslateYWidget::TranslateYWidget()
     : TranslateWidget(Y)
 {
-    auto hitrect = std::make_shared<Rectangle>(glm::vec3(-0.05, 1, 0), 
-                                               glm::vec3(0.1, 0, 0), 
+    auto hitrect = std::make_shared<Rectangle>(glm::vec3(-0.05, 1, 0),
+                                               glm::vec3(0.1, 0, 0),
                                                glm::vec3(0, 1., 0));
-    addShape(hitrect);
-    hitrect = std::make_shared<Rectangle>(glm::vec3(0, 1, -0.05), 
-                                          glm::vec3(0.0, 0, 0.1), 
+    hitrect = std::make_shared<Rectangle>(glm::vec3(0, 1, -0.05),
+                                          glm::vec3(0.0, 0, 0.1),
                                           glm::vec3(0, 1, 0));
-    addShape(hitrect);
-}
-
-TranslateYWidget::~TranslateYWidget()
-{
 }
 
 GL::ShapeRendererGroup* TranslateYWidget::createRenderer()
@@ -55,18 +115,12 @@ GL::ShapeRendererGroup* TranslateYWidget::createRenderer()
 TranslateZWidget::TranslateZWidget()
     : TranslateWidget(Z)
 {
-    auto hitrect = std::make_shared<Rectangle>(glm::vec3(-0.05, 0, 1), 
-                                               glm::vec3(0, 0, 1), 
+    auto hitrect = std::make_shared<Rectangle>(glm::vec3(-0.05, 0, 1),
+                                               glm::vec3(0, 0, 1),
                                                glm::vec3(0.1, 0, 0));
-    addShape(hitrect);
-    hitrect = std::make_shared<Rectangle>(glm::vec3(0, -0.05, 1), 
-                                          glm::vec3(0, 0.1, 0), 
+    hitrect = std::make_shared<Rectangle>(glm::vec3(0, -0.05, 1),
+                                          glm::vec3(0, 0.1, 0),
                                           glm::vec3(0, 0, 1));
-    addShape(hitrect);
-}
-
-TranslateZWidget::~TranslateZWidget()
-{
 }
 
 GL::ShapeRendererGroup* TranslateZWidget::createRenderer()
@@ -79,14 +133,9 @@ GL::ShapeRendererGroup* TranslateZWidget::createRenderer()
 TranslateXYPlaneWidget::TranslateXYPlaneWidget()
     : TranslateWidget(XY)
 {
-    auto hitrect = std::make_shared<Rectangle>(glm::vec3(0), 
-                                               glm::vec3(1.0, 0, 0), 
+    auto hitrect = std::make_shared<Rectangle>(glm::vec3(0),
+                                               glm::vec3(1.0, 0, 0),
                                                glm::vec3(0, 1.0, 0));
-    addShape(hitrect);
-}
-
-TranslateXYPlaneWidget::~TranslateXYPlaneWidget()
-{
 }
 
 GL::ShapeRendererGroup* TranslateXYPlaneWidget::createRenderer()
@@ -102,14 +151,9 @@ GL::ShapeRendererGroup* TranslateXYPlaneWidget::createRenderer()
 TranslateXZPlaneWidget::TranslateXZPlaneWidget()
     : TranslateWidget(XZ)
 {
-    auto hitrect = std::make_shared<Rectangle>(glm::vec3(0), 
-                                               glm::vec3(1.0, 0, 0), 
+    auto hitrect = std::make_shared<Rectangle>(glm::vec3(0),
+                                               glm::vec3(1.0, 0, 0),
                                                glm::vec3(0, 0, 1.0));
-    addShape(hitrect);
-}
-
-TranslateXZPlaneWidget::~TranslateXZPlaneWidget()
-{
 }
 
 GL::ShapeRendererGroup* TranslateXZPlaneWidget::createRenderer()
@@ -117,26 +161,21 @@ GL::ShapeRendererGroup* TranslateXZPlaneWidget::createRenderer()
     _renderer = new GL::ShapeRendererGroup();
 
     auto quad = new GL::QuadRenderer(1.0, 1.0);
-    quad->setStaticTransformation(glm::rotate(glm::mat4(), 
-                                              90.f, 
+    quad->setStaticTransformation(glm::rotate(glm::mat4(),
+                                              90.f,
                                               glm::vec3(1, 0, 0)));
     quad->setParentPrimitive(_renderer);
     _renderer->setBorderWidth(3);
-    
+
     return _renderer;
 }
 
 TranslateYZPlaneWidget::TranslateYZPlaneWidget()
     : TranslateWidget(YZ)
 {
-    auto hitrect = std::make_shared<Rectangle>(glm::vec3(0), 
-                                               glm::vec3(0, 1, 0), 
+    auto hitrect = std::make_shared<Rectangle>(glm::vec3(0),
+                                               glm::vec3(0, 1, 0),
                                                glm::vec3(0, 0, 1));
-    addShape(hitrect);
-}
-
-TranslateYZPlaneWidget::~TranslateYZPlaneWidget()
-{
 }
 
 GL::ShapeRendererGroup* TranslateYZPlaneWidget::createRenderer()
@@ -145,37 +184,35 @@ GL::ShapeRendererGroup* TranslateYZPlaneWidget::createRenderer()
 
     auto quad = new GL::QuadRenderer(1.0, 1.0);
 
-    quad->setStaticTransformation(glm::rotate(glm::mat4(), 
-                                              -90.f, 
+    quad->setStaticTransformation(glm::rotate(glm::mat4(),
+                                              -90.f,
                                               glm::vec3(0, 1, 0)));
     quad->setParentPrimitive(_renderer);
     _renderer->setBorderWidth(3);
-    
+
     return _renderer;
 }
 
 TranslateScreenPlaneWidget::TranslateScreenPlaneWidget()
     : Widget3D("TRANSFORM")
 {
-    _screenOriented = true;
+    shape_.setScreenOriented(true);
     _hoverBorderColor = glm::vec4(1, 1, 0, 1);
     _outBorderColor = glm::vec4(.7, .7, .2, 1);
     _hoverFillColor = glm::vec4(1, 1, 0, .8);
     _outFillColor = glm::vec4(.8, .8, .3, .6);
 
-    auto hitrect = std::make_shared<Rectangle>(glm::vec3(1.75, 1.75, 0), 
-                                               glm::vec3(.25, 0, 0), 
-                                               glm::vec3(0, .25, 0)); 
+    auto hitrect = std::make_shared<Rectangle>(glm::vec3(1.75, 1.75, 0),
+                                               glm::vec3(.25, 0, 0),
+                                               glm::vec3(0, .25, 0));
 
-    addShape(hitrect);
 }
 
 GL::ShapeRendererGroup* TranslateScreenPlaneWidget::createRenderer()
 {
     _renderer = new GL::ShapeRendererGroup();
-    auto quad = new GL::QuadRenderer(.25, .25);
+    auto quad = new GL::QuadRenderer(.25, .25, _renderer);
     quad->setStaticTransformation(glm::translate(glm::mat4(), glm::vec3(1.75, 1.75, 0)));
-    quad->setParentPrimitive(_renderer);
     _renderer->setScreenOriented(true);
     _renderer->setBorderWidth(3);
     return _renderer;
