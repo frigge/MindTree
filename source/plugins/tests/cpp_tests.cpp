@@ -112,7 +112,7 @@ bool testRaycasting()
     glm::vec3 p2(2, -1, 0);
     glm::vec3 p3(-1, 2, 0);
 
-    bool hit = r.intersectTriangle(p1, p2, p3, &uvdist, &hitpoint);
+    bool hit = r.intersect(p1, p2, p3, &uvdist, &hitpoint);
 
     std::cout << "uvcoords are: " << uvdist.x << ", " << uvdist.y << std::endl;
     std::cout << "distance is: " << uvdist.z << std::endl;
