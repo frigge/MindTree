@@ -125,12 +125,37 @@ void Compositor::setProperty(std::string name, Property prop)
                            [&name=layername] (const CompositorPlane::CompositInfo &info) {
                                return info.texture->getName() == name;
                            });
-    if (it == end(layers)) return;
-
-    if(setting == "enabled")
-        it->enabled = prop.getData<bool>();
-    else if(setting == "mixValue")
-        it->mixValue = prop.getData<double>();
+    if (it != end(layers)) {
+        if(setting == "enabled")
+            it->enabled = prop.getData<bool>();
+        else if(setting == "mixValue")
+            it->mixValue = prop.getData<double>();
+    } else if (name == "GL:CUSTOMPIXELSHADER") {
+        auto &layers = _plane->getLayers();
+        auto custompass =  std::find_if(begin(layers),
+                                        end(layers),
+                                        [](const auto &info) {
+                                            return info.texture->getName() == "custom_pixelshader";
+                                        });
+        std::string shader = prop.getData<std::string>();
+        if (custompass == end(layers)) {
+            custom_pass_ = addPassBefore(_pixelPass);
+            auto *plane = new PixelPlane();
+            plane->setFragmentShader(shader);
+            custom_pass_->addRenderer(plane);
+            auto texture = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                    "custom_pixelshader");
+            auto *tx = texture.get();
+            custom_pass_->addOutput(std::move(texture));
+            addLayer(tx, 1.0, CompositorPlane::CompositType::ALPHAOVER);
+        }
+        else {
+            custom_pass_->clearRenderers();
+            auto *plane = new PixelPlane();
+            plane->setFragmentShader(shader);
+            custom_pass_->addRenderer(plane);
+        }
+    }
 }
 
 void Compositor::addLayer(Texture2D *tx,
@@ -138,4 +163,14 @@ void Compositor::addLayer(Texture2D *tx,
                           CompositorPlane::CompositType type)
 {
     _plane->addLayer(tx, mix, type);
+}
+
+std::vector<std::string> Compositor::getLayerNames() const
+{
+    auto layers = _plane->getLayers();
+    std::vector<std::string> names;
+    for (const auto &layer : layers) {
+        names.push_back(layer.texture->getName());
+    }
+    return names;
 }

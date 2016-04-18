@@ -47,10 +47,12 @@ public:
     void setProperty(std::string name, Property prop);
     void addLayer(Texture2D *tx, float mix, CompositorPlane::CompositType type);
     void init();
+    std::vector<std::string> getLayerNames() const;
 
  private:
     CompositorPlane *_plane;
     RenderPass *_pixelPass;
+    RenderPass *custom_pass_;
 };
 
 }
