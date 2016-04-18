@@ -33,12 +33,11 @@
 
 namespace MindTree {
 namespace GL {
-    class GridRenderer;
-    class RenderConfigurator;
+class GridRenderer;
+class RenderConfigurator;
 }
-}
-
 class Widget3DManager;
+}
 
 class ViewportWidget;
 class Viewport : public QGLWidget
@@ -100,7 +99,7 @@ private:
     std::shared_ptr<Camera> activeCamera, defaultCamera;
 
     std::unique_ptr<MindTree::GL::RenderConfigurator> _renderConfigurator;
-    std::shared_ptr<Widget3DManager> _widgetManager;
+    std::shared_ptr<MindTree::Widget3DManager> _widgetManager;
 
     static std::vector<Viewport*> _viewports;
     std::unordered_map<std::string, std::shared_ptr<Light>> _lights;

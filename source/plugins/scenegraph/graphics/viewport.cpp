@@ -66,8 +66,8 @@ Viewport::Viewport(ViewportWidget *widget) :
     defaultCamera->setFar(1000);
 
     QGLContext *ctx = const_cast<QGLContext*>(context());
-    _widgetManager = std::make_shared<Widget3DManager>();
-    _renderConfigurator = std::unique_ptr<GL::DeferredRenderer>(new GL::DeferredRenderer(ctx, defaultCamera, _widgetManager.get()));
+    _widgetManager = std::make_shared<MindTree::Widget3DManager>();
+    _renderConfigurator = std::make_unique<GL::DeferredRenderer>(ctx, defaultCamera, _widgetManager.get());
 
     setMouseTracking(true);
     doneCurrent();
