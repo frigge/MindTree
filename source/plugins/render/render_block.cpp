@@ -142,6 +142,18 @@ RenderPass* RenderBlock::addPass()
     return pass_ptr;
 }
 
+
+RenderPass* RenderBlock::addPassBefore(const RenderPass *hint)
+{
+    auto pass = std::make_unique<RenderPass>();
+    auto pass_ptr = pass.get();
+    _passes.push_back(pass_ptr);
+
+    _config->getManager()->insertPassBefore(hint, std::move(pass));
+
+    return pass_ptr;
+}
+
 GeometryRenderBlock::GeometryRenderBlock(RenderPass *geopass)
     : _geometryPass(geopass)
 {

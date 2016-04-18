@@ -38,6 +38,7 @@ public:
 
     virtual void setGeometry(std::shared_ptr<Group> grp);
     RenderPass* addPass();
+    RenderPass* addPassBefore(const RenderPass *hint);
     void setEnabled(bool enable);
     std::vector<Texture2D*> getOutputs() const;
     void setProperty(std::string name, Property prop);

@@ -78,8 +78,8 @@ public:
     std::vector<std::string> getAllOutputs() const;
 
     void addPass(std::unique_ptr<RenderPass> &&pass);
-    void insertPassBefore(RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass);
-    void insertPassAfter(RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass);
+    void insertPassBefore(const RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass);
+    void insertPassAfter(const RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass);
     void removePass(RenderPass *pass);
     RenderPass* getPass(uint index);
 

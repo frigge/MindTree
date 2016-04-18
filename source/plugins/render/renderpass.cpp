@@ -510,6 +510,8 @@ std::pair<bool, std::shared_ptr<ShaderRenderNode>>
 
 void RenderPass::addRenderer(Renderer *renderer)
 {
+    if(!renderer) return;
+
     renderer->setResourceManager(_tree->getResourceManager());
     std::pair<bool, std::shared_ptr<ShaderRenderNode>> shaderNode;
     {
@@ -525,6 +527,8 @@ void RenderPass::addRenderer(Renderer *renderer)
 
 void RenderPass::addGeometryRenderer(Renderer *renderer)
 {
+    if(!renderer) return;
+
     renderer->setResourceManager(_tree->getResourceManager());
     std::pair<bool, std::shared_ptr<ShaderRenderNode>> shaderNode;
     {

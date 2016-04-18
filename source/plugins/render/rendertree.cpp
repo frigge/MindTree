@@ -93,6 +93,9 @@ void RenderThread::updateOnce()
 
 void RenderThread::update()
 {
+    //noop if already updating
+    if(_update) return;
+
     _update = true;
     _renderNotifier.notify_all();
 }
@@ -232,7 +235,7 @@ void RenderTree::addPass(std::unique_ptr<RenderPass> &&pass)
     passes.push_back(std::move(pass));
 }
 
-void RenderTree::insertPassBefore(RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass)
+void RenderTree::insertPassBefore(const RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass)
 {
     std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     pass->setTree(this);
@@ -243,7 +246,7 @@ void RenderTree::insertPassBefore(RenderPass *ref_pass, std::unique_ptr<RenderPa
     passes.insert(it, std::move(pass));
 }
 
-void RenderTree::insertPassAfter(RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass)
+void RenderTree::insertPassAfter(const RenderPass *ref_pass, std::unique_ptr<RenderPass> &&pass)
 {
     std::lock_guard<std::shared_timed_mutex> lock(_managerLock);
     pass->setTree(this);
