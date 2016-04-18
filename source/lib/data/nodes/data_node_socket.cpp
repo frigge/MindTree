@@ -472,6 +472,7 @@ void DinSocket::listenToLinkedName()
 {
     auto cb = Signal::getBoundHandler<DoutSocket*>(this)
         .connect("linkChanged", [this] (DoutSocket *socket) {
+                    if(!socket) return;
                     this->listenToNameChange(socket);
                     this->setName(socket->getName());
                  });
@@ -482,6 +483,7 @@ void DinSocket::listenToLinkedType()
 {
     auto cb = Signal::getBoundHandler<DoutSocket*>(this)
         .connect("linkChanged", [this] (DoutSocket *socket) {
+                    if(!socket) return;
                     this->listenToTypeChange(socket);
                     this->setType(socket->getType());
                  });
@@ -492,6 +494,7 @@ void DinSocket::listenToLinked()
 {
     auto cb = Signal::getBoundHandler<DoutSocket*>(this)
         .connect("linkChanged", [this] (DoutSocket *socket) {
+                    if(!socket) return;
                     this->listenToChange(socket);
                     this->setType(socket->getType());
                     this->setName(socket->getName());
