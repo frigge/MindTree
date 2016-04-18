@@ -1,24 +1,19 @@
 #include "iostream"
 #include "shapes.h"
 
-Shape::Shape(Shape::Type type)
-    : _type(type)
-{
-}
-
-Shape::Type Shape::type() const
-{
-    return _type;
-}
-
 Plane::Plane()
-    : Shape(PLANE)
 {
 }
 
-Plane::Plane(glm::vec3 point, glm::vec3 normal)
-    : Shape(PLANE), _point(point), _normal(normal)
+Plane::Plane(const glm::vec3 &point, const glm::vec3 &normal) :
+    _point(point), _normal(normal)
 {
+}
+
+Plane Plane::operator*(const glm::mat4 &mat) const
+{
+    return Plane((mat * glm::vec4(_point, 1)).xyz(),
+                 (mat * glm::vec4(_normal, 0)).xyz());
 }
 
 glm::vec3 Plane::point() const
@@ -31,24 +26,34 @@ glm::vec3 Plane::normal() const
     return _normal;
 }
 
-void Plane::setPoint(glm::vec3 point)
+void Plane::setPoint(const glm::vec3 &point)
 {
     _point = point;
 }
 
-void Plane::setNormal(glm::vec3 normal)
+void Plane::setNormal(const glm::vec3 &normal)
 {
     _normal = normal;
 }
 
 Rectangle::Rectangle()
-    : Shape(RECTANGLE)
 {
 }
 
-Rectangle::Rectangle(glm::vec3 bl, glm::vec3 v1, glm::vec3 v2)
-    : Shape(RECTANGLE), _bottomLeft(bl), _v1(v1), _v2(v2)
+Rectangle::Rectangle(const glm::vec3 &bl,
+                     const glm::vec3 &v1,
+                     const glm::vec3 &v2) :
+    _bottomLeft(bl),
+    _v1(v1),
+    _v2(v2)
 {
+}
+
+Rectangle Rectangle::operator*(const glm::mat4 &mat) const
+{
+    return Rectangle((mat * glm::vec4(_bottomLeft, 1)).xyz(),
+                     (mat * glm::vec4(_v1, 0)).xyz(),
+                     (mat * glm::vec4(_v2, 0)).xyz());
 }
 
 glm::vec3 Rectangle::bottomLeft() const
@@ -82,19 +87,24 @@ glm::vec3 Rectangle::vvector() const
     return _v2;
 }
 
-void Rectangle::setBottomLeft(glm::vec3 bl)
+void Rectangle::setBottomLeft(const glm::vec3 &bl)
 {
     _bottomLeft = bl;
 }
 
-Sphere::Sphere()
-    : Shape(SPHERE), _radius(0)
+Sphere::Sphere() :
+    _radius(0)
 {
 }
 
-Sphere::Sphere(glm::vec3 point, float radius)
-    : Shape(SPHERE), _point(point), _radius(radius)
+Sphere::Sphere(const glm::vec3 &point, float radius) :
+    _point(point), _radius(radius)
 {
+}
+
+Sphere Sphere::operator*(const glm::mat4 &mat) const
+{
+    return Sphere((mat * glm::vec4(_point, 1)).xyz(), _radius);
 }
 
 glm::vec3 Sphere::point() const
@@ -107,7 +117,7 @@ float Sphere::radius() const
     return _radius;
 }
 
-void Sphere::setPoint(glm::vec3 point)
+void Sphere::setPoint(const glm::vec3 &point)
 {
     _point = point;
 }
@@ -118,13 +128,23 @@ void Sphere::setRadius(float radius)
 }
 
 Box::Box()
-    : Shape(BOX), _width(0), _height(0), _depth(0)
 {
 }
 
-Box::Box(glm::vec3 point, float width, float height, float depth)
-    : Shape(BOX), _point(point), _width(width), _height(height), _depth(depth)
+Box::Box(const glm::vec3 &point, float width, float height, float depth) :
+    _point(point),
+    _width(width),
+    _height(height),
+    _depth(depth)
 {
+}
+
+Box Box::operator*(const glm::mat4 &mat) const
+{
+    return Box((mat * glm::vec4(_point, 1)).xyz(),
+               _width,
+               _height,
+               _depth);
 }
 
 glm::vec3 Box::point() const
@@ -147,7 +167,7 @@ float Box::depth() const
     return _depth;
 }
 
-void Box::setPoint(glm::vec3 point)
+void Box::setPoint(const glm::vec3 &point)
 {
     _point = point;
 }
@@ -166,4 +186,3 @@ void Box::setDepth(float depth)
 {
     _depth = depth;
 }
-

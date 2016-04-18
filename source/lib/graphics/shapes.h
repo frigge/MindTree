@@ -1,47 +1,33 @@
 #ifndef MT_SHAPES
 #define MT_SHAPES
 
+#define GLM_SWIZZLE
 #include "glm/glm.hpp"
 
-class Shape 
-{
-public:
-    enum Type {
-        PLANE,
-        RECTANGLE,
-        SPHERE,
-        BOX,
-        NONE
-    };
-
-    Shape(Shape::Type type=NONE);
-    Type type() const;
-
-private:
-    Type _type;
-
-};
-
-class Plane : public Shape 
+class Plane
 {
 public:
     Plane();
-    Plane(glm::vec3 point, glm::vec3 normal);
+    Plane(const glm::vec3 &point, const glm::vec3 &normal);
+
+    Plane operator*(const glm::mat4 &mat) const;
 
     glm::vec3 point() const;
     glm::vec3 normal() const;
-    void setPoint(glm::vec3 point);
-    void setNormal(glm::vec3 normal);
+    void setPoint(const glm::vec3 &point);
+    void setNormal(const glm::vec3 &normal);
 
 private:
     glm::vec3 _point, _normal;
 };
 
-class Rectangle : public Shape 
+class Rectangle
 {
 public:
     Rectangle();
-    Rectangle(glm::vec3 bl, glm::vec3 tr, glm::vec3 normal);
+    Rectangle(const glm::vec3 &bl, const glm::vec3 &tr, const glm::vec3 &normal);
+
+    Rectangle operator*(const glm::mat4 &mat) const;
 
     glm::vec3 bottomLeft() const;
     glm::vec3 topRight() const;
@@ -50,21 +36,23 @@ public:
     glm::vec3 uvector() const;
     glm::vec3 vvector() const;
 
-    void setBottomLeft(glm::vec3 bl);
+    void setBottomLeft(const glm::vec3 &bl);
 
 private:
     glm::vec3 _bottomLeft, _v1, _v2;
 };
 
-class Sphere : public Shape 
+class Sphere
 {
 public:
     Sphere();
-    Sphere(glm::vec3 point, float radius);
+    Sphere(const glm::vec3 &point, float radius);
+
+    Sphere operator*(const glm::mat4 &mat) const;
 
     glm::vec3 point() const;
     float radius() const;
-    void setPoint(glm::vec3 point);
+    void setPoint(const glm::vec3 &point);
     void setRadius(float radius);
 
 private:
@@ -72,21 +60,22 @@ private:
     float _radius;
 };
 
-class Box : public Shape 
+class Box
 {
 public:
     Box();
-    Box(glm::vec3 _point, float width, float height, float depth);
+    Box(const glm::vec3 &point, float width, float height, float depth);
+
+    Box operator*(const glm::mat4 &mat) const;
 
     glm::vec3 point() const;
     float width() const;
     float height() const;
     float depth() const;
-    void setPoint(glm::vec3 point);
+    void setPoint(const glm::vec3 &point);
     void setWidth(float width);
     void setHeight(float height);
     void setDepth(float depth);
-
 
 private:
     glm::vec3 _point;
