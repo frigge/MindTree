@@ -31,7 +31,7 @@ Ray::~Ray()
 {
 }
 
-bool Ray::intersectPlane(const Plane &plane, glm::vec3 *hitpoint) const
+bool Ray::intersect(const Plane &plane, glm::vec3 *hitpoint) const
 {
     glm::vec3 v1(1, 0, 0);
     glm::vec3 v2(0, 1, 0);
@@ -82,11 +82,11 @@ bool Ray::intersectPlane(const Plane &plane, glm::vec3 *hitpoint) const
     return true;
 }
 
-bool Ray::intersectTriangle(const glm::vec3 &p1, 
-                            const glm::vec3 &p2, 
-                            const glm::vec3 &p3, 
-                            glm::vec3 *uvdist, 
-                            glm::vec3 *hitpoint) const    
+bool Ray::intersect(const glm::vec3 &p1,
+                    const glm::vec3 &p2,
+                    const glm::vec3 &p3,
+                    glm::vec3 *uvdist,
+                    glm::vec3 *hitpoint) const
 {
     glm::vec3 diru = p2 - p1;
     glm::vec3 dirv = p3 - p1;
@@ -118,7 +118,7 @@ bool Ray::intersectTriangle(const glm::vec3 &p1,
 }
 
 
-bool Ray::intersectRectangle(const Rectangle &rect, glm::vec3 *hitpoint) const
+bool Ray::intersect(const Rectangle &rect, glm::vec3 *hitpoint) const
 {
     glm::vec3 _hitpoint, uvdist;
 
@@ -126,7 +126,7 @@ bool Ray::intersectRectangle(const Rectangle &rect, glm::vec3 *hitpoint) const
     auto u = rect.uvector();
     auto v = rect.vvector();
 
-    intersectTriangle(bl, bl + u, bl + v, &uvdist, &_hitpoint);
+    intersect(bl, bl + u, bl + v, &uvdist, &_hitpoint);
 
     auto hit = start + dir * uvdist.z;
     if (hitpoint)
@@ -137,12 +137,12 @@ bool Ray::intersectRectangle(const Rectangle &rect, glm::vec3 *hitpoint) const
     return false;
 }
 
-bool Ray::intersectBox(const Box &box, glm::vec3 *hitpoint) const 
+bool Ray::intersect(const Box &box, glm::vec3 *hitpoint) const
 {
     return false;
 }
 
-bool Ray::intersectSphere(const Sphere &sphere, glm::vec3 *hitpoint) const
+bool Ray::intersect(const Sphere &sphere, glm::vec3 *hitpoint) const
 {
     return false;
 }

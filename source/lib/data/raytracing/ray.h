@@ -32,11 +32,11 @@ public:
     Ray(glm::vec3 start, glm::vec3 dir);
     virtual ~Ray();
 
-    bool intersectPlane(const Plane &plane, glm::vec3 *hitpoint=nullptr) const;
-    bool intersectTriangle(const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3, glm::vec3 *uvdist=nullptr, glm::vec3 *hitpoint=nullptr) const;
-    bool intersectRectangle(const Rectangle &rect, glm::vec3 *hitpoint=nullptr) const;
-    bool intersectBox(const Box &box, glm::vec3 *hitpoint=nullptr) const;
-    bool intersectSphere(const Sphere &sphere, glm::vec3 *hitpoint=nullptr) const;
+    bool intersect(const Plane &plane, glm::vec3 *hitpoint=nullptr) const;
+    bool intersect(const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3, glm::vec3 *uvdist=nullptr, glm::vec3 *hitpoint=nullptr) const;
+    bool intersect(const Rectangle &rect, glm::vec3 *hitpoint=nullptr) const;
+    bool intersect(const Box &box, glm::vec3 *hitpoint=nullptr) const;
+    bool intersect(const Sphere &sphere, glm::vec3 *hitpoint=nullptr) const;
 
     static Ray primaryRay(glm::mat4 mvp, glm::vec3 camPos, glm::ivec2 pixel, glm::ivec2 viewportSize);
 
