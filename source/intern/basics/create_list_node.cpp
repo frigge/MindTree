@@ -19,7 +19,3 @@ CreateListNode::CreateListNode(bool raw)
         out->listenToTypeChange(initValue);
     }
 }
-
-CreateListNode::~CreateListNode()
-{
-}

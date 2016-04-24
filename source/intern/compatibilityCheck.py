@@ -25,6 +25,10 @@ def getCompatibleSockets(outsocket, node, namepath=[]):
             compIns.update(getCompatibleSockets(outsocket, child, pathlist))
     return compIns
 
+def isList(t):
+    if t.startswith("LIST:"):
+        return True, t[t.find("LIST:"):]
+
 def isCompatible(socket1, socket2):
     type1 = socket1.type
     type2 = socket2.type
@@ -44,7 +48,6 @@ def isCompatible(socket1, socket2):
 
     if type1compset is not None and type2 in type1compset:
         return True
-    return False
 
 MT.__dict__["addCompatibility"] = addCompatibility
 MT.__dict__["isCompatible"] = isCompatible

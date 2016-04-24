@@ -38,9 +38,6 @@ public:
 
     MathNode(MindTree::NodeType t, bool raw=false);
     MathNode(const MathNode &node);
-
-    virtual void decVarSocket(MindTree::DSocket *socket);
-    virtual void incVarSocket();
 };
 
 #endif /* end of include guard: MATH_AHZJP9OE */

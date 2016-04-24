@@ -26,16 +26,16 @@ class CustomWidget(MT.pytypes.CustomNodeWidget):
 class AddPropertiesNodeDecorator(MT.pytypes.NodeDecorator):
     type="ADDPROPERTIES"
     label="Objects.Add Properties"
-    insockets = [("Object(s)", "GROUPDATA")]
-    outsockets = [("Object(s)", "GROUPDATA")]
+    insockets = [("Object", "TRANSFORMABLE")]
+    outsockets = [("Object", "TRANSFORMABLE")]
     customwidget = CustomWidget
 
 class FilterObjectsNodeDecorator(MT.pytypes.NodeDecorator):
     type="FILTEROBJECTS"
     label="Objects.Filter"
-    insockets = [("Objects", "GROUPDATA"),
+    insockets = [("Object", "TRANSFORMABLE"),
             ("Name Regex", "STRING")]
-    outsockets = [("Objects", "GROUPDATA")]
+    outsockets = [("Object", "TRANSFORMABLE")]
 
 
 def registerNodes():

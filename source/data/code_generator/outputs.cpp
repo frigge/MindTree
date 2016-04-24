@@ -114,7 +114,6 @@ SurfaceOutputNode::SurfaceOutputNode(bool raw)
         //((StringSocketProperty*)dirsocket->getSocketProperty())->setPath(StringSocketProperty::DIRPATH);
         new DinSocket("Ci", COLOR, this);
         new DinSocket("Oi", COLOR, this);
-        setDynamicSocketsNode(IN);
     }
 }
 
@@ -130,7 +129,6 @@ DisplacementOutputNode::DisplacementOutputNode(bool raw)
     if(!raw){
         new DinSocket("P", POINT, this);
         new DinSocket("N", NORMAL, this);
-        setDynamicSocketsNode(IN);
     }
 }
 
@@ -146,7 +144,6 @@ VolumeOutputNode::VolumeOutputNode(bool raw)
     if(!raw){
         new DinSocket("Ci", COLOR, this);
         new DinSocket("Oi", COLOR, this);
-        setDynamicSocketsNode(IN);
     }
 }
 
@@ -161,7 +158,6 @@ LightOutputNode::LightOutputNode(bool raw)
     setType(LIGHTOUTPUT);
     if(!raw){
         new DinSocket("Cl", COLOR, this);
-        setDynamicSocketsNode(IN);
     }
 }
 

@@ -246,7 +246,6 @@ public:
 
     static void init(BPy::object self);
     static void wrap();
-    void setDynamicInSockets();
     bool getSelected();
     void setSelected(bool sel);
     std::string getName();

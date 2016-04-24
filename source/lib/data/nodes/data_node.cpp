@@ -70,9 +70,6 @@ DNode * CopyNodeMapper::getCopy(DNode *original)
 DNode::DNode(std::string name)
         : selected(false),
           space(nullptr),
-          varsocket(nullptr),
-          lastsocket(nullptr),
-          varcnt(0),
           ID(count++),
           nodeName(name),
           _signalLiveTime(new Signal::LiveTimeTracker(this)),
@@ -83,7 +80,6 @@ DNode::DNode(std::string name)
 DNode::DNode(const DNode& node)
 : selected(false),
     space(nullptr),
-    varcnt(0),
     ID(count++),
     nodeName(node.nodeName),
     type(node.getType()),
@@ -94,8 +90,6 @@ DNode::DNode(const DNode& node)
         new DinSocket(*socket, this);
     for(DoutSocket *socket : node.getOutSockets())
         new DoutSocket(*socket, this);
-    varsocket = const_cast<DSocket*>(CopySocketMapper::getCopy(node.getVarSocket()));
-    lastsocket = const_cast<DSocket*>(CopySocketMapper::getCopy(node.getLastSocket()));
 
     CopyNodeMapper::setNodePair(const_cast<DNode*>(&node), this);
     setPos(node.getPos());
@@ -307,29 +301,6 @@ void DNode::removeSocket(DSocket *socket)
         outSockets.erase(it);
         delete socket;
     }
-    if (varsocket == socket)
-        varsocket = nullptr;
-
-    if (socket == lastsocket)
-        lastsocket = nullptr;
-}
-
-void DNode::decVarSocket(DSocket *socket)
-{
-    removeSocket(socket);
-    varcnt--;
-}
-
-void DNode::incVarSocket()
-{
-    lastsocket = varsocket;
-    if(lastsocket->getDir() == DSocket::IN)
-        varsocket = new DinSocket("+", "VARIABLE", this);
-    else
-        varsocket = new DoutSocket("+", "VARIABLE", this);
-    varsocket->setVariable(true);
-    varsocket->listenToLinked();
-    varcnt++;
 }
 
 void DNode::clearSocketLinks()
@@ -361,11 +332,6 @@ DoutSocketList DNode::getOutSockets() const
     return out;
 }
 
-DSocketList *DNode::getOutSocketLlist() const
-{
-    return &outSockets;
-}
-
 void DNode::setOutSockets(DoutSocketList value)
 {
 }
@@ -378,43 +344,8 @@ DinSocketList DNode::getInSockets() const
     return in;
 }
 
-DSocketList* DNode::getInSocketLlist()    const
-{
-    return &inSockets;
-}
-
 void DNode::setInSockets(DinSocketList value)
 {
-}
-
-DSocket* DNode::getVarSocket() const
-{
-    return varsocket;
-}
-
-void DNode::setVarSocket(const DSocket* value)
-{
-    varsocket = const_cast<DSocket*>(value);
-}
-
-DSocket* DNode::getLastSocket() const
-{
-    return lastsocket;
-}
-
-void DNode::setLastSocket(const DSocket* value)
-{
-    lastsocket = const_cast<DSocket*>(value);
-}
-
-int DNode::getVarcnt() const
-{
-    return varcnt;
-}
-
-void DNode::setVarcnt(int value)
-{
-    varcnt = value;
 }
 
 DNSpace* DNode::getSpace() const
@@ -426,14 +357,3 @@ void DNode::setSpace(DNSpace* value)
 {
     space = value;
 }
-
-void DNode::setDynamicSocketsNode(DSocket::SocketDir dir)
-{
-    if(dir == DSocket::IN)
-        varsocket = new DinSocket("+", "VARIABLE", this);
-    else
-        varsocket = new DoutSocket("+", "VARIABLE", this);
-    varsocket->setVariable(true);
-    varsocket->listenToLinked();
-}
-

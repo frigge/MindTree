@@ -93,12 +93,6 @@ MathNode::MathNode(NodeType t, bool raw)
             auto in2 = new DinSocket("value2", "VARIABLE", this);
             out->listenToChange(in1);
         }
-        else {
-            setDynamicSocketsNode(DSocket::IN);
-            auto *varsocket = getVarSocket();
-            varsocket->toIn()->listenToLinked();
-            out->listenToChange(varsocket);
-        }
     }
 }
 
@@ -106,23 +100,3 @@ MathNode::MathNode(const MathNode &node)
     : DNode(node)
 {
 }
-
-void MathNode::incVarSocket()
-{
-    DNode::incVarSocket();
-    auto *varsocket = getVarSocket();
-    auto *out = getOutSockets().at(0);
-    varsocket->toIn()->listenToLinked();
-}
-
-void MathNode::decVarSocket(DSocket *socket)
-{
-    DNode::decVarSocket(socket);
-    DoutSocket *outsocket = getOutSockets().at(0);
-    if(getVarcnt() == 0)
-    {
-        outsocket->setType("VARIABLE");
-        getVarSocket()->setType("VARIABLE");
-    }
-}
-

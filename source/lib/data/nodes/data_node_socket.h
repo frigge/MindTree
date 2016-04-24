@@ -109,8 +109,6 @@ public:
     SocketDir getDir() const;
 	void setDir(SocketDir value);
 	DNode* getNode() const;
-	bool getVariable() const;
-	void setVariable(bool value);
 	unsigned short getID() const;
 
     void setIDName(std::string name);
@@ -142,7 +140,6 @@ private:
     mutable std::mutex _typeLock;
     SocketDir dir;
     DNode *node;
-    bool variable;
     unsigned short ID;
 
     static std::unordered_map<unsigned short, DSocket*>socketIDHash;

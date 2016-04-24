@@ -100,9 +100,17 @@ NodePtr NodeDataBase::createNodeByType(const NodeType &t)
 
 std::vector<AbstractNodeDecorator*> NodeDataBase::getConverters(DataType t)
 {
+    std::vector<AbstractNodeDecorator*> ret;
     if(s_converters.find(t.toStr()) == end(s_converters))
-        return std::vector<AbstractNodeDecorator*>();
-    return s_converters[t.toStr()];
+        return ret;
+
+    const auto &converters = s_converters[t.toStr()];
+    ret.insert(converters.begin(), converters.end(), ret.end());
+
+    const auto &universalConverters = NodeDataBase::getConverters("VARIABLE");
+    ret.insert(universalConverters.begin(), universalConverters.end(), ret.end());
+
+    return ret;
 }
 
 std::vector<AbstractNodeDecorator*> NodeDataBase::getFactories()

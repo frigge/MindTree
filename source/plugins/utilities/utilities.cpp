@@ -14,10 +14,6 @@ SwitchNode::SwitchNode(bool raw)
     if(!raw) {
         auto sw = new DinSocket("switch", "INTEGER", this);
         auto out = new DoutSocket("output", "VARIABLE", this);
-
-        setDynamicSocketsNode(DSocket::IN);
-        getVarSocket()->listenToLinked();
-        out->listenToChange(getVarSocket());
     }
 }
 
@@ -41,14 +37,6 @@ void regSwitchNode()
     };
 
     DataCache::addGenericProcessor(new GenericCacheProcessor("SWITCH", switchProc));
-}
-
-void SwitchNode::incVarSocket()
-{
-    DNode::incVarSocket();
-    auto *varsocket = getVarSocket();
-    auto *out = getOutSockets().at(0);
-    varsocket->toIn()->listenToLinked();
 }
 
 void setPropertyMap(DataCache *cache) {
@@ -77,8 +65,8 @@ void setPropertyMap(DataCache *cache) {
 
 BOOST_PYTHON_MODULE(utilities) {
     auto addPropertiesProc = [](DataCache *cache) {
-        auto grp = cache->getData(0).getData<std::shared_ptr<Group>>();
-        auto new_grp = std::make_shared<Group>(*grp);
+        auto obj = cache->getData(0).getData<AbstractTransformablePtr>();
+        auto new_obj = obj->clone();
 
         auto sockets = cache->getNode()->getInSockets();
         int prop_cnt = sockets.size();
@@ -87,13 +75,13 @@ BOOST_PYTHON_MODULE(utilities) {
             auto prop_name = sockets[i]->getName();
             auto prop_value = cache->getData(i);
 
-            new_grp->setProperty(prop_name, prop_value);
+            new_obj->setProperty(prop_name, prop_value);
         }
 
-        cache->pushData(new_grp);
+        cache->pushData(new_obj);
     };
 
-    DataCache::addProcessor(new CacheProcessor("GROUPDATA",
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE",
                                                "ADDPROPERTIES",
                                                addPropertiesProc));
 

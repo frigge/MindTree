@@ -105,9 +105,6 @@ public:
     void setSocketIDName(DSocket *socket);
     DSocket* getSocketByIDName(std::string idname);
     void removeSocket(DSocket *socket);
-    virtual void decVarSocket(DSocket *socket);
-    virtual void incVarSocket();
-    void setDynamicSocketsNode(DSocket::SocketDir dir);
     void clearSocketLinks();
     bool isContainer() const;
 
@@ -116,23 +113,12 @@ public:
     void setOutSockets(DoutSocketList value);
     DoutSocketList getOutSockets() const;
     DinSocketList getInSockets() const;
-    DSocketList* getInSocketLlist() const;
-    DSocketList *getOutSocketLlist() const;
     void setInSockets(DinSocketList value);
-    DSocket* getVarSocket() const;
-    void setVarSocket(const DSocket* value);
-    DSocket* getLastSocket() const;
-    void setLastSocket(const DSocket* value);
-    int getVarcnt() const;
-    void setVarcnt(int value);
     DNSpace* getSpace() const;
     virtual void setSpace(DNSpace* value);
 
     static NodePtr newNode(std::string name, NodeType t, int insize, int outsize);
-
     static bool isInput(const DNode *node);
-    static bool isConditionNode(const DNode *node);
-    bool isValueNode()const;
     
     virtual bool operator==(const DNode &node)const;
     virtual bool operator!=(const DNode &node)const;
@@ -152,9 +138,6 @@ private:
 
     bool selected;
     DNSpace *space;
-    DSocket *varsocket;
-    DSocket *lastsocket;
-    int varcnt;
     unsigned short ID;
     static unsigned short count;
     std::string nodeName;

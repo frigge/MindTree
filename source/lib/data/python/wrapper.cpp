@@ -449,7 +449,6 @@ void DNodePyWrapper::wrap()
                 .def("addInSocket", &DNodePyWrapper::addInSocket, BPy::return_value_policy<BPy::manage_new_object>())
                 .def("addOutSocket", &DNodePyWrapper::addOutSocket, BPy::return_value_policy<BPy::manage_new_object>())
                 .add_property("selected", &DNodePyWrapper::getSelected, &DNodePyWrapper::setSelected)
-                .def("setDynamicInSockets", &DNodePyWrapper::setDynamicInSockets)
                 .add_property("outsockets", &DNodePyWrapper::out);
 }
 
@@ -464,12 +463,6 @@ void DNodePyWrapper::setSelected(bool value)
     GILReleaser releaser;
     if(!alive())return;
     getWrapped<DNode>()->setSelected(value);
-}
-
-void DNodePyWrapper::setDynamicInSockets()
-{
-    if(!alive()) return;
-    getWrapped<DNode>()->setDynamicSocketsNode(DSocket::IN);
 }
 
 DinSocketPyWrapper* DNodePyWrapper::addInSocket(std::string name, std::string type)

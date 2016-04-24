@@ -104,9 +104,8 @@ void CopySocketMapper::remap()
 IO::OutStream& MindTree::operator<<(IO::OutStream& stream, const DSocket &socket)
 {
     stream << socket.getName()
-        << socket.getID()
-        << static_cast<const TypeBase&>(socket.getType())
-        << socket.getVariable();
+           << socket.getID()
+           << static_cast<const TypeBase&>(socket.getType());
     return stream;
 }
 
@@ -114,8 +113,7 @@ IO::InStream& MindTree::operator>>(IO::InStream& stream, DSocket &socket)
 {
     std::string name, type;
     int id;
-    bool variable;
-    stream >> name >> id >> type >> variable;
+    stream >> name >> id >> type;
     socket.name = name;
     socket.type = type;
     LoadSocketIDMapper::setID(&socket, id);
@@ -127,7 +125,6 @@ DSocket::DSocket(std::string name, SocketType type, DNode *node)
     name(name),
     type(type),
     node(node),
-    variable(false),
     ID(++count),
     _propagateType([](SocketType t) { return t; })
 {
@@ -139,7 +136,6 @@ DSocket::DSocket(const DSocket& socket, DNode *node)
     name(socket.getName()),
     type(socket.getType()),
     node(node),
-    variable(socket.getVariable()),
     ID(++count),
     _propagateType(socket._propagateType)
 {
@@ -164,9 +160,8 @@ NodeList DSocket::getChildNodes() const
 
 bool DSocket::operator==(DSocket &socket)    const
 {
-    if(getVariable() != socket.getVariable()
-        ||getName() != socket.getName()
-        ||getType() != socket.getType())
+    if(getName() != socket.getName()
+       ||getType() != socket.getType())
         return false;
     return true;
 }
@@ -226,17 +221,6 @@ DSocket* DSocket::getSocket(unsigned short ID)
     return socketIDHash[ID];
 }
 
-bool DSocket::getVariable() const
-{
-	return variable;
-}
-
-void DSocket::setVariable(bool value)
-{
-	variable = value;
-    if(getNode()&&variable)getNode()->setVarSocket(this);
-}
-
 unsigned short DSocket::getID() const
 {
 	return ID;
@@ -255,7 +239,6 @@ void DSocket::setIDName(std::string value)
 void DSocket::setNode(DNode *node)
 {
     this->node = node;
-    if(getVariable())node->setVarSocket(this);
 }
 
 std::string DSocket::getName() const
@@ -433,17 +416,12 @@ void DinSocket::addLink(DoutSocket *socket)
 
     //here we set the actual link
     setCntdSocket(socket);
-    if (getVariable())
-        getNode()->incVarSocket();
 }
 
 void DinSocket::clearLink()
 {
     if(cntdSocket)cntdSocket->unregisterSocket(this);
 	cntdSocket = nullptr;
-
-    if(getVariable())
-        getNode()->decVarSocket(this);
 }
 
 unsigned short DinSocket::getTempCntdID() const
@@ -518,8 +496,6 @@ void DinSocket::setCntdSocket(DoutSocket *socket)
     //here we set the actual link
 	cntdSocket = socket;
     cntdSocket->registerSocket(this);
-    if (getVariable())
-        getNode()->incVarSocket();
 
     MT_CUSTOM_SIGNAL_EMITTER("createLink", this);
 }
@@ -576,8 +552,6 @@ bool DoutSocket::operator !=(DoutSocket &socket)const
 void DoutSocket::registerSocket(DinSocket *socket)
 {
     MT_CUSTOM_BOUND_SIGNAL_EMITTER(&_signalLiveTime, "outLinkChanged", socket);
-    if(this == getNode()->getVarSocket())
-        getNode()->incVarSocket();
     
     pushSocket(socket);
 }
@@ -602,8 +576,6 @@ void DoutSocket::unregisterSocket(DinSocket *socket, bool decr)
     if(it != end(cntdSockets)) {
         cntdSockets.erase(it);
     }
-    if(cntdSockets.size() == 0 && getVariable() && decr)
-        getNode()->decVarSocket(this);
 }
 
 void DoutSocket::listenToLinkedName()

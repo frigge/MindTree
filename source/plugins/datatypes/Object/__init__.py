@@ -1,15 +1,6 @@
 import MT
 from . import object
 
-class GroupObjectsNodeDecorator(MT.pytypes.NodeDecorator):
-    label = "Objects.Group"
-    type = "GROUP"
-    outsockets = [("Group", "GROUPDATA")]
-
-    def __init__(self, node, raw=False):
-        super().__init__(node, raw)
-        node.setDynamicInSockets()
-
 class ObjectNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Object"
     type = "OBJECTNODE"

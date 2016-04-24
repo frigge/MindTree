@@ -9,8 +9,6 @@ class SwitchNode : public DNode
 {
 public:
     SwitchNode(bool raw=false);
-
-    void incVarSocket();
 };
 
 }

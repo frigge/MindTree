@@ -6,6 +6,8 @@ set(LIB_SRC
     data/dnspace.cpp
     data/io.cpp
     data/nodes/data_node.cpp
+    data/nodes/arraynode.cpp
+    data/nodes/structnode.cpp
     data/nodes/containernode.cpp
     data/mtobject.cpp
     data/nodes/data_node_socket.cpp
