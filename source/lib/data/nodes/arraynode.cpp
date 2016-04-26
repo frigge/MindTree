@@ -22,12 +22,17 @@ void ArrayNode::addSocket(DSocket *socket)
     DNode::addSocket(socket);
     if(socket->getDir() == DSocket::OUT) return;
 
-    auto cb = Signal::getBoundHandler(socket)
-        ->connect("linkChanged", [this, socket](DoutSocket *out) {
+    auto cb = Signal::getBoundHandler<DoutSocket*>(socket)
+        .connect("linkChanged", [this, socket](DoutSocket *out) {
+                const auto &insockets = this->getInSockets();
                 if (!out)
                     this->removeSocket(socket);
-
-                else if(out == socket->getCntdSocket())
+                else if(out == socket->toIn()->getCntdSocket()
+                        && !std::all_of(insockets.begin(),
+                                        insockets.end(),
+                                        [](const auto *in) {
+                                return in->getCntdSocket();
+                            }))
                     return;
 
                 else

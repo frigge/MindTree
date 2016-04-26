@@ -136,7 +136,6 @@ class SetMaterialInstanceNodeDecorator(MT.pytypes.NodeDecorator):
 
 
 
-MT.registerNode(GroupObjectsNodeDecorator)
 MT.registerNode(TransformObjectNodeDecorator)
 MT.registerNode(ParentNodeDecorator)
 MT.registerNode(PointLightNodeDecorator)
