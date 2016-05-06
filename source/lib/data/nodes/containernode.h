@@ -3,8 +3,11 @@
 
 #include "data_node.h"
 
-namespace MindTree { class ContainerSpace;
+namespace MindTree {
+
+class ContainerSpace;
 class SocketNode;
+class ArrayNode;
 
 class ContainerNode : public DNode
 {
@@ -15,6 +18,8 @@ public:
 
     void setOutSockets(SocketNode *node);
     void setInSockets(SocketNode *node);
+
+    void addSocket(DSocket *socket) override;
 
     DSocket *getSocketOnContainer(DSocket *socket);
     const DSocket *getSocketOnContainer(const DSocket *socket) const;
@@ -36,12 +41,8 @@ public:
     SocketNode *getOutputs() const;
 
     void setName(std::string name);
-    virtual bool operator==(const DNode &node)const;
-    virtual bool operator!=(const DNode &node)const;
-
-    void newSocket(DSocket *socket);
-    void killSocket(DSocket *socket);
-    void addtolib();
+    bool operator==(const DNode &node)const override;
+    bool operator!=(const DNode &node)const override;
 
     void setSpace(DNSpace *space);
 
@@ -99,6 +100,7 @@ public:
 private:
     std::unordered_map<DSocket*, DSocket*> loopSocketMap;
     LoopSocketNode *partner;
+    ArrayNode *inputs_;
 };
 
 class ForNode : public LoopNode

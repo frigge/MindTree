@@ -17,6 +17,9 @@ class PrimitiveNodeDecoratorBase(MT.pytypes.NodeDecorator):
         node.graph.addNode(data)
         node.graph.addNode(obj)
 
+        for i in range(4):
+            node.graph[0].addInSocket("Input", )
+
         obj.insockets[0].connected = node.graph[0].outsockets[-1]
         obj.insockets[1].connected = node.graph[0].outsockets[-1]
         obj.insockets[2].connected = data.outsockets[0]

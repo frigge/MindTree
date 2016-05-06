@@ -1,4 +1,5 @@
 #include "data/dnspace.h"
+#include "arraynode.h"
 #include "containernode.h"
 
 using namespace MindTree;
@@ -135,23 +136,6 @@ SocketNode *ContainerNode::getOutputs() const
     return outSocketNode;
 }
 
-void ContainerNode::newSocket(DSocket *socket)
-{
-    DSocket *mapped_socket = 0;
-    if(socket->getDir() == DSocket::IN)
-        mapped_socket = new DoutSocket(*socket->toOut(), this);
-    else
-        mapped_socket = new DinSocket(*socket->toIn(), this);
-    mapOnToIn(socket, mapped_socket);
-}
-
-void ContainerNode::killSocket(DSocket *socket)
-{
-    DSocket *contsocket = const_cast<DSocket*>(socket_map[socket]);
-    socket_map.erase(socket);
-    removeSocket(contsocket);
-}
-
 DSocket *ContainerNode::getSocketInContainer(DSocket *socket)
 {
     return const_cast<DSocket*>(socket_map[ const_cast<DSocket*>(socket) ]);
@@ -258,8 +242,28 @@ ContainerNode* SocketNode::getContainer() const
     return container;
 }
 
-LoopSocketNode::LoopSocketNode(DSocket::SocketDir dir, LoopNode *contnode, bool raw)
-    : SocketNode(dir, contnode, true), partner(nullptr)
+void SocketNode::addSocket(DSocket *socket)
+{
+    DNode::addSocket(socket);
+    DSocket *mapped{nullptr};
+    if(socket->getDir() == DSocket::IN) {
+        mapped = new DoutSocket(socket->getName(),
+                                socket->getType(),
+                                container);
+    }
+    else {
+        mapped = new DinSocket(socket->getName(),
+                               socket->getType(),
+                               container);
+    }
+
+    container->mapOnToIn(mapped, socket);
+}
+
+LoopSocketNode::LoopSocketNode(DSocket::SocketDir dir, LoopNode *contnode, bool raw) :
+    SocketNode(dir, contnode, true),
+    partner(nullptr),
+    inputs{nullptr}
 {
     if (dir == DSocket::IN) {
         setType("LOOPINSOCKETS");
@@ -272,7 +276,7 @@ LoopSocketNode::LoopSocketNode(DSocket::SocketDir dir, LoopNode *contnode, bool 
 }
 
 LoopSocketNode::LoopSocketNode(const LoopSocketNode& node)
-    : SocketNode(node), partner(nullptr)
+    : SocketNode(node), partner(nullptr), inputs_{nullptr}
 {
     for(auto pair : node.loopSocketMap) {
         auto *original = const_cast<DSocket*>(CopySocketMapper::getCopy(pair.first));
@@ -280,6 +284,7 @@ LoopSocketNode::LoopSocketNode(const LoopSocketNode& node)
         auto newPair = std::make_pair(original, partner);
         loopSocketMap.insert(newPair);
     }
+    inputs_ = const_cast<DSocket*>(CopySocketMapper::getCopy(node.inputs_));
 }
 
 void LoopSocketNode::decVarSocket(DSocket *socket)
