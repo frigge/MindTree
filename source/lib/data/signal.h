@@ -316,7 +316,12 @@ class SignalCollector
     typedef std::shared_ptr<Signal_t> SignalPtr_t;
 public:
     SignalCollector() {}
-    SignalCollector(const SignalCollector<Args...> &other) : sigs(other.sigs) {}
+
+    SignalCollector(const SignalCollector &&other) {sigs = std::move(other.sigs);}
+    SignalCollector& operator=(const SignalCollector &&other) {sigs = std::move(other.sigs);}
+
+    SignalCollector(const SignalCollector&) = delete;
+    SignalCollector& operator=(const SignalCollector&) = delete;
 
     CallbackHandler connect(std::string sigEmitter, std::function<void(Args...)> fun) {
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
@@ -357,7 +362,12 @@ class SignalCollector<>
     typedef std::shared_ptr<Signal_t> SignalPtr_t;
 public:
     SignalCollector() {}
-    SignalCollector(const SignalCollector<> &other) : sigs(other.sigs) {}
+
+    SignalCollector(const SignalCollector&) = delete;
+    SignalCollector& operator=(const SignalCollector&) = delete;
+
+    SignalCollector(const SignalCollector &&other) {sigs = std::move(other.sigs);}
+    SignalCollector& operator=(const SignalCollector &&other) {sigs = std::move(other.sigs);}
 
     CallbackHandler connect(std::string sigEmitter, std::function<void()> fun) {
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
@@ -398,7 +408,12 @@ class SignalCollector<BPy::object>
     typedef std::shared_ptr<Signal_t> SignalPtr_t;
 public:
     SignalCollector() {}
-    SignalCollector(const SignalCollector<BPy::object> &other) : sigs(other.sigs) {}
+
+    SignalCollector(const SignalCollector&) = delete;
+    SignalCollector& operator=(const SignalCollector&) = delete;
+
+    SignalCollector(const SignalCollector &&other) {sigs = std::move(other.sigs);}
+    SignalCollector& operator=(const SignalCollector &&other) {sigs = std::move(other.sigs);}
 
     CallbackHandler connect(std::string sigEmitter, BPy::object fun) 
     {
@@ -436,6 +451,7 @@ private:
     std::unordered_map<std::string, SignalPtr_t> sigs;
 };
 
+namespace detail {
 template<typename...Args>
 struct SignalHandler {
     static SignalCollector<Args...> handler;
@@ -451,15 +467,16 @@ struct BoundSignalHandler {
 
 template<typename...Args> 
 std::map<void*, SignalCollector<Args...>> BoundSignalHandler<Args...>::handlers;
+} //ns detail
 
 template<typename ...Args>
 void callHandler(std::string sig, Args... args) noexcept
 {
-    SignalHandler<Args...>::handler(sig, args ...);
+    detail::SignalHandler<Args...>::handler(sig, args ...);
     
     //The Python Signal only registers one tuple as an argument so the
     //signature is different.
-    SignalHandler<BPy::object>::handler(sig, args ...);
+    detail::SignalHandler<BPy::object>::handler(sig, args ...);
 }
 
 template<typename ...Args>
@@ -470,36 +487,36 @@ void callBoundHandler(LiveTimeTracker* tracker, std::string sig, Args... args)
 #endif
     if(!tracker->registered) {
         tracker->destructor = [tracker] {
-            BoundSignalHandler<Args...>::handlers.erase(tracker->boundObject);
+            detail::BoundSignalHandler<Args...>::handlers.erase(tracker->boundObject);
         };
         tracker->registered = true;
     }
 
-    auto end = BoundSignalHandler<Args...>::handlers.end();
-    if (BoundSignalHandler<Args...>::handlers.find(tracker->boundObject) != end)
-        BoundSignalHandler<Args...>::handlers[tracker->boundObject](sig, args ...);
+    auto end = detail::BoundSignalHandler<Args...>::handlers.end();
+    if (detail::BoundSignalHandler<Args...>::handlers.find(tracker->boundObject) != end)
+        detail::BoundSignalHandler<Args...>::handlers[tracker->boundObject](sig, args ...);
     else {
-        SignalCollector<Args...> sc;
-        BoundSignalHandler<Args...>::handlers.insert({tracker->boundObject, std::move(sc)});
+        detail::BoundSignalHandler<Args...>::handlers[tracker->boundObject] = 
+            std::move(SignalCollector<Args...>());
     }
     
     //The Python Signal only registers one tuple as an argument so the
     //signature is different.
-    auto e = BoundSignalHandler<BPy::object>::handlers.end();
-    if (BoundSignalHandler<BPy::object>::handlers.find(tracker->boundObject) != e) {
-        auto &handler = BoundSignalHandler<BPy::object>::handlers.at(tracker->boundObject);
+    auto e = detail::BoundSignalHandler<BPy::object>::handlers.end();
+    if (detail::BoundSignalHandler<BPy::object>::handlers.find(tracker->boundObject) != e) {
+        auto &handler = detail::BoundSignalHandler<BPy::object>::handlers.at(tracker->boundObject);
         handler(sig, args...);
     }
     else {
-        SignalCollector<BPy::object> sc;
-        BoundSignalHandler<BPy::object>::handlers.insert({tracker->boundObject, std::move(sc)});
+        detail::BoundSignalHandler<BPy::object>::handlers[tracker->boundObject] =
+            std::move(SignalCollector<BPy::object>());
     }
 }
 
 template<typename ...Args>
 SignalCollector<Args...>& getHandler()
 {
-    return SignalHandler<Args...>::handler;
+    return detail::SignalHandler<Args...>::handler;
 }
 
 template<typename ...Args>
@@ -508,22 +525,40 @@ SignalCollector<Args...>& getBoundHandler(void* boundObject)
 #ifdef MT_DEBUG_SIGNALS
     dbout("receiving bound signal handler for: " << boundObject);
 #endif
-    auto begin = BoundSignalHandler<Args...>::handlers.begin();
-    auto end = BoundSignalHandler<Args...>::handlers.end();
+    auto begin = detail::BoundSignalHandler<Args...>::handlers.begin();
+    auto end = detail::BoundSignalHandler<Args...>::handlers.end();
 
-    if(BoundSignalHandler<Args...>::handlers.find(boundObject) == end)
-        BoundSignalHandler<Args...>::handlers.insert({boundObject, SignalCollector<Args...>()});
+    if(detail::BoundSignalHandler<Args...>::handlers.find(boundObject) == end)
+        detail::BoundSignalHandler<Args...>::handlers[boundObject] =
+            SignalCollector<Args...>();
 
-    SignalCollector<Args...> &handler = BoundSignalHandler<Args...>::handlers.at(boundObject);
+    SignalCollector<Args...> &handler = detail::BoundSignalHandler<Args...>::handlers.at(boundObject);
     return handler;
+}
+
+namespace detail {
+template<typename ...Args>
+struct MergedSignals
+{
+    static std::unordered_map<std::string, std::string> merged;
+};
+template<typename ...Args>
+std::unordered_map<std::string, std::string> MergedSignals<Args...>::merged;
 }
 
 template<typename ...Args>
 void mergeSignals(std::string oldSignal, std::string newSignal)
 {
+    //merge only once!!!
+    auto &merged = detail::MergedSignals<Args...>::merged;
+    if(merged.find(oldSignal) != merged.end())
+        return;
+
     getHandler<Args...>().connect(oldSignal, [newSignal](Args... args){
                 MT_CUSTOM_SIGNAL_EMITTER(newSignal);
             }).detach();
+
+    detail::MergedSignals<Args...>::merged[oldSignal] = newSignal;
 }
 
 } /* Signal */

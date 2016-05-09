@@ -28,7 +28,7 @@ void ArrayNode::addSocket(DSocket *socket)
                 if (!out)
                     this->removeSocket(socket);
                 else if(out == socket->toIn()->getCntdSocket()
-                        && !std::all_of(insockets.begin(),
+                        || !std::all_of(insockets.begin(),
                                         insockets.end(),
                                         [](const auto *in) {
                                 return in->getCntdSocket();

@@ -111,21 +111,6 @@ void ContainerNode::addMappedSocket(DSocket *socket)
     mapOnToIn(socket, mapped_socket);
 }
 
-void ContainerNode::addtolib()
-{
-    //QDir::setCurrent(QCoreApplication::applicationDirPath());
-
-    //QString filename;
-    //filename.append("nodes/");
-    //filename.append(getNodeName().c_str());
-    //filename.append(".node");
-    //QFile file(filename);
-    //file.open(QIODevice::WriteOnly);
-    //QDataStream out(&file);
-    //out<<FRG_NODE_HEADER;
-    //out<<this;
-}
-
 SocketNode *ContainerNode::getInputs() const
 {
     return inSocketNode;
@@ -263,7 +248,7 @@ void SocketNode::addSocket(DSocket *socket)
 LoopSocketNode::LoopSocketNode(DSocket::SocketDir dir, LoopNode *contnode, bool raw) :
     SocketNode(dir, contnode, true),
     partner(nullptr),
-    inputs{nullptr}
+    inputs_{nullptr}
 {
     if (dir == DSocket::IN) {
         setType("LOOPINSOCKETS");
@@ -284,7 +269,7 @@ LoopSocketNode::LoopSocketNode(const LoopSocketNode& node)
         auto newPair = std::make_pair(original, partner);
         loopSocketMap.insert(newPair);
     }
-    inputs_ = const_cast<DSocket*>(CopySocketMapper::getCopy(node.inputs_));
+    inputs_ = static_cast<ArrayNode*>(CopyNodeMapper::getCopy(node.inputs_));
 }
 
 void LoopSocketNode::decVarSocket(DSocket *socket)

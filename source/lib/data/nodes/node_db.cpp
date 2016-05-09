@@ -107,6 +107,7 @@ std::vector<AbstractNodeDecorator*> NodeDataBase::getConverters(DataType t)
     const auto &converters = s_converters[t.toStr()];
     ret.insert(ret.cend(), converters.begin(), converters.end());
 
+    //universal converters
     const auto &universalConverters = NodeDataBase::getConverters("VARIABLE");
     ret.insert(ret.end(), universalConverters.begin(), universalConverters.end());
 

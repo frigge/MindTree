@@ -19,8 +19,6 @@ public:
     void setOutSockets(SocketNode *node);
     void setInSockets(SocketNode *node);
 
-    void addSocket(DSocket *socket) override;
-
     DSocket *getSocketOnContainer(DSocket *socket);
     const DSocket *getSocketOnContainer(const DSocket *socket) const;
     DSocket *getSocketInContainer(DSocket *socket);
@@ -59,6 +57,8 @@ class SocketNode : public DNode
 public:
     SocketNode(DSocket::SocketDir dir, ContainerNode *contnode, bool raw=false);
     SocketNode(const SocketNode &node);
+
+    void addSocket(DSocket *socket);
 
     ContainerNode *getContainer() const;
 

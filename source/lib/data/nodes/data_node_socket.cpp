@@ -363,7 +363,7 @@ DinSocket::DinSocket(const DinSocket& socket, DNode *node)
     getNode()->addSocket(this);
 
     for(auto child : socket.getChildNodes()) {
-        addChildNode(std::make_shared<DNode>(*child));
+        addChildNode(child->clone());
     }
 }
 
