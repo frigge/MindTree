@@ -239,12 +239,12 @@ TimelineNode::TimelineNode(bool raw)
         new MindTree::DoutSocket("Frame", "INTEGER", this);
 
     setType("TIMELINE");
-    auto cbhandler = MindTree::Signal::SignalHandler<int>
-        ::handler.connect("frameChanged",
-                          [this](int) {
-                              MT_CUSTOM_SIGNAL_EMITTER("nodeChanged",
-                                                       static_cast<DNode*>(this));
-                          });
+    auto cbhandler = MindTree::Signal::getHandler<int>()
+        .connect("frameChanged",
+                 [this](int) {
+                     MT_CUSTOM_SIGNAL_EMITTER("nodeChanged",
+                                              static_cast<DNode*>(this));
+                 });
 
     callbacks.push_back(cbhandler);
 }

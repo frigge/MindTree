@@ -91,7 +91,7 @@ void MindTree::Python::wrap_all()
         ContainerNodePyWrapper::wrap();
         ContainerSpacePyWrapper::wrap();
         PropertyPyWrapper::wrap();
-        MindTree::Signal::SignalHandler<>::handler("registerPyDataTypes");
+        MindTree::Signal::getHandler<>()("registerPyDataTypes");
     }
 
     BPy::object pycache_module(BPy::borrowed(PyImport_AddModule("cache")));
@@ -101,7 +101,7 @@ void MindTree::Python::wrap_all()
         wrap_DataCache();
     }
 
-    MindTree::Signal::SignalHandler<>::handler(__PRETTY_FUNCTION__);
+    MindTree::Signal::getHandler<>()(__PRETTY_FUNCTION__);
 }
 
 PyObject* QPointFToPython::convert(QPointF const &pos)
