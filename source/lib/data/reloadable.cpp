@@ -55,7 +55,10 @@ bool Library::load()
 {
     if(!m_path.empty()) {
         m_handle = dlopen(m_path.c_str(), RTLD_LAZY);
-        std::cout << "loaded library: " << m_path << std::endl;
+        if(!m_handle)
+            std::cout << "library loading failed: " << dlerror() << std::endl;
+        else
+            std::cout << "loaded library: " << m_path << std::endl;
     }
     return m_handle;
 }
