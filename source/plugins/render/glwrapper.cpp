@@ -616,6 +616,7 @@ void ShaderProgram::_addShaderFromSource(std::string src, ShaderProgram::ShaderT
     GLsizei infologlength;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, (GLint*)&infologlength);
     GLchar *infolog = new GLchar[infologlength];
+    std::memset(infolog, '\0', infologlength);
     glGetShaderInfoLog(shader, infologlength, 0, infolog);
     std::string log((char*)infolog);
     delete [] infolog;
@@ -748,6 +749,11 @@ void ShaderProgram::setUniform(std::string name, const glm::mat4 &value)
 
     GLint location = getUniformLocation(name);
     if(location > -1) glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+    else std::cout << "shader " << _id << " has no uniform named: " << name << std::endl;
+
+#ifdef DEBUG_GL_WRAPPER_SHADER
+    dbout(name << glm::to_string(value));
+#endif
     if(MTGLERROR) dbout(name);
 }
 

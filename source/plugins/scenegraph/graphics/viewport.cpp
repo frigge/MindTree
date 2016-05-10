@@ -345,8 +345,8 @@ void Viewport::rotateView(float xdist, float ydist)
     glm::vec3 center = activeCamera->getCenter();
     glm::mat4 camtrans = activeCamera->getTransformation();
 
-    glm::mat4 rotx = glm::rotate(glm::mat4(), (float)ydist, glm::cross(glm::vec3(0, 1, 0), -camtrans[2].xyz()));
-    glm::mat4 roty = glm::rotate(glm::mat4(), (float)xdist, glm::vec3(0, 1, 0));
+    glm::mat4 rotx = glm::rotate(glm::mat4(), glm::radians((float)ydist), glm::cross(glm::vec3(0, 1, 0), -camtrans[2].xyz()));
+    glm::mat4 roty = glm::rotate(glm::mat4(), glm::radians((float)xdist), glm::vec3(0, 1, 0));
     glm::mat4 rotation = roty * rotx;
 
     glm::mat4 translation = glm::translate(glm::mat4(), center);

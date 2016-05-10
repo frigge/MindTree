@@ -91,7 +91,7 @@ TranslateXWidget::TranslateXWidget()
 GL::ShapeRendererGroup* TranslateXWidget::createRenderer()
 {
     _renderer = new GL::ArrowRenderer();
-    _renderer->setStaticTransformation(glm::rotate(glm::mat4(), -90.0f, glm::vec3(0, 0, 1)));
+    _renderer->setStaticTransformation(glm::rotate(glm::mat4(), glm::radians(-90.0f), glm::vec3(0, 0, 1)));
     return _renderer;
 }
 
@@ -126,7 +126,7 @@ TranslateZWidget::TranslateZWidget()
 GL::ShapeRendererGroup* TranslateZWidget::createRenderer()
 {
     _renderer = new GL::ArrowRenderer();
-    _renderer->setStaticTransformation(glm::rotate(glm::mat4(), 90.0f, glm::vec3(1, 0, 0)));
+    _renderer->setStaticTransformation(glm::rotate(glm::mat4(), glm::radians(90.0f), glm::vec3(1, 0, 0)));
     return _renderer;
 }
 
@@ -162,7 +162,7 @@ GL::ShapeRendererGroup* TranslateXZPlaneWidget::createRenderer()
 
     auto quad = new GL::QuadRenderer(1.0, 1.0);
     quad->setStaticTransformation(glm::rotate(glm::mat4(),
-                                              90.f,
+                                              glm::radians(90.f),
                                               glm::vec3(1, 0, 0)));
     quad->setParentPrimitive(_renderer);
     _renderer->setBorderWidth(3);
@@ -185,7 +185,7 @@ GL::ShapeRendererGroup* TranslateYZPlaneWidget::createRenderer()
     auto quad = new GL::QuadRenderer(1.0, 1.0);
 
     quad->setStaticTransformation(glm::rotate(glm::mat4(),
-                                              -90.f,
+                                              glm::radians(-90.f),
                                               glm::vec3(0, 1, 0)));
     quad->setParentPrimitive(_renderer);
     _renderer->setBorderWidth(3);

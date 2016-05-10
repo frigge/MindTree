@@ -80,9 +80,9 @@ void transformProc(MindTree::DataCache *cache)
     glm::vec3 rotation = cache->getData(1).getData<glm::vec3>();
     glm::vec3 scale = cache->getData(2).getData<glm::vec3>();
 
-    glm::mat4 rotx = glm::rotate(glm::mat4(), rotation.x, glm::vec3(1, 0, 0));
-    glm::mat4 roty = glm::rotate(glm::mat4(), rotation.y, glm::vec3(0, 1, 0));
-    glm::mat4 rotz = glm::rotate(glm::mat4(), rotation.z, glm::vec3(0, 0, 1));
+    glm::mat4 rotx = glm::rotate(glm::mat4(), glm::radians(rotation.x), glm::vec3(1, 0, 0));
+    glm::mat4 roty = glm::rotate(glm::mat4(), glm::radians(rotation.y), glm::vec3(0, 1, 0));
+    glm::mat4 rotz = glm::rotate(glm::mat4(), glm::radians(rotation.z), glm::vec3(0, 0, 1));
 
     glm::mat4 rot = rotz * roty * rotx;
 

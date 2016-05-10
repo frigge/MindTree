@@ -524,7 +524,7 @@ void Group::setProperty(std::string name, Property prop)
 }
 
 Camera::Camera()
-    : AbstractTransformable(CAMERA), _fov(45),
+    : AbstractTransformable(CAMERA), _fov(glm::radians(45.f)),
     _near(.1), _far(10000), _width(0), _height(0), _aspect(1)
 {
     setTransformation(glm::inverse(glm::lookAt(glm::vec3(0, 10, -10), glm::vec3(0), glm::vec3(0, 1, 0))));

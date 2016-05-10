@@ -33,7 +33,9 @@ RenderConfigurator::RenderConfigurator(QGLContext *context, CameraPtr camera) :
     _geometryPass->setCamera(camera);
 
     _grid = new GL::GridRenderer(100, 100, 100, 100);
-    auto trans = glm::rotate(glm::mat4(), 90.f, glm::vec3(1, 0, 0));
+    auto trans = glm::rotate(glm::mat4(),
+                             glm::radians(90.f),
+                             glm::vec3(1, 0, 0));
 
     _grid->setTransformation(trans);
     _grid->setBorderColor(glm::vec4(.5, .5, .5, .5));
