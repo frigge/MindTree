@@ -12,7 +12,9 @@ link_directories(
 )
 
 add_library(pointcloud MODULE pointcloud.cpp)
+target_link_libraries(pointcloud mindtree_core objectlib)
 add_library(primitives MODULE primitives.cpp)
+target_link_libraries(primitives mindtree_core objectlib)
 
 install(TARGETS pointcloud LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS primitives LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
