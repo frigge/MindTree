@@ -107,14 +107,6 @@ MathNode::MathNode(const MathNode &node)
 {
 }
 
-void MathNode::incVarSocket()
-{
-    DNode::incVarSocket();
-    auto *varsocket = getVarSocket();
-    auto *out = getOutSockets().at(0);
-    varsocket->toIn()->listenToLinked();
-}
-
 void MathNode::decVarSocket(DSocket *socket)
 {
     DNode::decVarSocket(socket);

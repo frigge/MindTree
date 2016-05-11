@@ -323,10 +323,22 @@ void DNode::decVarSocket(DSocket *socket)
 void DNode::incVarSocket()
 {
     lastsocket = varsocket;
-    if(lastsocket->getDir() == DSocket::IN)
-        varsocket = new DinSocket("+", "VARIABLE", this);
-    else
-        varsocket = new DoutSocket("+", "VARIABLE", this);
+    if(lastsocket->getDir() == DSocket::IN) {
+        if (std::any_of(inSockets.begin(),
+                        inSockets.end(),
+                        [](const auto *in) {
+                            return in->toIn()->getCntdSocket();
+                        }))
+            varsocket = new DinSocket("+", "VARIABLE", this);
+    }
+    else {
+        if (std::any_of(outSockets.begin(),
+                        outSockets.end(),
+                        [](const auto *out) {
+                            return !out->toOut()->getCntdSockets().empty();
+                        }))
+            varsocket = new DoutSocket("+", "VARIABLE", this);
+    }
     varsocket->setVariable(true);
     varsocket->listenToLinked();
     varcnt++;

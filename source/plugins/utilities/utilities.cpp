@@ -43,14 +43,6 @@ void regSwitchNode()
     DataCache::addGenericProcessor(new GenericCacheProcessor("SWITCH", switchProc));
 }
 
-void SwitchNode::incVarSocket()
-{
-    DNode::incVarSocket();
-    auto *varsocket = getVarSocket();
-    auto *out = getOutSockets().at(0);
-    varsocket->toIn()->listenToLinked();
-}
-
 void setPropertyMap(DataCache *cache) {
     PropertyMap props;
     auto sockets = cache->getNode()->getInSockets();
