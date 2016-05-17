@@ -14,6 +14,7 @@ link_directories(
 
 set(object_source_files
     object.cpp
+    skeleton.cpp
     dcel.cpp
     lights.cpp
     material.cpp

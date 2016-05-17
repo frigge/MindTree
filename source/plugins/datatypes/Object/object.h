@@ -21,7 +21,10 @@
 #define OBJECT
 
 #include "data/mtobject.h"
+
+#define GLM_SWIZZLE
 #include "glm/glm.hpp"
+
 #include "data/python/pyexposable.h"
 #include "data/properties.h"
 #include "material.h"
@@ -44,7 +47,7 @@ class AbstractTransformable : public MindTree::Object
 {
 public:
     enum eObjType {
-        GEO, CAMERA, LIGHT, EMPTY
+        GEO, CAMERA, LIGHT, EMPTY, SKELETON
     };
     AbstractTransformable(eObjType t);
     virtual ~AbstractTransformable();

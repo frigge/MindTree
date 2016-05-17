@@ -16,9 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define GLM_SWIZZLE
-
 #include "cmath"
+
+#define GLM_SWIZZLE
 #include "glm/gtc/matrix_transform.hpp"
 
 #include "lights.h"

@@ -1,5 +1,6 @@
 import MT
 from . import object
+from . import skeleton
 
 class GroupObjectsNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Group"
