@@ -5,7 +5,7 @@ using namespace MindTree;
 
 std::vector<std::unique_ptr<AbstractNodeDecorator>> NodeDataBase::nodeFactories;
 std::unordered_map<std::string, std::vector<AbstractNodeDecorator*>> NodeDataBase::s_converters;
-std::vector<std::string> NodeDataBase::s_nonConverters;
+std::vector<std::string> NodeDataBase::s_nonConverters{"VARIABLE", "FLOAT", "INTEGER", "BOOLEAN", "STRING"};
 
 AbstractNodeDecorator::AbstractNodeDecorator(std::string type, std::string label)
     : type(type), label(label)
@@ -58,21 +58,24 @@ void NodeDataBase::registerNodeType(std::unique_ptr<AbstractNodeDecorator> &&fac
     NodePtr prototype = (*factory)(false);
     auto outsockets = prototype->getOutSockets();
     auto insockets = prototype->getInSockets();
-    if(outsockets.size() == 1) {
-        auto p = [&outsockets](const DinSocket *socket) {
-            return outsockets[0]->getType() != socket->getType();
-        };
 
-        if (std::all_of(begin(insockets), end(insockets), p)) {
-            std::string type_string = outsockets[0]->getType().toStr();
-            if(s_converters.find(type_string) == end(s_converters)) {
-                s_converters[type_string] = std::vector<AbstractNodeDecorator*>();
-            }
-            if (std::none_of(begin(s_nonConverters),
-                               end(s_nonConverters),
-                             [&type_string](const std::string &s) { return s == type_string; }))
-                s_converters[type_string].push_back(factory.get());
+    //consider all nodes with at least one input and only one output to be
+    //converters
+    DoutSocket *out = outsockets[0];
+    if(outsockets.size() == 1
+       && std::none_of(begin(insockets),
+                       end(insockets),
+                       [out](const DinSocket *in) {
+                           return out->getType() == in->getType();
+                       })){
+        std::string type_string = outsockets[0]->getType().toStr();
+        if(s_converters.find(type_string) == end(s_converters)) {
+            s_converters[type_string] = std::vector<AbstractNodeDecorator*>();
         }
+        if (std::none_of(begin(s_nonConverters),
+                         end(s_nonConverters),
+                         [&type_string](const std::string &s) { return s == type_string; }))
+            s_converters[type_string].push_back(factory.get());
     }
 
     nodeFactories.push_back(std::move(factory));
@@ -100,9 +103,24 @@ NodePtr NodeDataBase::createNodeByType(const NodeType &t)
 
 std::vector<AbstractNodeDecorator*> NodeDataBase::getConverters(DataType t)
 {
+    auto type_string = t.toStr();
+
+    std::vector<AbstractNodeDecorator*> ret;
+
+    //look for LIST:VARIABLE also
+    if(type_string.find("LIST:") != std::string::npos
+       && type_string != "LIST:VARIABLE") {
+        auto p = s_converters.find("LIST:VARIABLE");
+        if(p != s_converters.end())
+            ret = p->second;
+    }
+        
     if(s_converters.find(t.toStr()) == end(s_converters))
-        return std::vector<AbstractNodeDecorator*>();
-    return s_converters[t.toStr()];
+        return ret;
+
+    auto converters = s_converters[t.toStr()];
+    ret.insert(ret.end(), converters.begin(), converters.end());
+    return ret;
 }
 
 std::vector<AbstractNodeDecorator*> NodeDataBase::getFactories()

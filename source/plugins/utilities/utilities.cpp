@@ -13,11 +13,17 @@ SwitchNode::SwitchNode(bool raw)
     setType("SWITCH");
     if(!raw) {
         auto sw = new DinSocket("switch", "INTEGER", this);
+        //inputs to be switched
+        auto *list = new DinSocket("inputs", "LIST:VARIABLE", this);
+
         auto out = new DoutSocket("output", "VARIABLE", this);
 
-        setDynamicSocketsNode(DSocket::IN);
-        getVarSocket()->listenToLinked();
-        out->listenToChange(getVarSocket());
+        out->setTypePropagationFunction([](SocketType t) {
+                return t.toStr().substr(5);
+        });
+
+        list->listenToLinked();
+        out->listenToTypeChange(list);
     }
 }
 
@@ -32,12 +38,10 @@ void regSwitchNode()
         const DNode *node = cache->getNode();
 
         int sw = cache->getData(0).getData<int>();
-
-        sw = std::min(sw, (int)node->getInSockets().size() - 2);
         sw = std::max(0, sw);
-        ++sw;
 
-        cache->pushData(cache->getData(sw));
+        auto list = cache->getData(1);
+        cache->pushData(Property::getItem(list, sw));
     };
 
     DataCache::addGenericProcessor(new GenericCacheProcessor("SWITCH", switchProc));

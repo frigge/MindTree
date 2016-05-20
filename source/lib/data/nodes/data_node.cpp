@@ -320,25 +320,44 @@ void DNode::decVarSocket(DSocket *socket)
     varcnt--;
 }
 
-void DNode::incVarSocket()
+bool DNode::incVarSocket()
 {
-    lastsocket = varsocket;
-    if(lastsocket->getDir() == DSocket::IN) {
-        if (std::any_of(inSockets.begin(),
+    if(varsocket->getDir() == DSocket::IN) {
+        if (std::all_of(inSockets.begin(),
                         inSockets.end(),
                         [](const auto *in) {
                             return in->toIn()->getCntdSocket();
-                        }))
-            varsocket = new DinSocket("+", "VARIABLE", this);
+                        })) {
+            createNewVarSocket_(DSocket::IN);
+            return true;
+        }
+        else {
+            return false;
+        }
     }
     else {
-        if (std::any_of(outSockets.begin(),
+        if (std::all_of(outSockets.begin(),
                         outSockets.end(),
                         [](const auto *out) {
                             return !out->toOut()->getCntdSockets().empty();
-                        }))
-            varsocket = new DoutSocket("+", "VARIABLE", this);
+                        })) {
+            createNewVarSocket_(DSocket::OUT);
+            return true;
+        }
+        else {
+            return false;
+        }
     }
+}
+
+void DNode::createNewVarSocket_(DSocket::SocketDir dir)
+{
+    lastsocket = varsocket;
+    if(dir == DSocket::IN)
+        varsocket = new DinSocket("+", "VARIABLE", this);
+    else
+        varsocket = new DoutSocket("+", "VARIABLE", this);
+
     varsocket->setVariable(true);
     varsocket->listenToLinked();
     varcnt++;

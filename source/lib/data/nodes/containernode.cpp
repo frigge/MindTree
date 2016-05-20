@@ -262,9 +262,11 @@ ContainerNode* SocketNode::getContainer() const
     return container;
 }
 
-void SocketNode::incVarSocket()
+bool SocketNode::incVarSocket()
 {
-    DNode::incVarSocket();
+    if(!DNode::incVarSocket())
+       return false;
+
 	DSocket *newsocket;
 	if(getLastSocket()->getDir() == DSocket::IN) {
 		newsocket = new DoutSocket(getLastSocket()->getName(), getLastSocket()->getType(), container);
@@ -274,6 +276,8 @@ void SocketNode::incVarSocket()
     }
     container->mapOnToIn(newsocket, getLastSocket());
     getVarSocket()->listenToLinkedType();
+
+    return true;
 }
 
 void SocketNode::decVarSocket(DSocket *socket)
@@ -380,10 +384,13 @@ DSocket *LoopSocketNode::getPartnerSocket(const DSocket *socket) const
         return nullptr;
 }
 
-void LoopSocketNode::incVarSocket()
+bool LoopSocketNode::incVarSocket()
 {
-    SocketNode::incVarSocket();
+    if(!SocketNode::incVarSocket())
+        return false;
+
     createPartnerSocket(getLastSocket());
+    return true;
 }
 
 LoopNode::LoopNode(std::string name, bool raw)
@@ -478,9 +485,10 @@ ForeachNode::ForeachNode(const ForeachNode& node)
 {
 }
 
-void ForeachNode::incVarSocket()
+bool ForeachNode::incVarSocket()
 {
-    DNode::incVarSocket();
+    if(!DNode::incVarSocket())
+       return false;
 
     auto nodes = getContainerData()->getNodes();
 
@@ -494,4 +502,6 @@ void ForeachNode::incVarSocket()
     else {
         new DoutSocket(getLastSocket()->getName(), t, nodes[0].get());
     }
+
+       return true;
 }

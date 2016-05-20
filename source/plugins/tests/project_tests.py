@@ -71,7 +71,7 @@ def testLoadProject():
 
     graphsize = len(node3.graph)
 
-    node9.insockets[4].value = True
+    node9.insockets[6].value = True
 
     node1.insockets[0].value = 5.7
     node2.insockets[0].value = 14
@@ -101,7 +101,7 @@ def testLoadProject():
     
     test = TestCase()
 
-    test.equal(len(MT.project.root), 4)
+    test.equal(len(MT.project.root), 4, "Project size")
     test.contains("Add", node.name)
     test.contains("Float Value", node1.name)
     test.contains("Int Value", node2.name)
@@ -123,10 +123,10 @@ def testLoadProject():
     test.contains("Color Value", node7.name)
     test.contains("Transform", node8.name)
     test.contains("Spot Light", node9.name)
-    test.equal(len(node8.insockets), 4)
+    test.equal(len(node8.insockets), 2, "number of insockets")
     test.equal(node2.insockets[0].value, 14)
     test.floatEqual(node1.insockets[0].value, 5.7, 0.00001)
-    test.equal(node9.insockets[3].value, False)
-    test.equal(node9.insockets[4].value, True)
-    test.equal(node9.insockets[5].value, 512)
+    test.equal(node9.insockets[5].value, False)
+    test.equal(node9.insockets[6].value, True)
+    test.equal(node9.insockets[7].value, 512)
     return test.exit()

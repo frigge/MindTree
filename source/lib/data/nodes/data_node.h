@@ -106,7 +106,7 @@ public:
     DSocket* getSocketByIDName(std::string idname);
     void removeSocket(DSocket *socket);
     virtual void decVarSocket(DSocket *socket);
-    virtual void incVarSocket();
+    virtual bool incVarSocket();
     void setDynamicSocketsNode(DSocket::SocketDir dir);
     void clearSocketLinks();
     bool isContainer() const;
@@ -147,6 +147,8 @@ protected:
     }
 
 private:
+    void createNewVarSocket_(DSocket::SocketDir dir);
+
     BuildInType _buildInType;
     static std::vector<std::function<NodePtr()>> newNodeDecorator;
 
