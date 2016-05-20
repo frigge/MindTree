@@ -576,10 +576,10 @@ bool DoutSocket::operator !=(DoutSocket &socket)const
 void DoutSocket::registerSocket(DinSocket *socket)
 {
     MT_CUSTOM_BOUND_SIGNAL_EMITTER(&_signalLiveTime, "outLinkChanged", socket);
+    pushSocket(socket);
+
     if(this == getNode()->getVarSocket())
         getNode()->incVarSocket();
-    
-    pushSocket(socket);
 }
 
 void DoutSocket::pushSocket(DinSocket *socket)

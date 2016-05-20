@@ -12,7 +12,8 @@ CreateListNode::CreateListNode(bool raw)
         auto *cnt = new DinSocket("Count", "INTEGER", this);
         cnt->setProperty(1);
 
-        auto *out = new DoutSocket("List", "VARIABLE", this);
+        auto *out = new DoutSocket("List", "LIST:VARIABLE", this);
+        initValue->listenToLinked();
         out->setTypePropagationFunction([](SocketType t) {
             return "LIST:" + t.toStr();
         });

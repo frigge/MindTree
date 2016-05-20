@@ -3,6 +3,7 @@
 #include "data/cache_main.h"
 #include "data/nodes/node_db.h"
 #include "data/nodes/containernode.h"
+#include "data/nodes/arraynode.h"
 #include "data/dnspace.h"
 #include "create_list_node.h"
 
@@ -233,6 +234,34 @@ void regCreateList()
                             }));
 }
 
+void regArrayNode()
+{
+    auto createArrayProc = [] (DataCache *cache) {
+        auto insockets = cache->getNode()->getInSockets();
+        int len = insockets.size() - 1;
+
+        auto proto = cache->getData(0);
+        auto list = proto.createList(len);
+
+        for(size_t i = 1; i < len; i++) {
+            auto prop = cache->getData(i);
+            Property::setItem(list, i, prop);
+        }
+
+        cache->pushData(list);
+    };
+
+    DataCache::addGenericProcessor(new GenericCacheProcessor("ARRAYNODE",
+                                                      createArrayProc));
+
+    NodeDataBase::registerNodeType(
+                    std::make_unique<BuildInDecorator>("ARRAYNODE",
+                                                       "General.Array",
+                            [] (bool raw) {
+                                return std::make_shared<ArrayNode>(raw);
+                            }));
+}
+
 BOOST_PYTHON_MODULE(basics)
 {
     regContainer();
@@ -240,4 +269,5 @@ BOOST_PYTHON_MODULE(basics)
     regWhileLoop();
     regForeachLoop();
     regCreateList();
+    regArrayNode();
 }

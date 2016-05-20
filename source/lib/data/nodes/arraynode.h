@@ -9,15 +9,8 @@ namespace MindTree {
 class ArrayNode : public DNode
 {
 public:
-    ArrayNode(bool raw);
-    void setType(SocketType t);
-    void addSocket(DSocket *socket);
-
-private:
-    SocketType type_;
-    Signal::CallbackVector callbacks_;
+    ArrayNode(bool raw=false);
 };
-
 }
 
 #endif //MT_ARRAYNODE_H

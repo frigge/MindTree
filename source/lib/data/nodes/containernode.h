@@ -59,7 +59,7 @@ public:
     SocketNode(DSocket::SocketDir dir, ContainerNode *contnode, bool raw=false);
     SocketNode(const SocketNode &node);
 
-    virtual void incVarSocket();
+    virtual bool incVarSocket();
     virtual void decVarSocket(DSocket *socket);
 
     ContainerNode *getContainer() const;
@@ -99,7 +99,7 @@ public:
     std::vector<DSocket*> getLoopedSockets() const;
     uint getLoopedSocketsCount() const;
 
-    virtual void incVarSocket();
+    virtual bool incVarSocket();
 
 private:
     std::unordered_map<DSocket*, DSocket*> loopSocketMap;
@@ -118,7 +118,7 @@ class ForeachNode : public LoopNode
 public:
     ForeachNode(bool raw=false);
     ForeachNode(const ForeachNode& node);
-    virtual void incVarSocket() override;
+    virtual bool incVarSocket() override;
 };
 
 class WhileNode : public LoopNode

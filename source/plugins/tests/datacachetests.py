@@ -79,6 +79,7 @@ def testForLoopCache():
     add = MT.createNode("Math.Add")
     loop.graph.addNode(add)
     test.equal(len(loop.graph[2].insockets), 0, "outsockets of loop container before (direct) connection")
+    test.equal(len(loop.graph[1].outsockets), 1, "looped insockets node has too many sockets")
     loopsocket = loop.graph[1].outsockets[0]
     add.insockets[0].connected = loopsocket
     test.equal(len(loop.graph[2].insockets), 1, "outsockets of loop container before (indirect) connection")

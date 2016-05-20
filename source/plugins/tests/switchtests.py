@@ -17,9 +17,21 @@ def testSwitchNode():
     MT.project.root.addNode(value3)
     MT.project.root.addNode(switch)
 
-    switch.insockets[1].connected = value1.outsockets[0]
-    switch.insockets[2].connected = value2.outsockets[0]
-    switch.insockets[3].connected = value3.outsockets[0]
+    #find array converter ... this is still kinda ugly
+    array = None
+    for child in switch.insockets[1].childNodes:
+        if child.name == "ArrayNode":
+            array = child
+            break
+
+    print(array.type)
+    print(dir(array))
+            
+    array.insockets[0].connected = value1.outsockets[0]
+    array.insockets[1].connected = value2.outsockets[0]
+    array.insockets[2].connected = value3.outsockets[0]
+
+    switch.insockets[1].connected = array.outsockets[0]
 
     test = TestCase()
 
