@@ -298,6 +298,27 @@ void objectProc(DataCache *cache)
     cache->pushData(obj);
 }
 
+void registerSkeleton()
+{
+    auto jointProc = [](DataCache *cache) {
+        auto trans = cache->getData(0).getData<glm::mat4>();
+        auto children = cache->getData(1).getData<std::vector<std::unique_ptr<Joint>>>();
+    };
+
+    auto skeletonProc = [] (DataCache *cache) {
+        auto skel = std::make_shared<Skeleton>();
+
+        auto trans = cache->getData(0).getData<glm::mat4>();
+        auto children = cache->getData(1).getData<GroupPtr>();
+        empty->setTransformation(trans);
+        if(children)
+            for (const auto &child : children->getMembers())
+                empty->addChild(child);
+
+        auto joints = cache->getData(2).getData<std::vector<std::unique_ptr<Joints>>>();
+    };
+}
+
 BOOST_PYTHON_MODULE(object){
     DataCache::addProcessor(new CacheProcessor("GROUPDATA", "GROUP", groupProc));
     DataCache::addProcessor(new CacheProcessor("MAT4", "TRANSFORM", transformProc));

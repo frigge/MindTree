@@ -10,5 +10,12 @@ class JointNodeDecorator(MT.pytypes.NodeDecorator):
 class SkeletonNodeDecorator(MT.pytypes.NodeDecorator):
     label = "Objects.Skeleton"
     type = "SKELETONNODE"
-    outsockets = [("Skeleton", "SKELETON")]
-    insockets  = [("RootJoint", "JOINT")]
+    outsockets = [("Skeleton", "TRANSFORMABLE")]
+    insockets  = [
+        ("Transform", "MAT4"),
+        ("Child(ren)", "GROUPDATA"),
+        ("RootJoint", "JOINT")
+    ]
+
+MT.registerNode(SkeletonNodeDecorator)
+MT.registerNode(JointNodeDecorator)
