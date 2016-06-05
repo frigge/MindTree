@@ -5,11 +5,11 @@
 using namespace MindTree;
 using namespace MindTree::GL;
 
-SkeletonRenderer::SkeletonRenderer(Skeleton *skel, ShapeRendererGroup *parent) :
+SkeletonRenderer::SkeletonRenderer(Joint *skel, ShapeRendererGroup *parent) :
     ShapeRendererGroup(parent), skeleton_(skel)
 {
-    std::stack<const Skeleton::Joint*> joints;
-    joints.push(skel->getRoot());
+    std::stack<const Joint*> joints;
+    joints.push(skel);
 
     while(!joints.empty()) {
         const auto *joint = joints.top();
