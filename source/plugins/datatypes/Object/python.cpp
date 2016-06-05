@@ -133,7 +133,7 @@ void emptyProc(MindTree::DataCache *cache)
     empty->setTransformation(trans);
     if(children)
         for (const auto &child : children->getMembers())
-            empty->addChild(child);
+            empty->addChild(child->clone());
     cache->pushData(empty);
 }
 
@@ -151,7 +151,7 @@ void cameraProc(MindTree::DataCache *cache)
     cam->setTransformation(trans);
     if(children)
         for (const auto &child : children->getMembers())
-            cam->addChild(child);
+            cam->addChild(child->clone());
 
     cam->setFov(fov);
     cam->setNear(near);
@@ -190,7 +190,7 @@ void regLightProcs()
         light->setTransformation(trans);
         if(children)
             for (const auto &child : children->getMembers())
-                light->addChild(child);
+                light->addChild(child->clone());
         cache->pushData(light);
     };
 
@@ -212,7 +212,7 @@ void regLightProcs()
         light->setTransformation(trans);
         if(children)
             for (const auto &child : children->getMembers())
-                light->addChild(child);
+                light->addChild(child->clone());
 
         Light::ShadowInfo info{shadowMapping, glm::ivec2(shadowSize)};
         info._near = near;
@@ -232,7 +232,7 @@ void regLightProcs()
         light->setTransformation(trans);
         if(children)
             for (const auto &child : children->getMembers())
-                light->addChild(child);
+                light->addChild(child->clone());
 
         cache->pushData(light);
     };
@@ -284,7 +284,7 @@ void objectProc(DataCache *cache)
     obj->setTransformation(trans);
     if(children)
         for (const auto &child : children->getMembers())
-            obj->addChild(child);
+            obj->addChild(child->clone());
 
     auto data = cache->getData(2).getData<ObjectDataPtr>();
     auto mat = cache->getData(3).getData<MaterialPtr>();
@@ -302,21 +302,21 @@ void registerSkeleton()
 {
     auto jointProc = [](DataCache *cache) {
         auto trans = cache->getData(0).getData<glm::mat4>();
-        auto children = cache->getData(1).getData<std::vector<std::unique_ptr<Joint>>>();
+        auto children = cache->getData(1).getData<std::vector<std::shared_ptr<Joint>>>();
+
+        auto joint = std::make_shared<Joint>();
+        joint->setTransformation(trans);
+
+        if(children)
+            for (const auto &child : children->getMembers()) {
+                empty->addChild(child->clone());
+            }
     };
 
     auto skeletonProc = [] (DataCache *cache) {
-        auto skel = std::make_shared<Skeleton>();
-
-        auto trans = cache->getData(0).getData<glm::mat4>();
-        auto children = cache->getData(1).getData<GroupPtr>();
-        empty->setTransformation(trans);
-        if(children)
-            for (const auto &child : children->getMembers())
-                empty->addChild(child);
-
-        auto joints = cache->getData(2).getData<std::vector<std::unique_ptr<Joints>>>();
     };
+
+    DataCache::addProcessor(new CacheProcessor("JOINT", "JOINTNODE", jointProc));
 }
 
 BOOST_PYTHON_MODULE(object){
@@ -338,4 +338,5 @@ BOOST_PYTHON_MODULE(object){
 
     regLightProcs();
     materialProcs();
+    registerSkeleton();
 }

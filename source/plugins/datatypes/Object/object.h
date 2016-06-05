@@ -47,7 +47,7 @@ class AbstractTransformable : public MindTree::Object
 {
 public:
     enum eObjType {
-        GEO, CAMERA, LIGHT, EMPTY, SKELETON
+        GEO, CAMERA, LIGHT, EMPTY, JOINT
     };
     AbstractTransformable(eObjType t);
     virtual ~AbstractTransformable();
@@ -94,6 +94,9 @@ private:
     eObjType type;
     glm::vec3 center;
     glm::mat4 transformation;
+
+    //cached for performance on deep hierarchies (skeletons)
+    glm::mat4 worldTransform_;
     std::mutex _transformationLock;
     std::mutex _centerLock;
 

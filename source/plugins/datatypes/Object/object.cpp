@@ -54,10 +54,11 @@ AbstractTransformable::AbstractTransformable(const AbstractTransformable &other)
     _parent(other._parent),
     center(other.center),
     transformation(other.transformation),
-    _name(other._name + "_clone"),
-    _children(other._children)
-
+    _name(other._name + "_clone")
 {
+    //deep copy children
+    for (const auto &child : other._children)
+        _children.push_back(child->clone());
 }
 
 AbstractTransformable::~AbstractTransformable()
