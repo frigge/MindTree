@@ -5,6 +5,8 @@
 #include "light_renderer.h"
 #include "camera_renderer.h"
 #include "empty_renderer.h"
+#include "skeleton_renderer.h"
+
 #include "render_setup.h"
 #include "rendertree.h"
 #include "benchmark.h"
@@ -111,6 +113,9 @@ void RenderBlock::addRendererFromTransformable(AbstractTransformablePtr transfor
         case AbstractTransformable::EMPTY:
             addRendererFromEmpty(std::dynamic_pointer_cast<Empty>(transformable));
             break;
+        case AbstractTransformable::JOINT:
+            addRendererFromJoint(std::dynamic_pointer_cast<Joint>(transformable));
+            break;
     }
     addRenderersFromGroup(transformable->getChildren());
 }
@@ -128,6 +133,10 @@ void RenderBlock::addRendererFromCamera(CameraPtr obj)
 }
 
 void RenderBlock::addRendererFromEmpty(EmptyPtr obj)
+{
+}
+
+void RenderBlock::addRendererFromJoint(JointPtr obj)
 {
 }
 
@@ -194,6 +203,9 @@ void GeometryRenderBlock::addRendererFromTransformable(AbstractTransformablePtr 
         case AbstractTransformable::EMPTY:
             addRendererFromEmpty(std::dynamic_pointer_cast<Empty>(transformable));
             break;
+        case AbstractTransformable::JOINT:
+            addRendererFromJoint(std::dynamic_pointer_cast<Joint>(transformable));
+            break;
     }
     addRenderersFromGroup(transformable->getChildren());
 }
@@ -238,6 +250,11 @@ void GeometryRenderBlock::addRendererFromCamera(CameraPtr obj)
 void GeometryRenderBlock::addRendererFromEmpty(EmptyPtr obj)
 {
     _geometryPass->addGeometryRenderer(new EmptyRenderer(obj));
+}
+
+void GeometryRenderBlock::addRendererFromJoint(JointPtr obj)
+{
+    _geometryPass->addGeometryRenderer(new SkeletonRenderer(obj));
 }
 
 RenderPass* GeometryRenderBlock::getGeometryPass() const

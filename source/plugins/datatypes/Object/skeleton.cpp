@@ -3,9 +3,16 @@
 
 using namespace MindTree;
 
+PROPERTY_TYPE_INFO(JointPtr, "TRANSFORMABLE");
+
 AbstractTransformablePtr Joint::clone() const
 {
     return std::make_shared<Joint>(*this);
+}
+
+Joint::Joint()
+    : AbstractTransformable(JOINT)
+{
 }
 
 Joint::Joint(glm::vec3 pos, glm::vec3 x)

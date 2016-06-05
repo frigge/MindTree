@@ -1,13 +1,13 @@
-#include "data/properties.h"
-#include "object.h"
-#include "lights.h"
-#include "data/cache_main.h"
-#include "glm/gtc/matrix_transform.hpp"
-#include "data/debuglog.h"
-
-#include "data/nodes/node_db.h"
-
 #include "../../3dwidgets/translate_widgets.h"
+#include "data/cache_main.h"
+#include "data/debuglog.h"
+#include "data/nodes/node_db.h"
+#include "data/properties.h"
+#include "glm/gtc/matrix_transform.hpp"
+#include "lights.h"
+#include "object.h"
+#include "skeleton.h"
+
 #include "python.h"
 
 using namespace MindTree;
@@ -307,16 +307,14 @@ void registerSkeleton()
         auto joint = std::make_shared<Joint>();
         joint->setTransformation(trans);
 
-        if(children)
-            for (const auto &child : children->getMembers()) {
-                empty->addChild(child->clone());
-            }
+        for (const auto &child : children) {
+            joint->addChild(child->clone());
+        }
+
+        cache->pushData(joint);
     };
 
-    auto skeletonProc = [] (DataCache *cache) {
-    };
-
-    DataCache::addProcessor(new CacheProcessor("JOINT", "JOINTNODE", jointProc));
+    DataCache::addProcessor(new CacheProcessor("TRANSFORMABLE", "JOINTNODE", jointProc));
 }
 
 BOOST_PYTHON_MODULE(object){

@@ -14,6 +14,7 @@ class Empty;
 class Group;
 
 namespace MindTree {
+class Joint;
 class Benchmark;
 namespace GL{
 
@@ -51,6 +52,8 @@ protected:
     virtual void addRendererFromLight(std::shared_ptr<Light> obj);
     virtual void addRendererFromCamera(std::shared_ptr<Camera> obj);
     virtual void addRendererFromEmpty(std::shared_ptr<Empty> obj);
+    virtual void addRendererFromJoint(std::shared_ptr<Joint> obj);
+
     void addOutput(Texture2D *output);
 
     RenderConfigurator *_config;
@@ -79,6 +82,7 @@ protected:
     virtual void addRendererFromLight(std::shared_ptr<Light> obj);
     virtual void addRendererFromCamera(std::shared_ptr<Camera> obj);
     virtual void addRendererFromEmpty(std::shared_ptr<Empty> obj);
+    virtual void addRendererFromJoint(std::shared_ptr<Joint> obj);
 
     RenderPass *_geometryPass;
 
