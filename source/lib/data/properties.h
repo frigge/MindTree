@@ -281,7 +281,10 @@ public:
     inline Property createList(size_t cnt)
     {
         if(isList()) return *this;
-        return traits_->createList(cnt, *this);
+        if(traits_)
+            return traits_->createList(cnt, *this);
+        else
+            return Property();
     }
 
 private:
