@@ -247,7 +247,7 @@ void AbstractTransformable::applyTransform(glm::mat4 &transform)
     transformation = transform * transformation;
 }
 
-glm::mat4 AbstractTransformable::getWorldTransformation()    
+glm::mat4 AbstractTransformable::getWorldTransformation() const
 {
     glm::mat4 trans;
     {

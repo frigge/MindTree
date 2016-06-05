@@ -63,7 +63,7 @@ public:
 
     glm::mat4 getTransformation();
     void setTransformation(glm::mat4 value);
-    glm::mat4 getWorldTransformation();
+    glm::mat4 getWorldTransformation() const;
     glm::vec3 getPosition();
     void setPosition(glm::vec3 pos);
     void setPosition(double x, double y, double z);
@@ -97,7 +97,7 @@ private:
 
     //cached for performance on deep hierarchies (skeletons)
     glm::mat4 worldTransform_;
-    std::mutex _transformationLock;
+    mutable std::mutex _transformationLock;
     std::mutex _centerLock;
 
     AbstractTransformable *_parent;
