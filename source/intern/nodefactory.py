@@ -4,7 +4,9 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 class CustomNodeWidget(QWidget):
-    def __init__(self, node, parent=None):
+    name = ""
+
+    def __init__(self, node, parent):
         QWidget.__init__(self, parent)
         self.node = node
         self.editor = parent

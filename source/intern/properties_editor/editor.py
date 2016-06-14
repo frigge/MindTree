@@ -233,19 +233,32 @@ class Vector3DEditor(QWidget):
         self.socket.value = (x, y, z)
 
 class Delegate(QItemDelegate):
-    def __init__(self, parent=None):
+    def __init__(self, editor, parent=None):
         super().__init__(parent)
         self.editors = {}
+        self.editor = editor
 
     def createEditor(self, parent, option, index):
         if index.column() == 0:
             return
 
-        socket = index.model().data(index, Qt.UserRole + 1)
-        if not socket.type in Editor.editors:
+        data = index.model().data(index, Qt.UserRole + 1)
+        widget = None
+        if type(data) is MT.pytypes.DNode:
+            type_ = data.type
+            customwidget = None;
+            if type_ in Editor.customWidgets:
+                customwidget = Editor.customWidgets[type_]
+                widget = customwidget(data, self.editor)
+                widget.setParent(parent)
+                widget.setFocusPolicy(Qt.StrongFocus)
+                self.editors[index] = widget
+                return widget
+        
+        if not data.type in Editor.editors:
             return
 
-        widget = Editor.editors[socket.type](socket)
+        widget = Editor.editors[data.type](data)
         widget.setParent(parent)
         widget.setFocusPolicy(Qt.StrongFocus)
         self.editors[index] = widget
@@ -276,7 +289,7 @@ class Editor(QWidget):
         self.model = QStandardItemModel(0, 2, parent);
         self.tree.setModel(self.model)
         self.model.setHorizontalHeaderLabels(["Name", "Value"])
-        self.tree.setItemDelegate(Delegate())
+        self.tree.setItemDelegate(Delegate(self))
 
         lay = QVBoxLayout()
         lay.setMargin(0)
@@ -346,6 +359,15 @@ class Editor(QWidget):
                     if socket.connected is not None and socket.connected.node == n:
                         self.tree.setExpanded(self.model.indexFromItem(nodeItem), True)
                     self.addItems(n, nodeItem)
+        if node.type in self.customWidgets:
+            customWidget = self.customWidgets[node.type]
+            name = QStandardItem(customWidget.name)
+            name.setData(node)
+            nodeitem = QStandardItem()
+            nodeitem.setData(node)
+            parent.appendRow([name, nodeitem])
+            index = self.model.indexFromItem(nodeitem)
+            self.tree.openPersistentEditor(index)
 
     def updateEditorLinks(self, socket):
         if self.node is not None:
@@ -357,14 +379,5 @@ class Editor(QWidget):
         self.model.setHorizontalHeaderLabels(["Name", "Value"])
         root = self.model.invisibleRootItem()
         self.addItems(node, root)
-
-        type_ = node.type
-        customwidget = None;
-        if type_ in Editor.customWidgets:
-            customwidget = Editor.customWidgets[type_]
-
-        if customwidget is not None and self.customWidget is None:
-            self.customWidget = customwidget(node, self)
-            self.layout().addWidget(self.customWidget)
 
 MT.gui.registerWindow("PropertiesEditor", Editor)

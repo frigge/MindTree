@@ -3,19 +3,23 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 class CustomWidget(MT.pytypes.CustomNodeWidget):
-    def __init__(self, node, parent=None):
+    name = "Add Property"
+    
+    def __init__(self, node, parent):
         MT.pytypes.CustomNodeWidget.__init__(self, node, parent)
 
-        self.setLayout(QFormLayout())
+        self.setLayout(QHBoxLayout())
 
-        self.name_edit = QLineEdit()
-        self.type_edit = QLineEdit()
+        self.name_edit = QLineEdit("Name")
+        self.type_edit = QLineEdit("Type")
 
         button = QPushButton("Add Property")
 
-        self.layout().addRow("Name: ", self.name_edit)
-        self.layout().addRow("Type: ", self.type_edit)
-        self.layout().addRow("", button)
+        self.layout().setMargin(0)
+        self.layout().setSpacing(0)
+        self.layout().addWidget(self.name_edit)
+        self.layout().addWidget(self.type_edit)
+        self.layout().addWidget(button)
 
         button.clicked.connect(self.addProperty)
 
