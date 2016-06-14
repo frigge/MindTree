@@ -393,6 +393,10 @@ DinSocket::~DinSocket()
 void DinSocket::addChildNode(NodePtr child)
 {
     DSocket::addChildNode(child);
+    for (auto *out : child->getOutSockets()) {
+        out->setType(getType());
+    }
+    
     for (auto *in : child->getInSockets()) {
         auto cb = Signal::getBoundHandler<DoutSocket*>(in)
             .connect("linkChanged", [this, child](DoutSocket *out) {
