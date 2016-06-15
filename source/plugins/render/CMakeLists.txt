@@ -3,6 +3,7 @@ set(RENDER_SRC
     benchmark.cpp
     camera_renderer.cpp
     compositor_plane.cpp
+    coordsystem_renderer.cpp
     deferred_renderer.cpp
     deferred_light_block.cpp
     screenspace_reflection.cpp
