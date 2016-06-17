@@ -54,7 +54,7 @@ AbstractTransformable::AbstractTransformable(const AbstractTransformable &other)
     _parent(other._parent),
     center(other.center),
     transformation(other.transformation),
-    _name(other._name + "_clone")
+    _name(other._name)
 {
     //deep copy children
     for (const auto &child : other._children)

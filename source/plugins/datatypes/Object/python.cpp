@@ -311,6 +311,7 @@ void registerSkeleton()
             joint->addChild(child->clone());
         }
 
+        joint->setName(cache->getNode()->getNodeName());
         cache->pushData(joint);
     };
 
