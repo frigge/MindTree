@@ -42,7 +42,8 @@ class LSystemNodeDecorator(MT.pytypes.NodeDecorator):
     insockets = [
         ("Axion", "STRING"),
         ("Rules", "LIST:STRING"),
-        ("Transformations", "LIST:TRANSFORMABLE")
+        ("Transformations", "LIST:TRANSFORMABLE"),
+        ("Iterations", "INTEGER")
     ]
     outsockets = [("Skeleton", "TRANSFORMABLE")]
     #customwidget = SyncInputsWidget

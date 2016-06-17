@@ -242,7 +242,7 @@ class NodeName(QGraphicsTextItem):
         if self.toPlainText() != "":
             text = str(self.toPlainText())
             self.parentItem().data.name = text
-            if len(self.data.outsockets) == 1:
+            if len(self.parentItem().data.outsockets) == 1:
                 self.data.outsockets.name = text
         else:
             self.setPlainText(sef.parentItem().data.name)

@@ -373,11 +373,13 @@ class Editor(QWidget):
         if self.node is not None:
             self.updateEditor(self.node)
 
-    def updateEditor(self, node):
-        self.node = node
+    def updateEditor(self, node=None):
+        if node is not None:
+            self.node = node
+
         self.model.clear()
         self.model.setHorizontalHeaderLabels(["Name", "Value"])
         root = self.model.invisibleRootItem()
-        self.addItems(node, root)
+        self.addItems(self.node, root)
 
 MT.gui.registerWindow("PropertiesEditor", Editor)
