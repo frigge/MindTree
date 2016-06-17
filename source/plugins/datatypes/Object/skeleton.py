@@ -5,6 +5,7 @@ class JointNodeDecorator(MT.pytypes.NodeDecorator):
     type = "JOINTNODE"
     outsockets = [("Joint", "TRANSFORMABLE")]
     insockets = [("Transformation", "MAT4"),
-                 ("Children", "LIST:TRANSFORMABLE")]
+                 ("Children", "LIST:TRANSFORMABLE"),
+                 ("Iterations", "INTEGER", 1)]
 
 MT.registerNode(JointNodeDecorator)
