@@ -13,7 +13,7 @@ void run(DataCache *cache)
 
     std::unordered_map<char, std::string> rules;
     for(auto rule : rawrules) {
-        rules[rule[0]] = rule.substr(1, std::string::npos);
+        rules[rule[0]] = rule.substr(2, std::string::npos);
     }
 
     std::string expanded = axiom;
@@ -36,13 +36,16 @@ void run(DataCache *cache)
 
     Joint *parent{nullptr};
     JointPtr j, root;
-    for (const char c : expanded) {
-        if(c == '{')
+    for (char c : expanded) {
+        if(c == '[') {
             parent = j.get();
-        else if(c == '}')
-            parent = dynamic_cast<Joint*>(j->getParent());
-        else if (joint_map.find(c) == joint_map.end())
+        }
+        else if(c == ']') {
+            if(j->getParent()) parent = static_cast<Joint*>(j->getParent());
+        }
+        else if (joint_map.find(c) == joint_map.end()) {
             continue;
+        }
         else {
             j = std::dynamic_pointer_cast<Joint>(joint_map[c]->clone());
             if(!root) {
