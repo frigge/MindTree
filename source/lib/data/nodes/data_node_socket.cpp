@@ -340,9 +340,15 @@ IO::OutStream& MindTree::operator<<(IO::OutStream &stream, const DinSocket &sock
     else
         cntdID = -1;
 
+
     stream << cntdID;
     auto prop = socket.getProperty();
     stream << prop;
+
+    stream << socket.getChildNodes().size();
+    for(const auto &child : socket.getChildNodes())
+        stream << *child;
+
     return stream;
 }
 
@@ -356,6 +362,21 @@ IO::InStream& MindTree::operator>>(IO::InStream& stream, DinSocket &socket)
     socket.prop = prop;
 
     socket.setTempCntdID(cntdID);
+
+    stream.beginBlock("ChildNodes");
+    int children;
+    stream >> children;
+    for(int i = 0; i < children; ++i) {
+        stream.beginBlock("DNode");
+        NodeType type;
+        stream >> type;
+        auto node = NodeDataBase::createNodeByType(type);
+        stream >> *node;
+        stream.endBlock("DNode");
+
+        socket.addChildNode(node);
+    }
+    stream.endBlock("ChildNodes");
 
     return stream;
 }

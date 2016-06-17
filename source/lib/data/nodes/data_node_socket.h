@@ -188,6 +188,7 @@ private:
     void createChildNodes();
 
     friend IO::InStream& operator>>(IO::InStream& stream, DinSocket &socket);
+    friend IO::InStream& operator<<(IO::InStream& stream, const DinSocket &socket);
 
     Signal::CallbackHandler _linkedNameChangeCallback;
     Signal::CallbackHandler _linkedTypeChangeCallback;
