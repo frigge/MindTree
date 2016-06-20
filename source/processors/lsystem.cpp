@@ -21,7 +21,7 @@ void run(DataCache *cache)
         std::string newexpanded;
         for (char c : expanded) {
             if (rules.find(c) != rules.end()) {
-                newexpanded += "[" + rules[c] + "]";
+                newexpanded += rules[c];
             }
             else {
                 newexpanded += c;
@@ -41,7 +41,7 @@ void run(DataCache *cache)
             parent = j.get();
         }
         else if(c == ']') {
-            if(j->getParent()) parent = static_cast<Joint*>(j->getParent());
+            if(parent->getParent()) parent = static_cast<Joint*>(parent->getParent());
         }
         else if (joint_map.find(c) == joint_map.end()) {
             continue;
