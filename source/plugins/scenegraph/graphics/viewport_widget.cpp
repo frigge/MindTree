@@ -71,6 +71,8 @@ void ViewportViewer::setupSettingsNode()
     s->setProperty(false);
     s = new DinSocket("showgrid", "BOOLEAN", node.get());
     s->setProperty(true);
+    s = new DinSocket("showcoordsystem", "BOOLEAN", node.get());
+    s->setProperty(true);
     s = new DinSocket("backgroundColor", "COLOR", node.get());
     float value = 70.0 / 255;
     s->setProperty(glm::vec4(value, value, value, 1.));

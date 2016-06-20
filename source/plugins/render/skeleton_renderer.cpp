@@ -8,8 +8,6 @@ using namespace MindTree::GL;
 SkeletonRenderer::SkeletonRenderer(JointPtr skel, ShapeRendererGroup *parent) :
     ShapeRendererGroup(parent), skeleton_(skel)
 {
-    auto *coord = new CoordSystemRenderer(this);
-    coord->setTransformation(skel->getWorldTransformation());
     if(skel->getParent() && skel->getParent()->getType() == AbstractTransformable::JOINT) {
         auto *line = new LineRenderer({skel->getParent()->getWorldTransformation()[3].xyz(),
                     skel->getWorldTransformation()[3].xyz()});
