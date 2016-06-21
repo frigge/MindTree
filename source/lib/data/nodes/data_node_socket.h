@@ -83,7 +83,7 @@ public:
         OUT = 1
     };
 
-	DSocket(std::string, SocketType, DNode *node);
+	DSocket(const std::string&, SocketType, DNode *node);
     DSocket(const DSocket& socket, DNode *node=0);
     virtual ~DSocket();
 
@@ -155,7 +155,7 @@ class DoutSocket;
 class DinSocket : public DSocket
 {
 public:
-    DinSocket(std::string, SocketType, DNode *node);
+    DinSocket(const std::string&, SocketType, DNode *node);
     DinSocket(const DinSocket& socket, DNode *node=0);
     virtual ~DinSocket();
 
@@ -205,7 +205,7 @@ private:
 class DoutSocket: public DSocket
 {
 public:
-	DoutSocket(std::string, SocketType, DNode *node);
+	DoutSocket(const std::string&, SocketType, DNode *node);
     DoutSocket(const DoutSocket& socket, DNode *node=0);
     virtual ~DoutSocket();
     bool operator==(DoutSocket &socket)const;

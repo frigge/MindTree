@@ -122,7 +122,7 @@ IO::InStream& MindTree::operator>>(IO::InStream& stream, DSocket &socket)
     return stream;
 }
 
-DSocket::DSocket(std::string name, SocketType type, DNode *node)
+DSocket::DSocket(const std::string &name, SocketType type, DNode *node)
 :   _signalLiveTime(this),
     name(name),
     type(type),
@@ -383,7 +383,7 @@ IO::InStream& MindTree::operator>>(IO::InStream& stream, DinSocket &socket)
     return stream;
 }
 
-DinSocket::DinSocket(std::string name, SocketType type, DNode *node)
+DinSocket::DinSocket(const std::string &name, SocketType type, DNode *node)
 :   DSocket(name, type, node),
     tempCntdID(0),
     cntdSocket(nullptr)
@@ -431,7 +431,8 @@ void DinSocket::addChildNode(NodePtr child)
 
 void DinSocket::createChildNodes()
 {
-    for (auto *factory : NodeDataBase::getConverters(getType())) {
+    auto factories = NodeDataBase::getConverters(getType());
+    for (auto *factory : factories) {
         addChildNode((*factory)(false));
     }
 }
@@ -571,7 +572,7 @@ DoutSocket* DinSocket::getCntdSocket() const
 	return cntdSocket;
 }
 
-DoutSocket::DoutSocket(std::string name, SocketType type, DNode *node)
+DoutSocket::DoutSocket(const std::string &name, SocketType type, DNode *node)
 	: DSocket(name, type, node)
 {
 	setDir(OUT);
