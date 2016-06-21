@@ -56,11 +56,18 @@ void NodeDataBase::setNotConvertible(std::string type)
 void NodeDataBase::registerNodeType(std::unique_ptr<AbstractNodeDecorator> &&factory)
 {
     NodePtr prototype = (*factory)(false);
+    if(!prototype)
+        return;
     auto outsockets = prototype->getOutSockets();
     auto insockets = prototype->getInSockets();
 
+    auto *fac = factory.get();
+    nodeFactories.push_back(std::move(factory));
+
     //consider all nodes with at least one input and only one output to be
     //converters
+    if(outsockets.empty() || insockets.empty()) return;
+
     DoutSocket *out = outsockets[0];
     if(outsockets.size() == 1
        && std::none_of(begin(insockets),
@@ -75,10 +82,8 @@ void NodeDataBase::registerNodeType(std::unique_ptr<AbstractNodeDecorator> &&fac
         if (std::none_of(begin(s_nonConverters),
                          end(s_nonConverters),
                          [&type_string](const std::string &s) { return s == type_string; }))
-            s_converters[type_string].push_back(factory.get());
+            s_converters[type_string].push_back(fac);
     }
-
-    nodeFactories.push_back(std::move(factory));
 }
 
 NodePtr NodeDataBase::createNode(std::string name)
