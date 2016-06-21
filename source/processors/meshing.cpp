@@ -23,8 +23,12 @@ std::shared_ptr<MeshData> meshJoint(JointPtr joint, MeshData *parent=nullptr)
         }
         if (parent) {
             auto pverts = parent->getProperty("P").getData<std::shared_ptr<VertexList>>();
-            auto offset = verts->size();
+            auto offset = pverts->size();
             pverts->insert(pverts->end(), verts->begin(), verts->end());
+            //move lower 3 vertices to upper parent positions
+            (*pverts)[offset + 3] = (*pverts)[offset - 6];
+            (*pverts)[offset + 4] = (*pverts)[offset - 5];
+            (*pverts)[offset + 5] = (*pverts)[offset - 4];
 
             auto ppolys = parent->getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
             auto polys = cylinder->getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
@@ -38,7 +42,8 @@ std::shared_ptr<MeshData> meshJoint(JointPtr joint, MeshData *parent=nullptr)
 
     for(auto j : joint->getChildren()) {
         if (j->getType() == AbstractTransformable::JOINT)
-            meshJoint(std::static_pointer_cast<Joint>(j), parent);
+            meshJoint(std::static_pointer_cast<Joint>(j),
+                      parent ? parent : cylinder.get());
     }
 
     return cylinder;
