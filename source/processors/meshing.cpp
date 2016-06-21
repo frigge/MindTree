@@ -12,9 +12,9 @@ std::shared_ptr<MeshData> meshJoint(JointPtr joint, MeshData *parent=nullptr)
     auto trans = joint->getTransformation();
 
     std::shared_ptr<MeshData> cylinder;
-    //if no translation, skip
-    if(trans[4] == glm::vec4(0, 0, 0, 1)
-       && joint->getParent()) {
+    //if no translation, skip, except for root
+    if(trans[3] != glm::vec4(0, 0, 0, 1)
+       || !joint->getParent()) {
         auto worldTrans = joint->getWorldTransformation();
         cylinder = createCylinder(3, false);
         auto verts = cylinder->getProperty("P").getData<std::shared_ptr<VertexList>>();
