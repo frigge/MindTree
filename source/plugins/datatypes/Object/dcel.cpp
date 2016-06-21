@@ -310,6 +310,34 @@ void HalfEdgeAdapter::connect(HalfEdgeVertex *v1, HalfEdgeVertex *v2)
         e->setIncidentFace(face);
 }
 
+std::shared_ptr<MeshData> HalfEdgeAdapter::getMesh()
+{
+    //update polygons
+    std::shared_ptr<PolygonList> polygons;
+    if(!m_mesh->hasProperty("polygon")) {
+        polygons = std::make_shared<PolygonList>();
+        m_mesh->setProperty("polygon", polygons);
+    }
+    else {
+        polygons = m_mesh->getProperty("polygons")
+            .getData<std::shared_ptr<PolygonList>>();
+        polygons->clear();
+    }
+
+    for(const auto &face : m_faces) {
+        auto *start = face->outerBoundary();
+        auto *e = start;
+        Polygon p;
+        do {
+            p.push_back(e->origin()->index());
+        } while ((e = e->next()) != start);
+        polygons->push_back(p);
+    }
+    m_mesh->computeVertexNormals();
+
+    return m_mesh;
+}
+
 void HalfEdgeAdapter::remove(HalfEdge *edge)
 {
 }

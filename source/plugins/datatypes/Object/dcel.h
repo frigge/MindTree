@@ -76,6 +76,8 @@ public:
     void remove(HalfEdge *edge);
     void collapse(HalfEdge *edge);
 
+    std::shared_ptr<MeshData> getMesh();
+
 private:
     HalfEdge* newEdge();
     HalfEdgeVertex * newVertex();
