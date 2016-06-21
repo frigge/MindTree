@@ -35,6 +35,10 @@ OutStream::~OutStream()
 
 void OutStream::beginBlock(std::string blockName)
 {
+#ifdef DEBUG_IO
+    std::string indent(_blockStack.size() * 2, ' ');
+    std::cout << indent << "begin block: " << blockName << std::endl;
+#endif
     _blockStack.push(std::vector<char>());
     *this << std::string("BLOCK:") + blockName;
 }
@@ -52,6 +56,12 @@ void OutStream::endBlock(std::string blockName)
     currentBlock.insert(begin(currentBlock), begin(sizeVec), end(sizeVec));
 
     _blockStack.pop();
+
+#ifdef DEBUG_IO
+    std::string indent(_blockStack.size() * 2, ' ');
+    std::cout << indent << "end block: " << blockName << "\n"
+              << indent << "block size: " << currentBlock.size() << std::endl;
+#endif
     
     if(!_blockStack.empty()) {
         write(currentBlock.data(), currentBlock.size());
@@ -215,13 +225,23 @@ InStream::InStream(std::string filename)
 
 void InStream::beginBlock(std::string blockName)
 {
-#ifdef DEBUG_IO
-    dbout("reading block: " << blockName);
-#endif
     _blocks.push(BlockInfo());
     auto &info = _blocks.top();
     _stream.read(reinterpret_cast<char*>(&info.size), sizeof(info.size));
     info.pos += 4;
+
+#ifdef DEBUG_IO
+    std::string indent(_blocks.size() * 2, ' ');
+    std::cout << indent << "reading block: " << blockName << " size: " << info.size << std::endl;
+#endif
+
+    if(info.size < 4) {
+        std::cerr
+#ifdef DEBUG_IO
+            << indent
+#endif
+            << "ERROR: corrupt block, skipping over" << std::endl;
+    }
 
     *this >> info.name;
 
@@ -232,10 +252,11 @@ void InStream::beginBlock(std::string blockName)
 
 void InStream::endBlock(std::string blockName)
 {
-#ifdef DEBUG_IO
-    dbout("end block: " << blockName);
-#endif
     BlockInfo currentBlock = _blocks.top();
+#ifdef DEBUG_IO
+    std::string indent(_blocks.size() * 2, ' ');
+    std::cout << indent << "end block: " << blockName << std::endl;
+#endif
     int32_t remaining_bytes = currentBlock.size - currentBlock.pos;
 
     auto block = std::vector<char>(remaining_bytes);
@@ -344,9 +365,10 @@ InStream& InStream::operator>>(std::string &str)
         read(&ch, 1);
     }
 
-#ifdef DEBUG_IO
-    dbout("read string: " << str);
-#endif
+    //#ifdef DEBUG_IO
+    //    std::string indent(_blocks.size() * 2, ' ');
+    //    std::cout << indent << "string: " << str << std::endl;
+    //#endif
     return *this;
 }
 
@@ -438,11 +460,6 @@ InStream& InStream::operator>>(DNode &node)
         beginBlock("DinSocket");
         auto *socket = new DinSocket("", "", &node);
         *this >> *socket;
-#ifdef DEBUG_IO
-        dbout("socket loaded:");
-        dbout("\tname: " << socket->getName());
-        dbout("\ttype: " << socket->getType().toStr());
-#endif
         endBlock("DinSocket");
     }
 

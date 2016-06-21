@@ -10,6 +10,11 @@ class CoordSystemRenderer : public ShapeRendererGroup
 {
  public:
     CoordSystemRenderer(ShapeRendererGroup *parent=nullptr);
+
+ protected:
+    void draw(const CameraPtr &camera,
+              const RenderConfig &config,
+              ShaderProgram* program) override;
 };
 
 }

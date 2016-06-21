@@ -29,19 +29,6 @@ DNSpace* Project::fromFile(std::string filename)
     IO::InStream stream(filename);
     auto space = new DNSpace();
     stream >> *space;
-    //QFile file(filename);
-    //file.open(QIODevice::ReadOnly);
-    //QDataStream stream(&file);
-
-    //FRG_PROJECT_HEADER_CHECK
-    //{
-    //    stream>>&space;
-    //    file.close();
-    //    LoadNodeIDMapper::clear();
-    //    LoadSocketIDMapper::remap();
-    //}
-    //else
-    //    space = new DNSpace;
     LoadSocketIDMapper::remap();
     return space;
 }

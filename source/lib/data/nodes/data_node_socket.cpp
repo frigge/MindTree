@@ -345,9 +345,11 @@ IO::OutStream& MindTree::operator<<(IO::OutStream &stream, const DinSocket &sock
     auto prop = socket.getProperty();
     stream << prop;
 
+    stream.beginBlock("ChildNodes");
     stream << socket.getChildNodes().size();
     for(const auto &child : socket.getChildNodes())
         stream << *child;
+    stream.endBlock("ChildNodes");
 
     return stream;
 }

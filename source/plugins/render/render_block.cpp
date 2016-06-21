@@ -4,6 +4,7 @@
 #include "renderpass.h"
 #include "light_renderer.h"
 #include "camera_renderer.h"
+#include "coordsystem_renderer.h"
 #include "empty_renderer.h"
 #include "skeleton_renderer.h"
 
@@ -190,6 +191,9 @@ void GeometryRenderBlock::addRenderersFromGroup(std::vector<std::shared_ptr<Abst
 void GeometryRenderBlock::addRendererFromTransformable(AbstractTransformablePtr transformable)
 {
     assert(transformable);
+    //auto coord = new CoordSystemRenderer();
+    //coord->setTransformation(transformable->getWorldTransformation());
+    //_geometryPass->addGeometryRenderer(coord);
     switch(transformable->getType()) {
         case AbstractTransformable::GEO:
             addRendererFromObject(std::dynamic_pointer_cast<GeoObject>(transformable));
