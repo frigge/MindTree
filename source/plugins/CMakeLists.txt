@@ -1,4 +1,4 @@
-add_subdirectory(3dprimitives)
+add_subdirectory(primitives3d)
 add_subdirectory(3dwidgets)
 add_subdirectory(datatypes)
 add_subdirectory(mathnodes)

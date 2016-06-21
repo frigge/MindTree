@@ -33,6 +33,13 @@ class PrimitiveNodeDecoratorBase(MT.pytypes.NodeDecorator):
         node.graph[3].pos = (70, 80)
         node.graph[1].pos = (70, 160)
 
+class CylinderDataNodeDecorator(MT.pytypes.NodeDecorator):
+    type="CYLINDER"
+    label="Objects.Data.Cylinder"
+    insockets = [ ("Sides", "INTEGER", 3),
+                  ("Cap Ends", "BOOLEAN", False)]
+    outsockets = [("Cylinder", "OBJECTDATA")]
+
 class CubeDataNodeDecorator(MT.pytypes.NodeDecorator):
     type="CUBE"
     label="Objects.Data.Cube"
@@ -63,9 +70,30 @@ class IcosphereNodeDecorator(PrimitiveNodeDecoratorBase):
     label="Objects.Primitives.Icosphere"
     datanode = "Objects.Data.Icosphere"
 
+class CylinderNodeDecorator(PrimitiveNodeDecoratorBase):
+    label="Objects.Primitives.Cylinder"
+    datanode = "Objects.Data.Cylinder"
+
+class MeshDataNodeDecorator(MT.pytypes.NodeDecorator):
+    type="MESHING"
+    label="Objects.Data.Mesh"
+    insockets = [ ("Skeleton", "TRANSFORMABLE"),
+                  ("Merge Joints", "BOOLEAN", False)]
+    outsockets = [("Cylinder", "OBJECTDATA")]
+
+class MeshNodeDecorator(PrimitiveNodeDecoratorBase):
+    label="Objects.Primitives.Mesh"
+    datanode = "Objects.Data.Mesh"
+
+MT.registerNode(MeshDataNodeDecorator)
+
 MT.registerNode(CubeDataNodeDecorator)
 MT.registerNode(PlaneDataNodeDecorator)
+MT.registerNode(CylinderDataNodeDecorator)
 MT.registerNode(CubeNodeDecorator)
 MT.registerNode(PlaneNodeDecorator)
 MT.registerNode(IcosphereDataNodeDecorator)
 MT.registerNode(IcosphereNodeDecorator)
+MT.registerNode(CylinderNodeDecorator)
+
+MT.registerNode(MeshNodeDecorator)

@@ -67,7 +67,7 @@ ConverterFunctor PropertyConverter::get(DataType from, DataType to)
 
 Property::Property()
     : data_(nullptr),
-     type_("undefined")
+     type_("property_undefined")
      /* default fn objects to avoid std::bad_function_call*/
      //by default reset property value as this property is empty as well
 {
@@ -75,7 +75,7 @@ Property::Property()
 
 Property::Property(const Property &other) noexcept
     : data_(nullptr),
-    type_("undefined")
+    type_("property_undefined")
 {
     if(!other.traits_) return;
     other.traits_->cloneData(*this);

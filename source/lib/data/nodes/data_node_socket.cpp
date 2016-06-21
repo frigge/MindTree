@@ -447,7 +447,10 @@ void DinSocket::setProperty(Property property)
         std::lock_guard<std::mutex> lock(_propLock);
         prop = property;
     }
-    setType(prop.getType());
+
+    if(prop) {
+        setType(prop.getType());
+    }
     MT_CUSTOM_SIGNAL_EMITTER("socketChanged", this);
 }
 

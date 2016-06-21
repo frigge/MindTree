@@ -47,7 +47,6 @@ public:
         return _type;
     }
 
-
 private:
     static const DataType _type;
 };

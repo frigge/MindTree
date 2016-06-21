@@ -32,6 +32,6 @@ target_link_libraries(prim3d
 )
 
 
-install(TARGETS prim3d LIBRARY DESTINATION ${PROJECT_ROOT}/plugins/3dprimitives/)
+install(TARGETS prim3d LIBRARY DESTINATION ${PROJECT_ROOT}/plugins/primitives3d/)
 
 

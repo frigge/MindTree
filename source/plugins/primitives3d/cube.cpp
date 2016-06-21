@@ -4,11 +4,7 @@ using namespace glm;
 
 std::shared_ptr<ObjectData> prim3d::createCubeMesh(float scale)
 {
-    auto obj = std::make_shared<GeoObject>();
-    obj->setName("Cube");
-
     auto mesh = std::make_shared<MeshData>();
-    obj->setData(mesh);
 
     auto vertices = std::make_shared<VertexList>();
 

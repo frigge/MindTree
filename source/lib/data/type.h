@@ -67,7 +67,7 @@ template<typename T>
 class Type : public TypeBase
 {
 public:
-    Type(const std::string &typeStr="undefined")
+    Type(const std::string &typeStr="type_undefined")
         : TypeBase(typeStr, getID(typeStr))
     { }
 
