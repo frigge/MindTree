@@ -23,8 +23,6 @@ void MindTree::Python::sys::wrap()
 
     BPy::def("attachToSignal", MindTree::Python::sys::attachToSignal);
     BPy::def("attachToBoundSignal", MindTree::Python::sys::attachToBoundSignal);
-    BPy::def("getNodeTypes", MindTree::Python::sys::getNodeTypes);
-    BPy::def("getSocketTypes", MindTree::Python::sys::getSocketTypes);
     BPy::def("openProject", MindTree::Python::sys::open);
     BPy::def("newProject", MindTree::Python::sys::newProject);
 
@@ -103,12 +101,12 @@ MindTree::Signal::CallbackHandler MindTree::Python::sys::attachToBoundSignal(BPy
 
 std::vector<std::string> MindTree::Python::sys::getNodeTypes()    
 {
-    return NodeType::getTypes();
+    return std::vector<std::string>();
 }
 
 std::vector<std::string> MindTree::Python::sys::getSocketTypes()    
 {
-    return SocketType::getTypes();
+    return std::vector<std::string>();
 }
 
 std::string MindTree::Python::sys::__str__StringVector(std::vector<std::string> &self)    

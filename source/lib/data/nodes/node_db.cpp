@@ -10,7 +10,6 @@ std::vector<std::string> NodeDataBase::s_nonConverters{"VARIABLE", "FLOAT", "INT
 AbstractNodeDecorator::AbstractNodeDecorator(std::string type, std::string label)
     : type(type), label(label)
 {
-    NodeType::registerType(type);
 }
 
 void AbstractNodeDecorator::setLabel(std::string l)

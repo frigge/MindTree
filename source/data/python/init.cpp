@@ -56,8 +56,6 @@ BOOST_PYTHON_MODULE(MT){
     BPy::object main = BPy::import("__main__");
     BPy::object global = main.attr("__dict__");
 
-    BPy::def("unregisterNodeType", NodeType::unregisterType);
-
     MindTree::Python::wrapViewerFunctions();
 #ifdef QT_DEBUG
     BPy::def("getStylePath", PyWrapper::getStylePath);
