@@ -10,4 +10,14 @@ class CreatePCInPlane(MT.pytypes.NodeDecorator):
     type = "CREATEPCPLANE"
     label = "Objects.Create Pointcloud in Plane"
 
+class ScatterPointsOnSurface(MT.pytypes.NodeDecorator):
+    type = "SCATTERSURFACE"
+    label = "Objects.Scatter Surface"
+    insockets = [
+        ("Object", "TRANSFORMABLE"),
+        ("count", "INTEGER", 100)
+    ]
+    outsockets = [ ("Pointcloud", "TRANSFORMABLE") ]
+
 MT.registerNode(CreatePCInPlane)
+MT.registerNode(ScatterPointsOnSurface)

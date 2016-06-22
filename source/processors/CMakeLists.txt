@@ -24,8 +24,12 @@ target_link_libraries(meshing mindtree_core objectlib)
 add_library(lsystem MODULE lsystem.cpp)
 target_link_libraries(lsystem mindtree_core objectlib)
 
+add_library(scattersurface MODULE scattersurface.cpp)
+target_link_libraries(scattersurface mindtree_core objectlib)
+
 install(TARGETS pointcloud LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS icosphere LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS cylinder LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS lsystem LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS meshing LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
+install(TARGETS scattersurface LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
