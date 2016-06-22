@@ -76,6 +76,9 @@ private:
     static std::thread m_watchThread;
     static std::unordered_map<std::string, HotProcessor> m_processors;
     static std::atomic<bool> m_watching;
+    static std::condition_variable m_initCondition;
+    static std::mutex m_initMutex;
+    static std::atomic<bool> m_init;
 };
 
 }

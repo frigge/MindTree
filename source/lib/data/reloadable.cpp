@@ -130,6 +130,9 @@ int64_t HotProcessor::age() const
 std::thread HotProcessorManager::m_watchThread;
 std::unordered_map<std::string, HotProcessor> HotProcessorManager::m_processors;
 std::atomic<bool> HotProcessorManager::m_watching{false};
+std::atomic<bool> HotProcessorManager::m_init{false};
+std::mutex HotProcessorManager::m_initMutex;
+std::condition_variable HotProcessorManager::m_initCondition;
 
 void HotProcessorManager::watch()
 {
@@ -154,6 +157,10 @@ void HotProcessorManager::watch()
                 m_processors.emplace(std::make_pair(fp, HotProcessor(fp, age)));
             }
         }
+        if(!m_init) {
+            m_init = true;
+            m_initCondition.notify_all();
+        }
 
         std::this_thread::sleep_for(std::chrono::seconds(2));
     }
@@ -165,6 +172,11 @@ void HotProcessorManager::start()
 
     m_watching = true;
     m_watchThread = std::thread(watch);
+
+    if(!m_init) {
+        std::unique_lock<std::mutex> lock(m_initMutex);
+        m_initCondition.wait(lock);
+    }
 }
 
 void HotProcessorManager::stop()
