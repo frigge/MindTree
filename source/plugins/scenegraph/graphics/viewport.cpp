@@ -71,6 +71,7 @@ Viewport::Viewport(ViewportWidget *widget) :
 
     setMouseTracking(true);
     doneCurrent();
+    _renderConfigurator->startRendering();
 }
 
 Viewport::~Viewport()

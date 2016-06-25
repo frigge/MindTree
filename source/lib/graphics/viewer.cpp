@@ -59,22 +59,20 @@ void WorkerThread::start()
 
     auto updateFunc = []{
         WorkerThread::_running = true;
-        size_t i = 0;
         while(WorkerThread::needToUpdate()) {
             std::unique_lock<std::mutex> lock(_updateMutex);
             _needToUpdateCondition.wait(lock);
 
-            std::weak_ptr<UpdateInfo> info = _updateQueue[i];
-            if(!info.expired()) {
-                auto ptr = info.lock();
-                if(!ptr->_update) continue;
+            for(auto &info : _updateQueue) {
+                if(!info.expired()) {
+                    auto ptr = info.lock();
+                    if(!ptr->_update) continue;
 
-                if(ptr->_node) DataCache::invalidate(ptr->_node);
-                ptr->_viewer->cacheAndUpdate();
-                ptr->_update = false;
+                    if(ptr->_node) DataCache::invalidate(ptr->_node);
+                    ptr->_viewer->cacheAndUpdate();
+                    ptr->_update = false;
+                }
             }
-            ++i;
-            i = i % _updateQueue.size();
         }
         WorkerThread::_running = false;
     };
@@ -131,6 +129,7 @@ void Viewer::initBase()
 {
     init();
     WorkerThread::notifyUpdate(_updateInfo);
+    update_viewer(static_cast<DinSocket*>(nullptr));
 }
 
 void Viewer::update_viewer(DNode *node)
@@ -217,7 +216,6 @@ void Viewer::setWidget(QWidget* value)
 {
     widget = value;
     if(!widget) std::cout<<"no valid viewer widget" << std::endl;
-    update_viewer(static_cast<DinSocket*>(nullptr));
 }
 
 void Viewer::cacheAndUpdate()
