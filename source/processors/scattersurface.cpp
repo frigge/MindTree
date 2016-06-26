@@ -26,18 +26,18 @@ void scattersurface(DataCache* cache)
     auto verts = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
 
     float area{0};
-    std::vector<float> poly_area(polys->size());
     for (const auto &poly : *polys) {
         int first = poly[0];
         auto v0 = (*verts)[first];
         float a{0};
         for(int i = 1; i < poly.size() - 1; ++i) {
-            auto v1 = (*verts)[i];
-            auto v2 = (*verts)[(i + 1)];
+            auto v1 = (*verts)[poly[i]];
+            auto v2 = (*verts)[poly[i + 1]];
 
-            a += glm::distance(v0, v1) * glm::distance(v0, v2);
+            auto e1 = v1 - v0;
+            auto e2 = v2 - v0;
+            a += glm::length(glm::cross(e1, e2)) * 0.5;
         }
-        poly_area.push_back(a);
         area += a;
     }
 
@@ -52,14 +52,17 @@ void scattersurface(DataCache* cache)
         int first = poly[0];
         auto v0 = (*verts)[first];
         for(int i = 1; i < poly.size() - 1; ++i) {
-            auto v1 = (*verts)[i];
-            auto v2 = (*verts)[(i + 1)];
+            auto v1 = (*verts)[poly[i]];
+            auto v2 = (*verts)[poly[i + 1]];
 
             auto e1 = v1 - v0;
             auto e2 = v2 - v0;
-            float a = glm::length(e1) * glm::length(e2);
+            float a = glm::length(glm::cross(e1, e2)) * 0.5;
 
             for(int n = 0; n < (count * (a / area)); ++n) {
+                if(points->size() == count)
+                    break;
+
                 glm::vec2 uv(dist(g), dist(g));
                 if (uv.x + uv.y > 1)
                     uv = glm::vec2(1) - uv;
