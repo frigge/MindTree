@@ -58,7 +58,8 @@ void ShadowMappingRenderBlock::addRendererFromObject(std::shared_ptr<GeoObject> 
     auto data = obj->getData();
     switch(data->getType()){
         case ObjectData::MESH:
-            _shadowNode->addRenderer(new PolygonRenderer(obj));
+            if(data->hasProperty("polygon"))
+               _shadowNode->addRenderer(new PolygonRenderer(obj));
             break;
         case ObjectData::POINTCLOUD:
             break;

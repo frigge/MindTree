@@ -219,8 +219,10 @@ void GeometryRenderBlock::addRendererFromObject(GeoObjectPtr obj)
     auto data = obj->getData();
     switch(data->getType()){
         case ObjectData::MESH:
-            _geometryPass->addGeometryRenderer(new PolygonRenderer(obj));
-            _geometryPass->addGeometryRenderer(new EdgeRenderer(obj));
+            if(obj->getData()->hasProperty("polygon")) {
+                _geometryPass->addGeometryRenderer(new PolygonRenderer(obj));
+                _geometryPass->addGeometryRenderer(new EdgeRenderer(obj));
+            }
             _geometryPass->addGeometryRenderer(new PointRenderer(obj));
             break;
         case ObjectData::POINTCLOUD:
