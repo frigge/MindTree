@@ -84,6 +84,8 @@ void GBufferRenderBlock::setupGBuffer()
         ->addShaderFromFile("../plugins/render/defaultShaders/gbuffer.frag",
                             ShaderProgram::FRAGMENT);
     auto gbufferNode = std::make_shared<ShaderRenderNode>(gbufferShader);
+    gbufferNode->setPersistend(true);
+
     _gbufferNode = gbufferNode;
 
     _geometryPass->addGeometryShaderNode(gbufferNode);

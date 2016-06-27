@@ -557,7 +557,8 @@ void RenderPass::clearUnusedShaderNodes()
     //find out which shaders are still unused
     std::vector<std::shared_ptr<ShaderRenderNode>> obsolete;
     for (auto node : _geometryShaderNodes) {
-        if(node->renders().empty())
+        if(node->renders().empty()
+           &&!node->isPersistend())
             obsolete.push_back(node);
     }
 

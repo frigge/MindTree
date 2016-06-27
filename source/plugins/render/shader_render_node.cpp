@@ -8,6 +8,7 @@ using namespace MindTree::GL;
 
 ShaderRenderNode::ShaderRenderNode(ShaderProgram *program) :
     _program(program),
+    _persistend(false),
     _initialized(false),
     _resourceManager(nullptr)
 {
@@ -18,6 +19,16 @@ void ShaderRenderNode::setResourceManager(ResourceManager *manager)
 {
     assert(manager != nullptr);
     _resourceManager = manager;
+}
+
+void ShaderRenderNode::setPersistend(bool pers)
+{
+    _persistend = pers;
+}
+
+bool ShaderRenderNode::isPersistend() const
+{
+    return _persistend;
 }
 
 void ShaderRenderNode::init()

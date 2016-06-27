@@ -27,6 +27,8 @@ public:
     ShaderProgram* program();
     std::vector<Renderer*> renders();
     void setResourceManager(ResourceManager *manager);
+    void setPersistend(bool pers);
+    bool isPersistend() const;
     void clear();
 
 private:
@@ -38,6 +40,7 @@ private:
     ShaderProgram *_program;
     std::vector<std::unique_ptr<Renderer>> _renders;
     std::mutex _rendersLock;
+    bool _persistend;
 
     std::atomic<bool> _initialized;
 };
