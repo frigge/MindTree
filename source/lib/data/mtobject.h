@@ -16,13 +16,14 @@ public:
     Object& operator=(const Object &other);
     Object& operator=(const Object &&other);
 
-    Property getProperty(std::string name)const;
-    Property operator[](std::string name) const;
+    const Property& getProperty(const std::string &name) const;
+    Property& getProperty(const std::string &name);
+    Property operator[](const std::string &name) const;
 
     PropertyMap getProperties()const;
-    virtual void setProperty(std::string, Property value);
-    void rmProperty(std::string name);
-    bool hasProperty(std::string name) const;
+    virtual void setProperty(const std::string&, const Property &value);
+    void rmProperty(const std::string &name);
+    bool hasProperty(const std::string &name) const;
 
 private:
     PropertyMap _properties;
