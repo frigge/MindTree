@@ -1,5 +1,6 @@
 #include "mindtree_core.h"
 #include "../datatypes/Object/object.h"
+#include "../datatypes/Object/dcel.h"
 #include "data/cache_main.h"
 #include "data/raytracing/ray.h"
 #include "data/io.h"
@@ -184,6 +185,48 @@ bool testCreateList()
     return true;
 }
 
+bool testDCEL()
+{
+    double pi = std::acos(-1);
+    auto mesh = std::make_shared<MeshData>();
+    auto points = std::make_shared<VertexList>();
+    auto polys = std::make_shared<PolygonList>();
+    mesh->setProperty("P", points);
+    mesh->setProperty("polygon", polys);
+
+    dcel::Adapter dcel_data(mesh);
+
+    //center vertex
+    auto *center = dcel_data.newVertex();
+
+    dcel::Vertex *lastVert = nullptr;
+    //create simple disk shape
+    for(int i = 0; i < 32; ++i) {
+        auto *vert = dcel_data.newVertex();
+        dcel_data.connect(vert, center);
+
+        if(i == 0) {
+            lastVert = vert;
+            continue;
+        }
+        glm::vec3 p(std::sin(2 * pi * i/32.f),
+                            0,
+                            std::cos(2 * pi * i/32.f));
+        vert->set("P", p);
+        dcel_data.connect(vert, lastVert)->setIncidentFace(dcel_data.newFace());
+        lastVert = vert;
+    }
+
+    dcel_data.updateMesh();
+
+    if(points->size() != 33) {
+        std::cerr << "wrong number of points: " << points->size() << " vs " << "33" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 BOOST_PYTHON_MODULE(cpp_tests)
 {
     BPy::def("testSocketPropertiesCPP", testSocketProperties);    
@@ -194,4 +237,5 @@ BOOST_PYTHON_MODULE(cpp_tests)
     BPy::def("testRaycastingCPP", testRaycasting);
     BPy::def("testSaveLoadPropertiesCPP", testSaveLoadProperties);
     BPy::def("testCreateListCPP", testCreateList);
+    BPy::def("testDCELCPP", testDCEL);
 }
