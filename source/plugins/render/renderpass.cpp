@@ -94,31 +94,15 @@ void RenderPass::setTree(RenderTree *tree)
     _tree = tree;
 }
 
-bool RenderPass::init()
+void RenderPass::init()
 {
-    _initialized = false;
-    if(!_currentWidth || !_currentHeight) {
-        dbout("renderpass " << _name << " has no size");
-        return false;
-    }
+    _initialized = true;
 
     {
         std::shared_lock<std::shared_timed_mutex> lock(_cameraLock);
-        auto w = getCamera()->getWidth();
-        auto h = getCamera()->getHeight();
-
-        if(!w || !h) {
-            dbout("new camera of " << _name << " is nonsense, old size: ("
-                  << _currentWidth << ", " << _currentHeight << ")"
-                  << " new size: (" << w << ", " << h << ")");
-
-            return false;
-        }
-        _currentWidth = w;
-        _currentHeight = h;
+        _currentWidth = getCamera()->getWidth();
+        _currentHeight = getCamera()->getHeight();
     }
-
-    _initialized = true;
     //make sure shaderprograms are clean
     {
         std::shared_lock<std::shared_timed_mutex> shapeLock(_shapesLock);
@@ -138,7 +122,7 @@ bool RenderPass::init()
     //so no need to setup anything
     if(_outputTextures.size() == 0 && _outputRenderbuffers.size() == 0
        && _depthOutput == NONE)
-        return true;
+        return;
 
     _target = make_resource<FBO>(_tree->getResourceManager());
 
@@ -210,10 +194,8 @@ bool RenderPass::init()
             default:
                 break;
         }
-        assert(!getGLFramebufferError(__PRETTY_FUNCTION__));
+        getGLFramebufferError(__PRETTY_FUNCTION__);
     }
-
-    return true;
 }
 
 void RenderPass::setDirty()
@@ -625,9 +607,7 @@ void RenderPass::render(const RenderConfig &config)
 
     BenchmarkHandler bhandler(_benchmark);
 
-    if(!_initialized || _currentHeight != height || _currentWidth != width)
-        if(!init())
-            return;
+    if(!_initialized || _currentHeight != height || _currentWidth != width) init();
 
     {
         if(_depthOutput != NONE)
