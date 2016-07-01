@@ -244,10 +244,12 @@ void RSMEvaluationBlock::setGeometry(std::shared_ptr<Group> grp)
         _rsmInterpolatePass->setProperty("downsampling", _downSampling.load());
         setCamera(getCamera().lock());
     }
-    if (auto prop = grp->getProperty("RSM:lowresdistance")) {
+    if (grp->hasProperty("RSM:lowresdistance")) {
+        auto prop = grp->getProperty("RSM:lowresdistance");
         _rsmInterpolatePass->setProperty("distanceTolerance", prop);
     }
-    if (auto prop = grp->getProperty("RSM:lowresangle")) {
+    if (grp->hasProperty("RSM:lowresangle")) {
+        auto prop = grp->getProperty("RSM:lowresangle");
         _rsmInterpolatePass->setProperty("cosAngleTolerance", prop);
     }
 }
