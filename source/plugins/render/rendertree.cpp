@@ -184,7 +184,8 @@ void RenderTree::init()
         std::shared_lock<std::shared_timed_mutex> lock(_managerLock);
         uint i=0;
         for(auto &pass : passes){
-            pass->init();
+            if(!pass->init())
+               continue;
             if(i > 0) {
                 for (uint j = 0; j < i; ++j){
                     auto *lastPass = passes[j].get();
