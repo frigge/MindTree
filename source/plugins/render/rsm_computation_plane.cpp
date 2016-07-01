@@ -147,7 +147,7 @@ void RSMEvaluationBlock::init()
     };
     //_config->addSettings("RSM Evaluation", settings);
 
-    auto rsmIndirectLowResPass = addPass();
+    auto rsmIndirectLowResPass = addPass("rsm_lowres");
     _rsmIndirectLowResPass = rsmIndirectLowResPass;
     rsmIndirectLowResPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                               "rsm_indirect_out_lowres",
@@ -159,7 +159,7 @@ void RSMEvaluationBlock::init()
     rsmIndirectLowResPass->setBlendFunc(GL_ONE, GL_ONE);
     rsmIndirectLowResPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
-    _rsmInterpolatePass = addPass();
+    _rsmInterpolatePass = addPass("rsm_interpolate");
     _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                            "rsm_indirect_out_interpolated",
                                                            Texture::RGBA16F));
@@ -173,7 +173,7 @@ void RSMEvaluationBlock::init()
     auto rsmInterpolatePlane = new PixelPlane("../plugins/render/defaultShaders/rsm_interpolate.frag");
     _rsmInterpolatePass->addRenderer(rsmInterpolatePlane);
 
-    _rsmIndirectPass = addPass();
+    _rsmIndirectPass = addPass("rsm_indirect");
     _rsmIndirectPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                          "rsm_indirect_out_highres",
                                                          Texture::RGBA16F));
@@ -185,7 +185,7 @@ void RSMEvaluationBlock::init()
     _rsmIndirectPass->setBlendFunc(GL_ONE, GL_ONE);
     _rsmIndirectPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
-    auto rsmFinalPass = addPass();
+    auto rsmFinalPass = addPass("rsm_final");
     rsmFinalPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                      "rsm_indirect_out",
                                                      Texture::RGBA16F));

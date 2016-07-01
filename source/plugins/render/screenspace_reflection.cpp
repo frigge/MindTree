@@ -9,7 +9,7 @@ using namespace MindTree::GL;
 
 void ScreenSpaceReflectionBlock::init()
 {
-    auto pass = addPass();
+    auto pass = addPass("ssreflection");
     auto reflection = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                "reflection",
                                                Texture::RGBA);

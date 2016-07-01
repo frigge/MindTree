@@ -38,8 +38,8 @@ public:
     std::weak_ptr<Camera> getCamera() const;
 
     virtual void setGeometry(std::shared_ptr<Group> grp);
-    RenderPass* addPass();
-    RenderPass* addPassBefore(const RenderPass *hint);
+    RenderPass* addPass(const std::string &name="unnamed");
+    RenderPass* addPassBefore(const RenderPass *hint, const std::string &name="unnamed");
     void setEnabled(bool enable);
     std::vector<Texture2D*> getOutputs() const;
     void setProperty(std::string name, Property prop);

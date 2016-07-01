@@ -27,7 +27,7 @@ RenderConfigurator::RenderConfigurator(QGLContext *context, CameraPtr camera) :
     _vertexCount(0),
     _polyCount(0)
 {
-    auto geometryPass = std::make_unique<RenderPass>();
+    auto geometryPass = std::make_unique<RenderPass>("gbuffer");
     _geometryPass = geometryPass.get();
     _rendertree->addPass(std::move(geometryPass));
     _geometryPass->setCamera(camera);
@@ -140,6 +140,7 @@ void RenderConfigurator::setCamera(std::shared_ptr<Camera> camera)
         block->setCamera(camera);
     }
     _camera = camera;
+    _geometryPass->setCamera(camera);
     _rendertree->setDirty();
 
     if(!_rendertree->getBenchmark().expired())

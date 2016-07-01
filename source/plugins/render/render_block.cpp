@@ -141,9 +141,9 @@ void RenderBlock::addRendererFromJoint(JointPtr obj)
 {
 }
 
-RenderPass* RenderBlock::addPass()
+RenderPass* RenderBlock::addPass(const std::string &name)
 {
-    auto pass = std::make_unique<RenderPass>();
+    auto pass = std::make_unique<RenderPass>(name);
     auto pass_ptr = pass.get();
     _passes.push_back(pass_ptr);
 
@@ -153,9 +153,9 @@ RenderPass* RenderBlock::addPass()
 }
 
 
-RenderPass* RenderBlock::addPassBefore(const RenderPass *hint)
+RenderPass* RenderBlock::addPassBefore(const RenderPass *hint, const std::string &name)
 {
-    auto pass = std::make_unique<RenderPass>();
+    auto pass = std::make_unique<RenderPass>(name);
     auto pass_ptr = pass.get();
     _passes.push_back(pass_ptr);
 

@@ -65,7 +65,7 @@ glm::mat4 createTransFromZVec(glm::vec3 z)
 
 void DeferredLightingRenderBlock::init()
 {
-    auto _deferredPass = addPass();
+    auto _deferredPass = addPass("deferred_lighting");
     _deferredPass
         ->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                              "shading_out",

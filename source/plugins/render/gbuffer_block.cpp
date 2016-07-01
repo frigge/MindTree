@@ -27,7 +27,6 @@ GBufferRenderBlock::~GBufferRenderBlock()
 
 void GBufferRenderBlock::init()
 {
-
     _geometryPass->setEnableBlending(false);
 
     auto depth = make_resource<Texture2D>(_config->getManager()->getResourceManager(),

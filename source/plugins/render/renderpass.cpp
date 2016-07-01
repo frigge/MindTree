@@ -11,7 +11,7 @@
 using namespace MindTree;
 using namespace MindTree::GL;
 
-RenderPass::RenderPass() :
+RenderPass::RenderPass(const std::string &name) :
     _initialized(false),
     _enabled(true),
     _blendColorSource(GL_SRC_ALPHA),
@@ -23,7 +23,8 @@ RenderPass::RenderPass() :
     _bgColor(0),
     _depth(1),
     overrideProgramFlag_(false),
-    _tree(nullptr)
+    _tree(nullptr),
+    _name(name)
 {
 }
 

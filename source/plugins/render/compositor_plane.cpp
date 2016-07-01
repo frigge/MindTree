@@ -89,7 +89,7 @@ Compositor::Compositor() :
 
 void Compositor::init()
 {
-    _pixelPass = addPass();
+    _pixelPass = addPass("compositing");
     _pixelPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
     _pixelPass->addRenderer(_plane);
     _pixelPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
@@ -139,7 +139,7 @@ void Compositor::setProperty(std::string name, Property prop)
                                         });
         std::string shader = prop.getData<std::string>();
         if (custompass == end(layers)) {
-            custom_pass_ = addPassBefore(_pixelPass);
+            custom_pass_ = addPassBefore(_pixelPass, "customPixelShader");
             auto *plane = new PixelPlane();
             plane->setFragmentShader(shader);
             custom_pass_->addRenderer(plane);

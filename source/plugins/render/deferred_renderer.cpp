@@ -63,7 +63,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     //auto ssreflection = std::make_shared<ScreenSpaceReflectionBlock>();
     //addRenderBlock(ssreflection);
 
-    auto overlayPass = std::make_unique<RenderPass>();
+    auto overlayPass = std::make_unique<RenderPass>("overlay");
     _overlayPass = overlayPass.get();
     manager->addPass(std::move(overlayPass));
     _overlayPass
@@ -89,7 +89,7 @@ DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget
     compositor->addLayer(overtx, 1.0, CompositorPlane::CompositType::ALPHAOVER);
     addRenderBlock(std::move(compositor));
 
-    auto finalPass = std::make_unique<RenderPass>();
+    auto finalPass = std::make_unique<RenderPass>("final");
     _finalPass = finalPass.get();
     finalPass->setCamera(camera);
     manager->addPass(std::move(finalPass));

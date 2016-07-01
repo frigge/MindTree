@@ -30,7 +30,7 @@ class RenderTree;
 class RenderPass : public Object
 {
 public:
-    RenderPass();
+    RenderPass(const std::string &name = "noname");
     virtual ~RenderPass();
 
     void setBenchmark(std::shared_ptr<Benchmark> benchmark);
@@ -92,7 +92,7 @@ public:
     bool isEnabled() const;
 
 private:
-    void init();
+    bool init();
     void render(const RenderConfig &config);
     void setDirty();
 
@@ -162,6 +162,8 @@ private:
     std::shared_ptr<Benchmark> _benchmark;
 
     std::vector<std::function<void(RenderPass*)>> _postRenderCallbacks;
+
+    std::string _name;
 };
 
 }
