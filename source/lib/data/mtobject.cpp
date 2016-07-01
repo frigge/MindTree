@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include "mtobject.h"
 
 using namespace MindTree;
@@ -40,24 +39,13 @@ Object& Object::operator=(const Object &&other)
     return *this;
 }
 
-const Property& Object::getProperty(const std::string &name) const
+Property Object::getProperty(std::string name) const
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
-    if (_properties.find(name) == end(_properties)) {
-        throw std::runtime_error("no property named " + name + " found");
-        assert(false);
-    }
-    return _properties.at(name);
-}
-
-Property& Object::getProperty(const std::string &name)
-{
-    std::lock_guard<std::mutex> lock(_propertiesLock);
-    if (_properties.find(name) == end(_properties)) {
-        throw std::runtime_error("no property named " + name + " found");
-        assert(false);
-    }
-    return _properties[name];
+    if (_properties.find(name) == end(_properties))
+        return Property();
+    auto prop = _properties.at(name);
+    return prop;
 }
 
 PropertyMap Object::getProperties() const
@@ -66,7 +54,7 @@ PropertyMap Object::getProperties() const
     return _properties;
 }
 
-Property Object::operator[](const std::string &name) const
+Property Object::operator[](std::string name) const
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
     if (_properties.find(name) == end(_properties))
@@ -74,13 +62,13 @@ Property Object::operator[](const std::string &name) const
     return _properties.at(name);
 }
 
-void Object::setProperty(const std::string &name, const Property &value)
+void Object::setProperty(std::string name, Property value)
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
     _properties[name] = value;
 }
 
-void Object::rmProperty(const std::string &name)
+void Object::rmProperty(std::string name)
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
     if (_properties.find(name) == end(_properties))
@@ -88,7 +76,7 @@ void Object::rmProperty(const std::string &name)
     _properties.erase(name);
 }
 
-bool Object::hasProperty(const std::string &name) const
+bool Object::hasProperty(std::string name) const
 {
     std::lock_guard<std::mutex> lock(_propertiesLock);
     return _properties.find(name) != _properties.cend();
