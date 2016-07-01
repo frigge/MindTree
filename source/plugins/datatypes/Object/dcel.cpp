@@ -320,27 +320,26 @@ Edge* Adapter::connect(Vertex *v1, Vertex *v2)
 {
     //find edges that need to be split
     auto adj1 = getAdjacentEdges(v1);
-    auto adj2 = getAdjacentEdges(v1);
+    auto adj2 = getAdjacentEdges(v2);
+
+    auto *edge = newEdge();
+    edge->setOrigin(v1);
+    edge->twin()->setOrigin(v2);
 
     Edge *e1 = nullptr, *e2 = nullptr;
-    for (auto edge1 : adj1) {
-        for (auto edge2 : adj2) {
-            if (edge1->incidentFace() == edge2->incidentFace()) {
-                e1 = edge1;
-                e2 = edge2;
-                break;
-            }
-        }
-        if (e1 != nullptr) break;
-    }
+    e1 = *std::adjacent_find(adj1.begin(), adj1.end(), [edge](Edge *first, Edge *second) {
+            return first < edge && second > edge
+            || first > edge && second < edge;
+        });
 
-    //split edges and their twins
-    auto *edge = newEdge();
+    auto twin = edge->twin();
+    e2 = *std::adjacent_find(adj2.begin(), adj2.end(), [edge=twin](Edge *first, Edge *second) {
+            return first < edge && second > edge
+            || first > edge && second < edge;
+        });
 
     if(e1) e1->setPrev(edge);
-    edge->setOrigin(v2);
     if(e2) e2->setPrev(edge->twin());
-    edge->setOrigin(v1);
 
     if(e1 && e1->incidentFace()) {
         auto *face = newFace();
