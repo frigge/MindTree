@@ -181,7 +181,7 @@ LineRenderer::~LineRenderer()
 {
 }
 
-void LineRenderer::setPoints(std::initializer_list<glm::vec3> points)
+void LineRenderer::setPoints(std::vector<glm::vec3> points)
 {
     _points = points;
 }
@@ -205,8 +205,14 @@ void LineRenderer::init(ShaderProgram* prog)
 void LineRenderer::drawBorder(const CameraPtr&, const RenderConfig &config, ShaderProgram* program)
 {
     glEnable(GL_LINE_SMOOTH);
-    glDrawArrays(GL_LINE_STRIP, 0, _points.size());
+    glDrawArrays(GL_LINES, 0, _points.size());
     glDisable(GL_LINE_SMOOTH);
+}
+
+void LineRenderer::drawFill(const CameraPtr &camera,
+                            const RenderConfig &config,
+                            ShaderProgram* program)
+{
 }
 
 QuadRenderer::QuadRenderer(float width, float height, ShapeRendererGroup *parent) :

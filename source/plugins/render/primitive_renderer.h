@@ -74,11 +74,17 @@ public:
     LineRenderer(std::initializer_list<glm::vec3> points);
     ~LineRenderer();
 
-    void setPoints(std::initializer_list<glm::vec3> points);
+    void setPoints(std::vector<glm::vec3> points);
 
 protected:
     virtual void init(ShaderProgram* prog);
-    virtual void drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
+    virtual void drawBorder(const CameraPtr &camera,
+                            const RenderConfig &config,
+                            ShaderProgram* program);
+
+    void drawFill(const CameraPtr &camera,
+                  const RenderConfig &config,
+                  ShaderProgram* program);
 
 private:
     VertexList _points;
