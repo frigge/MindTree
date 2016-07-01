@@ -8,87 +8,107 @@
 #include "./object.h"
 
 namespace MindTree {
-class HalfEdgeVertex;
-class HalfEdgeFace;
-class HalfEdge
+namespace dcel {
+
+class Adapter;
+class Element
 {
 public:
-    HalfEdge();
-
-    HalfEdge* next();
-    HalfEdge* prev();
-    HalfEdge* twin();
-
-    void setNext(HalfEdge *edge);
-    void setPrev(HalfEdge *edge);
-    void setTwin(HalfEdge *edge);
-
-    void setOrigin(HalfEdgeVertex *vertex);
-    HalfEdgeVertex* origin();
-
-    void setIncidentFace(HalfEdgeFace *face);
-    HalfEdgeFace* incidentFace();
-
-private:
-    HalfEdge *m_next;
-    HalfEdge *m_prev;
-    HalfEdge *m_twin;
-    HalfEdgeVertex *m_origin;
-    HalfEdgeFace *m_incidentFace;
+    Element(Adapter *adapter): m_adapter(adapter) {}
+protected:
+    Adapter *m_adapter;
 };
 
-class HalfEdgeVertex
+class Vertex;
+class Face;
+ class Edge : public Element
 {
 public:
-    HalfEdgeVertex(size_t index);
+    Edge(Adapter *adapter);
 
-    HalfEdge* incident();
-    void setIncident(HalfEdge *edge);
+    Edge* next();
+    Edge* prev();
+    Edge* twin();
+
+    void setNext(Edge *edge);
+    void setPrev(Edge *edge);
+    void setTwin(Edge *edge);
+
+    void setOrigin(Vertex *vertex);
+    Vertex* origin();
+
+    void setIncidentFace(Face *face);
+    Face* incidentFace();
+
+    bool operator<(const Edge &other);
+    bool operator>(const Edge &other);
+
+private:
+    Edge *m_next;
+    Edge *m_prev;
+    Edge *m_twin;
+    Vertex *m_origin;
+    Face *m_incidentFace;
+};
+
+ class Vertex : public Element
+{
+public:
+    Vertex(size_t index, Adapter *adapter);
+
+    Edge* incident();
+    void setIncident(Edge *edge);
     size_t index();
     void setIndex(size_t i);
+    void set(const std::string &name, Property prop);
+    const Property& get(const std::string &name) const;
+    Property& get(const std::string &name);
 
 private:
-    HalfEdge *m_incident;
+    Edge *m_incident;
     size_t m_index;
+    PropertyMap m_properties;
 };
 
-class HalfEdgeFace
+ class Face : public Element
 {
 public:
-    HalfEdgeFace();
+    Face(Adapter *adapter);
 
-    void setOuterBoundary(HalfEdge *edge);
-    HalfEdge* outerBoundary();
+    void setOuterBoundary(Edge *edge);
+    Edge* outerBoundary();
 
 private:
-    HalfEdge *m_outerBoundary;
-    //std::vector<HalfEdge*> m_innerBoundaries;
+    Edge *m_outerBoundary;
+    //std::vector<Edge*> m_innerBoundaries;
 };
 
-class HalfEdgeAdapter
+class Adapter
 {
 public:
-    HalfEdgeAdapter(std::shared_ptr<MeshData> mesh);
+    Adapter(std::shared_ptr<MeshData> mesh);
 
-    std::vector<HalfEdge*> getAdjacentEdges(HalfEdgeVertex *vertex);
-    void splitEdge(HalfEdge *edge);
-    void connect(HalfEdgeVertex *v1, HalfEdgeVertex *v2);
-    void remove(HalfEdge *edge);
-    void collapse(HalfEdge *edge);
+    std::vector<Edge*> getAdjacentEdges(Vertex *vertex);
+    void splitEdge(Edge *edge);
+    Edge* connect(Vertex *v1, Vertex *v2);
+    void remove(Edge *edge);
+    void collapse(Edge *edge);
+    Vertex* newVertex();
+    Face * newFace();
 
     std::shared_ptr<MeshData> getMesh();
+    void updateMesh();
 
 private:
-    HalfEdge* newEdge();
-    HalfEdgeVertex * newVertex();
-    HalfEdgeFace * newFace();
-    HalfEdge* insertEdge(HalfEdge *edge);
+    Edge* newEdge();
+    Edge* insertEdge(Edge *edge);
 
     std::shared_ptr<MeshData> m_mesh;
-    std::vector<std::unique_ptr<HalfEdge>> m_edges;
-    std::vector<std::unique_ptr<HalfEdgeVertex>> m_vertices;
-    std::vector<std::unique_ptr<HalfEdgeFace>> m_faces;
+    std::vector<std::unique_ptr<Edge>> m_edges;
+    std::vector<std::unique_ptr<Vertex>> m_vertices;
+    std::vector<std::unique_ptr<Face>> m_faces;
 };
+}
 }
 
 #endif

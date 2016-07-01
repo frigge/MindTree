@@ -3,8 +3,10 @@
 #include "dcel.h"
 
 using namespace MindTree;
+using namespace MindTree::dcel;
 
-HalfEdge::HalfEdge() :
+Edge::Edge(Adapter *adapter) :
+    Element(adapter),
     m_next{nullptr},
     m_prev{nullptr},
     m_twin{nullptr},
@@ -13,17 +15,35 @@ HalfEdge::HalfEdge() :
 {
 }
 
-HalfEdge* HalfEdge::next()
+bool Edge::operator<(const Edge &other)
+{
+    glm::vec3 o = m_origin->get("P").getData<glm::vec3>();
+    glm::vec3 e = m_twin->m_origin->get("P").getData<glm::vec3>();
+    glm::vec3 p = other.m_origin->get("P").getData<glm::vec3>();
+
+    return glm::dot(e - o, p - o) < 0;
+}
+
+bool Edge::operator>(const Edge &other)
+{
+    glm::vec3 o = m_origin->get("P").getData<glm::vec3>();
+    glm::vec3 e = m_twin->m_origin->get("P").getData<glm::vec3>();
+    glm::vec3 p = other.m_origin->get("P").getData<glm::vec3>();
+
+    return glm::dot(e - o, p - o) > 0;
+}
+
+Edge* Edge::next()
 {
     return m_next;
 }
 
-HalfEdge* HalfEdge::prev()
+Edge* Edge::prev()
 {
     return m_next;
 }
 
-void HalfEdge::setNext(HalfEdge *edge)
+void Edge::setNext(Edge *edge)
 {
     if (m_next == edge)
         return;
@@ -35,7 +55,7 @@ void HalfEdge::setNext(HalfEdge *edge)
         m_twin->setPrev(edge->m_twin);
 }
 
-void HalfEdge::setPrev(HalfEdge *edge)
+void Edge::setPrev(Edge *edge)
 {
     if (m_prev == edge)
         return;
@@ -47,7 +67,7 @@ void HalfEdge::setPrev(HalfEdge *edge)
         m_twin->setNext(edge->m_twin);
 }
 
-void HalfEdge::setTwin(HalfEdge *edge)
+void Edge::setTwin(Edge *edge)
 {
     if (m_twin == edge)
         return;
@@ -57,76 +77,94 @@ void HalfEdge::setTwin(HalfEdge *edge)
         edge->m_twin = this;
 }
 
-HalfEdge* HalfEdge::twin()
+Edge* Edge::twin()
 {
     return m_next;
 }
 
-HalfEdgeVertex* HalfEdge::origin()
+Vertex* Edge::origin()
 {
     return m_origin;
 }
 
-void HalfEdge::setOrigin(HalfEdgeVertex *vertex)
+void Edge::setOrigin(Vertex *vertex)
 {
     m_origin = vertex;
 }
-void HalfEdge::setIncidentFace(HalfEdgeFace *face)
+void Edge::setIncidentFace(Face *face)
 {
     m_incidentFace = face;
+    face->setOuterBoundary(this);
 }
 
-HalfEdgeFace* HalfEdge::incidentFace()
+Face* Edge::incidentFace()
 {
     return m_incidentFace;
 }
 
-HalfEdgeVertex::HalfEdgeVertex(size_t index) :
+Vertex::Vertex(size_t index, Adapter *adapter) :
+    Element(adapter),
     m_incident{nullptr},
     m_index{index}
 {
 }
 
-HalfEdge* HalfEdgeVertex::incident()
+Edge* Vertex::incident()
 {
     return m_incident;
 }
 
-void HalfEdgeVertex::setIncident(HalfEdge *edge)
+void Vertex::setIncident(Edge *edge)
 {
     m_incident = edge;
 }
 
-size_t HalfEdgeVertex::index()
+size_t Vertex::index()
 {
     return m_index;
 }
 
-void HalfEdgeVertex::setIndex(size_t i)
+void Vertex::setIndex(size_t i)
 {
     m_index = i;
 }
 
-HalfEdgeFace::HalfEdgeFace() :
+void Vertex::set(const std::string &name, Property prop)
+{
+    m_properties[name] = prop;
+}
+
+const Property& Vertex::get(const std::string &name) const
+{
+    return m_properties.at(name);
+}
+
+Property& Vertex::get(const std::string &name)
+{
+    return m_properties[name];
+}
+
+Face::Face(Adapter *adapter) :
+    Element(adapter),
     m_outerBoundary{nullptr}
 {
 }
 
-void HalfEdgeFace::setOuterBoundary(HalfEdge *edge)
+void Face::setOuterBoundary(Edge *edge)
 {
     m_outerBoundary = edge;
 }
 
-HalfEdge* HalfEdgeFace::outerBoundary()
+Edge* Face::outerBoundary()
 {
     return m_outerBoundary;
 }
 
 namespace {
-    class Edge {
+    class EdgeKey {
         int v0_, v1_;
     public:
-        Edge(const int &v0, const int &v1) :
+        EdgeKey(const int &v0, const int &v1) :
             v0_{v0 < v1 ? v0 : v1},
             v1_{v0 < v1 ? v1 : v0}
         {}
@@ -134,7 +172,7 @@ namespace {
         int v0() const { return v0_; }
         int v1() const { return v1_; }
 
-        bool operator==(const Edge &edge) const
+        bool operator==(const EdgeKey &edge) const
         {
             return edge.v0_ == v0_ && edge.v1_ == v1_;
         }
@@ -143,9 +181,9 @@ namespace {
 
 namespace std {
     template<>
-    struct hash<Edge> {
+    struct hash<EdgeKey> {
         typedef size_t result_type;
-        typedef Edge argument_type;
+        typedef EdgeKey argument_type;
 
         result_type operator()(argument_type const &value) const
         {
@@ -156,7 +194,7 @@ namespace std {
     };
 }
 
-HalfEdgeAdapter::HalfEdgeAdapter(std::shared_ptr<MeshData> mesh) :
+Adapter::Adapter(std::shared_ptr<MeshData> mesh) :
     m_mesh(mesh)
 {
     auto points = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
@@ -164,25 +202,24 @@ HalfEdgeAdapter::HalfEdgeAdapter(std::shared_ptr<MeshData> mesh) :
 
     int i=0;
     for(auto p : *points) {
-        m_vertices.push_back(std::make_unique<HalfEdgeVertex>(i));
+        m_vertices.push_back(std::make_unique<Vertex>(i, this));
         ++i;
     }
 
-    std::unordered_map<Edge, HalfEdge*> edge_map;
+    std::unordered_map<EdgeKey, Edge*> edge_map;
     for(const Polygon &p : *polygons) {
-        HalfEdge *prev{nullptr};
-        std::vector<Edge> adjacent_edges;
+        Edge *prev{nullptr};
+        std::vector<EdgeKey> adjacent_edges;
         std::adjacent_find(begin(p),
                            end(p),
                            [&adjacent_edges](const auto &a, const auto &b) {
-                               adjacent_edges.push_back(Edge(a, b));
+                               adjacent_edges.push_back(EdgeKey(a, b));
                                return false;
                            });
 
-        int i = 0;
         for (int i : p) {
-            HalfEdgeVertex *origin = m_vertices[i].get();
-            m_edges.push_back(std::make_unique<HalfEdge>());
+            Vertex *origin = m_vertices[i].get();
+            m_edges.push_back(std::make_unique<Edge>(this));
             auto newEdge = m_edges.back().get();
             if(!origin->incident()) origin->setIncident(newEdge);
 
@@ -196,16 +233,18 @@ HalfEdgeAdapter::HalfEdgeAdapter(std::shared_ptr<MeshData> mesh) :
             newEdge->setOrigin(origin);
             ++i;
         }
-        m_faces.push_back(std::make_unique<HalfEdgeFace>());
+        m_faces.push_back(std::make_unique<Face>(this));
         auto face = m_faces.back().get();
         face->setOuterBoundary(m_edges.back().get());
     }
 }
 
-std::vector<HalfEdge*> HalfEdgeAdapter::getAdjacentEdges(HalfEdgeVertex *vertex)
+std::vector<Edge*> Adapter::getAdjacentEdges(Vertex *vertex)
 {
-    std::vector<HalfEdge*> ret;
+    std::vector<Edge*> ret;
     auto *incident = vertex->incident();
+    if(!incident) return ret;
+
     ret.push_back(incident);
     while((incident = incident->twin()->next()))
         ret.push_back(incident);
@@ -213,7 +252,7 @@ std::vector<HalfEdge*> HalfEdgeAdapter::getAdjacentEdges(HalfEdgeVertex *vertex)
     return ret;
 }
 
-void HalfEdgeAdapter::splitEdge(HalfEdge *edge)
+void Adapter::splitEdge(Edge *edge)
 {
     auto newNext = insertEdge(edge);
     auto newTwin = newNext->twin();
@@ -232,7 +271,7 @@ void HalfEdgeAdapter::splitEdge(HalfEdge *edge)
     edge->twin()->setOrigin(newOrigin);
 }
 
-HalfEdge* HalfEdgeAdapter::insertEdge(HalfEdge *edge)
+Edge* Adapter::insertEdge(Edge *edge)
 {
     auto newNext = newEdge();
 
@@ -245,10 +284,10 @@ HalfEdge* HalfEdgeAdapter::insertEdge(HalfEdge *edge)
     return newNext;
 }
 
-HalfEdge* HalfEdgeAdapter::newEdge()
+Edge* Adapter::newEdge()
 {
-    auto newEdge = std::make_unique<HalfEdge>();
-    auto twin = std::make_unique<HalfEdge>();
+    auto newEdge = std::make_unique<Edge>(this);
+    auto twin = std::make_unique<Edge>(this);
     newEdge->setTwin(twin.get());
     auto *edge = newEdge.get();
     m_edges.push_back(std::move(newEdge));
@@ -256,9 +295,9 @@ HalfEdge* HalfEdgeAdapter::newEdge()
     return edge;
 }
 
-HalfEdgeVertex * HalfEdgeAdapter::newVertex()
+Vertex * Adapter::newVertex()
 {
-    auto newVertex = std::make_unique<HalfEdgeVertex>(m_vertices.size());
+    auto newVertex = std::make_unique<Vertex>(m_vertices.size(), this);
     auto *vertex = newVertex.get();
     m_vertices.push_back(std::move(newVertex));
 
@@ -269,21 +308,21 @@ HalfEdgeVertex * HalfEdgeAdapter::newVertex()
     return vertex;
 }
 
-HalfEdgeFace * HalfEdgeAdapter::newFace()
+Face * Adapter::newFace()
 {
-    auto newFace = std::make_unique<HalfEdgeFace>();
+    auto newFace = std::make_unique<Face>(this);
     auto *face = newFace.get();
     m_faces.push_back(std::move(newFace));
     return face;
 }
 
-void HalfEdgeAdapter::connect(HalfEdgeVertex *v1, HalfEdgeVertex *v2)
+Edge* Adapter::connect(Vertex *v1, Vertex *v2)
 {
     //find edges that need to be split
     auto adj1 = getAdjacentEdges(v1);
     auto adj2 = getAdjacentEdges(v1);
 
-    HalfEdge *e1 = nullptr, *e2 = nullptr;
+    Edge *e1 = nullptr, *e2 = nullptr;
     for (auto edge1 : adj1) {
         for (auto edge2 : adj2) {
             if (edge1->incidentFace() == edge2->incidentFace()) {
@@ -298,19 +337,28 @@ void HalfEdgeAdapter::connect(HalfEdgeVertex *v1, HalfEdgeVertex *v2)
     //split edges and their twins
     auto *edge = newEdge();
 
-    e1->setPrev(edge);
+    if(e1) e1->setPrev(edge);
     edge->setOrigin(v2);
-    e2->setPrev(edge->twin());
+    if(e2) e2->setPrev(edge->twin());
     edge->setOrigin(v1);
 
-    auto *face = newFace();
-    edge->setIncidentFace(e1->incidentFace());
-    edge->twin()->setIncidentFace(face);
-    for(HalfEdge *e = edge->twin()->next(); e != edge->twin(); e = e->next())
-        e->setIncidentFace(face);
+    if(e1 && e1->incidentFace()) {
+        auto *face = newFace();
+        edge->setIncidentFace(e1->incidentFace());
+        edge->twin()->setIncidentFace(face);
+        for(Edge *e = edge->twin()->next(); e != edge->twin(); e = e->next())
+            e->setIncidentFace(face);
+    }
+
+    return edge;
 }
 
-std::shared_ptr<MeshData> HalfEdgeAdapter::getMesh()
+std::shared_ptr<MeshData> Adapter::getMesh()
+{
+    return m_mesh;
+}
+
+void Adapter::updateMesh()
 {
     //update polygons
     std::shared_ptr<PolygonList> polygons;
@@ -319,7 +367,7 @@ std::shared_ptr<MeshData> HalfEdgeAdapter::getMesh()
         m_mesh->setProperty("polygon", polygons);
     }
     else {
-        polygons = m_mesh->getProperty("polygons")
+        polygons = m_mesh->getProperty("polygon")
             .getData<std::shared_ptr<PolygonList>>();
         polygons->clear();
     }
@@ -335,13 +383,13 @@ std::shared_ptr<MeshData> HalfEdgeAdapter::getMesh()
     }
     m_mesh->computeVertexNormals();
 
-    return m_mesh;
+    return;
 }
 
-void HalfEdgeAdapter::remove(HalfEdge *edge)
+void Adapter::remove(Edge *edge)
 {
 }
 
-void HalfEdgeAdapter::collapse(HalfEdge *edge)
+void Adapter::collapse(Edge *edge)
 {
 }
