@@ -260,6 +260,10 @@ void GeometryRenderBlock::addRendererFromEmpty(EmptyPtr obj)
 
 void GeometryRenderBlock::addRendererFromJoint(JointPtr obj)
 {
+    if(obj->getParent() && obj->getParent()->getType() == AbstractTransformable::JOINT) {
+        return;
+    }
+
     _geometryPass->addGeometryRenderer(new SkeletonRenderer(obj));
 }
 
