@@ -108,7 +108,7 @@ void GBufferRenderBlock::addRendererFromObject(std::shared_ptr<GeoObject> obj)
     }
 }
 
-void GBufferRenderBlock::setProperty(std::string name, Property prop)
+void GBufferRenderBlock::setProperty(const std::string &name, const Property &prop)
 {
     _geometryPass->setProperty(name, prop);
 }
