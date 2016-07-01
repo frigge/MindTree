@@ -71,6 +71,7 @@ Viewport::Viewport(ViewportWidget *widget) :
 
     setMouseTracking(true);
     doneCurrent();
+    _renderConfigurator->startRendering();
 }
 
 Viewport::~Viewport()
@@ -180,7 +181,6 @@ void Viewport::resizeEvent(QResizeEvent *)
     activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
     activeCamera->setResolution(width(), height());
     _renderConfigurator->setCamera(activeCamera);
-    _renderConfigurator->startRendering();
     MindTree::GL::RenderThread::updateOnce();
 }
 
