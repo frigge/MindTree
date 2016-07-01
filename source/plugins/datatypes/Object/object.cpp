@@ -302,11 +302,13 @@ std::string MeshData::getName()
     return name;
 }
 
-void MeshData::computeFaceNormals()    
+void MeshData::computeVertexNormals()    
 {
     auto facenormals = std::make_shared<VertexList>();
     auto polygons = getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
     auto vertices = getProperty("P").getData<std::shared_ptr<VertexList>>();
+    auto vertexnormals = std::make_shared<VertexList>();
+    vertexnormals->resize(vertices->size());
 
     for(const auto &poly : *polygons) {
         glm::vec3 normal;
@@ -330,45 +332,14 @@ void MeshData::computeFaceNormals()
                 normal = new_normal;
         }
 
-        //yet there could still be a corrupt poly and glm crashes in that case
-        if(glm::length(normal) > 0)
-            normal = glm::normalize(normal);
-
-        facenormals->push_back(normal);
-    }
-    setProperty("poly_normal", facenormals);
-}
-
-void MeshData::computeVertexNormals()    
-{
-    computeFaceNormals();
-    auto vertexnormals = std::make_shared<VertexList>();
-    auto verts = getProperty("P").getData<std::shared_ptr<VertexList>>();
-    auto polygons = getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
-    auto facenormals = getProperty("poly_normal").getData<std::shared_ptr<VertexList>>();
-    //loop through all vertices by index
-    for(size_t i = 0; i < verts->size(); i++) {
-        glm::vec3 normal;
-        //loop through all faces by index
-        for(size_t j = 0; j < facenormals->size(); j++) {
-            //if the polygon contains the currently looked at vertex
-            for(int pi : polygons->at(j)) {
-                if (pi == i) {
-                    //add it to the normal vector
-                    glm::vec3 vec2 = (*facenormals)[j];
-                    //if(glm::dot(normal, vec2) < 0) vec2 *= -1;
-                    glm::vec3 new_normal = normal + vec2;
-                    if(glm::length(new_normal) > 0)
-                        normal = new_normal;
-                    break;
-                }
-            }
+        for (int i : poly) {
+            vertexnormals->at(i) += glm::normalize(normal);
         }
-        if(glm::length(normal) > 0)
-            vertexnormals->push_back(glm::normalize(normal));
-        else
-            vertexnormals->push_back(glm::vec3(1, 0, 0));
     }
+
+    for(auto &n : *vertexnormals)
+        n = glm::normalize(n);
+
     setProperty("N", vertexnormals);
 }
 

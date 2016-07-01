@@ -148,7 +148,6 @@ public:
     virtual ~MeshData();
     std::string getName();
 
-    void computeFaceNormals();
     void computeVertexNormals();
     int getVertexCount() const;
     int getPolygonCount() const;
