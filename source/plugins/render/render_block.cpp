@@ -194,6 +194,7 @@ void GeometryRenderBlock::addRendererFromTransformable(AbstractTransformablePtr 
     //auto coord = new CoordSystemRenderer();
     //coord->setTransformation(transformable->getWorldTransformation());
     //_geometryPass->addGeometryRenderer(coord);
+
     switch(transformable->getType()) {
         case AbstractTransformable::GEO:
             addRendererFromObject(std::dynamic_pointer_cast<GeoObject>(transformable));

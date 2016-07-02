@@ -31,5 +31,6 @@ SkeletonRenderer::SkeletonRenderer(JointPtr skel, ShapeRendererGroup *parent) :
     }
 
     auto *line = new LineRenderer();
+    line->setPoints(lines);
     line->setParentPrimitive(this);
 }
