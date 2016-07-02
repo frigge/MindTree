@@ -48,7 +48,7 @@ public:
 
     void addRenderBlock(std::unique_ptr<RenderBlock> &&block);
 
-    void setProperty(std::string name, Property prop);
+    void setProperty(const std::string &name, Property prop) override;
 
     RenderPass* getGeometryPass() const;
 

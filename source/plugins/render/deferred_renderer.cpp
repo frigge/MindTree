@@ -112,7 +112,7 @@ glm::vec4 DeferredRenderer::getPosition(glm::vec2 pixel) const
     return _geometryPass->readPixel(values, pixel)[0];
 }
 
-void DeferredRenderer::setProperty(const std::string &name, const Property &prop)
+void DeferredRenderer::setProperty(const std::string &name, Property prop)
 {
     RenderConfigurator::setProperty(name, prop);
 

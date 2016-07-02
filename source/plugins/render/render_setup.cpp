@@ -94,7 +94,7 @@ void RenderConfigurator::clearOverrideOutput()
 {
 }
 
-void RenderConfigurator::setProperty(std::string name, Property prop)
+void RenderConfigurator::setProperty(const std::string &name, Property prop)
 {
     Object::setProperty(name, prop);
     for(auto &block : _renderBlocks) {

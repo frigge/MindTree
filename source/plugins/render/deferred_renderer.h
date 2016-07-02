@@ -26,7 +26,7 @@ public:
 
     void setCamera(std::shared_ptr<Camera> cam) override;
 
-    void setProperty(const std::string &name, const Property &prop) override;
+    void setProperty(const std::string &name, Property prop) override;
 
 private:
     RenderPass *_overlayPass;
