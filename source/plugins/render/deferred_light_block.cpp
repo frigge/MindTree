@@ -33,8 +33,8 @@ void DeferredLightingRenderBlock::setGeometry(std::shared_ptr<Group> grp)
     _sceneLights.clear();
     setRenderersFromGroup(grp);
 
-    if(hasProperty("GL:defaultLighting"))
-        if(!getProperty("GL:defaultLighting").getData<bool>())
+    if(grp->hasProperty("GL:defaultLighting"))
+        if(!grp->getProperty("GL:defaultLighting").getData<bool>())
             _deferredRenderer->setLights(_sceneLights);
         else
             _deferredRenderer->setLights(_defaultLights);
