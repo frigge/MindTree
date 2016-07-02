@@ -92,7 +92,7 @@ public:
     bool isEnabled() const;
 
 private:
-    bool init();
+    void init();
     void render(const RenderConfig &config);
     void setDirty();
 

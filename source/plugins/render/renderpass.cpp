@@ -194,7 +194,8 @@ void RenderPass::init()
             default:
                 break;
         }
-        getGLFramebufferError(__PRETTY_FUNCTION__);
+        if(!getGLFramebufferError("init: " + _name))
+            std::cout << "RenderPass: " << _name << " initialized" << std::endl;
     }
 }
 
@@ -644,7 +645,7 @@ void RenderPass::render(const RenderConfig &config)
         }
         glClearDepth(_depth);
 
-        getGLFramebufferError(__PRETTY_FUNCTION__);
+        getGLFramebufferError("draw: " + _name);
         MTGLERROR;
         std::vector<GLenum> buffers;
 
