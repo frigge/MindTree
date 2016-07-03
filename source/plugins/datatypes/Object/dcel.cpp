@@ -15,24 +15,6 @@ Edge::Edge(Adapter *adapter) :
 {
 }
 
-bool Edge::operator<(const Edge &other)
-{
-    glm::vec3 o = m_origin->get("P").getData<glm::vec3>();
-    glm::vec3 e = m_twin->m_origin->get("P").getData<glm::vec3>();
-    glm::vec3 p = other.m_origin->get("P").getData<glm::vec3>();
-
-    return glm::dot(e - o, p - o) < 0;
-}
-
-bool Edge::operator>(const Edge &other)
-{
-    glm::vec3 o = m_origin->get("P").getData<glm::vec3>();
-    glm::vec3 e = m_twin->m_origin->get("P").getData<glm::vec3>();
-    glm::vec3 p = other.m_origin->get("P").getData<glm::vec3>();
-
-    return glm::dot(e - o, p - o) > 0;
-}
-
 Edge* Edge::next()
 {
     return m_next;
@@ -40,31 +22,39 @@ Edge* Edge::next()
 
 Edge* Edge::prev()
 {
-    return m_next;
+    return m_prev;
 }
 
 void Edge::setNext(Edge *edge)
 {
+    assert(m_twin != edge);
+    assert(edge != this);
+    assert(edge != m_prev);
+
     if (m_next == edge)
         return;
 
     m_next = edge;
     if(edge->m_prev != this)
-        edge->m_prev = this;
-    if(m_twin && edge->m_twin)
-        m_twin->setPrev(edge->m_twin);
+        edge->setPrev(this);
+
+    m_twin->setPrev(edge->m_twin);
 }
 
 void Edge::setPrev(Edge *edge)
 {
+    assert(m_twin != edge);
+    assert(edge != this);
+    assert(edge != m_next);
+
     if (m_prev == edge)
         return;
 
     m_prev = edge;
     if(edge->m_next != this)
-        edge->m_next = this;
-    if(m_twin && edge->m_twin)
-        m_twin->setNext(edge->m_twin);
+        edge->setNext(this);
+
+    m_twin->setNext(edge->m_twin);
 }
 
 void Edge::setTwin(Edge *edge)
@@ -79,7 +69,7 @@ void Edge::setTwin(Edge *edge)
 
 Edge* Edge::twin()
 {
-    return m_next;
+    return m_twin;
 }
 
 Vertex* Edge::origin()
@@ -90,11 +80,18 @@ Vertex* Edge::origin()
 void Edge::setOrigin(Vertex *vertex)
 {
     m_origin = vertex;
+    if(!vertex->incident())
+        vertex->setIncident(this);
+    assert(vertex->incident()->origin() == vertex);
 }
 void Edge::setIncidentFace(Face *face)
 {
+    if(m_incidentFace == face)
+        return;
     m_incidentFace = face;
     face->setOuterBoundary(this);
+    if(m_next)
+        m_next->setIncidentFace(face);
 }
 
 Face* Edge::incidentFace()
@@ -117,6 +114,9 @@ Edge* Vertex::incident()
 void Vertex::setIncident(Edge *edge)
 {
     m_incident = edge;
+    if(edge->origin() != this)
+        edge->setOrigin(this);
+    assert(edge->origin() == this);
 }
 
 size_t Vertex::index()
@@ -134,9 +134,64 @@ void Vertex::set(const std::string &name, Property prop)
     m_properties[name] = prop;
 }
 
+std::vector<Edge*> Vertex::getAdjacentEdges() const
+{
+    std::vector<Edge*> ret;
+    auto *incident = m_incident;
+    if(!incident) return ret;
+
+    do {
+        ret.push_back(incident);
+        if(incident->twin())
+            incident = incident->twin()->next();
+    } while(incident && incident != m_incident);
+
+    return ret;
+}
+
+void Vertex::insertOuter(Edge *edge)
+{
+    Edge *next{m_incident};
+    Edge *prev{nullptr};
+
+    //find outer edge (the one without a face)
+    while(next->incidentFace())
+        next = next->twin()->next();
+
+    assert(edge->twin() != next);
+
+    if (next == edge)
+        return;
+    
+    if(next)
+        prev = next->prev();
+
+    if(prev) {
+        edge->setPrev(prev);
+    }
+    if(next) {
+        edge->twin()->setNext(next);
+    }
+
+}
+
+void Vertex::insertInner(Edge *edge)
+{
+    //split face if edge and twin share the same face
+    if(edge->incidentFace()
+       && edge->incidentFace() == edge->twin()->incidentFace()) {
+        auto *face = m_adapter->newFace();
+        auto *e = edge;
+        do {
+            e->setIncidentFace(face);
+            e = e->next();
+        } while(e != edge);
+    }
+}
+
 const Property& Vertex::get(const std::string &name) const
 {
-    return m_properties.at(name);
+    return m_properties[name];
 }
 
 Property& Vertex::get(const std::string &name)
@@ -239,19 +294,6 @@ Adapter::Adapter(std::shared_ptr<MeshData> mesh) :
     }
 }
 
-std::vector<Edge*> Adapter::getAdjacentEdges(Vertex *vertex)
-{
-    std::vector<Edge*> ret;
-    auto *incident = vertex->incident();
-    if(!incident) return ret;
-
-    ret.push_back(incident);
-    while((incident = incident->twin()->next()))
-        ret.push_back(incident);
-
-    return ret;
-}
-
 void Adapter::splitEdge(Edge *edge)
 {
     auto newNext = insertEdge(edge);
@@ -318,36 +360,14 @@ Face * Adapter::newFace()
 
 Edge* Adapter::connect(Vertex *v1, Vertex *v2)
 {
+    assert(v1 != v2);
     //find edges that need to be split
-    auto adj1 = getAdjacentEdges(v1);
-    auto adj2 = getAdjacentEdges(v2);
-
     auto *edge = newEdge();
+
     edge->setOrigin(v1);
     edge->twin()->setOrigin(v2);
-
-    Edge *e1 = nullptr, *e2 = nullptr;
-    e1 = *std::adjacent_find(adj1.begin(), adj1.end(), [edge](Edge *first, Edge *second) {
-            return first < edge && second > edge
-            || first > edge && second < edge;
-        });
-
-    auto twin = edge->twin();
-    e2 = *std::adjacent_find(adj2.begin(), adj2.end(), [edge=twin](Edge *first, Edge *second) {
-            return first < edge && second > edge
-            || first > edge && second < edge;
-        });
-
-    if(e1) e1->setPrev(edge);
-    if(e2) e2->setPrev(edge->twin());
-
-    if(e1 && e1->incidentFace()) {
-        auto *face = newFace();
-        edge->setIncidentFace(e1->incidentFace());
-        edge->twin()->setIncidentFace(face);
-        for(Edge *e = edge->twin()->next(); e != edge->twin(); e = e->next())
-            e->setIncidentFace(face);
-    }
+    v1->insertOuter(edge);
+    v2->insertOuter(edge->twin());
 
     return edge;
 }
@@ -361,6 +381,8 @@ void Adapter::updateMesh()
 {
     //update polygons
     std::shared_ptr<PolygonList> polygons;
+    std::shared_ptr<VertexList> vertices;
+
     if(!m_mesh->hasProperty("polygon")) {
         polygons = std::make_shared<PolygonList>();
         m_mesh->setProperty("polygon", polygons);
@@ -369,6 +391,22 @@ void Adapter::updateMesh()
         polygons = m_mesh->getProperty("polygon")
             .getData<std::shared_ptr<PolygonList>>();
         polygons->clear();
+        polygons->reserve(m_faces.size());
+    }
+
+    if(!m_mesh->hasProperty("P")) {
+        vertices = std::make_shared<VertexList>();
+        m_mesh->setProperty("P", vertices);
+    }
+    else {
+        vertices = m_mesh->getProperty("P")
+            .getData<std::shared_ptr<VertexList>>();
+        vertices->clear();
+        vertices->reserve(m_vertices.size());
+    }
+
+    for(const auto &vert : m_vertices) {
+        vertices->push_back(vert->get("P").getData<glm::vec3>());
     }
 
     for(const auto &face : m_faces) {
@@ -383,6 +421,34 @@ void Adapter::updateMesh()
     m_mesh->computeVertexNormals();
 
     return;
+}
+
+void Adapter::fill(std::initializer_list<Vertex*> vertices)
+{
+    assert(vertices.size() > 2);
+    auto v1 = *vertices.begin();
+    auto b = begin(vertices), e = end(vertices);
+
+    //find edge path that contains all vertices
+    Edge *edge = v1->incident();
+    do {
+        auto *nv = edge->twin()->origin();
+        auto *tmp = edge;
+        bool found = true;
+        do {
+            if(std::find(b, e, nv) == e) {
+                edge = edge->twin()->next();
+                found = false;
+                break;
+            }
+            tmp = tmp->next();
+        } while(tmp != edge);
+        if (found)
+            break;
+    } while (edge != v1->incident());
+
+    //recursively assigns face to whole edge loop
+    edge->setIncidentFace(newFace());
 }
 
 void Adapter::remove(Edge *edge)

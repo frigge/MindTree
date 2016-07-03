@@ -40,6 +40,12 @@ class CylinderDataNodeDecorator(MT.pytypes.NodeDecorator):
                   ("Cap Ends", "BOOLEAN", False)]
     outsockets = [("Cylinder", "OBJECTDATA")]
 
+class DiscDataNodeDecorator(MT.pytypes.NodeDecorator):
+    type="DISC"
+    label="Objects.Data.Disc"
+    insockets = [ ("Sides", "INTEGER", 3)]
+    outsockets = [("Disc", "OBJECTDATA")]
+
 class CubeDataNodeDecorator(MT.pytypes.NodeDecorator):
     type="CUBE"
     label="Objects.Data.Cube"
@@ -74,6 +80,10 @@ class CylinderNodeDecorator(PrimitiveNodeDecoratorBase):
     label="Objects.Primitives.Cylinder"
     datanode = "Objects.Data.Cylinder"
 
+class DiscNodeDecorator(PrimitiveNodeDecoratorBase):
+    label="Objects.Primitives.Disc"
+    datanode = "Objects.Data.Disc"
+
 class MeshDataNodeDecorator(MT.pytypes.NodeDecorator):
     type="MESHING"
     label="Objects.Data.Mesh"
@@ -90,10 +100,12 @@ MT.registerNode(MeshDataNodeDecorator)
 MT.registerNode(CubeDataNodeDecorator)
 MT.registerNode(PlaneDataNodeDecorator)
 MT.registerNode(CylinderDataNodeDecorator)
+MT.registerNode(DiscDataNodeDecorator)
 MT.registerNode(CubeNodeDecorator)
 MT.registerNode(PlaneNodeDecorator)
 MT.registerNode(IcosphereDataNodeDecorator)
 MT.registerNode(IcosphereNodeDecorator)
 MT.registerNode(CylinderNodeDecorator)
+MT.registerNode(DiscNodeDecorator)
 
 MT.registerNode(MeshNodeDecorator)

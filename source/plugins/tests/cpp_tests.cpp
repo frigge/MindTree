@@ -194,33 +194,39 @@ bool testDCEL()
     mesh->setProperty("P", points);
     mesh->setProperty("polygon", polys);
 
+    static const int SIZE = 4;
+
     dcel::Adapter dcel_data(mesh);
 
     //center vertex
     auto *center = dcel_data.newVertex();
 
-    dcel::Vertex *lastVert = nullptr;
+    dcel::Vertex *lastVert = nullptr, *firstVert = nullptr;
     //create simple disk shape
-    for(int i = 0; i < 32; ++i) {
+    for(int i = 0; i < SIZE; ++i) {
         auto *vert = dcel_data.newVertex();
         dcel_data.connect(vert, center);
 
         if(i == 0) {
             lastVert = vert;
+            firstVert = vert;
             continue;
         }
-        glm::vec3 p(std::sin(2 * pi * i/32.f),
+        glm::vec3 p(std::sin(2 * pi * i/float(SIZE)),
                             0,
-                            std::cos(2 * pi * i/32.f));
+                    std::cos(2 * pi * i/float(SIZE)));
         vert->set("P", p);
-        dcel_data.connect(vert, lastVert)->setIncidentFace(dcel_data.newFace());
+        dcel_data.connect(vert, lastVert);
+        dcel_data.fill({vert, lastVert, center});
         lastVert = vert;
     }
 
+    dcel_data.connect(lastVert, firstVert);
+    dcel_data.fill({lastVert, firstVert, center});
     dcel_data.updateMesh();
 
-    if(points->size() != 33) {
-        std::cerr << "wrong number of points: " << points->size() << " vs " << "33" << std::endl;
+    if(points->size() != SIZE + 1) {
+        std::cerr << "wrong number of points: " << points->size() << " vs " << SIZE+1 << std::endl;
         return false;
     }
 

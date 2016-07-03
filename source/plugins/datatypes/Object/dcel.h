@@ -40,9 +40,6 @@ public:
     void setIncidentFace(Face *face);
     Face* incidentFace();
 
-    bool operator<(const Edge &other);
-    bool operator>(const Edge &other);
-
 private:
     Edge *m_next;
     Edge *m_prev;
@@ -63,6 +60,9 @@ public:
     void set(const std::string &name, Property prop);
     const Property& get(const std::string &name) const;
     Property& get(const std::string &name);
+    std::vector<Edge*> getAdjacentEdges() const;
+    void insertOuter(Edge *edge);
+    void insertInner(Edge *edge);
 
 private:
     Edge *m_incident;
@@ -94,10 +94,11 @@ public:
     void remove(Edge *edge);
     void collapse(Edge *edge);
     Vertex* newVertex();
-    Face * newFace();
+    void fill(std::initializer_list<Vertex*> vertices);
 
     std::shared_ptr<MeshData> getMesh();
     void updateMesh();
+    Face * newFace();
 
 private:
     Edge* newEdge();
