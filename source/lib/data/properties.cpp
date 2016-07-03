@@ -258,6 +258,18 @@ Property& PropertyMap::operator[](const std::string &name)
     return _properties.at(pos).second;
 }
 
+const Property& PropertyMap::operator[](const std::string &name) const
+{
+    auto it = std::find_if(_properties.begin(),
+                           _properties.end(),
+                           [&name](const Info& info) {
+                               return info.first == name;
+                           });
+    assert(it != _properties.end());
+    size_t pos = std::distance(_properties.begin(), it);
+    return _properties.at(pos).second;
+}
+
 Property& PropertyMap::operator[](std::string &&name)
 {
     auto it = std::find_if(_properties.begin(),

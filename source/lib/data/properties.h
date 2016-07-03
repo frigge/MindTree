@@ -439,6 +439,7 @@ public:
 
     Property at(const std::string &name);
     const Property& at(const std::string &name) const;
+    const Property& operator[](const std::string &name) const;
     Property& operator[](const std::string &name);
     Property& operator[](std::string &&name);
 
