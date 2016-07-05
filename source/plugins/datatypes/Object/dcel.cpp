@@ -38,7 +38,8 @@ void Edge::setNext(Edge *edge)
     if(edge->m_prev != this)
         edge->setPrev(this);
 
-    m_twin->setPrev(edge->m_twin);
+    if(!m_twin->prev())
+        m_twin->setPrev(edge->m_twin);
 }
 
 void Edge::setPrev(Edge *edge)
@@ -54,7 +55,8 @@ void Edge::setPrev(Edge *edge)
     if(edge->m_next != this)
         edge->setNext(this);
 
-    m_twin->setNext(edge->m_twin);
+    if(!m_twin->next())
+        m_twin->setNext(edge->m_twin);
 }
 
 void Edge::setTwin(Edge *edge)
@@ -302,12 +304,11 @@ void Adapter::splitEdge(Edge *edge)
     auto newOrigin = newVertex();
     newNext->twin()->setOrigin(edge->twin()->origin());
 
-    auto verts = m_mesh->getProperty("P").getData<VertexListPtr>();
-    glm::vec3 prevPos = verts->at(edge->origin()->index());
-    glm::vec3 nextPos = verts->at(edge->twin()->origin()->index());
+    auto prevPos = edge->origin()->get("P").getData<glm::vec3>();
+    auto nextPos = edge->twin()->origin()->get("P").getData<glm::vec3>();
 
-    glm::vec3 newPos = prevPos + ((prevPos - nextPos) * 0.5f);
-    (*verts)[newOrigin->index()] = newPos;
+    glm::vec3 newPos = prevPos + ((nextPos - prevPos) * 0.5f);
+    newOrigin->set("P", newPos);
 
     newNext->setOrigin(newOrigin);
     edge->twin()->setOrigin(newOrigin);
@@ -315,10 +316,14 @@ void Adapter::splitEdge(Edge *edge)
 
 Edge* Adapter::insertEdge(Edge *edge)
 {
-    auto newNext = newEdge();
-
+    auto *newNext = newEdge();
+    auto *oldnext = edge->next();
+    auto *oldprev = edge->twin()->prev();
+      
     edge->setNext(newNext);
-    newNext->setNext(edge->next());
+    newNext->setNext(oldnext);
+    edge->twin()->setPrev(newNext->twin());
+    newNext->twin()->setPrev(oldprev);
 
     newNext->setIncidentFace(edge->incidentFace());
     newNext->twin()->setIncidentFace(edge->twin()->incidentFace());

@@ -1,6 +1,8 @@
 #ifndef MT_PROCESSOR_COMMON_H
 #define MT_PROCESSOR_COMMON_H
 
+#include "../plugins/datatypes/Object/dcel.h"
+
 namespace MindTree {
 
 std::shared_ptr<MeshData> createCylinder(unsigned sides, bool cap)
@@ -40,6 +42,54 @@ std::shared_ptr<MeshData> createCylinder(unsigned sides, bool cap)
     }
 
     return mesh;
+}
+
+ std::vector<MeshData::Edge> createRing(unsigned sides, VertexList *verts)
+{
+    double pi = acos(-1);
+
+    std::vector<MeshData::Edge> edges;
+
+    //upper side
+    auto offset = verts->size();
+    for(int i = 0; i < sides; ++i) {
+        verts->emplace_back(sin(2 * i * pi/sides) * 0.5, 0, cos(2 * i * pi/sides) * 0.5);
+        if(i > 0) {
+            edges.emplace_back(offset + i-1, offset + i);
+        }
+    }
+    edges.emplace_back(offset + sides - 1, offset);
+
+    return edges;
+}
+
+dcel::Edge* createRingDCEL(unsigned sides, dcel::Adapter *dcel_data)
+{
+    double pi = std::acos(-1);
+
+    dcel::Vertex *lastVert = nullptr, *firstVert = nullptr;
+    //create simple disk shape
+    for(int i = 0; i < sides; ++i) {
+        auto *vert = dcel_data->newVertex();
+
+        if(i == 0) {
+            lastVert = vert;
+            firstVert = vert;
+        }
+        glm::vec3 p(sin(2 * pi * i/sides) * 0.5,
+                    0,
+                    cos(2 * pi * i/sides) * 0.5);
+        vert->set("P", p);
+        if(i == 0) continue;
+
+        dcel_data->connect(vert, lastVert);
+        lastVert = vert;
+    }
+
+    auto *edge = dcel_data->connect(lastVert, firstVert);
+    dcel_data->updateMesh();
+
+    return edge;
 }
 
 }

@@ -31,17 +31,20 @@ void createdisc(DataCache* cache)
         if(i == 0) {
             lastVert = vert;
             firstVert = vert;
-            continue;
         }
-        glm::vec3 p(std::sin(2 * pi * i/(float)sides),
-                            0,
-                    std::cos(2 * pi * i/(float)sides));
+        glm::vec3 p(sin(2 * pi * i/sides) * 0.5,
+                    0,
+                    cos(2 * pi * i/sides) * 0.5);
         vert->set("P", p);
-        dcel_data.connect(vert, lastVert)->setIncidentFace(dcel_data.newFace());
+        if(i == 0) continue;
+
+        dcel_data.connect(vert, lastVert);
+        dcel_data.fill({vert, lastVert, center});
         lastVert = vert;
     }
 
-    dcel_data.connect(lastVert, firstVert)->setIncidentFace(dcel_data.newFace());
+    dcel_data.connect(lastVert, firstVert);
+    dcel_data.fill({lastVert, firstVert, center});
     dcel_data.updateMesh();
 
     cache->pushData(mesh);

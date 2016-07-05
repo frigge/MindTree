@@ -11,10 +11,13 @@ namespace MindTree {
 namespace dcel {
 
 class Adapter;
+
 class Element
 {
 public:
     Element(Adapter *adapter): m_adapter(adapter) {}
+    Adapter* adapter() {return m_adapter;}
+
 protected:
     Adapter *m_adapter;
 };
