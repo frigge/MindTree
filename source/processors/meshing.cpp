@@ -10,6 +10,10 @@
 
 using namespace MindTree;
 
+void grahamScanMerge(PolygonList *polys)
+{
+}
+
 std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints)
 {
     //differentiate paths and joints
@@ -124,8 +128,8 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
 
     if(merge_joints) {
         std::unordered_map<MeshData::Edge, uint> edge_map;
-        PointSet joint_points;
         for(auto &joints : joint_rings) {
+            PointSet joint_points;
             for(auto &ring : joints.second) {
                 for(const auto &edge : ring) {
                     joint_points.insert(edge.v0());
@@ -139,9 +143,9 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
             while(!edge_map.empty()
                   && !joint_points.empty()) {
                 auto &first = edge_map.begin()->first;
-                Polygon poly{first.v0(), first.v1()};
-                glm::vec3 v0 = points->at(first.v0());
-                glm::vec3 v1 = points->at(first.v1());
+                Polygon poly{first.v1(), first.v0()};
+                glm::vec3 v0 = points->at(first.v1());
+                glm::vec3 v1 = points->at(first.v0());
 
                 //try a triangle
                 int best_match = -1;
@@ -161,8 +165,9 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
                     
                     glm::vec3 best = points->at(best_match);
                     glm::vec3 pos = points->at(p);
+                    glm::vec3 center = (v0 + v1 + best) / 3.0f;
                     auto n = glm::cross(v1 - v0, best - v0);
-                    if(glm::dot(n, pos - v0) < 0) {
+                    if(glm::dot(n, pos - center) > 0) {
                         best_match = p;
                     }
                 }
@@ -194,20 +199,20 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
                 }
                 
                 std::vector<uint> to_be_killed;
-                for (auto it = joint_points.begin(); it != joint_points.end(); ++it) {
-                    auto eit = std::find_if(edge_map.begin(),
-                                            edge_map.end(),
-                                            [&it](const auto &edge) {
-                                                return edge.first.v0() == *it
-                                                || edge.first.v1() == *it;
-                        });
+                //for (auto it = joint_points.begin(); it != joint_points.end(); ++it) {
+                //    auto eit = std::find_if(processed_edges.begin(),
+                //                            processed_edges.end(),
+                //                            [&it](const auto &edge) {
+                //                                return edge.v0() == *it
+                //                                || edge.v1() == *it;
+                //        });
 
-                    if(eit == edge_map.end())
-                        to_be_killed.push_back(*it);
-                }
+                //    if(eit != processed_edges.end())
+                //        to_be_killed.push_back(*it);
+                //}
 
-                for(auto i : to_be_killed)
-                    joint_points.erase(i);
+                //for(auto i : to_be_killed)
+                //    joint_points.erase(i);
             }
         }
     }
