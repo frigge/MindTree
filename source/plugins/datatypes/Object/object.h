@@ -144,6 +144,22 @@ typedef std::shared_ptr<ObjectData> ObjectDataPtr;
 class MeshData : public ObjectData
 {
 public:
+class Edge {
+    uint v0_, v1_;
+public:
+    Edge(uint v0, uint v1) :
+        v0_{v0}, v1_{v1}
+    {}
+
+    uint v0() const { return v0_; }
+    uint v1() const { return v1_; }
+
+    bool operator==(const Edge &edge) const
+    {
+        return (edge.v0_ == v0_ && edge.v1_ == v1_)
+        || (edge.v0_ == v1_ && edge.v1_ == v0_);
+    }
+};
     MeshData();
     virtual ~MeshData();
     std::string getName();
@@ -249,4 +265,25 @@ private:
     std::atomic<int> _width, _height;
 };
 
+namespace std {
+    template<>
+    struct hash<MeshData::Edge> {
+        typedef size_t result_type;
+        typedef MeshData::Edge argument_type;
+
+        result_type operator()(argument_type const &value) const
+        {
+            size_t lhs, rhs;
+            if(value.v0() < value.v1()) {
+                lhs = value.v0();
+                rhs = value.v1();
+            }
+            else {
+                lhs = value.v1();
+                rhs = value.v0();
+            }
+            return lhs^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2);
+        }
+    };
+}
 #endif /* end of include guard: OBJECT */
