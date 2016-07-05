@@ -88,7 +88,8 @@ class MeshDataNodeDecorator(MT.pytypes.NodeDecorator):
     type="MESHING"
     label="Objects.Data.Mesh"
     insockets = [ ("Skeleton", "TRANSFORMABLE"),
-                  ("Merge Joints", "BOOLEAN", False)]
+                  ("Merge Joints", "BOOLEAN", False),
+                  ("Sides", "INTEGER", 3)]
     outsockets = [("Cylinder", "OBJECTDATA")]
 
 class MeshNodeDecorator(PrimitiveNodeDecoratorBase):
