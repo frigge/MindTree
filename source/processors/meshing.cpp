@@ -177,6 +177,8 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
                     MeshData::Edge e1(poly[1], poly[2]);
                     MeshData::Edge e2(poly[2], poly[0]);
 
+                    processed_edges.insert(first);
+                    edge_map.erase(first);
                     for(const auto &e : {e1, e2}) {
                         auto it = edge_map.find(e);
                         if(it != edge_map.end()) {
@@ -199,20 +201,20 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
                 }
                 
                 std::vector<uint> to_be_killed;
-                //for (auto it = joint_points.begin(); it != joint_points.end(); ++it) {
-                //    auto eit = std::find_if(processed_edges.begin(),
-                //                            processed_edges.end(),
-                //                            [&it](const auto &edge) {
-                //                                return edge.v0() == *it
-                //                                || edge.v1() == *it;
-                //        });
+                for (auto it = joint_points.begin(); it != joint_points.end(); ++it) {
+                    auto eit = std::find_if(edge_map.begin(),
+                                            edge_map.end(),
+                                            [&it](const auto &edge) {
+                                                return edge.first.v0() == *it
+                                                || edge.first.v1() == *it;
+                        });
 
-                //    if(eit != processed_edges.end())
-                //        to_be_killed.push_back(*it);
-                //}
+                    if(eit == edge_map.end())
+                        to_be_killed.push_back(*it);
+                }
 
-                //for(auto i : to_be_killed)
-                //    joint_points.erase(i);
+                for(auto i : to_be_killed)
+                    joint_points.erase(i);
             }
         }
     }
