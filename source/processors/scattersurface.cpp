@@ -41,17 +41,19 @@ void scattersurface(DataCache* cache)
         area += a;
     }
 
-    auto points = std::make_shared<VertexList>();
-    std::mt19937 g;
-    std::uniform_real_distribution<float> dist;
+    struct PolygonTriangle {
+        uint polygon;
+        uint triangle;
+    };
 
+    std::map<float, PolygonTriangle> polygon_map;
+    float offset{0};
+    uint pi{0};
     for (const auto &poly : *polys) {
-        if(points->size() == count)
-            break;
-        
-        int first = poly[0];
+        uint first = poly[0];
+
         auto v0 = (*verts)[first];
-        for(int i = 1; i < poly.size() - 1; ++i) {
+        for(uint i = 1; i < poly.size() - 1; ++i) {
             auto v1 = (*verts)[poly[i]];
             auto v2 = (*verts)[poly[i + 1]];
 
@@ -59,20 +61,36 @@ void scattersurface(DataCache* cache)
             auto e2 = v2 - v0;
             float a = glm::length(glm::cross(e1, e2)) * 0.5;
 
-            for(int n = 0; n < (count * (a / area)); ++n) {
-                if(points->size() == count)
-                    break;
-
-                glm::vec2 uv(dist(g), dist(g));
-                if (uv.x + uv.y > 1)
-                    uv = glm::vec2(1) - uv;
-
-                points->emplace_back(v0 + e1 * uv.x + e2 * uv.y);
-            }
+            offset += a/area;
+            polygon_map[offset] = PolygonTriangle{pi, i};
         }
+        pi++;
     }
 
     
+    auto points = std::make_shared<VertexList>();
+    std::mt19937 g;
+    std::uniform_real_distribution<float> dist;
+
+    for(int i = 0; i < count; ++i) {
+        float pos = dist(g);
+        glm::vec2 uv(dist(g), dist(g));
+        if(uv.x + uv.y > 1.f)
+            uv = glm::vec2(1) - uv;
+
+        auto tri = polygon_map.upper_bound(pos);
+        const auto &poly = (*polys)[tri->second.polygon];
+        uint j = tri->second.triangle;
+        auto v0 = (*verts)[poly[0]];
+        auto v1 = (*verts)[poly[j]];
+        auto v2 = (*verts)[poly[j + 1]];
+
+        auto e1 = v1 - v0;
+        auto e2 = v2 - v0;
+
+        points->push_back(v0 + e1 * uv.x + e2 * uv.y);
+    }
+
     MeshDataPtr retmesh = std::make_shared<MeshData>();
     retmesh->setProperty("P", points);
     GeoObjectPtr retobj = std::make_shared<GeoObject>();

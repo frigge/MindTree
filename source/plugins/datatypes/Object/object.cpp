@@ -180,10 +180,9 @@ glm::vec3 AbstractTransformable::getPosition()
 
 void AbstractTransformable::setPosition(glm::vec3 pos)    
 {
-    glm::vec3 dist = pos - getPosition();
     {
         std::lock_guard<std::mutex> lock(_transformationLock);
-        transformation = glm::translate(transformation, dist);
+        transformation[3] = glm::vec4(pos, 1);
     }
 }
 
