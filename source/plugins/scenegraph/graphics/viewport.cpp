@@ -66,12 +66,11 @@ Viewport::Viewport(ViewportWidget *widget) :
     defaultCamera->setFar(1000);
 
     QGLContext *ctx = const_cast<QGLContext*>(context());
+    doneCurrent();
     _widgetManager = std::make_shared<MindTree::Widget3DManager>();
     _renderConfigurator = std::make_unique<GL::DeferredRenderer>(ctx, defaultCamera, _widgetManager.get());
 
     setMouseTracking(true);
-    doneCurrent();
-    _renderConfigurator->startRendering();
 }
 
 Viewport::~Viewport()
@@ -177,21 +176,19 @@ void Viewport::changeCamera(std::string cam)
 
 void Viewport::resizeEvent(QResizeEvent *)
 {
-    doneCurrent();
     activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
     activeCamera->setResolution(width(), height());
     _renderConfigurator->setCamera(activeCamera);
+    _renderConfigurator->startRendering();
     MindTree::GL::RenderThread::updateOnce();
 }
 
 void Viewport::paintEvent(QPaintEvent *)
 {
-    doneCurrent();
 }
 
 void Viewport::showEvent(QShowEvent *)
 {
-    doneCurrent();
     _renderConfigurator->startRendering();
 }
 

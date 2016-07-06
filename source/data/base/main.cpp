@@ -16,24 +16,29 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <QtGui/QApplication>
 
 #include "source/graphics/base/mindtree_mainwindow.h"
 #include "source/data/base/init.h"
 
+#ifdef __linux__
+#include <X11/Xlib.h>
+#endif
+
 int main(int argc, char *argv[])
 {
+#ifdef __linux__
+    XInitThreads();
+    std::cout << "initializing X11 threading support" << std::endl;
+    QApplication::setAttribute(Qt::AA_X11InitThreads);
+#endif
+
     MindTree::initApp(argc, argv);
 
     if(MindTree::noGui()) {
         MindTree::finalizeApp();
         return 0;
     }
-
-#ifdef __linux__
-    QApplication::setAttribute(Qt::AA_X11InitThreads);
-#endif
 
     QApplication a(argc, argv);
     MindTree::MainWindow *w = new MindTree::MainWindow();
