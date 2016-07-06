@@ -92,6 +92,15 @@ class MeshDataNodeDecorator(MT.pytypes.NodeDecorator):
                   ("Sides", "INTEGER", 3)]
     outsockets = [("Cylinder", "OBJECTDATA")]
 
+class CopyNodeDecorator(MT.pytypes.NodeDecorator):
+    type="COPY"
+    label="Objects.Copy"
+    insockets = [ ("Object", "TRANSFORMABLE"),
+                  ("Points", "TRANSFORMABLE"),
+                  ("Use Normal", "BOOLEAN", False),
+                  ("Up Vector", "VECTOR3D", (0,1,0))]
+    outsockets = [("Copies", "TRANSFORMABLE")]
+
 class MeshNodeDecorator(PrimitiveNodeDecoratorBase):
     label="Objects.Primitives.Mesh"
     datanode = "Objects.Data.Mesh"
@@ -108,5 +117,6 @@ MT.registerNode(IcosphereDataNodeDecorator)
 MT.registerNode(IcosphereNodeDecorator)
 MT.registerNode(CylinderNodeDecorator)
 MT.registerNode(DiscNodeDecorator)
+MT.registerNode(CopyNodeDecorator)
 
 MT.registerNode(MeshNodeDecorator)

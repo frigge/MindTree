@@ -49,6 +49,7 @@ endif()
 message("C++ compiler: " ${CMAKE_CXX_COMPILER_ID})
 message("CMake Build Type: " ${CMAKE_BUILD_TYPE})
 
+set(CMAKE_EXE_LINKER_FLAGS "-lX11 ${CMAKE_EXE_LINKER_FLAGS}")
 
 #set(CMAKE_VERBOSE_MAKEFILE true)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -132,14 +133,15 @@ add_subdirectory(source/lib)
 
 add_executable(mindTree ${ALL_SRC})
 target_link_libraries(mindTree
-            mindtree_core
-            ${MINDTREE_CORE_LIB}
-            ${QT_LIBRARIES}
-            ${Boost_LIBRARIES}
-            ${PYTHON_LIBRARIES}
-            ${OPENGL_LIBRARIES}
-            ${GLEW_LIBRARIES}
-            ${PROFILE_LIB}
+  X11
+  mindtree_core
+  ${MINDTREE_CORE_LIB}
+  ${QT_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${PYTHON_LIBRARIES}
+  ${OPENGL_LIBRARIES}
+  ${GLEW_LIBRARIES}
+  ${PROFILE_LIB}
 )
 
 set(PROJECT_ROOT ${PROJECT_BINARY_DIR})
