@@ -489,11 +489,12 @@ private:
 class ContextBinder
 {
 public:
-    ContextBinder(QGLContext *context);
+    ContextBinder(QGLContext *context, bool force=false);
     ~ContextBinder();
 
 private:
     QGLContext *_context;
+    bool _force;
 };
 
 class QtContext : public QGLContext
@@ -503,6 +504,7 @@ public:
 
     void makeCurrent() override;
     void doneCurrent() override;
+
     static QGLFormat format();
 };
 

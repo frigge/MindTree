@@ -66,7 +66,6 @@ Viewport::Viewport(ViewportWidget *widget) :
     defaultCamera->setFar(1000);
 
     QGLContext *ctx = const_cast<QGLContext*>(context());
-    doneCurrent();
     _widgetManager = std::make_shared<MindTree::Widget3DManager>();
     _renderConfigurator = std::make_unique<GL::DeferredRenderer>(ctx, defaultCamera, _widgetManager.get());
 

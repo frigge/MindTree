@@ -113,6 +113,7 @@ void RenderThread::start()
 
     auto renderLoop = [] {
         std::unique_lock<std::mutex> lock(_renderingLock, std::defer_lock);
+        ContextBinder binder(_renderQueue[0]->_context, true);
         while(RenderThread::isRendering()) {
             if(!_update) _renderNotifier.wait(lock);
             for(auto *manager : _renderQueue) {
@@ -281,7 +282,6 @@ RenderPass* RenderTree::getPass(uint index)
 
 void RenderTree::draw()
 {
-    ContextBinder binder(_context);
     RenderThread::asrt();
 
     glEnable(GL_POINT_SMOOTH);

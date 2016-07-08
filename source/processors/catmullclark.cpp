@@ -4,9 +4,7 @@
 
 #include "data/debuglog.h"
 #include "../plugins/datatypes/Object/object.h"
-#include "../plugins/datatypes/Object/skeleton.h"
 #include "data/reloadable_plugin.h"
-#include "common.h"
 
 using namespace MindTree;
 
@@ -122,7 +120,7 @@ void subd(DataCache* cache)
     mesh->setProperty("P", verts);
     mesh->setProperty("polygon", polys);
 
-
+    mesh->computeVertexNormals();
     cache->pushData(mesh);
 }
 

@@ -319,7 +319,10 @@ public:
     SignalCollector() {}
 
     SignalCollector(const SignalCollector &&other) {sigs = std::move(other.sigs);}
-    SignalCollector& operator=(const SignalCollector &&other) {sigs = std::move(other.sigs);}
+    SignalCollector& operator=(const SignalCollector &&other)
+    {
+        sigs = std::move(other.sigs); return *this;
+    }
 
     SignalCollector(const SignalCollector&) = delete;
     SignalCollector& operator=(const SignalCollector&) = delete;
@@ -368,7 +371,10 @@ public:
     SignalCollector& operator=(const SignalCollector&) = delete;
 
     SignalCollector(const SignalCollector &&other) {sigs = std::move(other.sigs);}
-    SignalCollector& operator=(const SignalCollector &&other) {sigs = std::move(other.sigs);}
+    SignalCollector& operator=(const SignalCollector &&other)
+    {
+        sigs = std::move(other.sigs); return *this;
+    }
 
     CallbackHandler connect(std::string sigEmitter, std::function<void()> fun) {
         if(std::find(emitterIDs.begin(), emitterIDs.end(), sigEmitter) == emitterIDs.end())
@@ -414,7 +420,10 @@ public:
     SignalCollector& operator=(const SignalCollector&) = delete;
 
     SignalCollector(const SignalCollector &&other) {sigs = std::move(other.sigs);}
-    SignalCollector& operator=(const SignalCollector &&other) {sigs = std::move(other.sigs);}
+    SignalCollector& operator=(const SignalCollector &&other)
+    {
+        sigs = std::move(other.sigs); return *this;
+    }
 
     CallbackHandler connect(std::string sigEmitter, BPy::object fun) 
     {

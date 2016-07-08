@@ -1,3 +1,4 @@
+#define GLM_SWIZZLE
 #include "data/debuglog.h"
 #include "../plugins/datatypes/Object/object.h"
 #include "data/reloadable_plugin.h"
@@ -25,49 +26,45 @@ void scattersurface(DataCache* cache)
     auto polys = mesh->getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
     auto verts = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
 
-    float area{0};
-    for (const auto &poly : *polys) {
-        int first = poly[0];
-        auto v0 = (*verts)[first];
-        float a{0};
-        for(int i = 1; i < poly.size() - 1; ++i) {
-            auto v1 = (*verts)[poly[i]];
-            auto v2 = (*verts)[poly[i + 1]];
-
-            auto e1 = v1 - v0;
-            auto e2 = v2 - v0;
-            a += glm::length(glm::cross(e1, e2)) * 0.5;
-        }
-        area += a;
-    }
-
     struct PolygonTriangle {
         uint polygon;
         uint triangle;
     };
 
-    std::map<float, PolygonTriangle> polygon_map;
-    float offset{0};
+    using Value = std::pair<float, PolygonTriangle>;
+
+    std::vector<Value> polygon_map;
+    float area{0};
     uint pi{0};
+
+    auto trans = obj->getWorldTransformation();
     for (const auto &poly : *polys) {
         uint first = poly[0];
-
-        auto v0 = (*verts)[first];
+        auto v0 = (trans * glm::vec4((*verts)[first], 1)).xyz();
+        float a{0};
         for(uint i = 1; i < poly.size() - 1; ++i) {
-            auto v1 = (*verts)[poly[i]];
-            auto v2 = (*verts)[poly[i + 1]];
+            auto v1 = (trans * glm::vec4((*verts)[poly[i]], 1)).xyz();
+            auto v2 = (trans * glm::vec4((*verts)[poly[i + 1]], 1)).xyz();
 
             auto e1 = v1 - v0;
             auto e2 = v2 - v0;
-            float a = glm::length(glm::cross(e1, e2)) * 0.5;
-
-            offset += a/area;
-            polygon_map[offset] = PolygonTriangle{pi, i};
+            a += glm::length(glm::cross(e1, e2)) * 0.5;
+            polygon_map.emplace_back(std::make_pair(area + a, PolygonTriangle{pi, i}));
         }
+        area += a;
         pi++;
     }
 
-    
+    auto comp1 = [](const auto &l, const auto &r) {
+        return l < r.first;
+    };
+
+    auto comp2 = [](const auto &l, const auto &r) {
+        return l.first < r.first;
+    };
+
+    std::sort(begin(polygon_map), end(polygon_map), comp2);
+
     auto points = std::make_shared<VertexList>();
     std::mt19937 g;
     std::uniform_real_distribution<float> dist;
@@ -78,9 +75,11 @@ void scattersurface(DataCache* cache)
         if(uv.x + uv.y > 1.f)
             uv = glm::vec2(1) - uv;
 
-        auto tri = polygon_map.upper_bound(pos);
-        const auto &poly = (*polys)[tri->second.polygon];
-        uint j = tri->second.triangle;
+        auto tri = std::upper_bound(begin(polygon_map),
+                                    end(polygon_map),
+                                    pos * area, comp1)->second;
+        const auto &poly = (*polys)[tri.polygon];
+        uint j = tri.triangle;
         auto v0 = (*verts)[poly[0]];
         auto v1 = (*verts)[poly[j]];
         auto v2 = (*verts)[poly[j + 1]];
@@ -88,7 +87,7 @@ void scattersurface(DataCache* cache)
         auto e1 = v1 - v0;
         auto e2 = v2 - v0;
 
-        points->push_back(v0 + e1 * uv.x + e2 * uv.y);
+        points->push_back((trans * glm::vec4(v0 + e1 * uv.x + e2 * uv.y, 1)).xyz());
     }
 
     MeshDataPtr retmesh = std::make_shared<MeshData>();

@@ -1480,15 +1480,21 @@ int Texture2D::height()
     return _height;
 }
 
-ContextBinder::ContextBinder(QGLContext *context)
-    : _context(context)
+ContextBinder::ContextBinder(QGLContext *context, bool force)
+    : _context(context), _force(force)
 {
-    _context->makeCurrent();
+    if(force)
+        _context->QGLContext::makeCurrent();
+    else
+        _context->makeCurrent();
 }
 
 ContextBinder::~ContextBinder()
 {
-    _context->doneCurrent();
+    if(_force)
+        _context->QGLContext::doneCurrent();
+    else
+        _context->doneCurrent();
 }
 
 QtContext::QtContext()
@@ -1498,11 +1504,13 @@ QtContext::QtContext()
 
 void QtContext::makeCurrent()
 {
+    RenderThread::asrt();
     QGLContext::makeCurrent();
 }
 
 void QtContext::doneCurrent()
 {
+    RenderThread::asrt();
     QGLContext::doneCurrent();
 }
 
