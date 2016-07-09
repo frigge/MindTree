@@ -9,33 +9,48 @@ using namespace MindTree;
 void filter(DataCache* cache)
 {
     auto input = cache->getData(0).getData<MeshDataPtr>();
-    auto filter = cache->getData(1).getData<std::string>();
+    auto name = cache->getData(1).getData<std::string>();
     auto upper_limit = cache->getData(2).getData<float>();
     auto lower_limit = cache->getData(3).getData<float>();
 
     if(input
        && !input->hasProperty("P")
        && !input->hasProperty("polygon")
-       &&!input->hasProperty(filter))
+       &&!input->hasProperty(name))
         return;
 
     auto input_points = input->getProperty("P").getData<std::shared_ptr<VertexList>>();
     auto input_polys = input->getProperty("P").getData<std::shared_ptr<PolygonList>>();
-    auto prop = input->getProperty(filter);
+    auto prop = input->getProperty(name).getData<std::shared_ptr<std::vector<float>>>();
+    if(!prop->size() == input_polys->size())
+        return;
 
     auto points = std::make_shared<VertexList>();
     auto polygons = std::make_shared<PolygonList>();
 
-    auto properties = input->getProperties();
     std::unordered_map<uint, uint> vertex_mapping;
 
-    for(const auto &prop : properties) {
-        bool matched = true;
-        if((!matched) || (matched)) {
-            for(uint i = 0; i < polygons->size(); ++i) {
+    for(uint i = 0; i < input_polys->size(); ++i) {
+        auto value = (*prop)[i];
+        if( value > lower_limit && value < upper_limit) {
+            Polygon poly;
+            const auto &old_poly = (*input_polys)[i];
+            for(int j = 0; j < old_poly.size(); ++j) {
+                if(vertex_mapping.find(old_poly[j]) == vertex_mapping.end()) {
+                    vertex_mapping[old_poly[j]] = points->size();
+                    points->push_back((*input_points)[old_poly[j]]);
+                }
+                poly.push_back(vertex_mapping[old_poly[j]]);
             }
+            polygons->push_back(poly);
         }
     }
+
+    auto mesh = std::make_shared<MeshData>();
+    mesh->setProperty("P", points);
+    mesh->setProperty("polygon", polygons);
+
+    cache->pushData(mesh);
 }
 
 extern "C" {

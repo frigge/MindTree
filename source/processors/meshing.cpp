@@ -14,6 +14,13 @@ void grahamScanMerge(PolygonList *polys)
 {
 }
 
+void inheritAttributes(PropertyMap *attributes, Joint *j, uint i)
+{
+    for(const auto &prop : j->getProperties()){
+        Property::setItem((*attributes)[prop.first], i, prop.second);
+    }
+}
+
 std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints)
 {
     //differentiate paths and joints
@@ -27,6 +34,7 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
     auto mesh = std::make_shared<MeshData>();
     auto points = std::make_shared<VertexList>();
     auto polys = std::make_shared<PolygonList>();
+    PropertyMap attributes;
     mesh->setProperty("P", points);
     mesh->setProperty("polygon", polys);
 
@@ -50,9 +58,8 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
             Joint *lastjoint{nullptr};
             if(j->getParent() && merge_joints) {
                 auto childTrans = children[0]->getWorldTransformation();
-                auto childPos = childTrans[3].xyz();
-                auto currentPos = trans[3].xyz();
-                trans[3] = glm::vec4((childPos + currentPos) * 0.5f, 1);
+                trans = (childTrans + trans) * 0.5f;
+                trans[3].w = 1;
             }
 
             bool first{true};
@@ -75,6 +82,7 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
                     for(int i = sides-1; i >= 0; --i) {
                         p.push_back(i);
                     }
+                    inheritAttributes(&attributes, j, polys->size());
                     polys->push_back(p);
                 }
 
@@ -87,6 +95,7 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
                     for(int i = 0; i < ring.size(); ++i) {
                         Polygon p{ring[i].v1(), ring[i].v0(),
                                 lastring[i].v0(), lastring[i].v1()};
+                        inheritAttributes(&attributes, j, polys->size());
                         polys->push_back(p);
                     }
                 }
@@ -122,6 +131,7 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
                 p.push_back(i);
             }
 
+            inheritAttributes(&attributes, joint, polys->size());
             polys->push_back(p);
         }
     }
@@ -193,6 +203,7 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
                         }
                     }
 
+                    inheritAttributes(&attributes, joints.first, polys->size());
                     polys->push_back(poly);
                 }
                 else {

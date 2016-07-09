@@ -21,7 +21,7 @@ void run(DataCache *cache)
         std::string newexpanded;
         for (char c : expanded) {
             if (rules.find(c) != rules.end()) {
-                newexpanded += rules[c];
+                newexpanded += "(" + rules[c] + ")";
             }
             else {
                 newexpanded += c;
@@ -36,8 +36,15 @@ void run(DataCache *cache)
 
     Joint *parent{nullptr};
     JointPtr j, root;
+    uint generation{0};
     for (char c : expanded) {
-        if(c == '[') {
+        if(c == '(') {
+            generation++;
+        }
+        else if(c == ')') {
+            generation--;
+        }
+        else if(c == '[') {
             parent = j.get();
         }
         else if(c == ']') {
@@ -48,6 +55,7 @@ void run(DataCache *cache)
         }
         else {
             j = std::dynamic_pointer_cast<Joint>(joint_map[c]->clone());
+            j->setProperty("lsystem_generation", generation);
             if(!root) {
                 root = j;
                 parent = root.get();
