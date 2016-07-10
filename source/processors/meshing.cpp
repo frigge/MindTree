@@ -10,13 +10,13 @@
 
 using namespace MindTree;
 
-void grahamScanMerge(PolygonList *polys)
-{
-}
-
 void inheritAttributes(PropertyMap *attributes, Joint *j, uint i)
 {
     for(const auto &prop : j->getProperties()){
+        if(!attributes->contains(prop.first)) {
+            (*attributes)[prop.first] = prop.second.createList(i);
+        }
+
         Property::setItem((*attributes)[prop.first], i, prop.second);
     }
 }
@@ -229,6 +229,9 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
             }
         }
     }
+       
+    for(const auto &p : attributes)
+        mesh->setProperty(p.first, p.second);
 
     mesh->computeVertexNormals();
     return mesh;

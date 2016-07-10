@@ -223,6 +223,11 @@ bool PropertyMap::empty() const
     return _properties.empty();
 }
 
+bool PropertyMap::contains(const std::string &name) const
+{
+    return find(name) != cend();
+}
+
 Property PropertyMap::at(const std::string &name)
 {
     return *std::find_if(std::begin(_properties),
@@ -295,9 +300,19 @@ PropertyMap::Iterator PropertyMap::end()
     return _properties.end();
 }
 
+PropertyMap::CIterator PropertyMap::begin() const
+{
+    return _properties.cbegin();
+}
+
 PropertyMap::CIterator PropertyMap::cbegin() const
 {
     return _properties.cbegin();
+}
+
+PropertyMap::CIterator PropertyMap::end() const
+{
+    return _properties.cend();
 }
 
 PropertyMap::CIterator PropertyMap::cend() const

@@ -19,3 +19,4 @@ class FilterPolygonDecorator(MT.pytypes.NodeDecorator):
     outsockets = [("Filtered", "OBJECTDATA")]
 
 MT.registerNode(SubdNodeDecorator)
+MT.registerNode(FilterPolygonDecorator)

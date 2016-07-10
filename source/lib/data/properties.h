@@ -61,6 +61,16 @@ public:
     }
 };
 
+template<typename T>
+class PropertyTypeInfo<std::shared_ptr<std::vector<T>>>
+{
+public:
+    static DataType getType()
+    {
+        return "LIST:" + PropertyTypeInfo<T>::getType().toStr();
+    }
+};
+
 #define PROPERTY_TYPE_INFO(TYPE, STR) \
     template<> const MindTree::DataType MindTree::PropertyTypeInfo<TYPE>::_type{STR}
 
@@ -277,7 +287,7 @@ public:
         return traits_->getSize();
     }
 
-    inline Property createList(size_t cnt)
+    inline Property createList(size_t cnt) const
     {
         if(isList()) return *this;
         if(traits_)
@@ -436,6 +446,7 @@ public:
     void clear();
     size_t size() const;
     bool empty() const;
+    bool contains(const std::string &name) const;
 
     Property at(const std::string &name);
     const Property& at(const std::string &name) const;
@@ -444,7 +455,9 @@ public:
     Property& operator[](std::string &&name);
 
     Iterator begin();
+    CIterator begin() const;
     Iterator end();
+    CIterator end() const;
     CIterator cbegin() const;
     CIterator cend() const;
 

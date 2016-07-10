@@ -10,8 +10,8 @@ void filter(DataCache* cache)
 {
     auto input = cache->getData(0).getData<MeshDataPtr>();
     auto name = cache->getData(1).getData<std::string>();
-    auto upper_limit = cache->getData(2).getData<float>();
-    auto lower_limit = cache->getData(3).getData<float>();
+    auto upper_limit = cache->getData(2).getData<double>();
+    auto lower_limit = cache->getData(3).getData<double>();
 
     if(input
        && !input->hasProperty("P")
@@ -20,10 +20,12 @@ void filter(DataCache* cache)
         return;
 
     auto input_points = input->getProperty("P").getData<std::shared_ptr<VertexList>>();
-    auto input_polys = input->getProperty("P").getData<std::shared_ptr<PolygonList>>();
-    auto prop = input->getProperty(name).getData<std::shared_ptr<std::vector<float>>>();
-    if(!prop->size() == input_polys->size())
+    auto input_polys = input->getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
+    auto prop = input->getProperty(name).getData<std::vector<double>>();
+    if(prop.size() != input_polys->size()) {
+        cache->pushData(input);
         return;
+    }
 
     auto points = std::make_shared<VertexList>();
     auto polygons = std::make_shared<PolygonList>();
@@ -31,7 +33,7 @@ void filter(DataCache* cache)
     std::unordered_map<uint, uint> vertex_mapping;
 
     for(uint i = 0; i < input_polys->size(); ++i) {
-        auto value = (*prop)[i];
+        auto value = prop[i];
         if( value > lower_limit && value < upper_limit) {
             Polygon poly;
             const auto &old_poly = (*input_polys)[i];

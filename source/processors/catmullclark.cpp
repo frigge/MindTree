@@ -8,6 +8,18 @@
 
 using namespace MindTree;
 
+void inheritAttributes(PropertyMap *attributes, const PropertyMap &old, uint oldi, uint i)
+{
+    for(const auto &prop : old){
+        if(!attributes->contains(prop.first)) {
+            (*attributes)[prop.first] = Property::getItem(prop.second, 0).createList(i);
+        }
+        Property::setItem((*attributes)[prop.first],
+                          i,
+                          Property::getItem(prop.second, oldi));
+    }
+}
+
 void subd(DataCache* cache)
 {
     auto base = cache->getData(0).getData<std::shared_ptr<MeshData>>();
@@ -16,10 +28,22 @@ void subd(DataCache* cache)
     auto mesh = std::make_shared<MeshData>();
     auto polys = base->getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
     auto verts = base->getProperty("P").getData<std::shared_ptr<VertexList>>();
+
+    PropertyMap poly_properties;
+    auto original_props = base->getProperties();
+
+    for(const auto &prop : original_props) {
+        if(prop.second.isList() && prop.second.size() == polys->size()
+           && prop.first != "polygon") {
+            poly_properties[prop.first] = prop.second;
+        }
+    }
+
     for(int i = 0; i < iterations; ++i) {
         auto points = std::make_shared<VertexList>(*verts);
         auto polygons = std::make_shared<PolygonList>();
 
+        PropertyMap props;
         uint vertCnt = points->size();
 
         //face points
@@ -110,15 +134,20 @@ void subd(DataCache* cache)
                 poly.push_back(edge_points[e1]);
                 poly.push_back(e1.v1());
                 poly.push_back(edge_points[e2]);
+                inheritAttributes(&props, poly_properties, i, polygons->size());
                 polygons->push_back(poly);
             }
         }
         polys = polygons;
         verts = points;
+        poly_properties = std::move(props);
     }
 
     mesh->setProperty("P", verts);
     mesh->setProperty("polygon", polys);
+
+    for(const auto &p : poly_properties)
+        mesh->setProperty(p.first, p.second);
 
     mesh->computeVertexNormals();
     cache->pushData(mesh);

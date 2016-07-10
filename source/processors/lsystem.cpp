@@ -55,7 +55,8 @@ void run(DataCache *cache)
         }
         else {
             j = std::dynamic_pointer_cast<Joint>(joint_map[c]->clone());
-            j->setProperty("lsystem_generation", generation);
+            double gen = generation;
+            j->setProperty("lsystem_generation", gen);
             if(!root) {
                 root = j;
                 parent = root.get();
