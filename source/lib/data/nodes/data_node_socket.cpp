@@ -373,10 +373,10 @@ IO::InStream& MindTree::operator>>(IO::InStream& stream, DinSocket &socket)
         NodeType type;
         stream >> type;
         auto node = NodeDataBase::createNodeByType(type);
-        stream >> *node;
+        if(node) stream >> *node;
         stream.endBlock("DNode");
 
-        socket.addChildNode(node);
+        if(node) socket.addChildNode(node);
     }
     stream.endBlock("ChildNodes");
 
