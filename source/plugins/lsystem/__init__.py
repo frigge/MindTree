@@ -40,7 +40,7 @@ class LSystemNodeDecorator(MT.pytypes.NodeDecorator):
     label = "LSystem"
     type = "LSYSTEMNODE"
     insockets = [
-        ("Axion", "STRING"),
+        ("Axiom", "STRING"),
         ("Rules", "LIST:STRING"),
         ("Transformations", "LIST:TRANSFORMABLE"),
         ("Iterations", "INTEGER")

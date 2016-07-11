@@ -161,6 +161,11 @@ class NodeSpace(QGraphicsScene):
         self.links[insocket] = link
         self.addItem(link)
 
+        for child in insocket.childNodes:
+            for s in child.insockets:
+                if s.connected:
+                    self.drawLink(s)
+
     def removeLink(self, insocket):
         toremove = []
         for s in self.links.keys():
