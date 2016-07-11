@@ -1,6 +1,9 @@
+find_package(ASSIMP)
+
 include_directories(
             ${PROJECT_SOURCE_DIR}
             ${MINDTREE_SRC_LIB_DIR}
+            ${ASSIMP_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -38,6 +41,11 @@ target_link_libraries(copy mindtree_core objectlib)
 add_library(filter MODULE filterpolygons.cpp)
 target_link_libraries(filter mindtree_core objectlib)
 
+add_library(import3d MODULE import3d.cpp)
+target_link_libraries(import3d mindtree_core objectlib assimp)
+add_library(export3d MODULE export3d.cpp)
+target_link_libraries(export3d mindtree_core objectlib assimp)
+
 install(TARGETS pointcloud LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS icosphere LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS cylinder LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
@@ -48,3 +56,5 @@ install(TARGETS scattersurface LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS catmullclark LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS copy LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS filter LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
+install(TARGETS import3d LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
+install(TARGETS export3d LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
