@@ -12,9 +12,9 @@ BOOST_PYTHON_MODULE(objio)
         return std::make_shared<ObjImportNode>(raw);
     };
 
-    NodeDataBase::registerNodeType(std::make_unique<BuildInDecorator>("OBJIMPORT", 
-                                                      "Objects.Import",
-                                                      importFn));
+    //NodeDataBase::registerNodeType(std::make_unique<BuildInDecorator>("OBJIMPORT", 
+    //                                                  "Objects.Import",
+    //                                                  importFn));
 
     auto proc = [] (MindTree::DataCache* cache)
     {
