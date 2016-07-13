@@ -11,6 +11,8 @@ class AssimpExporter
 {
     std::vector<MeshData*> meshes_;
     std::vector<Material*> materials_;
+    std::string filename_;
+    std::string format_;
 
 public:
     AssimpExporter(const std::string &filename, const std::string &format) :
@@ -18,25 +20,28 @@ public:
     {
     }
     
-    void export(cosnt AbstractTransformablePtr &out)
+    void exportObject(const AbstractTransformablePtr &out)
     {
         Assimp::Exporter exporter;
 
-        exporter.mScene = new aiScene();
+        aiScene scene;
         writeObject(out);
-        writeMeshes(exporter.mScene);
-        writeMaterials(exporter.mScene);
+        writeMeshes(&scene);
+        writeMaterials(&scene);
+
+        exporter.Export(&scene, filename_, format_);
     }
 
-    aiNode* writeObject(const AbstractTransformable &trans)
+    aiNode* writeObject(const AbstractTransformablePtr &trans)
     {
         auto *n = new aiNode();
         n->mTransformation = convert(trans->getTransformation());
 
-        if (trans->getType() == AbstractTransformable::GEOOBJECT) {
+        if (trans->getType() == AbstractTransformable::GEO) {
             auto data = std::static_pointer_cast<GeoObject>(trans)->getData();
-            n->mMesh = meshes_.size();
-            meshes_->push_back(std::static_pointer_cast<MeshData>(data));
+            n->mMeshes = new uint[1];
+            n->mMeshes[0] = meshes_.size();
+            meshes_.push_back(std::static_pointer_cast<MeshData>(data).get());
             n->mNumMeshes = 1;
         }
 
@@ -54,29 +59,41 @@ public:
         return n;
     }
 
-    void writeMeshes() const
+    void writeMeshes(aiScene *scene) const
     {
-        auto *mesh = new aiMesh();
+        uint i{0};
         for(const auto &mesh : meshes_) {
+            auto *aim = new aiMesh();
+            scene->mMeshes[i] = aim;
             auto verts = mesh->getProperty("P").getData<VertexListPtr>();
-            mesh->mNumVertices = verts->size();
-            mesh->mVertices = new aiVector3D[verts->size()];
-            mesh->mNormals = new aiVector3D[verts->size()];
+            aim->mNumVertices = verts->size();
+            aim->mVertices = new aiVector3D[verts->size()];
+            aim->mNormals = new aiVector3D[verts->size()];
             auto normals = mesh->getProperty("N").getData<VertexListPtr>();
             for(int i = 0; i < verts->size(); ++i) {
-                mesh->mVertices[i] = convert((*verts)[i]);
-                mesh->mNormals[i] = convert((*normals)[i]);
+                aim->mVertices[i] = convert((*verts)[i]);
+                aim->mNormals[i] = convert((*normals)[i]);
             }
 
             auto polygons = mesh->getProperty("polygon").getData<PolygonListPtr>();
+
+            aim->mFaces = new aiFace[polygons->size()];
+
+            for (uint j = 0; j < polygons->size(); ++j) {
+                aiFace f;
+                f.mNumIndices = (*polygons)[j].size();
+                f.mIndices = new uint[f.mNumIndices];
+                for(uint k = 0; j < (*polygons)[j].size(); ++k) {
+                    f.mIndices[k] = (*polygons)[j][k];
+                }
+                aim->mFaces[j] = f;
+            }
+            i++;
         }
+
     }
 
-    void writeFace() const
-    {
-    }
-
-    void writeMaterials() const
+    void writeMaterials(aiScene *scene) const
     {
     }
 
@@ -99,19 +116,19 @@ public:
 
 void export3d(DataCache* cache)
 {
-    auto data = cache.getData(0).getData<AbstractTransformablePtr>();
-    auto filename = cache.getData(1).getData<std::string>();
-    auto format = cache.getData(2).getData<std::string>();
+    auto data = cache->getData(0).getData<AbstractTransformablePtr>();
+    auto filename = cache->getData(1).getData<std::string>();
+    auto format = cache->getData(2).getData<std::string>();
 
     AssimpExporter exporter(filename, format);
-    exporter.export(data);
+    exporter.exportObject(data);
 }
 
 extern "C" {
 CacheProcessorInfo load()
 {
     CacheProcessorInfo info;
-    info.socket_type = "TRANSFORMABLE";
+    info.socket_type = "ACTION";
     info.node_type = "EXPORT3D";
     info.cache_proc = export3d;
     return info;
