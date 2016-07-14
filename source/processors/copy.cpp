@@ -1,3 +1,4 @@
+#define GLM_SWIZZLE
 #include "data/debuglog.h"
 #include "../plugins/datatypes/Object/object.h"
 #include "data/reloadable_plugin.h"
@@ -31,15 +32,15 @@ void copy(DataCache* cache)
         auto copy = obj->clone();
         if(normals) {
             auto n = glm::normalize((*normals)[i]);
-            auto x = glm::cross(n, glm::normalize(upvector));
-            auto z = glm::cross(x, n); 
+            auto x = glm::normalize(glm::cross(n, glm::normalize(upvector)));
+            auto z = glm::normalize(glm::cross(x, n));
 
             glm::mat4 rot(glm::vec4(x, 0),
                           glm::vec4(n, 0),
                           glm::vec4(z, 0),
                           glm::vec4(0, 0, 0, 1));
 
-            copy->setTransformation(copy->getTransformation() * rot);
+            copy->setTransformation(rot * copy->getTransformation());
         }
         copy->setPosition(p);
         empty->addChild(copy);

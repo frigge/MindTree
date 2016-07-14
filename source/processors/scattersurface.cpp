@@ -26,6 +26,11 @@ void scattersurface(DataCache* cache)
     auto polys = mesh->getProperty("polygon").getData<std::shared_ptr<PolygonList>>();
     auto verts = mesh->getProperty("P").getData<std::shared_ptr<VertexList>>();
 
+    if(!mesh->hasProperty("N"))
+        mesh->computeVertexNormals();
+
+    auto normals = mesh->getProperty("N").getData<std::shared_ptr<VertexList>>();
+
     struct PolygonTriangle {
         uint polygon;
         uint triangle;
@@ -38,6 +43,7 @@ void scattersurface(DataCache* cache)
     uint pi{0};
 
     auto trans = obj->getWorldTransformation();
+    auto ntrans = glm::transpose(glm::inverse(obj->getWorldTransformation()));
     for (const auto &poly : *polys) {
         uint first = poly[0];
         auto v0 = (trans * glm::vec4((*verts)[first], 1)).xyz();
@@ -66,6 +72,7 @@ void scattersurface(DataCache* cache)
     std::sort(begin(polygon_map), end(polygon_map), comp2);
 
     auto points = std::make_shared<VertexList>();
+    auto retnormals = std::make_shared<VertexList>();
     std::mt19937 g;
     std::uniform_real_distribution<float> dist;
 
@@ -84,14 +91,24 @@ void scattersurface(DataCache* cache)
         auto v1 = (*verts)[poly[j]];
         auto v2 = (*verts)[poly[j + 1]];
 
+        auto n0 = (*normals)[poly[0]];
+        auto n1 = (*normals)[poly[j]];
+        auto n2 = (*normals)[poly[j + 1]];
+
         auto e1 = v1 - v0;
         auto e2 = v2 - v0;
 
+        auto ne1 = n1 - n0;
+        auto ne2 = n2 - n0;
+
         points->push_back((trans * glm::vec4(v0 + e1 * uv.x + e2 * uv.y, 1)).xyz());
+        retnormals->push_back((ntrans *
+                               glm::normalize(glm::vec4(n0 + ne1 * uv.x + ne2 * uv.y, 0))).xyz());
     }
 
     MeshDataPtr retmesh = std::make_shared<MeshData>();
     retmesh->setProperty("P", points);
+    retmesh->setProperty("N", retnormals);
     GeoObjectPtr retobj = std::make_shared<GeoObject>();
     retobj->setData(retmesh);
     cache->pushData(retobj);

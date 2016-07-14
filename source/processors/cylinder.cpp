@@ -9,7 +9,9 @@ void cylinder(DataCache* cache)
 {
     unsigned sides = std::max(3, cache->getData(0).getData<int>());
     bool cap = cache->getData(1).getData<bool>();
-    cache->pushData(createCylinder(sides, cap));
+    auto cylinder = createCylinder(sides, cap);
+    cylinder->computeVertexNormals();
+    cache->pushData(cylinder);
 }
 
 extern "C" {
