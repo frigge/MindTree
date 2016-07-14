@@ -10,14 +10,14 @@ in vec3 worldNormal;
 uniform float has_polygon_color = 0.0;
 uniform vec4 diffuse_color = vec4(1);
 uniform float specular_intensity = .5;
-uniform float diffuse_intensity = .8;
+uniform float specular_roughness = .3;
 
 out vec4 outnormal;
 out vec4 outposition;
 out vec4 worldposition;
 out vec4 outdiffusecolor;
-out vec4 outdiffuseintensity;
 out vec4 outspecintensity;
+out vec4 outspecroughness;
 out vec4 outcolor;
 
 uniform int flatShading = 0;
@@ -37,7 +37,7 @@ void main() {
     //outdiffusecolor = mix(diffuse_color,
     //                      texelFetch(polygon_color, gl_PrimitiveID, 0),
     //                      has_polygon_color);
-    outdiffuseintensity = vec4(vec3(diffuse_intensity), 1);
     outspecintensity = vec4(vec3(specular_intensity), 1);
-    //outcolor = vec4(0);
+    outspecroughness = vec4(vec3(specular_roughness), 1);
+    outcolor = vec4(0);
 }

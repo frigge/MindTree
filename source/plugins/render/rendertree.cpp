@@ -284,7 +284,6 @@ void RenderTree::draw()
 {
     RenderThread::asrt();
 
-    glEnable(GL_POINT_SMOOTH);
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_POLYGON_OFFSET_POINT);
 
@@ -302,7 +301,6 @@ void RenderTree::draw()
         _resourceManager->cleanUp();
     }
 
-    glDisable(GL_POINT_SMOOTH);
     glDisable(GL_PROGRAM_POINT_SIZE);
     glDisable(GL_POLYGON_OFFSET_POINT);
     _context->swapBuffers();

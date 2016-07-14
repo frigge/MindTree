@@ -77,6 +77,7 @@ void runIcosphere(DataCache* cache)
 
     mesh->setProperty("P", verts);
     mesh->setProperty("polygon", polys);
+    mesh->computeVertexNormals();
     cache->pushData(mesh);
 }
 

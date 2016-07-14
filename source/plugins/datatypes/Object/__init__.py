@@ -130,7 +130,8 @@ class MaterialInstanceNodeDecorator(MT.pytypes.NodeDecorator):
     insockets = [
             ("Diffuse Color", "COLOR", (1, 1, 1, 1)),
             ("Diffuse Intensity", "FLOAT", 0.8),
-            ("Specular Intensity", "FLOAT", 0.8)
+            ("Specular Intensity", "FLOAT", 0.8),
+            ("Specular Roughness", "FLOAT", 0.3)
             ]
     outsockets = [("Material", "MATERIAL")]
 

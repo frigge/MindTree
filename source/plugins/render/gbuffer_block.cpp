@@ -38,9 +38,9 @@ void GBufferRenderBlock::init()
     _geometryPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                 "outcolor"));
     _geometryPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
-                                                "outdiffuseintensity"));
-    _geometryPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                                 "outspecintensity"));
+    _geometryPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+                                                "outspecroughness"));
     auto normalptr = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
                                            "outnormal",
                                            Texture::RGBA16F);

@@ -12,7 +12,7 @@ uniform ivec2 resolution;
 uniform sampler2D outnormal;
 uniform sampler2D outposition;
 uniform sampler2D outdiffusecolor;
-uniform sampler2D outdiffuseintensity;
+uniform sampler2D outspecroughness;
 uniform sampler2D outspecintensity;
 uniform sampler2DShadow shadow;
 float inLight = 1;
@@ -94,8 +94,8 @@ void main(){
     Nn = normalize(texelFetch(outnormal, p, 0).xyz);
 
     vec4 diffuse_color = texture(outdiffusecolor, st);
-    float diffint = texture(outdiffuseintensity, st).r;
     float specint = texture(outspecintensity, st).r;
+    float specrough = texture(outspecroughness, st).r;
 
     float lightDirLength = length(light.dir);
 
@@ -126,14 +126,12 @@ void main(){
         inLight += clamp(1 - light.shadow, 0, 1);
     }
 
-    float specrough = .3;
     //vec3 spec = clamp(phong(specrough) * specint, vec3(0), vec3(1));
-    vec3 spec = phong(specrough);
+    vec3 spec = phong(specrough) * specint;
 
     vec3 diff = lambert() * diffuse_color.rgb;
     //float diffspecratio = 0.5 * value(diff) / clamp(value(spec), 0.0001, 1.);
-    //vec3 diffspec = mix(diff, spec, diffspecratio);
-    vec3 diffspec = diff + spec;
+    vec3 diffspec = mix(diff, spec, value(spec));
     shading_out = vec4(diffspec.rgb, 1);
     shading_out.rgb *= angleMask;
     shading_out.rgb *= inLight;
