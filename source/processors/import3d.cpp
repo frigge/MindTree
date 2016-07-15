@@ -106,15 +106,32 @@ private:
         meshes_.push_back(MeshInfo{mesh, aim->mMaterialIndex});
     }
 
+    template<typename T, int size> void read(aiMaterial *mat, std::string n, int n1, int n2,T* ret)
+    {
+        for(int i = 0; i < mat->mNumProperties; ++i) {
+            if(mat->mProperties[i]->mKey.data == n) {
+                for (int j = 0; j < size; j++){
+                    ret[j] = ((T*)mat->mProperties[i]->mData)[j];
+                }
+            }
+        }
+    }
+
     void parseMaterial(aiMaterial *aim)
     {
         MaterialPtr mat = std::make_shared<Material>();
-        aiColor3D diff;
-        float specint, specrough;
-        aim->Get<aiColor3D>(AI_MATKEY_COLOR_DIFFUSE, diff);
-        aim->Get<float>(AI_MATKEY_SHININESS_STRENGTH, specint);
-        aim->Get<float>(AI_MATKEY_SHININESS, specrough);
-        glm::vec4 col(diff.r, diff.g, diff.b, 1);
+        float specint{0}, specrough{1};
+        uint size(3);
+
+        float diff[3];
+        float spec[3];
+        read<float, 3>(aim, AI_MATKEY_COLOR_DIFFUSE, diff);
+        read<float, 3>(aim, AI_MATKEY_COLOR_SPECULAR, spec);
+        //read<float, 1>(aim, AI_MATKEY_SHININESS, &specrough);
+
+        glm::vec4 col(diff[0], diff[1], diff[2], 1);
+        glm::vec3 sp(spec[0], spec[1], spec[2]);
+        specint = (spec[0] + spec[1] + spec[2]) / 3.0f;
         mat->setProperty("diffuse_color", col);
         mat->setProperty("specular_intensity", specint);
         mat->setProperty("specular_roughness", specrough);

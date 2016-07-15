@@ -128,8 +128,9 @@ public:
             auto diff = convert(m->getProperty("diffuse_color").getData<glm::vec4>());
             float specint = m->getProperty("specular_intensity").getData<double>();
             float specrough = m->getProperty("specular_roughness").getData<double>();
+            aiColor3D spec(specint, specint, specint);
             mat->AddProperty(&diff, 1, AI_MATKEY_COLOR_DIFFUSE);
-            mat->AddProperty(&specint, 1, AI_MATKEY_SHININESS_STRENGTH);
+            mat->AddProperty(&spec, 1, AI_MATKEY_COLOR_SPECULAR);
             mat->AddProperty(&specrough, 1, AI_MATKEY_SHININESS);
             scene->mMaterials[i] = mat;
             ++i;
