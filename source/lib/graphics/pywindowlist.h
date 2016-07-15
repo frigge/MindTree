@@ -61,9 +61,6 @@ public:
     void setWidget(BPy::object widget);
     DoutSocketPyWrapper* getSocket();
     DataCache getCache() const;
-
-private:
-    BPy::object widget;
 };
 
 } /* MindTree */

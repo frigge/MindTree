@@ -5,6 +5,8 @@
 
 #include "QWidget"
 
+#include <chrono>
+
 #include "viewer.h"
 
 using namespace MindTree;
@@ -78,6 +80,8 @@ void WorkerThread::start()
     };
 
     _updateThread = std::thread(updateFunc);
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(2ms);
 }
 
 void WorkerThread::stop()
@@ -177,15 +181,17 @@ void Viewer::update_viewer(DinSocket *socket)
             }
             if(connected) break;
         }
-        ConstNodeList settingsNodes = _settingsNode->getAllInNodesConst();
-        for(const DNode *node : settingsNodes) {
-            for (const DinSocket *in : node->getInSockets()) {
-                if (in == socket) {
-                    connected = true;
-                    break;
+        if(_settingsNode) {
+            ConstNodeList settingsNodes = _settingsNode->getAllInNodesConst();
+            for(const DNode *node : settingsNodes) {
+                for (const DinSocket *in : node->getInSockets()) {
+                    if (in == socket) {
+                        connected = true;
+                        break;
+                    }
                 }
+                if(connected) break;
             }
-            if(connected) break;
         }
     }
 

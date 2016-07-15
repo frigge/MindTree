@@ -38,6 +38,28 @@ class DirEditor(QWidget):
         self.path = str(QFileDialog.getOpenFileName())
         self.widget.setText(self.path)
 
+class SaveFileEditor(QWidget):
+    def __init__(self, socket):
+        QWidget.__init__(self)
+        self.socket = socket
+        self.widget = QLineEdit()
+        self.setLayout(QHBoxLayout())
+        if socket.value != None:
+            self.widget.setText(socket.value)
+        self.layout().addWidget(self.widget)
+        self.browsebutton = QPushButton("...")
+        self.layout().addWidget(self.browsebutton)
+        self.layout().setSpacing(0)
+        self.layout().setMargin(0)
+        self.browsebutton.pressed.connect(self.browseFilePath)
+        self.widget.textChanged.connect(lambda x: setattr(self.socket, "value", str(x)))
+
+        self.path = ""
+
+    def browseFilePath(self):
+        self.path = str(QFileDialog.getSaveFileName())
+        self.widget.setText(self.path)
+
 class FloatEditor(QWidget):
 
     def __init__(self, socket):
@@ -274,6 +296,7 @@ class Editor(QWidget):
     editors = {
         "STRING" : StringEditor,
         "DIRECTORY" : DirEditor,
+        "SAVEFILE" : SaveFileEditor,
         "FLOAT" : FloatEditor,
         "INTEGER" : IntEditor,
         "BOOLEAN" : BoolEditor,

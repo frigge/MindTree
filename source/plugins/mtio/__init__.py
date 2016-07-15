@@ -10,5 +10,12 @@ class Import3D(MT.pytypes.NodeDecorator):
                   ("Transformation", "MAT4")]
     outsockets = [("Scene", "TRANSFORMABLE")]
 
+class Export3D(MT.pytypes.NodeDecorator):
+    type="EXPORT3D"
+    label="Objects.Export"
+    insockets = [ ("Filepath", "SAVEFILE"), ("Scene", "TRANSFORMABLE") ]
+    outsockets = [("Export", "ACTION")]
+
 MT.registerNode(Import3D)
+MT.registerNode(Export3D)
     

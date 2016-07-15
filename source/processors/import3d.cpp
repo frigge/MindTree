@@ -109,6 +109,15 @@ private:
     void parseMaterial(aiMaterial *aim)
     {
         MaterialPtr mat = std::make_shared<Material>();
+        aiColor3D diff;
+        float specint, specrough;
+        aim->Get<aiColor3D>(AI_MATKEY_COLOR_DIFFUSE, diff);
+        aim->Get<float>(AI_MATKEY_SHININESS_STRENGTH, specint);
+        aim->Get<float>(AI_MATKEY_SHININESS, specrough);
+        glm::vec4 col(diff.r, diff.g, diff.b, 1);
+        mat->setProperty("diffuse_color", col);
+        mat->setProperty("specular_intensity", specint);
+        mat->setProperty("specular_roughness", specrough);
         materials_.push_back(mat);
     }
 

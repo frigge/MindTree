@@ -433,7 +433,8 @@ struct PropertyTypeTraits : public PropertyDataTraits {
 
 };
 
-class PropertyMap {
+class PropertyMap
+{
 public:
     typedef std::pair<std::string, Property> Info;
     typedef std::vector<Info>::iterator Iterator;

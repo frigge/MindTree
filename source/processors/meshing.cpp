@@ -71,7 +71,7 @@ std::shared_ptr<MeshData> meshJoint(JointPtr root, uint sides, bool merge_joints
                     Joint *key = j;
                     while(key->getParent() &&key->getTransformation()[3].xyz() == glm::vec3(0))
                         key = static_cast<Joint*>(key->getParent());
-                    joint_rings[key].push_back(ring);
+                    if(key->getParent()) joint_rings[key].push_back(ring);
                 }
 
                 first = false;

@@ -43,7 +43,7 @@ void subd(DataCache* cache)
         auto points = std::make_shared<VertexList>(*verts);
         auto polygons = std::make_shared<PolygonList>();
 
-        PropertyMap props;
+        PropertyMap props = poly_properties;
         uint vertCnt = points->size();
 
         //face points

@@ -146,6 +146,7 @@ QString MindTree::ViewerList::showViewer(DoutSocket *socket, unsigned int index)
         auto &factories_for_type = windowFactories[typestr];
         if(!factories_for_type.empty()) {
             dock = windowFactories[typestr][index]->getViewer(socket);
+            if(!dock) return "";
             openViewers.insert({typestr + std::to_string(index), dock});
             showDock(dock);
         }

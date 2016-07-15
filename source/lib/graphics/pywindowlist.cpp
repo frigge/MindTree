@@ -43,13 +43,22 @@ PythonViewerFactory::~PythonViewerFactory()
 MindTree::ViewerDockBase* PythonViewerFactory::createViewer(DoutSocket *socket)    
 {
     std::cout<<"creating Python Viewer"<<std::endl;
-    ViewerDockBase *dock = new ViewerDockBase(getName(), this);
     PyViewerBase *base = nullptr;
     {
         GILLocker locker;
         BPy::object obj = cls(new DoutSocketPyWrapper(socket));
-        base = BPy::extract<PyViewerBase*>(obj);
+        std::auto_ptr<PyViewerBase> b = BPy::extract<std::auto_ptr<PyViewerBase>>(obj);
+        base = b.get();
+        b.release();
     }
+    if(!base)
+        return nullptr;
+
+    base->initBase();
+    if(!base->getWidget())
+        return nullptr;
+
+    ViewerDockBase *dock = new ViewerDockBase(getName(), this);
     dock->setViewer(base);
     dock->setStart(socket);
     return dock;
@@ -70,7 +79,7 @@ void PyViewerBase::init()
 
 void PyViewerBase::wrap()
 {
-    BPy::class_<PyViewerBase, boost::noncopyable>("Viewer", BPy::init<DoutSocketPyWrapper*>())
+    BPy::class_<PyViewerBase, std::auto_ptr<PyViewerBase>, boost::noncopyable>("Viewer", BPy::init<DoutSocketPyWrapper*>())
         .def("setWidget", &PyViewerBase::setWidget)
         .add_property("cache", &PyViewerBase::getCache)
         .add_property("socket", 
@@ -100,8 +109,12 @@ void PyViewerBase::update()
 
 void PyViewerBase::setWidget(BPy::object pywidget)
 {
-    widget = pywidget;
-    WId id = BPy::extract<WId>(widget.attr("winId")());
+    //TODO: find out how to prevent boost::python from cleaning python
+    //(shiboken) wrapped qwidget
+    static std::vector<BPy::object> fuck_you_container;
+    fuck_you_container.push_back(pywidget);
+
+    WId id = BPy::extract<WId>(pywidget.attr("winId")());
     auto *w = QWidget::find(id);
     if(w) Viewer::setWidget(w);
     else std::cout<<"Python Viewer not valid"<<std::endl;
