@@ -12,7 +12,7 @@
 #include "unordered_map"
 #include "../datatypes/Object/object.h"
 
-class QGLContext;
+#include "qtcontext.h"
 
 namespace MindTree {
 class Benchmark;
@@ -44,7 +44,7 @@ class RenderTree;
 class RenderThread
 {
 public:
-    static void addManager(RenderTree* manager);
+    static void addManager(RenderTree* manager, QtContext &ctx);
     static void removeManager(RenderTree *manager);
     inline static std::thread::id id() { return _renderThread.get_id(); }
     inline static void asrt() { assert(_renderThread.get_id() == std::this_thread::get_id()); }
@@ -53,7 +53,7 @@ public:
     static void pause();
 
 private:
-    static void start();
+    static void start(QtContext &ctx);
     static void stop();
     static bool isRendering();
 
@@ -66,10 +66,11 @@ private:
 };
 
 class ResourceManager;
+class QtContext;
 class RenderTree
 {
 public:
-    RenderTree(QGLContext *context);
+    RenderTree();
     virtual ~RenderTree();
 
     void setBenchmark(std::shared_ptr<Benchmark> benchmark);
@@ -92,7 +93,7 @@ public:
 
 private:
     void init();
-    void draw();
+    void draw(QtContext &ctx);
     friend class RenderThread;
 
     std::shared_timed_mutex _managerLock;
@@ -101,7 +102,6 @@ private:
     std::unique_ptr<ResourceManager> _resourceManager;
     std::vector<std::unique_ptr<RenderPass>> passes;
     RenderConfig config;
-    QGLContext *_context;
     std::atomic_bool _initialized;
     double renderTime;
 

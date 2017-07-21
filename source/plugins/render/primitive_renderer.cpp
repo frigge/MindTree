@@ -1,6 +1,6 @@
 #define GLM_SWIZZLE
 #include "glm/gtc/matrix_transform.hpp"
-#include "GL/glew.h"
+//#include "GL/glew.h"
 #include "renderpass.h"
 #include "rendertree.h"
 #include "primitive_renderer.h"

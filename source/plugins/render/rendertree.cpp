@@ -1,5 +1,4 @@
-#include "GL/glew.h"
-#include "QGLContext"
+//#include "GL/glew.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glwrapper.h"
 #include "chrono"
@@ -7,6 +6,10 @@
 #include "renderpass.h"
 #include "shader_render_node.h"
 #include "benchmark.h"
+
+#include <QThread>
+#include <QOpenGLContext>
+
 #include "rendertree.h"
 
 using namespace MindTree;
@@ -59,14 +62,14 @@ std::condition_variable RenderThread::_renderNotifier;
 std::thread RenderThread::_renderThread;
 std::vector<RenderTree*> RenderThread::_renderQueue;
 
-void RenderThread::addManager(RenderTree* manager)
+void RenderThread::addManager(RenderTree* manager, QtContext &ctx)
 {
     std::unique_lock<std::mutex> lock(_renderingLock, std::defer_lock);
     auto it = std::find(begin(_renderQueue), end(_renderQueue), manager);
     if(it == end(_renderQueue))
         _renderQueue.push_back(manager);
 
-    if(!isRendering()) start();
+    if(!isRendering()) start(ctx);
     _update = true;
 }
 
@@ -105,19 +108,21 @@ void RenderThread::pause()
     _update = false;
 }
 
-void RenderThread::start()
+void RenderThread::start(QtContext &ctx)
 {
     if(isRendering()) stop();
 
     _rendering = true;
 
-    auto renderLoop = [] {
+    auto renderLoop = [&ctx] {
         std::unique_lock<std::mutex> lock(_renderingLock, std::defer_lock);
-        ContextBinder binder(_renderQueue[0]->_context, true);
+		QThread *thread = QThread::currentThread();
+		ctx._context->moveToThread(thread);
+        ContextBinder binder(ctx);
         while(RenderThread::isRendering()) {
             if(!_update) _renderNotifier.wait(lock);
             for(auto *manager : _renderQueue) {
-                manager->draw();
+                manager->draw(ctx);
             }
         }
     };
@@ -135,9 +140,8 @@ void RenderThread::stop()
     if (_renderThread.joinable()) _renderThread.join();
 }
 
-RenderTree::RenderTree(QGLContext *context) :
+RenderTree::RenderTree() :
     _resourceManager(std::make_unique<ResourceManager>()),
-    _context(context),
     _initialized(false)
 {
 }
@@ -280,7 +284,7 @@ RenderPass* RenderTree::getPass(uint index)
     return std::next(begin(passes), index)->get();
 }
 
-void RenderTree::draw()
+void RenderTree::draw(QtContext &ctx)
 {
     RenderThread::asrt();
 
@@ -303,7 +307,7 @@ void RenderTree::draw()
 
     glDisable(GL_PROGRAM_POINT_SIZE);
     glDisable(GL_POLYGON_OFFSET_POINT);
-    _context->swapBuffers();
+    ctx.swapBuffers();
 
     glFinish();
 }

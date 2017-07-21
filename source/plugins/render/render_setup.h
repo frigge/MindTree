@@ -5,9 +5,11 @@
 #include "vector"
 
 #include "data/mtobject.h"
+#include "qtcontext.h"
+#include "glwrapper.h"
 
 class Widget3DManager;
-class QGLContext;
+class QOpenGLContext;
 
 class Group;
 class Camera;
@@ -25,14 +27,15 @@ class ShaderProgram;
 class ShaderRenderNode;
 class RenderBlock;
 class GridRenderer;
+class QtContext;
 
 class RenderConfigurator : public Object
 {
 public:
-    RenderConfigurator(QGLContext *context, std::shared_ptr<Camera> camera);
+    RenderConfigurator(std::shared_ptr<Camera> camera);
     ~RenderConfigurator();
 
-    void startRendering();
+    void startRendering(QtContext &ctx);
     void stopRendering();
 
     virtual void setCamera(std::shared_ptr<Camera> camera);

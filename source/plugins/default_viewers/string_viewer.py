@@ -1,6 +1,6 @@
-import MT, PySide
-from PySide.QtCore import *
-from PySide.QtGui import *
+import MT, PyQt5
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 class StringViewerGUI(QScrollArea): 
     def __init__(self, viewer):

@@ -1,6 +1,6 @@
-import MT, PyQt4
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+import MT, PyQt5
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 
 class CustomWidget(MT.pytypes.CustomNodeWidget):
     name = "Add Property"

@@ -1,12 +1,12 @@
-import MT, os, PySide, sys
+import MT, os, PyQt5, sys
 
 from . import methodupdater
 
-from PySide import QtCore
-from PySide import QtGui
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 class ModuleWatcher:
     def __init__(self, module, path):

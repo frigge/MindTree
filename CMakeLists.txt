@@ -84,11 +84,12 @@ else()
     add_definitions("-msse2")
 endif()
     
-set(QT_USE_QTOPENGL TRUE)
-set(QT_USE_QTSVG TRUE)
-
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
-find_package(Qt4 4.8 COMPONENTS QtCore QtGui QtOpenGL REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Core REQUIRED)
+find_package(Qt5OpenGL REQUIRED)
 find_package(PythonLibs 3.4 REQUIRED)
 find_package(Boost COMPONENTS python REQUIRED)
 # set(Boost_LIBRARIES /usr/lib/x86_64-linux-gnu/libboost_python-py34.so)
@@ -97,10 +98,6 @@ find_package(Boost COMPONENTS python REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 
-QT4_WRAP_CPP(MOC_SRC ${HEADER} OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
-QT4_ADD_RESOURCES(RES_RCC ${RESOURCES})
-
-include(${QT_USE_FILE})
 set(MINDTREE_CORE_LIB_DIR ${PROJECT_BINARY_DIR}/lib)
 set(MINDTREE_SRC_LIB_DIR ${PROJECT_SOURCE_DIR}/source/lib)
 include_directories(
@@ -123,7 +120,7 @@ link_directories(
             ${GLEW_LIBRARY_DIRS}
 )
 
-set(ALL_SRC ${SOURCE} ${MOC_SRC} ${RES_RCC})
+set(ALL_SRC ${SOURCE} ${RESOURCES})
 set(MINDTREE_CORE_LIB ${PROJECT_BINARY_DIR}/source/lib/libmindtree_core.so)
 
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
@@ -137,7 +134,9 @@ target_link_libraries(mindTree
   X11
   mindtree_core
   ${MINDTREE_CORE_LIB}
-  ${QT_LIBRARIES}
+  Qt5::Widgets
+  Qt5::Core
+  Qt5::OpenGL
   ${Boost_LIBRARIES}
   ${PYTHON_LIBRARIES}
   ${OPENGL_LIBRARIES}

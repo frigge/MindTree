@@ -49,7 +49,6 @@ using namespace MindTree;
 std::vector<Viewport*> Viewport::_viewports;
 
 Viewport::Viewport(ViewportWidget *widget) :
-    QGLWidget(new GL::QtContext(), nullptr, _viewports.empty() ? nullptr : _viewports[0]),
     defaultCamera(std::make_shared<Camera>()),
     rotate(false),
     pan(false),
@@ -62,14 +61,13 @@ Viewport::Viewport(ViewportWidget *widget) :
     _viewports.push_back(this);
 
     activeCamera = defaultCamera;
-    setAutoBufferSwap(false);
     defaultCamera->setFar(1000);
 
-    QGLContext *ctx = const_cast<QGLContext*>(context());
-    _widgetManager = std::make_shared<MindTree::Widget3DManager>();
-    _renderConfigurator = std::make_unique<GL::DeferredRenderer>(ctx, defaultCamera, _widgetManager.get());
-
     setMouseTracking(true);
+
+    _widgetManager = std::make_shared<MindTree::Widget3DManager>();
+    _renderConfigurator = std::make_unique<GL::DeferredRenderer>(defaultCamera,
+                                                                 _widgetManager.get());
 }
 
 Viewport::~Viewport()
@@ -178,7 +176,7 @@ void Viewport::resizeEvent(QResizeEvent *)
     activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
     activeCamera->setResolution(width(), height());
     _renderConfigurator->setCamera(activeCamera);
-    _renderConfigurator->startRendering();
+    _renderConfigurator->startRendering(context());
     MindTree::GL::RenderThread::updateOnce();
 }
 
@@ -188,7 +186,7 @@ void Viewport::paintEvent(QPaintEvent *)
 
 void Viewport::showEvent(QShowEvent *)
 {
-    _renderConfigurator->startRendering();
+    _renderConfigurator->startRendering(context());
 }
 
 void Viewport::hideEvent(QHideEvent *)
@@ -263,7 +261,7 @@ void Viewport::mousePressEvent(QMouseEvent *event)
 
     _renderConfigurator->setProperty("GL:camera:showcenter", true);
 
-    lastpos = event->posF();
+    lastpos = event->screenPos();
     glm::vec4 center = _renderConfigurator->getPosition(pos);
     dbout(glm::to_string(center));
     if(center.a > 0) {
@@ -312,15 +310,15 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 
     auto viewportSize = glm::ivec2(width(), height());
 
-    float xdist = lastpos.x()  - event->posF().x();
-    float ydist = event->posF().y() - lastpos.y();
+    float xdist = lastpos.x()  - event->screenPos().x();
+    float ydist = event->screenPos().y() - lastpos.y();
     if(rotate)
         rotateView(xdist, ydist);
     else if(pan)
         panView(xdist, ydist);
     else if(zoom)
         zoomView(xdist, ydist);
-    lastpos = event->posF();
+    lastpos = event->screenPos();
 
     if(rotate || pan || zoom)
         return;

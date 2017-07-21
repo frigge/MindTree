@@ -9,9 +9,6 @@
 #include "typeindex"
 #include "GL/glew.h"
 
-#include "QGLFormat"
-#include "QGLContext"
-
 #include "../datatypes/Object/object.h"
 
 namespace MindTree
@@ -485,29 +482,6 @@ protected:
 private:
     int _height;
 };
-
-class ContextBinder
-{
-public:
-    ContextBinder(QGLContext *context, bool force=false);
-    ~ContextBinder();
-
-private:
-    QGLContext *_context;
-    bool _force;
-};
-
-class QtContext : public QGLContext
-{
-public:
-    QtContext();
-
-    void makeCurrent() override;
-    void doneCurrent() override;
-
-    static QGLFormat format();
-};
-
 } /* GL */
 } /* MindTree */
 

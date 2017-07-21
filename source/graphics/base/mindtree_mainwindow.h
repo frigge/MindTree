@@ -20,10 +20,10 @@
 #ifndef FRG_SHADER_AUTHOR_H
 #define FRG_SHADER_AUTHOR_H
 
-#include <QtGui/QMainWindow>
-#include "QGraphicsScene"
-#include "QApplication"
-#include "QDialog"
+#include <QMainWindow>
+#include <QGraphicsScene>
+#include <QApplication>
+#include <QDialog>
 
 #include "data/project.h"
 #include "data/windowfactory.h"

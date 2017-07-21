@@ -29,7 +29,7 @@
 #include "../../render/glwrapper.h"
 #include "../../render/rendertree.h"
 
-#include "QGLWidget"
+#include <QOpenGLWidget>
 
 namespace MindTree {
 namespace GL {
@@ -40,7 +40,7 @@ class Widget3DManager;
 }
 
 class ViewportWidget;
-class Viewport : public QGLWidget
+class Viewport : public QOpenGLWidget
 {
     Q_OBJECT
 public:

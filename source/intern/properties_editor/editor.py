@@ -1,6 +1,7 @@
 import MT
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from .spinbox import *
 
 class StringEditor(QWidget):
@@ -13,7 +14,7 @@ class StringEditor(QWidget):
             self.widget.setText(socket.value)
         self.layout().addWidget(self.widget)
         self.layout().setSpacing(0)
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         self.widget.textChanged.connect(lambda x: setattr(self.socket, "value", str(x)))
 
 class DirEditor(QWidget):
@@ -28,7 +29,7 @@ class DirEditor(QWidget):
         self.browsebutton = QPushButton("...")
         self.layout().addWidget(self.browsebutton)
         self.layout().setSpacing(0)
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         self.browsebutton.pressed.connect(self.browseFilePath)
         self.widget.textChanged.connect(lambda x: setattr(self.socket, "value", str(x)))
 
@@ -50,7 +51,7 @@ class SaveFileEditor(QWidget):
         self.browsebutton = QPushButton("...")
         self.layout().addWidget(self.browsebutton)
         self.layout().setSpacing(0)
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         self.browsebutton.pressed.connect(self.browseFilePath)
         self.widget.textChanged.connect(lambda x: setattr(self.socket, "value", str(x)))
 
@@ -69,7 +70,7 @@ class FloatEditor(QWidget):
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
         self.layout().setSpacing(0)
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
 
         if socket.value != None:
             self.widget.setValue(socket.value)
@@ -86,7 +87,7 @@ class IntEditor(QWidget):
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
         self.layout().setSpacing(0)
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         if socket.value != None:
             self.widget.setValue(socket.value)
         self.widget.valueChanged.connect(lambda x: setattr(self.socket, "value", x))
@@ -106,7 +107,7 @@ class BoolEditor(QWidget):
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
         self.layout().setSpacing(0)
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         if socket.value != None:
             self.widget.setCheckState(Qt.Checked if socket.value else Qt.Unchecked)
         self.widget.stateChanged.connect(self.setChecked)
@@ -147,7 +148,7 @@ class ColorEditor(QWidget):
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.widget)
         self.layout().setSpacing(0)
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         if socket.value != None:
             value = socket.value
             col = QColor(value[0]*255, value[1]*255, value[2]*255, value[3]*255)
@@ -174,7 +175,7 @@ class IntVector2DEditor(QWidget):
 
         lay.addWidget(self.xspin)
         lay.addWidget(self.yspin)
-        lay.setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
         if socket.value != None:
@@ -203,7 +204,7 @@ class Vector2DEditor(QWidget):
 
         lay.addWidget(self.xspin)
         lay.addWidget(self.yspin)
-        lay.setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
         if socket.value != None:
@@ -235,7 +236,7 @@ class Vector3DEditor(QWidget):
         lay.addWidget(self.xspin)
         lay.addWidget(self.yspin)
         lay.addWidget(self.zspin)
-        lay.setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
         if socket.value != None:
@@ -315,7 +316,7 @@ class Editor(QWidget):
         self.tree.setItemDelegate(Delegate(self))
 
         lay = QVBoxLayout()
-        lay.setMargin(0)
+        lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
         self.setLayout(lay)
         lay.addWidget(self.tree)

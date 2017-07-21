@@ -1,7 +1,7 @@
 import MT
-from PySide.QtGui import *
-from PySide.QtOpenGL import *
-from PySide.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtOpenGL import *
+from PyQt5.QtCore import *
 
 from functools import partial
 
@@ -25,7 +25,7 @@ class NodeBrowser(QWidget):
         dropConnectShortcut = QShortcut(self)
         dropCenterShortcut.setContext(Qt.WidgetWithChildrenShortcut)
         dropConnectShortcut.setContext(Qt.WidgetWithChildrenShortcut)
-        dropCenterShortcut.setKey(QKeySequence(Qt.Key_Return))
+        dropCenterShortcut.setKey(Qt.Key_Return)
         dropConnectShortcut.setKey(Qt.CTRL + Qt.Key_Return)
         dropCenterShortcut.activated.connect(self.browser.dropNodeCenter)
         dropConnectShortcut.activated.connect(self.browser.dropNodeConnect)
@@ -36,7 +36,7 @@ class NodeBrowser(QWidget):
 
     def eventFilter(self, obj, event):
         if obj is self.node_filter:
-            if (event.type() == QEvent.Type.KeyPress
+            if (event.type() == QEvent.KeyPress
                 and (event.key() == Qt.Key_Up
                      or event.key() == Qt.Key_Down)):
                 self.browser.keyPressEvent(event)

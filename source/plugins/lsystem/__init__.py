@@ -1,5 +1,5 @@
 import MT
-from PyQt4.QtGui import *
+from PyQt5.QtWidgets import *
 
 class SyncInputsWidget(MT.pytypes.CustomNodeWidget):
     name = "Add"

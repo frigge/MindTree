@@ -1,9 +1,10 @@
 import MT
 from . import node
 
-from PySide.QtGui import *
-from PySide.QtOpenGL import *
-from PySide.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtOpenGL import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 from .nodebrowser import NodeBrowser
 
@@ -244,7 +245,7 @@ class NodeGraph(QGraphicsView):
         browserShortcut.setContext(Qt.WidgetShortcut)
         containerShortcut.setKey("c")
         browserShortcut.setKey(" ")
-        deleteShortcut.setKey(QKeySequence(Qt.Key_Delete))
+        deleteShortcut.setKey(Qt.Key_Delete)
         containerShortcut.activated.connect(self.createContainer)
         deleteShortcut.activated.connect(self.deleteNode)
         browserShortcut.activated.connect(self.showNodeBrowser)

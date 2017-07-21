@@ -19,8 +19,8 @@
 using namespace MindTree;
 using namespace GL;
 
-ForwardRenderer::ForwardRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager)
-    : RenderConfigurator(context, camera), _maxLightCount(5)
+ForwardRenderer::ForwardRenderer(CameraPtr camera, Widget3DManager *widgetManager)
+    : RenderConfigurator(camera), _maxLightCount(5)
 {
     RenderTree *manager = getManager();
     auto config = manager->getConfig();

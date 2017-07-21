@@ -1,4 +1,4 @@
-#include "GL/glew.h"
+//#include "GL/glew.h"
 
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
@@ -1478,54 +1478,4 @@ void Texture2D::init()
 int Texture2D::height()
 {
     return _height;
-}
-
-ContextBinder::ContextBinder(QGLContext *context, bool force)
-    : _context(context), _force(force)
-{
-    if(force)
-        _context->QGLContext::makeCurrent();
-    else
-        _context->makeCurrent();
-}
-
-ContextBinder::~ContextBinder()
-{
-    if(_force)
-        _context->QGLContext::doneCurrent();
-    else
-        _context->doneCurrent();
-}
-
-QtContext::QtContext()
-    : QGLContext(format())
-{
-}
-
-void QtContext::makeCurrent()
-{
-    RenderThread::asrt();
-    QGLContext::makeCurrent();
-}
-
-void QtContext::doneCurrent()
-{
-    RenderThread::asrt();
-    QGLContext::doneCurrent();
-}
-
-QGLFormat QtContext::format()
-{
-    auto options = QGL::DoubleBuffer
-        | QGL::DepthBuffer
-        | QGL::Rgba
-        | QGL::DirectRendering
-        | QGL::AlphaChannel
-        | QGL::StencilBuffer;
-
-    auto format = QGLFormat(options);
-
-    format.setVersion(4, 3);
-    format.setProfile(QGLFormat::CompatibilityProfile);
-    return format;
 }

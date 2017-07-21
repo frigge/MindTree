@@ -28,8 +28,8 @@ using namespace GL;
 
 
 
-DeferredRenderer::DeferredRenderer(QGLContext *context, CameraPtr camera, Widget3DManager *widgetManager) :
-    RenderConfigurator(context, camera)
+DeferredRenderer::DeferredRenderer(CameraPtr camera, Widget3DManager *widgetManager) :
+    RenderConfigurator(camera)
 {
     auto manager = getManager();
     //auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");

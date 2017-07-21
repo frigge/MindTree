@@ -1,6 +1,7 @@
-import PyQt4, sys, math
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+import PyQt5, sys, math
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 class ScrollWidget(QWidget):
     def __init__(self, parent, startPos):
@@ -126,7 +127,7 @@ class SpinBox(QWidget):
         QWidget.__init__(self)
         lay = QHBoxLayout()
         lay.setSpacing(0)
-        lay.setMargin(0)
+        lay.setContentsMargins(0, 0, 0, 0)
         self._value = default
 
         self._type = type(default)

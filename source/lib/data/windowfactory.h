@@ -20,9 +20,9 @@
 
 #define WINDOWFACTORY_6K40MCK4
 
-#include "QObject"
-#include "QAction"
-#include "functional"
+#include <QObject>
+#include <QAction>
+#include <functional>
 
 namespace MindTree
 {

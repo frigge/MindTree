@@ -21,8 +21,8 @@
 using namespace MindTree;
 using namespace GL;
 
-RenderConfigurator::RenderConfigurator(QGLContext *context, CameraPtr camera) :
-    _rendertree(new RenderTree(context)),
+RenderConfigurator::RenderConfigurator(CameraPtr camera) :
+    _rendertree(new RenderTree()),
     _camera(camera),
     _vertexCount(0),
     _polyCount(0)
@@ -48,9 +48,9 @@ RenderConfigurator::~RenderConfigurator()
 {
 }
 
-void RenderConfigurator::startRendering()
+void RenderConfigurator::startRendering(QtContext &ctx)
 {
-    MindTree::GL::RenderThread::addManager(_rendertree.get());
+    MindTree::GL::RenderThread::addManager(_rendertree.get(), ctx);
 }
 
 void RenderConfigurator::stopRendering()
@@ -83,7 +83,7 @@ glm::vec4 RenderConfigurator::getPosition(glm::vec2 pixel) const
 
 RenderTree* RenderConfigurator::getManager()
 {
-    return _rendertree.get();
+return _rendertree.get();
 }
 
 void RenderConfigurator::setOverrideOutput(std::string output)

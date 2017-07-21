@@ -18,7 +18,7 @@ class SinglePointRenderer;
 class  DeferredRenderer : public RenderConfigurator
 {
 public:
-    DeferredRenderer(QGLContext *context, std::shared_ptr<Camera> camera, Widget3DManager *widgetManager);
+    DeferredRenderer(std::shared_ptr<Camera> camera, Widget3DManager *widgetManager);
 
     void setOverrideOutput(std::string output) override;
     void clearOverrideOutput() override;

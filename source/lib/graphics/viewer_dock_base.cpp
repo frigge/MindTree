@@ -171,7 +171,11 @@ void ViewerDockBase::setViewerWidget(QWidget *widget)
             BPy::object nodeEditorClass = module.attr("Editor");
             editor = nodeEditorClass(settingsObj);
             Py_IncRef(editor.ptr());
-            id = BPy::extract<WId>(editor.attr("winId")());
+            auto pywid = editor.attr("winId")();
+            BPy::object builtins = BPy::import("builtins");
+            BPy::object intfn = builtins.attr("int");
+        
+            id = BPy::extract<WId>(intfn(pywid));
         } catch(BPy::error_already_set) {
             PyErr_Print();
         }
@@ -197,7 +201,11 @@ void ViewerDockBase::setPythonWidget(BPy::object widget)
     try{
         Python::GILLocker locker;
         pywidget = widget();
-        id = BPy::extract<WId>(pywidget.attr("winId")());
+        auto pywid = pywidget.attr("winId")();
+        BPy::object builtins = BPy::import("builtins");
+        BPy::object intfn = builtins.attr("int");
+        
+        id = BPy::extract<WId>(intfn(pywid));
     } catch(BPy::error_already_set) {
         PyErr_Print();
     }

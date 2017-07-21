@@ -10,10 +10,12 @@ set(SCE_HEADER
     graphics/viewport_widget.h
 )
 
-find_package(Qt4 COMPONENTS QtCore QtGui QtOpenGL REQUIRED)
+set(CMAKE_AUTOMOC ON)
+ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Core REQUIRED)
+find_package(Qt5OpenGL REQUIRED)
 
-QT4_WRAP_CPP(SCE_MOC_SRC ${SCE_HEADER} OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
-include(${QT_USE_FILE})
 message("main include directory: " ${MAIN_INCLUDE_DIR})
 include_directories(
             ${PROJECT_SOURCE_DIR}
@@ -36,7 +38,9 @@ target_link_libraries(scenegraph
             render
             mindtree_core
             ${MINDTREE_CORE_LIB}
-            ${QT_LIBRARIES}
+            Qt5::Widgets
+            Qt5::Core
+            Qt5::OpenGL
 )
 
 message("Root dir: " ${PROJECT_ROOT})

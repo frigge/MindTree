@@ -1,7 +1,7 @@
-import MT, PyQt4, properties_editor
+import MT, PyQt5, properties_editor
 from properties_editor import *
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 
 class CustomNodeWidget(QWidget):
     name = ""

@@ -1,7 +1,8 @@
-import PyQt4, MT, math
+import PyQt5, MT, math
 from . import mttimeline
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 from functools import partial
 
 class TimelineScrubWidget(QWidget):
@@ -74,7 +75,7 @@ class TimelineWidget(QWidget):
         QWidget.__init__(self)
         self.setLayout(QVBoxLayout())
         self.layout().setSpacing(0)
-        self.layout().setMargin(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         self.scrubwidget = TimelineScrubWidget(self)
         self.layout().addWidget(self.scrubwidget)
 

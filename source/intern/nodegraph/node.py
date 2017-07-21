@@ -1,7 +1,8 @@
-import PySide, MT
-from PySide.QtGui import *
-from PySide.QtCore import *
-from PySide.QtSvg import *
+import PyQt5, MT
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtSvg import *
 
 class NodeDesigner:
     width = 40
@@ -26,7 +27,6 @@ class NodeLink(QGraphicsItem):
         self.hover = False
         self.drop = False
         self.setAcceptHoverEvents(True)
-        self.setAcceptsHoverEvents(True)
         self.setAcceptDrops(True)
 
     def paint(self, painter, options, widget):
@@ -414,7 +414,6 @@ class NodeItem(QGraphicsSvgItem):
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
 
         self.setAcceptHoverEvents(True)
-        self.setAcceptsHoverEvents(True)
         self.setAcceptDrops(True)
 
         self.nameBG = NodeNameBG(self)

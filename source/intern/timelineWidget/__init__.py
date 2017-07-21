@@ -3,10 +3,10 @@ from . import mttimeline
 MT.__dict__["timeline"] = mttimeline
 from .timelinewidget import *
 
-import PySide
-from PySide.QtCore import *
-from PySide.QtGui import *
-from PySide.QtSvg import *
+import PyQt5
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtSvg import *
 import nodegraph
 
 class TimelineNodeVis(nodegraph.node.NodeItem):

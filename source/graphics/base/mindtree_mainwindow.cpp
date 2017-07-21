@@ -17,7 +17,6 @@
 */
 
 
-//#include "QtGui"
 #include "QPainterPath"
 #include "QWheelEvent"
 #include "QPalette"
@@ -33,7 +32,6 @@
 #include "QTextStream"
 #include "QFileDialog"
 #include "QVBoxLayout"
-#include "QPlastiqueStyle"
 #include "QDir"
 
 #include "iostream"
@@ -94,7 +92,6 @@ MainWindow::MainWindow(QWidget *parent)
     MindTree::WindowList::instance()->addFactory(fac);
 
     statusBar()->showMessage("Welcome to MindTree");
-    qApp->setStyle(new QPlastiqueStyle);
 
     setupStyle();
 
@@ -188,12 +185,8 @@ void MainWindow::openSettings()
 
 QWidget* MainWindow::addConsole()    
 {
-    //char *argv = new char;
-    //argv = '\0';
-    //Py_Main(0, &argv);
     ConsoleWindow *console = new ConsoleWindow();
     return console;
-    //ConsoleDialog *console = new ConsoleDialog(this);
 }
 
 void MainWindow::change_window_title(QString title)

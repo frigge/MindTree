@@ -10,7 +10,7 @@ namespace GL {
 class ForwardRenderer : public RenderConfigurator
 {
 public:
-    ForwardRenderer(QGLContext *context, std::shared_ptr<Camera> camera, Widget3DManager *manager=nullptr);
+    ForwardRenderer(std::shared_ptr<Camera> camera, Widget3DManager *manager=nullptr);
 
     void setGeometry(std::shared_ptr<Group> grp);
 
