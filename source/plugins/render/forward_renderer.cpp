@@ -22,7 +22,7 @@ using namespace GL;
 ForwardRenderer::ForwardRenderer(CameraPtr camera, Widget3DManager *widgetManager)
     : RenderConfigurator(camera), _maxLightCount(5)
 {
-    RenderTree *manager = getManager();
+    RenderTree *manager = getTree();
     auto config = manager->getConfig();
     config.setProperty("defaultLighting", true);
     manager->setConfig(config);
@@ -76,7 +76,7 @@ void ForwardRenderer::setupDefaultLights()
 
 void ForwardRenderer::setGeometry(std::shared_ptr<Group> grp)
 {
-//    auto config = getManager()->getConfig();
+//    auto config = getTree()->getConfig();
 //    if(config.hasProperty("defaultLighting") &&
 //       config["defaultLighting"].getData<bool>()) {
 //        setupDefaultLights();

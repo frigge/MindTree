@@ -147,7 +147,7 @@ RenderPass* RenderBlock::addPass(const std::string &name)
     auto pass_ptr = pass.get();
     _passes.push_back(pass_ptr);
 
-    _config->getManager()->addPass(std::move(pass));
+    _config->getTree()->addPass(std::move(pass));
 
     return pass_ptr;
 }
@@ -159,7 +159,7 @@ RenderPass* RenderBlock::addPassBefore(const RenderPass *hint, const std::string
     auto pass_ptr = pass.get();
     _passes.push_back(pass_ptr);
 
-    _config->getManager()->insertPassBefore(hint, std::move(pass));
+    _config->getTree()->insertPassBefore(hint, std::move(pass));
 
     return pass_ptr;
 }

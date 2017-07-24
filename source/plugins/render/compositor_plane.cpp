@@ -92,7 +92,7 @@ void Compositor::init()
     _pixelPass = addPass("compositing");
     _pixelPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
     _pixelPass->addRenderer(_plane);
-    _pixelPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _pixelPass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                   "final_out"));
 
     PropertyMap layer = {
@@ -143,7 +143,7 @@ void Compositor::setProperty(std::string name, Property prop)
             auto *plane = new PixelPlane();
             plane->setFragmentShader(shader);
             custom_pass_->addRenderer(plane);
-            auto texture = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+            auto texture = make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                     "custom_pixelshader");
             auto *tx = texture.get();
             custom_pass_->addOutput(std::move(texture));

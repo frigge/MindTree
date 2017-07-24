@@ -29,31 +29,31 @@ void GBufferRenderBlock::init()
 {
     _geometryPass->setEnableBlending(false);
 
-    auto depth = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    auto depth = make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                           "depth",
                                           Texture::DEPTH);
     _geometryPass->setDepthOutput(std::move(depth));
-    _geometryPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _geometryPass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                 "outdiffusecolor"));
-    _geometryPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _geometryPass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                 "outcolor"));
-    _geometryPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _geometryPass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                 "outspecintensity"));
-    _geometryPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _geometryPass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                 "outspecroughness"));
-    auto normalptr = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    auto normalptr = make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                            "outnormal",
                                            Texture::RGBA16F);
     auto *normal = normalptr.get();
     normal->generateMipmaps();
     _geometryPass->addOutput(std::move(normalptr));
-    auto positionptr = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    auto positionptr = make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                              "outposition",
                                              Texture::RGBA16F);
     auto *position = positionptr.get();
     position->generateMipmaps();
     _geometryPass->addOutput(std::move(positionptr));
-    _geometryPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _geometryPass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                 "worldposition",
                                                 Texture::RGBA16F));
 
@@ -72,7 +72,7 @@ void GBufferRenderBlock::init()
 void GBufferRenderBlock::setupGBuffer()
 {
     auto gbufferShader = _config->
-        getManager()->getResourceManager()->shaderManager()->getProgram<GBufferRenderBlock>();
+        getTree()->getResourceManager()->shaderManager()->getProgram<GBufferRenderBlock>();
     gbufferShader
         ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert",
                             ShaderProgram::VERTEX);

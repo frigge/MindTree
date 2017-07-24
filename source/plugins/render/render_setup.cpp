@@ -81,9 +81,9 @@ glm::vec4 RenderConfigurator::getPosition(glm::vec2 pixel) const
     return glm::vec4(0);
 }
 
-RenderTree* RenderConfigurator::getManager()
+RenderTree* RenderConfigurator::getTree()
 {
-return _rendertree.get();
+	return _rendertree.get();
 }
 
 void RenderConfigurator::setOverrideOutput(std::string output)

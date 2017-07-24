@@ -18,9 +18,9 @@ ShadowMappingRenderBlock::ShadowMappingRenderBlock()
 void ShadowMappingRenderBlock::init()
 {
     auto shadowShader = _config->
-        getManager()->getResourceManager()->shaderManager()->getProgram<ShadowMappingRenderBlock>();
-    _shadowNode = std::make_shared<ShaderRenderNode>(shadowShader);
-    _shadowNode->setResourceManager(_config->getManager()->getResourceManager());
+		getTree()->getResourceManager()->shaderManager()->getProgram<ShadowMappingRenderBlock>();
+	_shadowNode = std::make_shared<ShaderRenderNode>(shadowShader);
+    _shadowNode->setResourceManager(_config->getTree()->getResourceManager());
 
     shadowShader
         ->addShaderFromFile("../plugins/render/defaultShaders/polygons.vert",
@@ -45,7 +45,7 @@ void ShadowMappingRenderBlock::setGeometry(std::shared_ptr<Group> grp)
 {
     //clear shadow passes
     for(auto p : _shadowPasses) {
-        _config->getManager()->removePass(p.second);
+        _config->getTree()->removePass(p.second);
     }
     _shadowNode->clear();
     _shadowPasses.clear();
@@ -77,7 +77,7 @@ RenderPass* ShadowMappingRenderBlock::createShadowPass(SpotLightPtr spot)
     if(!info._enabled) return nullptr;
 
     auto shadow_pass = std::make_unique<RenderPass>("shadowpass");
-    shadow_pass->setTree(_config->getManager());
+    shadow_pass->setTree(_config->getTree());
     _shadowPasses[spot] = shadow_pass.get();
 
     auto camera = std::make_shared<Camera>();
@@ -88,7 +88,7 @@ RenderPass* ShadowMappingRenderBlock::createShadowPass(SpotLightPtr spot)
     camera->setFar(info._far);
     shadow_pass->setCamera(camera);
     shadow_pass
-        ->setDepthOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+        ->setDepthOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                   "shadow",
                                                   Texture::DEPTH32F));
     shadow_pass->addGeometryShaderNode(_shadowNode);
@@ -98,7 +98,7 @@ RenderPass* ShadowMappingRenderBlock::createShadowPass(SpotLightPtr spot)
     shadow_pass->setProperty("intensity", spot->getIntensity());
 
     auto *ret = shadow_pass.get();
-    _config->getManager()->insertPassAfter(_config->getGeometryPass(), std::move(shadow_pass));
+    _config->getTree()->insertPassAfter(_config->getGeometryPass(), std::move(shadow_pass));
 
     return ret;
 }

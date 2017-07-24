@@ -101,19 +101,19 @@ RenderPass* RSMGenerationBlock::createShadowPass(SpotLightPtr spot)
         shadowPass->setBenchmark(bench);
     }
 
-    auto pos = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    auto pos = make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                         "shadow_position",
                                         Texture::RGBA16F);
     pos->setFilter(Texture::NEAREST);
     pos->setWrapMode(Texture::REPEAT);
     shadowPass->addOutput(std::move(pos));
-    auto normal = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    auto normal = make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                            "shadow_normal",
                                            Texture::RGBA16F);
     normal->setFilter(Texture::NEAREST);
     normal->setWrapMode(Texture::REPEAT);
     shadowPass->addOutput(std::move(normal));
-    auto flux = make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    auto flux = make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                          "shadow_flux",
                                          Texture::RGBA16F);
     flux->setFilter(Texture::NEAREST);
@@ -149,7 +149,7 @@ void RSMEvaluationBlock::init()
 
     auto rsmIndirectLowResPass = addPass("rsm_lowres");
     _rsmIndirectLowResPass = rsmIndirectLowResPass;
-    rsmIndirectLowResPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    rsmIndirectLowResPass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                               "rsm_indirect_out_lowres",
                                                               Texture::RGBA16F));
     rsmIndirectLowResPass->setCustomFragmentNameMapping("rsm_indirect_out_lowres", "rsm_indirect_out");
@@ -160,13 +160,13 @@ void RSMEvaluationBlock::init()
     rsmIndirectLowResPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     _rsmInterpolatePass = addPass("rsm_interpolate");
-    _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                            "rsm_indirect_out_interpolated",
                                                            Texture::RGBA16F));
-    _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                            "rsm_indirect_interpolate_mask",
                                                            Texture::RGBA8));
-    _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _rsmInterpolatePass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                            "rsm_indirect_lowres_pixels",
                                                            Texture::RGBA8));
     _rsmInterpolatePass->setProperty("downsampling", _downSampling.load());
@@ -174,7 +174,7 @@ void RSMEvaluationBlock::init()
     _rsmInterpolatePass->addRenderer(rsmInterpolatePlane);
 
     _rsmIndirectPass = addPass("rsm_indirect");
-    _rsmIndirectPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    _rsmIndirectPass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                          "rsm_indirect_out_highres",
                                                          Texture::RGBA16F));
     _rsmIndirectPass->setCustomFragmentNameMapping("rsm_indirect_out_highres", "rsm_indirect_out");
@@ -186,7 +186,7 @@ void RSMEvaluationBlock::init()
     _rsmIndirectPass->setBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     auto rsmFinalPass = addPass("rsm_final");
-    rsmFinalPass->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+    rsmFinalPass->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                                      "rsm_indirect_out",
                                                      Texture::RGBA16F));
     auto rsmFinalPlane = new PixelPlane("../plugins/render/defaultShaders/rsm_final.frag");
@@ -217,7 +217,7 @@ void RSMEvaluationBlock::setGeometry(std::shared_ptr<Group> grp)
             return;
     }
 
-    auto config = _config->getManager()->getConfig();
+    auto config = _config->getTree()->getConfig();
     if(!config.hasProperty("defaultLighting") ||
        !config["defaultLighting"].getData<bool>()) {
         _rsmIndirectHighResPlane->setLights(grp->getLights());

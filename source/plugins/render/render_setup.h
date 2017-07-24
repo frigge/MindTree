@@ -41,7 +41,7 @@ public:
     virtual void setCamera(std::shared_ptr<Camera> camera);
     std::shared_ptr<Camera> getCamera() const;
 
-    RenderTree* getManager();
+    RenderTree* getTree();
 
     void setGeometry(std::shared_ptr<Group> grp);
 

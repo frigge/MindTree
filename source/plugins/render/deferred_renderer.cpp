@@ -31,7 +31,7 @@ using namespace GL;
 DeferredRenderer::DeferredRenderer(CameraPtr camera, Widget3DManager *widgetManager) :
     RenderConfigurator(camera)
 {
-    auto manager = getManager();
+    auto manager = getTree();
     //auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
     //manager->setBenchmark(benchmark);
     //benchmark->setCallback([this](Benchmark* benchmark) {

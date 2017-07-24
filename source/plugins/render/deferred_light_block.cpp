@@ -67,7 +67,7 @@ void DeferredLightingRenderBlock::init()
 {
     auto _deferredPass = addPass("deferred_lighting");
     _deferredPass
-        ->addOutput(make_resource<Texture2D>(_config->getManager()->getResourceManager(),
+        ->addOutput(make_resource<Texture2D>(_config->getTree()->getResourceManager(),
                                              "shading_out",
                                              Texture::RGBA16F));
     _deferredRenderer = new LightAccumulationPlane();
