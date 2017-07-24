@@ -72,7 +72,7 @@ Viewport::Viewport(ViewportWidget *widget) :
 
 Viewport::~Viewport()
 {
-    _renderConfigurator->stopRendering();
+    MindTree::GL::RenderThread::removeManager(_renderConfigurator->getTree());
     _viewports.erase(std::find(begin(_viewports), end(_viewports), this));
 }
 
@@ -176,7 +176,7 @@ void Viewport::resizeEvent(QResizeEvent *)
     activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
     activeCamera->setResolution(width(), height());
     _renderConfigurator->setCamera(activeCamera);
-    _renderConfigurator->startRendering(context());
+    MindTree::GL::RenderThread::addManager(_renderConfigurator->getTree(), ctx);
     MindTree::GL::RenderThread::updateOnce();
 }
 
@@ -186,12 +186,12 @@ void Viewport::paintEvent(QPaintEvent *)
 
 void Viewport::showEvent(QShowEvent *)
 {
-    _renderConfigurator->startRendering(context());
+    MindTree::GL::RenderThread::addManager(_renderConfigurator->getTree(), ctx);
 }
 
 void Viewport::hideEvent(QHideEvent *)
 {
-    _renderConfigurator->stopRendering();
+    MindTree::GL::RenderThread::removeManager(_renderConfigurator->getTree());
 }
 
 void Viewport::setShowPoints(bool b)

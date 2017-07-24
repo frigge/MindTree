@@ -35,9 +35,6 @@ public:
     RenderConfigurator(std::shared_ptr<Camera> camera);
     ~RenderConfigurator();
 
-    void startRendering(QtContext &ctx);
-    void stopRendering();
-
     virtual void setCamera(std::shared_ptr<Camera> camera);
     std::shared_ptr<Camera> getCamera() const;
 

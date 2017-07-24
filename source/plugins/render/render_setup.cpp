@@ -48,16 +48,6 @@ RenderConfigurator::~RenderConfigurator()
 {
 }
 
-void RenderConfigurator::startRendering(QtContext &ctx)
-{
-    MindTree::GL::RenderThread::addManager(_rendertree.get(), ctx);
-}
-
-void RenderConfigurator::stopRendering()
-{
-    MindTree::GL::RenderThread::removeManager(_rendertree.get());
-}
-
 RenderPass* RenderConfigurator::getGeometryPass() const
 {
     return _geometryPass;
