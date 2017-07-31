@@ -98,6 +98,8 @@ void RenderPass::init()
 {
     _initialized = true;
 
+	std::cout << "initialize renderpass: " << _name << std::endl;
+
     {
         std::shared_lock<std::shared_timed_mutex> lock(_cameraLock);
         _currentWidth = getCamera()->getWidth();
@@ -273,7 +275,7 @@ void RenderPass::setTextures(std::vector<Texture2D*> textures)
     }
 }
 
-std::vector<glm::vec4> RenderPass::readPixel(std::vector<std::string> names, glm::ivec2 pos)
+std::vector<glm::vec4> RenderPass::readPixel(const std::vector<std::string> &names, glm::ivec2 pos)
 {
     std::unique_lock<std::mutex> lock(_pixelRequestsLock);
     for(auto name : names)
@@ -283,19 +285,42 @@ std::vector<glm::vec4> RenderPass::readPixel(std::vector<std::string> names, glm
     return _requestedPixels;
 }
 
-void RenderPass::processPixelRequests()
+template<typename T>
+void getFormatAndSize(const ResourceHandle<T> &buffer, GLenum *datasize, GLenum *format)
 {
-    std::unique_lock<std::mutex> locker(_pixelRequestsLock);
-    _requestedPixels.clear();
-    if (_pixelRequests.empty()) return;
-    while(_pixelRequests.size() > 0) {
-        auto request = _pixelRequests.front();
-        _pixelRequests.pop();
-        auto name = request.first;
-        auto pos = request.second;
+	switch(buffer->getFormat()) {
+	case T::RGB:
+		*format = GL_RGB;
+		*datasize = GL_UNSIGNED_BYTE;
+		break;
+	case T::RGB8:
+		*format = GL_RGB;
+		*datasize = GL_UNSIGNED_BYTE;
+		break;
+	case T::RGBA:
+		*format = GL_RGBA;
+		*datasize = GL_UNSIGNED_BYTE;
+		break;
+	case T::RGBA8:
+		*format = GL_RGBA;
+		*datasize = GL_UNSIGNED_BYTE;
+		break;
+	case T::RGBA16F:
+		*format = GL_RGBA;
+		*datasize = GL_FLOAT;
+		break;
+	default:
+		break;
+	}
+}
 
-        //find attachment
-        if(_target) {
+std::vector<glm::vec4> RenderPass::readPixelSync(const std::vector<std::string> &names, glm::ivec2 pos)
+{
+	std::vector<glm::vec4> ret(names.size());
+
+	for(const auto &name : names) {
+		//find attachment
+		if(_target) {
             glReadBuffer(GL_COLOR_ATTACHMENT0 + _target->getAttachmentPos(name));
             MTGLERROR;
         }
@@ -307,63 +332,95 @@ void RenderPass::processPixelRequests()
         //find out whether name is a renderbuffer or a taxture
         GLenum datasize = GL_UNSIGNED_BYTE;
         GLenum format = GL_RGBA;
-        for(const auto &tex : _outputTextures) {
-            if (tex->getName() == name){
-                switch(tex->getFormat()) {
-                case Texture::RGB:
-                    format = GL_RGB;
-                    datasize = GL_UNSIGNED_BYTE;
-                    break;
-                case Texture::RGB8:
-                    format = GL_RGB;
-                    datasize = GL_UNSIGNED_BYTE;
-                    break;
-                case Texture::RGBA:
-                    format = GL_RGBA;
-                    datasize = GL_UNSIGNED_BYTE;
-                    break;
-                case Texture::RGBA8:
-                    format = GL_RGBA;
-                    datasize = GL_UNSIGNED_BYTE;
-                    break;
-                case Texture::RGBA16F:
-                    format = GL_RGBA;
-                    datasize = GL_FLOAT;
-                    break;
-                default:
-                    break;
-                }
-            }
+
+		auto getBuffer = [&name](const auto &buffer) {
+			return buffer->getName() == name;
+		};
+
+		const auto &tex = std::find_if(_outputTextures.begin(), _outputTextures.end(), getBuffer);
+		if (tex != _outputTextures.end()) getFormatAndSize(*tex, &datasize, &format);
+		const auto &renderbuffer = std::find_if(_outputRenderbuffers.begin(), _outputRenderbuffers.end(), getBuffer);
+		if (renderbuffer != _outputRenderbuffers.end()) getFormatAndSize(*renderbuffer, &datasize, &format);
+        //and then find its datasize
+        void* data = nullptr;
+
+        if(format == GL_RGB)
+            data = new GLubyte[3];
+        else if(format == GL_RGBA && datasize == GL_UNSIGNED_BYTE)
+            data = new GLubyte[4];
+        else if(format == GL_RGBA && datasize == GL_FLOAT)
+            data = new GLfloat[4];
+
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        MTGLERROR;
+        glReadPixels(pos.x, pos.y, 1, 1, format, datasize, data);
+        MTGLERROR;
+
+        glm::vec4 color;
+        if(format == GL_RGB) {
+            GLubyte* raw_color = reinterpret_cast<GLubyte*>(data);
+            color = glm::vec4(raw_color[0] / 255.0,
+                              raw_color[1] / 255.0,
+                              raw_color[2] / 255.0,
+                              1);
+            delete [] raw_color;
+        }
+        else if(format == GL_RGBA && datasize == GL_UNSIGNED_BYTE) {
+            GLubyte* raw_color = reinterpret_cast<GLubyte*>(data);
+            color = glm::vec4(raw_color[0] / 255.0,
+                              raw_color[1] / 255.0,
+                              raw_color[2] / 255.0,
+                              raw_color[3] / 255.0);
+            delete [] raw_color;
+        }
+        else if(format == GL_RGBA && datasize == GL_FLOAT) {
+            GLfloat* raw_color = reinterpret_cast<GLfloat*>(data);
+            color = glm::vec4(raw_color[0],
+                              raw_color[1],
+                              raw_color[2],
+                              raw_color[3]);
+            delete [] raw_color;
         }
 
-        for(const auto &renderbuffer : _outputRenderbuffers) {
-            if (renderbuffer->getName() == name){
-                switch(renderbuffer->getFormat()) {
-                case Renderbuffer::RGB:
-                    format = GL_RGB;
-                    datasize = GL_UNSIGNED_BYTE;
-                    break;
-                case Renderbuffer::RGB8:
-                    format = GL_RGB;
-                    datasize = GL_UNSIGNED_BYTE;
-                    break;
-                case Renderbuffer::RGBA:
-                    format = GL_RGBA;
-                    datasize = GL_UNSIGNED_BYTE;
-                    break;
-                case Renderbuffer::RGBA8:
-                    format = GL_RGBA;
-                    datasize = GL_UNSIGNED_BYTE;
-                    break;
-                case Renderbuffer::RGBA16F:
-                    format = GL_RGBA;
-                    datasize = GL_FLOAT;
-                    break;
-                default:
-                    break;
-                }
-            }
+        ret.push_back(color);
+    }
+	return ret;
+}
+
+void RenderPass::processPixelRequests()
+{
+	std::unique_lock<std::mutex> locker(_pixelRequestsLock);
+	_requestedPixels.clear();
+	if (_pixelRequests.empty()) return;
+	while(_pixelRequests.size() > 0) {
+		auto request = _pixelRequests.front();
+		_pixelRequests.pop();
+		auto name = request.first;
+		auto pos = request.second;
+
+		//find attachment
+		if(_target) {
+            glReadBuffer(GL_COLOR_ATTACHMENT0 + _target->getAttachmentPos(name));
+            MTGLERROR;
         }
+        else {
+            glReadBuffer(GL_BACK);
+            MTGLERROR;
+        }
+
+        //find out whether name is a renderbuffer or a taxture
+        GLenum datasize = GL_UNSIGNED_BYTE;
+        GLenum format = GL_RGBA;
+
+		auto getBuffer = [&name](const auto &buffer) {
+			return buffer->getName() == name;
+		};
+
+		auto tex = std::find_if(_outputTextures.begin(), _outputTextures.end(), getBuffer);
+		getFormatAndSize(*tex, &datasize, &format);
+		auto renderbuffer = std::find_if(_outputRenderbuffers.begin(), _outputRenderbuffers.end(), getBuffer);
+		getFormatAndSize(*renderbuffer, &datasize, &format);
+		
         //and then find its datasize
         void* data = nullptr;
 

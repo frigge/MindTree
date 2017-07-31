@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
     std::cout << "initializing X11 threading support" << std::endl;
     QApplication::setAttribute(Qt::AA_X11InitThreads);
 #endif
-
     MindTree::initApp(argc, argv);
 
     if(MindTree::noGui()) {

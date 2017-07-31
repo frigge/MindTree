@@ -41,8 +41,6 @@ ResourceManager* Renderer::getResourceManager()
 
 void Renderer::_init(ShaderProgram* program)
 {
-    RenderThread::asrt();
-
     for (auto &child : _children)
         child->_init(program);
 
@@ -122,7 +120,6 @@ Renderer* Renderer::getParent()
 
 void Renderer::render(const CameraPtr camera, const RenderConfig &config, ShaderProgram* program)
 {
-    RenderThread::asrt();
     if(!_visible) return;
     assert(_initialized);
 

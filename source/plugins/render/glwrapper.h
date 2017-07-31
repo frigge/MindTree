@@ -19,37 +19,40 @@ namespace GL
 class FBO;
 inline bool getGLError(std::string location)
 {
-    switch(glGetError()) {
-    case GL_NO_ERROR:
-        return false;
-    case GL_INVALID_ENUM:
-        std::cout << "GL_INVALID_ENUM" ;
-        break;
-    case GL_INVALID_VALUE:
-        std::cout << "GL_INVALID_VALUE";
-        break;
-    case GL_INVALID_OPERATION:
-        std::cout << "GL_INVALID_OPERATION";
-        break;
-    case GL_INVALID_FRAMEBUFFER_OPERATION:
-        std::cout << "GL_INVALID_FRAMEBUFFER_OPERATION";
-        break;
-    case GL_OUT_OF_MEMORY:
-        std::cout << "GL_OUT_OF_MEMORY";
-        break;
-    case GL_STACK_UNDERFLOW:
-        std::cout << "GL_STACK_UNDERFLOW";
-        break;
-    case GL_STACK_OVERFLOW:
-        std::cout << "GL_STACK_OVERFLOW";
-        break;
-    }
+	auto err = glGetError();
+	do {
+		switch(glGetError()) {
+		case GL_NO_ERROR:
+			return false;
+		case GL_INVALID_ENUM:
+			std::cout << "GL_INVALID_ENUM" ;
+			break;
+		case GL_INVALID_VALUE:
+			std::cout << "GL_INVALID_VALUE";
+			break;
+		case GL_INVALID_OPERATION:
+			std::cout << "GL_INVALID_OPERATION";
+			break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			std::cout << "GL_INVALID_FRAMEBUFFER_OPERATION";
+			break;
+		case GL_OUT_OF_MEMORY:
+			std::cout << "GL_OUT_OF_MEMORY";
+			break;
+		case GL_STACK_UNDERFLOW:
+			std::cout << "GL_STACK_UNDERFLOW";
+			break;
+		case GL_STACK_OVERFLOW:
+			std::cout << "GL_STACK_OVERFLOW";
+			break;
+		}
 
 #ifdef ASSERT_ON_MTGLERROR
-    assert(false);
+		assert(false);
 #endif
 
-    std::cout << " in " << location << std::endl;
+		std::cout << " in " << location << std::endl;
+	} while (err != GL_NO_ERROR);
     return true;
 }
 
@@ -178,6 +181,7 @@ public:
 private:
     uint color_attachments;
     GLuint id;
+    GLint prev_id;
     std::vector<std::string> _attachments;
     std::vector<Texture2D*> _textures;
     std::vector<Renderbuffer*> _renderbuffers;

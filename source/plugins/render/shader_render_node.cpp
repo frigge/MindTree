@@ -36,7 +36,6 @@ void ShaderRenderNode::init()
     if(_initialized) return;
     std::lock_guard<std::mutex> lock(_rendersLock);
 
-    RenderThread::asrt();
     _initialized = true;
     _program->init();
     for (auto &render : _renders)
@@ -53,7 +52,6 @@ void ShaderRenderNode::addRenderer(Renderer *renderer)
 
 void ShaderRenderNode::render(CameraPtr camera, glm::ivec2 resolution, const RenderConfig &config)
 {
-    RenderThread::asrt();
     std::lock_guard<std::mutex> lock(_rendersLock);
     if(!_initialized || !_program) return;
 

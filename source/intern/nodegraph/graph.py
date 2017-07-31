@@ -46,14 +46,14 @@ class NodeSpace(QGraphicsScene):
         rpos += pos
 
         painter.setBrush(QBrush(QColor(50, 50, 50)))
-        painter.drawRect(QRectF(pos, QSize(size, size)))
+        painter.drawRect(QRectF(pos, QSizeF(size, size)))
 
         #draw viewport rect
         width = (rect.width() / cwidth) * size
         height = (rect.height() / cheight) * size
 
         painter.setBrush(QBrush(QColor(80, 80, 80)))
-        painter.drawRect(QRectF(rpos, QSize(width, height)))
+        painter.drawRect(QRectF(rpos, QSizeF(width, height)))
 
         super().drawForeground(painter, rect)
 

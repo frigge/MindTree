@@ -22,6 +22,8 @@
 #include "boost/python.hpp"
 #include "pluginentry.h"
 
+#include <QCoreApplication>
+
 namespace BPy = boost::python;
 
 using namespace MindTree;
@@ -41,4 +43,5 @@ BOOST_PYTHON_MODULE(scenegraph){
         ->addViewer(new MindTree::ViewerFactory("&Viewport", 
                                                 "TRANSFORMABLE", 
                                                 addViewport));
+	QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 }

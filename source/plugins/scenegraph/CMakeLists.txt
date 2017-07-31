@@ -1,11 +1,14 @@
 project(scenegraph)
 set(SCE_SRC
     pluginentry.cpp
+    renderthread.cpp
+    qtcontext.cpp
     graphics/viewport.cpp
     graphics/viewport_widget.cpp
 )
 
 set(SCE_HEADER
+    renderthread.h
     graphics/viewport.h
     graphics/viewport_widget.h
 )

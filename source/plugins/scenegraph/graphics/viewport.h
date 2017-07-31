@@ -28,6 +28,7 @@
 #include "data/nodes/nodetype.h"
 #include "../../render/glwrapper.h"
 #include "../../render/rendertree.h"
+#include "renderthread.h"
 
 #include <QOpenGLWidget>
 
@@ -105,6 +106,8 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Light>> _lights;
     std::unordered_map<std::string, std::shared_ptr<Camera>> _cameras;
     std::vector<std::string> _camNames;
+
+	MindTree::GL::RenderThread _renderThread;
 
     QPointF lastpos;
     QPointF winClickPos;

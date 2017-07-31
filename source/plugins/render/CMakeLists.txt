@@ -17,7 +17,6 @@ set(RENDER_SRC
     pixel_plane.cpp
     polygon_renderer.cpp
     primitive_renderer.cpp
-    qtcontext.cpp
     render.cpp
     render_block.cpp
     render_setup.cpp

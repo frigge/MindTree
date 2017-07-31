@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
+set(CMAKE_CXX_STANDARD 14)
 project(mindTree)
 
 option(CLANG_SANITIZE_THREAD "CLANG_SANITIZE_THREAD" OFF)
@@ -38,13 +39,6 @@ set(RESOURCES source/graphics/styles/styles.qrc)
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
                 OUTPUT_VARIABLE GCC_VERSION)
 message("compiler flags: " ${CMAKE_CXX_FLAGS})
-if(GCC_VERSION VERSION_LESS 4.7)
-    add_definitions("-std=c++0x")
-elseif(GCC_VERSION VERSION_LESS 4.9)
-    add_definitions("-std=c++11")
-else()
-    add_definitions("-std=c++14")
-endif()
 
 message("C++ compiler: " ${CMAKE_CXX_COMPILER_ID})
 message("CMake Build Type: " ${CMAKE_BUILD_TYPE})

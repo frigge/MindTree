@@ -32,20 +32,20 @@ DeferredRenderer::DeferredRenderer(CameraPtr camera, Widget3DManager *widgetMana
     RenderConfigurator(camera)
 {
     auto manager = getTree();
-    //auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
-    //manager->setBenchmark(benchmark);
-    //benchmark->setCallback([this](Benchmark* benchmark) {
-    //                           if(benchmark->getNumCalls() >= 500) {
-    //                               int vcnt = this->getVertexCount();
-    //                               int pcnt = this->getPolygonCount();
-    //                               std::cout << "======START======\n";
-    //                               std::cout << "Vertexcount: " << vcnt;
-    //                               std::cout << " Polygoncount: " << pcnt << "\n";
-    //                               std::cout << (*benchmark) << "\n";
-    //                               std::cout << "======END======" << std::endl;
-    //                               benchmark->reset();
-    //                           }
-    //                       });
+    auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
+    manager->setBenchmark(benchmark);
+    benchmark->setCallback([this](Benchmark* benchmark) {
+                               if(benchmark->getNumCalls() >= 500) {
+                                   int vcnt = this->getVertexCount();
+                                   int pcnt = this->getPolygonCount();
+                                   std::cout << "======START======\n";
+                                   std::cout << "Vertexcount: " << vcnt;
+                                   std::cout << " Polygoncount: " << pcnt << "\n";
+                                   std::cout << (*benchmark) << "\n";
+                                   std::cout << "======END======" << std::endl;
+                                   benchmark->reset();
+                               }
+                           });
 
     auto rsm_generation_block = std::make_unique<RSMGenerationBlock>();
     auto gbuffer_block = std::make_unique<GBufferRenderBlock>(_geometryPass);
@@ -109,7 +109,7 @@ void DeferredRenderer::setCamera(std::shared_ptr<Camera> cam)
 glm::vec4 DeferredRenderer::getPosition(glm::vec2 pixel) const
 {
     std::vector<std::string> values = {"worldposition"};
-    return _geometryPass->readPixel(values, pixel)[0];
+    return _geometryPass->readPixelSync(values, pixel)[0];
 }
 
 void DeferredRenderer::setProperty(const std::string &name, Property prop)

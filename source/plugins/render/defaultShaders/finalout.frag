@@ -1,7 +1,7 @@
-#version 330
+#version 430
 in vec2 st;
 uniform ivec2 resolution;
-uniform sampler2D output;
+uniform sampler2D outputtx;
 
 out vec4 color;
 
@@ -18,7 +18,7 @@ void main(){
 
     vec4 checker = mix(col1, col2, pattern);
 
-    vec4 col = texture(output, st);
+    vec4 col = texture(outputtx, st);
     col.a = clamp(col.a, 0, 1);
     color = col;
     //color = mix(checker, col, col.a);

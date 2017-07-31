@@ -12,8 +12,6 @@
 #include "unordered_map"
 #include "../datatypes/Object/object.h"
 
-#include "qtcontext.h"
-
 namespace MindTree {
 class Benchmark;
 namespace GL {
@@ -41,32 +39,7 @@ private:
 };
 
 class RenderTree;
-class RenderThread
-{
-public:
-    static void addManager(RenderTree* manager, QtContext &ctx);
-    static void removeManager(RenderTree *manager);
-    inline static std::thread::id id() { return _renderThread.get_id(); }
-    inline static void asrt() { assert(_renderThread.get_id() == std::this_thread::get_id()); }
-    static void update();
-    static void updateOnce();
-    static void pause();
-
-private:
-    static void start(QtContext &ctx);
-    static void stop();
-    static bool isRendering();
-
-    static std::atomic_bool _rendering;
-    static std::atomic_bool _update;
-    static std::condition_variable _renderNotifier;
-    static std::mutex _renderingLock;
-    static std::thread _renderThread;
-    static std::vector<RenderTree*> _renderQueue;
-};
-
 class ResourceManager;
-class QtContext;
 class RenderTree
 {
 public:
@@ -89,12 +62,10 @@ public:
     void setDirty();
 
     ResourceManager *getResourceManager();
-
+    void draw();
 
 private:
     void init();
-    void draw(QtContext &ctx);
-    friend class RenderThread;
 
     std::shared_timed_mutex _managerLock;
 

@@ -5,11 +5,9 @@
 #include "vector"
 
 #include "data/mtobject.h"
-#include "qtcontext.h"
 #include "glwrapper.h"
 
 class Widget3DManager;
-class QOpenGLContext;
 
 class Group;
 class Camera;
@@ -27,7 +25,6 @@ class ShaderProgram;
 class ShaderRenderNode;
 class RenderBlock;
 class GridRenderer;
-class QtContext;
 
 class RenderConfigurator : public Object
 {

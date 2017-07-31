@@ -67,7 +67,8 @@ public:
 
     CameraPtr getCamera();
 
-    std::vector<glm::vec4> readPixel(std::vector<std::string> name, glm::ivec2 pos);
+    std::vector<glm::vec4> readPixel(const std::vector<std::string> &name, glm::ivec2 pos);
+	std::vector<glm::vec4> readPixelSync(const std::vector<std::string> &names, glm::ivec2 pos);
 
     void setOverrideProgram(ResourceHandle<ShaderProgram> &&program);
 

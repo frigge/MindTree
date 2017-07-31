@@ -254,7 +254,7 @@ bool Widget3DManager::mouseMoveEvent(const CameraPtr &cam, glm::ivec2 pos, glm::
     }
 
     if (clicked_widget) {
-        MindTree::GL::RenderThread::update();
+		DataCache::tryUpdate();
         for (auto &widget : _widgets) {
             if (widget.get() != clicked_widget) {
                 widget->forceHoverLeft();
@@ -262,9 +262,9 @@ bool Widget3DManager::mouseMoveEvent(const CameraPtr &cam, glm::ivec2 pos, glm::
         }
         return true;
     }
-    else {
-        MindTree::GL::RenderThread::pause();
-    }
+    //else {
+    //    MindTree::GL::RenderThread::pause();
+    //}
     return false;
 }
 

@@ -137,6 +137,11 @@ public:
     void setContext(CacheContext *context);
     static Property getCachedData(const DNode *node, int output=0);
 
+	inline static void tryUpdate()
+	{
+		MT_CUSTOM_SIGNAL_EMITTER("socketChanged", nullptr);
+	}
+
 private:
     static void invalidateNode(const DNode *node);
     std::vector<Property>& _getCachedOutputs();

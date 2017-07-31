@@ -39,6 +39,7 @@
 #include "../../render/deferred_renderer.h"
 #include "../../datatypes/Object/lights.cpp"
 #include  "viewport_widget.h"
+#include  "qtcontext.h"
 
 #include "data/debuglog.h"
 
@@ -72,7 +73,7 @@ Viewport::Viewport(ViewportWidget *widget) :
 
 Viewport::~Viewport()
 {
-    MindTree::GL::RenderThread::removeManager(_renderConfigurator->getTree());
+    //_renderThread.removeTree(_renderConfigurator->getTree());
     _viewports.erase(std::find(begin(_viewports), end(_viewports), this));
 }
 
@@ -81,7 +82,7 @@ void Viewport::exitFullscreen()
     dbout("exit");
     setWindowState(windowState() & ~Qt::WindowFullScreen);
     _viewportWidget->resetViewport();
-    MindTree::GL::RenderThread::update();
+    //_renderThread.update();
 }
 
 void Viewport::setOverride(std::string name)
@@ -96,7 +97,7 @@ void Viewport::clearOverrideOutput()
 
 GL::RenderTree* Viewport::getRenderTree()
 {
-    return _renderConfigurator->getManager();
+    return _renderConfigurator->getTree();
 }
 
 void Viewport::setData(std::shared_ptr<Group> value)
@@ -137,7 +138,7 @@ void Viewport::setData(std::shared_ptr<Group> value)
         _lights[name] = light;
     }
 
-    MindTree::GL::RenderThread::updateOnce();
+    //_renderThread.updateOnce();
 }
 
 std::vector<std::string> Viewport::getCameras() const
@@ -171,55 +172,60 @@ void Viewport::changeCamera(std::string cam)
     _renderConfigurator->setCamera(activeCamera);
 }
 
-void Viewport::resizeEvent(QResizeEvent *)
+void Viewport::resizeEvent(QResizeEvent *event)
 {
-    activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
-    activeCamera->setResolution(width(), height());
-    _renderConfigurator->setCamera(activeCamera);
-    MindTree::GL::RenderThread::addManager(_renderConfigurator->getTree(), ctx);
-    MindTree::GL::RenderThread::updateOnce();
+	QOpenGLWidget::resizeEvent(event);
+	//activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
+	//activeCamera->setResolution(width(), height());
+	//_renderConfigurator->setCamera(activeCamera);
+
+	//_renderThread.addTree(_renderConfigurator->getTree(), context());
+	//_renderThread.updateOnce();
 }
 
-void Viewport::paintEvent(QPaintEvent *)
+void Viewport::paintEvent(QPaintEvent *event)
 {
+	QOpenGLWidget::paintEvent(event);
 }
 
-void Viewport::showEvent(QShowEvent *)
+void Viewport::showEvent(QShowEvent *event)
 {
-    MindTree::GL::RenderThread::addManager(_renderConfigurator->getTree(), ctx);
+	QOpenGLWidget::showEvent(event);
+    //_renderThread.addTree(_renderConfigurator->getTree(), context());
 }
 
-void Viewport::hideEvent(QHideEvent *)
+void Viewport::hideEvent(QHideEvent *event)
 {
-    MindTree::GL::RenderThread::removeManager(_renderConfigurator->getTree());
+	QOpenGLWidget::hideEvent(event);
+    //_renderThread.removeTree(_renderConfigurator->getTree());
 }
 
 void Viewport::setShowPoints(bool b)
 {
-    auto config = _renderConfigurator->getManager()->getConfig();
+    auto config = _renderConfigurator->getTree()->getConfig();
     config.setDrawPoints(b);
-    _renderConfigurator->getManager()->setConfig(config);
+    _renderConfigurator->getTree()->setConfig(config);
 }
 
 void Viewport::setShowEdges(bool b)
 {
-    auto config = _renderConfigurator->getManager()->getConfig();
+    auto config = _renderConfigurator->getTree()->getConfig();
     config.setDrawEdges(b);
-    _renderConfigurator->getManager()->setConfig(config);
+    _renderConfigurator->getTree()->setConfig(config);
 }
 
 void Viewport::setShowPolygons(bool b)
 {
-    auto config = _renderConfigurator->getManager()->getConfig();
+    auto config = _renderConfigurator->getTree()->getConfig();
     config.setDrawPolygons(b);
-    _renderConfigurator->getManager()->setConfig(config);
+    _renderConfigurator->getTree()->setConfig(config);
 }
 
 void Viewport::setShowFlatShading(bool b)
 {
-    auto config = _renderConfigurator->getManager()->getConfig();
+    auto config = _renderConfigurator->getTree()->getConfig();
     config.setShowFlatShaded(b);
-    _renderConfigurator->getManager()->setConfig(config);
+    _renderConfigurator->getTree()->setConfig(config);
 }
 
 void Viewport::setOption(const std::string &key, Property value)
@@ -240,17 +246,22 @@ void Viewport::initializeGL()
 {
 }
 
-void Viewport::resizeGL(int, int)
+void Viewport::resizeGL(int w, int h)
 {
+	activeCamera->setAspect((GLdouble)w/(GLdouble)h);
+	activeCamera->setResolution(w, h);
+	_renderConfigurator->setCamera(activeCamera);
 }
 
 void Viewport::paintGL()
 {
+	std::cout << "painting to fbo: " << defaultFramebufferObject() << std::endl;
+	_renderConfigurator->getTree()->draw();
 }
 
 void Viewport::mousePressEvent(QMouseEvent *event)
 {
-    MindTree::GL::RenderThread::update();
+    //_renderThread.update();
     glm::ivec2 pos;
     pos.x = event->pos().x();
     pos.y = height() - event->pos().y();
@@ -262,7 +273,12 @@ void Viewport::mousePressEvent(QMouseEvent *event)
     _renderConfigurator->setProperty("GL:camera:showcenter", true);
 
     lastpos = event->screenPos();
-    glm::vec4 center = _renderConfigurator->getPosition(pos);
+	glm::vec4 center;
+    {
+		GL::QtContext ctx(context());
+		GL::ContextBinder binder(ctx);
+		center = _renderConfigurator->getPosition(pos);
+	}
     dbout(glm::to_string(center));
     if(center.a > 0) {
         activeCamera->setCenter(center.xyz());
@@ -275,6 +291,7 @@ void Viewport::mousePressEvent(QMouseEvent *event)
         pan = true;
     else
         rotate = true;
+	repaint();
 }
 
 void Viewport::mouseReleaseEvent(QMouseEvent *event)
@@ -287,7 +304,8 @@ void Viewport::mouseReleaseEvent(QMouseEvent *event)
 
     _widgetManager->mouseReleaseEvent();
     _renderConfigurator->setProperty("GL:camera:showcenter", false);
-    MindTree::GL::RenderThread::pause();
+	repaint();
+    //_renderThread.pause();
 }
 
 PropertyMap Viewport::getSettings() const
@@ -320,6 +338,7 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
         zoomView(xdist, ydist);
     lastpos = event->screenPos();
 
+	repaint();
     if(rotate || pan || zoom)
         return;
 
@@ -329,7 +348,8 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 void Viewport::wheelEvent(QWheelEvent *event)
 {
     zoomView(0, event->delta());
-    MindTree::GL::RenderThread::updateOnce();
+    //_renderThread.updateOnce();
+	repaint();
 }
 
 void Viewport::rotateView(float xdist, float ydist)
@@ -356,8 +376,9 @@ void Viewport::panView(float xdist, float ydist)
     float lalen = glm::length(activeCamera->getCenter() - activeCamera->getPosition());
     float xtrans = xdist * lalen * 0.005;
     float ytrans = ydist * lalen * 0.005;
-    activeCamera->translate(glm::vec3(1, 0, 0) * xtrans);
-    activeCamera->translate(glm::vec3(0, 1, 0) * ytrans);
+    glm::mat4 camtrans = activeCamera->getTransformation();
+    activeCamera->translate((camtrans * glm::vec4(1, 0, 0, 0)).xyz * xtrans);
+    activeCamera->translate((camtrans * glm::vec4(0, 1, 0, 0)).xyz * ytrans);
 }
 
 void Viewport::zoomView(float xdist, float ydist)

@@ -7,9 +7,6 @@
 #include "shader_render_node.h"
 #include "benchmark.h"
 
-#include <QThread>
-#include <QOpenGLContext>
-
 #include "rendertree.h"
 
 using namespace MindTree;
@@ -55,91 +52,6 @@ bool RenderConfig::flatShading() const
     return _flatShading;
 }
 
-std::atomic_bool RenderThread::_rendering{false};
-std::atomic_bool RenderThread::_update{false};
-std::mutex RenderThread::_renderingLock;
-std::condition_variable RenderThread::_renderNotifier;
-std::thread RenderThread::_renderThread;
-std::vector<RenderTree*> RenderThread::_renderQueue;
-
-void RenderThread::addManager(RenderTree* manager, QtContext &ctx)
-{
-    std::unique_lock<std::mutex> lock(_renderingLock, std::defer_lock);
-    auto it = std::find(begin(_renderQueue), end(_renderQueue), manager);
-    if(it == end(_renderQueue))
-        _renderQueue.push_back(manager);
-
-    if(!isRendering()) start(ctx);
-    _update = true;
-}
-
-void RenderThread::removeManager(RenderTree *manager)
-{
-    std::unique_lock<std::mutex> lock(_renderingLock, std::defer_lock);
-    auto it = std::find(begin(_renderQueue), end(_renderQueue), manager);
-    if(it != end(_renderQueue))
-        _renderQueue.erase(it);
-    if(_renderQueue.empty()) stop();
-}
-
-bool RenderThread::isRendering()
-{
-    return _rendering;
-}
-
-void RenderThread::updateOnce()
-{
-    _update = true;
-    _renderNotifier.notify_all();
-    _update = false;
-}
-
-void RenderThread::update()
-{
-    //noop if already updating
-    if(_update) return;
-
-    _update = true;
-    _renderNotifier.notify_all();
-}
-
-void RenderThread::pause()
-{
-    _update = false;
-}
-
-void RenderThread::start(QtContext &ctx)
-{
-    if(isRendering()) stop();
-
-    _rendering = true;
-
-    auto renderLoop = [&ctx] {
-        std::unique_lock<std::mutex> lock(_renderingLock, std::defer_lock);
-		QThread *thread = QThread::currentThread();
-		ctx._context->moveToThread(thread);
-        ContextBinder binder(ctx);
-        while(RenderThread::isRendering()) {
-            if(!_update) _renderNotifier.wait(lock);
-            for(auto *manager : _renderQueue) {
-                manager->draw(ctx);
-            }
-        }
-    };
-
-    std::cout << "starting render thread" << std::endl;
-    _renderThread = std::thread(renderLoop);
-}
-
-void RenderThread::stop()
-{
-    std::cout << "stop rendering" << std::endl;
-    _rendering = false;
-    _update = false;
-    _renderNotifier.notify_all();
-    if (_renderThread.joinable()) _renderThread.join();
-}
-
 RenderTree::RenderTree() :
     _resourceManager(std::make_unique<ResourceManager>()),
     _initialized(false)
@@ -172,7 +84,6 @@ void RenderTree::setDirty()
 
 void RenderTree::init()
 {
-    RenderThread::asrt();
     if(_initialized) return;
 
     static bool glewInitialized = false;
@@ -284,10 +195,8 @@ RenderPass* RenderTree::getPass(uint index)
     return std::next(begin(passes), index)->get();
 }
 
-void RenderTree::draw(QtContext &ctx)
+void RenderTree::draw()
 {
-    RenderThread::asrt();
-
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_POLYGON_OFFSET_POINT);
 
@@ -307,7 +216,4 @@ void RenderTree::draw(QtContext &ctx)
 
     glDisable(GL_PROGRAM_POINT_SIZE);
     glDisable(GL_POLYGON_OFFSET_POINT);
-    ctx.swapBuffers();
-
-    glFinish();
 }
