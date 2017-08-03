@@ -82,17 +82,20 @@ void Viewport::exitFullscreen()
     dbout("exit");
     setWindowState(windowState() & ~Qt::WindowFullScreen);
     _viewportWidget->resetViewport();
+	update();
     //_renderThread.update();
 }
 
 void Viewport::setOverride(std::string name)
 {
     _renderConfigurator->setOverrideOutput(name);
+	update();
 }
 
 void Viewport::clearOverrideOutput()
 {
     _renderConfigurator->clearOverrideOutput();
+	update();
 }
 
 GL::RenderTree* Viewport::getRenderTree()
@@ -139,6 +142,7 @@ void Viewport::setData(std::shared_ptr<Group> value)
     }
 
     //_renderThread.updateOnce();
+	//update();
 }
 
 std::vector<std::string> Viewport::getCameras() const
@@ -235,6 +239,7 @@ void Viewport::setOption(const std::string &key, Property value)
     if(key == "GL:showpolygons") setShowPolygons(value.getData<bool>());
     if(key == "GL:flatshading") setShowFlatShading(value.getData<bool>());
     else _renderConfigurator->setProperty(key, value);
+	update();
 }
 
 void Viewport::setShowGrid(bool b)
@@ -291,7 +296,7 @@ void Viewport::mousePressEvent(QMouseEvent *event)
         pan = true;
     else
         rotate = true;
-	repaint();
+	update();
 }
 
 void Viewport::mouseReleaseEvent(QMouseEvent *event)
@@ -304,7 +309,7 @@ void Viewport::mouseReleaseEvent(QMouseEvent *event)
 
     _widgetManager->mouseReleaseEvent();
     _renderConfigurator->setProperty("GL:camera:showcenter", false);
-	repaint();
+	update();
     //_renderThread.pause();
 }
 
@@ -336,9 +341,23 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
         panView(xdist, ydist);
     else if(zoom)
         zoomView(xdist, ydist);
-    lastpos = event->screenPos();
+	else {
+		glm::vec4 center;
+		{
+			GL::QtContext ctx(context());
+			GL::ContextBinder binder(ctx);
+			center = _renderConfigurator->getPosition(pos);
+		}
+		dbout(glm::to_string(center));
+		if(center.a > 0) {
+			activeCamera->setCenter(center.xyz());
+			_renderConfigurator->setProperty("GL:camera:center", center.xyz());
+		}
+		_renderConfigurator->setProperty("GL:camera:showcenter", false);
+	}
+	lastpos = event->screenPos();
 
-	repaint();
+	update();
     if(rotate || pan || zoom)
         return;
 
@@ -347,9 +366,10 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 
 void Viewport::wheelEvent(QWheelEvent *event)
 {
+    _renderConfigurator->setProperty("GL:camera:showcenter", true);
     zoomView(0, event->delta());
     //_renderThread.updateOnce();
-	repaint();
+	update();
 }
 
 void Viewport::rotateView(float xdist, float ydist)
