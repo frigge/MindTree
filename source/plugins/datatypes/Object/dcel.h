@@ -1,6 +1,7 @@
 #ifndef MT_OBJECT_DCEL_H
 #define MT_OBJECT_DCEL_H
 
+#define GLM_FORCE_SWIZZLE
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>

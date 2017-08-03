@@ -18,7 +18,7 @@
 
 #include "cmath"
 
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include "glm/gtc/matrix_transform.hpp"
 
 #include "lights.h"

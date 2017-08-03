@@ -18,6 +18,7 @@
 
 #include "source/data/python/init.h"
 #include "exception"
+#define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 #include "iostream"
 #include "data/debuglog.h"

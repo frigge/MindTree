@@ -9,6 +9,8 @@
 #include "functional"
 #include "data/nodes/nodetype.h"
 #include "data/datatypes.h"
+
+#define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 
 namespace MindTree {

@@ -1,6 +1,7 @@
 #ifndef MT_GL_RENDERMANAGER
 #define MT_GL_RENDERMANAGER
 
+#define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 #include "mutex"
 #include "shared_mutex"

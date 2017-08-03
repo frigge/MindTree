@@ -1,4 +1,4 @@
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include <unordered_map>
 
 #include "../plugins/datatypes/Object/object.h"

@@ -1,4 +1,4 @@
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include "glm/gtc/matrix_transform.hpp"
 #include "data/nodes/data_node.h"
 #include "translate_widgets.h"

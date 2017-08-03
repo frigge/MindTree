@@ -17,7 +17,7 @@
 */
 
 
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include "iostream"
 #include "glm/gtc/matrix_transform.hpp"
 #include "ray.h"

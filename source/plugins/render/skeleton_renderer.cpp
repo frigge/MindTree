@@ -1,4 +1,4 @@
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include "coordsystem_renderer.h"
 #include "skeleton_renderer.h"
 

@@ -1,7 +1,7 @@
 #ifndef MT_SHAPES
 #define MT_SHAPES
 
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 
 class Plane

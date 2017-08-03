@@ -1,4 +1,4 @@
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include "data/debuglog.h"
 #include "../plugins/datatypes/Object/object.h"
 #include "../plugins/datatypes/Object/dcel.h"

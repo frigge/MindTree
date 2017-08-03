@@ -1,4 +1,5 @@
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
+
 #include "deferred_renderer.h"
 #include "light_accumulation_plane.h"
 

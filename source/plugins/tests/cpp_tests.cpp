@@ -1,3 +1,4 @@
+#define GLM_FORCE_SWIZZLE
 #include "mindtree_core.h"
 #include "../datatypes/Object/object.h"
 #include "../datatypes/Object/dcel.h"

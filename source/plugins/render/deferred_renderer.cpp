@@ -1,4 +1,4 @@
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include "render.h"
 #include "renderpass.h"
 #include "rendertree.h"

@@ -1,8 +1,10 @@
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/string_cast.hpp"
 //#include "GL/glew.h"
 #include "renderpass.h"
 #include "rendertree.h"
+#include "data/debuglog.h"
 #include "primitive_renderer.h"
 
 #define PI 3.14159265359

@@ -10,7 +10,6 @@
 #include "glwrapper.h"
 #include "resource_handling.h"
 #include "../datatypes/Object/object.h"
-#include "glm/glm.hpp"
 
 class GeoObject;
 namespace MindTree

@@ -1,7 +1,9 @@
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/string_cast.hpp"
 #include "glwrapper.h"
+#include "data/debuglog.h"
 
 #include "rendertree.h"
 #include "render.h"

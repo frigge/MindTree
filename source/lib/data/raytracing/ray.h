@@ -20,6 +20,7 @@
 
 #define RAY
 
+#define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 #include "graphics/shapes.h"
 #include "memory"

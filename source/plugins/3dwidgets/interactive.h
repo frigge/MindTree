@@ -1,10 +1,9 @@
 #ifndef MT_GL_WIDGETS_INTERACTIVE_H
 #define MT_GL_WIDGETS_INTERACTIVE_H
 
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 
 #include <memory>
-#include <glm/glm.hpp>
 #include "graphics/shapes.h"
 #include "data/raytracing/ray.h"
 #include "../render/primitive_renderer.h"

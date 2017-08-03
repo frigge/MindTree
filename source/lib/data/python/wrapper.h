@@ -23,6 +23,7 @@
 #include "boost/python.hpp"
 #include "iostream"
 
+#define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 #include "memory"
 #include "data/nodes/node_db.h"

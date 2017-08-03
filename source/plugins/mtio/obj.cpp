@@ -19,6 +19,7 @@
 #include "QFile"
 #include "QFileInfo"
 #include "QString"
+#define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 
 #include "obj.h"
