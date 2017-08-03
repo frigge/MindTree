@@ -124,7 +124,14 @@ bool testRaycasting()
         << hitpoint.y
         << ", "
         << hitpoint.z << ")" << std::endl;
-    return hit && (start + dir * uvdist.z) == hitpoint;
+	auto nhit = start + dir * uvdist.z;
+    std::cout << "the hitpoint should be: ("
+        << hitpoint.x
+        << ", "
+        << hitpoint.y
+        << ", "
+        << hitpoint.z << ")" << std::endl;
+    return hit && nhit == hitpoint;
 }
 
 bool testSaveLoadProperties()
