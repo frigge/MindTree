@@ -72,7 +72,12 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), style_age(-1)
 {
     setObjectName("MindTreeMainWindow");
-    setWindowTitle("MindTree");
+	QString title = "MindTree";
+	auto filename = Project::instance()->getFilename();
+
+	if (!filename.empty())
+		title += QString(" - ") + filename.c_str();
+    setWindowTitle(title);
     resize(1500, 1000);
 
     setAnimated(false);
@@ -87,6 +92,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(windowList, SIGNAL(windowFactoryAdded(MindTree::WindowFactory*)), this, SLOT(registerWindow(MindTree::WindowFactory*)));
 
+	addFileMenu();
     registerMenu(new QMenu("&Window"));
     auto fac = new WindowFactory("Console", addConsole);
     MindTree::WindowList::instance()->addFactory(fac);
@@ -103,18 +109,70 @@ MainWindow::MainWindow(QWidget *parent)
 #endif
 
     MindTree::Signal::getHandler<std::string>().connect("filename_changed",[this](std::string title){
-        this->change_window_title(title.c_str()); 
+			this->change_window_title(title.c_str());
     }).detach();
 
     MindTree::Signal::getHandler<std::string>().connect("STATUSUPDATE",[this](std::string message){
-                                                        dbout("test");
-        this->statusBar()->showMessage(message.c_str());
+			QString qmessage(message.c_str());
+			QMetaObject::invokeMethod(this,
+									  "updateStatusBar",
+									  Qt::QueuedConnection,
+									  Q_ARG(QString, qmessage));
     }).detach();
 };
 
 MainWindow::~MainWindow()
 {
     MindTree::finalizeApp();
+}
+
+void MainWindow::addFileMenu()
+{
+	QMenu *file = new QMenu("&File");
+	registerMenu(file);
+
+	QAction *newAction = new QAction("New");
+	QAction *openAction = new QAction("Open");
+	QAction *saveAction = new QAction("Save");
+	QAction *saveAsAction = new QAction("Save As");
+
+	file->addAction(newAction);
+	file->addAction(openAction);
+	file->addAction(saveAction);
+	file->addAction(saveAsAction);
+
+	connect(newAction, &QAction::triggered, [](){ Project::create(); });
+	connect(openAction, &QAction::triggered, this, &MainWindow::openProject);
+	connect(saveAction, &QAction::triggered, this, &MainWindow::saveProject);
+	connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAsProject);
+}
+
+void MainWindow::openProject()
+{
+	QString project = QFileDialog::getOpenFileName(this, "Open Project", "../", "*.mt");
+	Project::load(project.toStdString());
+}
+
+void MainWindow::saveProject()
+{
+	auto filename = Project::instance()->getFilename();
+	if (filename.empty()) {
+		saveAsProject();
+		return;
+	}
+	Project::instance()->save();
+}
+
+void MainWindow::saveAsProject()
+{
+	QString project = QFileDialog::getSaveFileName(this, "Save Project", "../", "*.mt");
+	Project::instance()->setFilename(project.toStdString());
+	Project::instance()->save();
+}
+
+void MainWindow::updateStatusBar(QString message)
+{
+	statusBar()->showMessage(message);
 }
 
 MainWindow* MainWindow::create()

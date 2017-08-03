@@ -53,6 +53,7 @@ public:
 
     Q_SIGNAL void projectChanged();
 
+	Q_SLOT void updateStatusBar(QString message);
     Q_SLOT void registerWindow(MindTree::WindowFactory *factory);
     Q_SLOT void openSettings();
 
@@ -67,13 +68,12 @@ public:
 
     Q_SLOT void showDock(QDockWidget* widget);
 
-protected:
-    void createMenus();
-    void createDocks();
-    void createSpaceDock();
-    void initDefaultProperties();
-
 private:
+	void addFileMenu();
+	void openProject();
+	void saveProject();
+	void saveAsProject();
+
     static MainWindow *_window;
 
     qint64 style_age;
