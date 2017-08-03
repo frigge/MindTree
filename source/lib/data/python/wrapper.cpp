@@ -450,7 +450,8 @@ void DNodePyWrapper::wrap()
                 .def("addOutSocket", &DNodePyWrapper::addOutSocket, BPy::return_value_policy<BPy::manage_new_object>())
                 .add_property("selected", &DNodePyWrapper::getSelected, &DNodePyWrapper::setSelected)
                 .def("setDynamicInSockets", &DNodePyWrapper::setDynamicInSockets)
-                .add_property("outsockets", &DNodePyWrapper::out);
+                .add_property("outsockets", &DNodePyWrapper::out)
+				.def("property", &DNodePyWrapper::getProperty);
 }
 
 bool DNodePyWrapper::getSelected()

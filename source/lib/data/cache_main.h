@@ -22,6 +22,7 @@
 
 #include "mutex"
 #include "data/type.h"
+#include "data/benchmark.h"
 #include "data/nodes/data_node_socket.h"
 #include "data/nodes/containernode.h"
 
@@ -101,7 +102,7 @@ class DataCache
 {
 public:
     DataCache(CacheContext *context = nullptr);
-    DataCache(const MindTree::DoutSocket *start, CacheContext *context = nullptr);
+    DataCache(const MindTree::DoutSocket *start, CacheContext *context = nullptr, Benchmark *parent_benchmark=nullptr);
     DataCache(const DNode *node, DataType t, CacheContext *context = nullptr);
 
     DataCache(const DataCache &other);
@@ -160,6 +161,8 @@ private:
     static std::unordered_map<const DNode*, std::vector<Property>> _cachedOutputs;
     static std::recursive_mutex _cachedOutputsMutex;
     static std::recursive_mutex _processorMutex;
+
+	std::shared_ptr<Benchmark> _benchmark;
 
     CacheContext *_context;
 };

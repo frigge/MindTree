@@ -16,10 +16,10 @@ class NodeSpace(QGraphicsScene):
         QGraphicsScene.__init__(self)
         self.setItemIndexMethod(QGraphicsScene.NoIndex)
         self.tmpLink = None
-        self.createNetwork()
-
         self.nodes = {}
         self.links = {}
+
+        self.createNetwork()
 
         setattr(MT, "graph", self)
         self.cb = MT.attachToSignal("createLink", self.drawLink)

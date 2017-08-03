@@ -5,7 +5,7 @@
 #include "data/debuglog.h"
 #include "shader_render_node.h"
 #include "rendertree.h"
-#include "benchmark.h"
+#include "data/benchmark.h"
 #include "renderpass.h"
 
 using namespace MindTree;
@@ -316,7 +316,8 @@ void getFormatAndSize(const ResourceHandle<T> &buffer, GLenum *datasize, GLenum 
 
 std::vector<glm::vec4> RenderPass::readPixelSync(const std::vector<std::string> &names, glm::ivec2 pos)
 {
-	std::vector<glm::vec4> ret(names.size());
+	std::vector<glm::vec4> ret;
+	GLObjectBinder<FBO*> fbobinder(_target.get());
 
 	for(const auto &name : names) {
 		//find attachment

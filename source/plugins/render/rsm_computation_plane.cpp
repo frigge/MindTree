@@ -2,7 +2,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "render_setup.h"
 #include "rendertree.h"
-#include "benchmark.h"
+#include "data/benchmark.h"
 #include "rsm_computation_plane.h"
 
 using namespace MindTree;

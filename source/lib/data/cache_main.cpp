@@ -131,6 +131,22 @@ void CacheProcessor::operator()(DataCache* cache)
     processor(cache);
 }
 
+void benchmarkCB(Benchmark *benchmark)
+{
+	auto time = benchmark->getTime();
+	auto name = benchmark->getName();
+
+	for (const auto b : benchmark->benchmarks()) {
+		auto t = b->getTime();
+		time -= t;
+
+		benchmarkCB(b.get());
+	}
+	std::cout << name << ": " << time << "ms" << std::endl;
+
+	benchmark->reset();
+}
+
 std::unordered_map<const DNode*, std::vector<Property>> DataCache::_cachedOutputs;
 std::recursive_mutex DataCache::_cachedOutputsMutex;
 std::recursive_mutex DataCache::_processorMutex;
@@ -144,16 +160,23 @@ DataCache::DataCache(CacheContext *context)
 DataCache::DataCache(const DNode *node, DataType t, CacheContext *context)
     : node(node), type(t), _context(context)
 {
-    cacheInputs();
+	_benchmark = std::make_shared<Benchmark>(node->getNodeName());
+	_benchmark->setCallback(benchmarkCB);
+	cacheInputs();
 }
 
-DataCache::DataCache(const DoutSocket *socket, CacheContext *context)
-    : node(socket->getNode()),
-    type(socket->getType()),
-    startsocket(socket),
-    _context(context)
+DataCache::DataCache(const DoutSocket *socket, CacheContext *context, Benchmark *parent_benchmark)
+	: node(socket->getNode()),
+	type(socket->getType()),
+	startsocket(socket),
+	_context(context)
 {
-    cacheInputs();
+	_benchmark = std::make_shared<Benchmark>(node->getNodeName());
+	if (parent_benchmark)
+		parent_benchmark->addBenchmark(_benchmark);
+	else
+		_benchmark->setCallback(benchmarkCB);
+	cacheInputs();
 }
 
 DataCache::DataCache(const DataCache &other)
@@ -164,6 +187,11 @@ DataCache::DataCache(const DataCache &other)
     startsocket(other.startsocket),
     _context(other._context)
 {
+	_benchmark = std::make_shared<Benchmark>(node->getNodeName());
+	_benchmark->setCallback([](Benchmark *benchmark) {
+			std::cout << "cooked " << (*benchmark) << std::endl;
+			benchmark->reset();
+		});
 }
 
 DataCache::~DataCache()
@@ -243,6 +271,9 @@ bool DataCache::isCached(const DNode *node)
 
 void DataCache::start(const DoutSocket *socket)
 {
+	_benchmark = std::make_shared<Benchmark>(socket->getNode()->getNodeName());
+	_benchmark->setCallback(benchmarkCB);
+
     startsocket = socket;
     cachedInputs.clear();
     if(socket) {
@@ -250,6 +281,7 @@ void DataCache::start(const DoutSocket *socket)
         type = socket->getType();
     }
     cacheInputs();
+	MT_CUSTOM_SIGNAL_EMITTER("CACHE_FINISHED");
 }
 
 int DataCache::getTypeID() const
@@ -331,7 +363,7 @@ void DataCache::cache(const DinSocket *socket)
                                         socket));
    if(socket->getCntdSocket()){
        DoutSocket *out = socket->getCntdSocket();
-       DataCache cache(out, _context);
+       DataCache cache(out, _context, _benchmark.get());
        _pushInputData(cache.getOutput(out), index);
    } 
    else
@@ -421,6 +453,8 @@ Property DataCache::getOutput(DoutSocket* socket)
 void DataCache::setNode(const DNode *n)
 {
     node = n;
+	_benchmark = std::make_shared<Benchmark>(node->getNodeName());
+	_benchmark->setCallback(benchmarkCB);
 }
 
 void DataCache::setType(DataType t)
@@ -441,54 +475,62 @@ const DoutSocket* DataCache::getStart() const
 void DataCache::setStart(const DoutSocket *socket)
 {
     startsocket = socket;
+	_benchmark = std::make_shared<Benchmark>(socket->getNode()->getNodeName());
+	_benchmark->setCallback(benchmarkCB);
 }
 
 void DataCache::cacheInputs()
 {
-    if(isCached(node))
-        return;
+	{
+		BenchmarkHandler bhandle(_benchmark);
+		if(isCached(node))
+			return;
 
-    auto ntype = node->getType();
-    unsigned long nodeTypeID = ntype.id();
-    std::string nodeName = node->getNodeName();
+		std::string status = "start caching " + node->getNodeName() + " ...";
+		MT_CUSTOM_SIGNAL_EMITTER("STATUSUPDATE", status);
 
-    const auto &genericProcessor = _genericProcessors[ntype];
-    if(genericProcessor) {
-        (*genericProcessor)(this);
-        return;
-    }
+		auto ntype = node->getType();
+		unsigned long nodeTypeID = ntype.id();
+		std::string nodeName = node->getNodeName();
 
-    std::lock_guard<std::recursive_mutex> lock(_processorMutex);
-    if(processors.find(type) == processors.end()){
-        std::cout<< "no processors defined for this data type ("
-                 << type.toStr()
-                 << " id:"
-                 << type.id()
-                 << ")"
-                 << std::endl;
-        return;
-    }
-    const auto &list = processors[type];
-    if(list.find(ntype) == list.end()){
-        std::cout<< "no processors defined for this node type ("
-                 << node->getType().toStr()
-                 << " id:"
-                 <<nodeTypeID
-                 <<")"
-                 << " on node: "
-                 << nodeName
-                 << std::endl;
-        return;
-    }
-    const auto &datacache = list.at(node->getType());
-    if(!datacache) {
-        std::cout<<"Node Type ID:" << nodeTypeID << std::endl;
-        std::cout<<"Socket Type ID:" << type.id() << std::endl;
-        return;
-    }
-    (*datacache)(this);
-    std::string status = "done caching caching: " + node->getNodeName();
-    MT_SIGNAL_EMITTER("STATUSUPDATE", status);
-    dbout(status);
+		const auto &genericProcessor = _genericProcessors[ntype];
+		if(genericProcessor) {
+			(*genericProcessor)(this);
+			return;
+		}
 
+		std::lock_guard<std::recursive_mutex> lock(_processorMutex);
+		if(processors.find(type) == processors.end()){
+			std::cout<< "no processors defined for this data type ("
+					 << type.toStr()
+					 << " id:"
+					 << type.id()
+					 << ")"
+					 << std::endl;
+			return;
+		}
+		const auto &list = processors[type];
+		if(list.find(ntype) == list.end()){
+			std::cout<< "no processors defined for this node type ("
+					 << node->getType().toStr()
+					 << " id:"
+					 <<nodeTypeID
+					 <<")"
+					 << " on node: "
+					 << nodeName
+					 << std::endl;
+			return;
+		}
+		const auto &datacache = list.at(node->getType());
+		if(!datacache) {
+			std::cout<<"Node Type ID:" << nodeTypeID << std::endl;
+			std::cout<<"Socket Type ID:" << type.id() << std::endl;
+			return;
+		}
+		(*datacache)(this);
+		status = "done caching " + node->getNodeName();
+		MT_CUSTOM_SIGNAL_EMITTER("STATUSUPDATE", status);
+		dbout(status);
+	}
+	const_cast<DNode*>(node)->setProperty("computation_time", _benchmark->getTime());
 }

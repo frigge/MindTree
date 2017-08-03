@@ -229,8 +229,8 @@ void Viewer::cacheAndUpdate()
     dataCache.start(start);
     if(_settingsNode)
         settingsCache.start(_settingsNode->getOutSockets()[0]);
+    MT_CUSTOM_SIGNAL_EMITTER("STATUSUPDATE", std::string("done updating"));
     update();
-    MT_SIGNAL_EMITTER("STATUSUPDATE", std::string("done updating"));
 }
 
 DNode* Viewer::getSettings()

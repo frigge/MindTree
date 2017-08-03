@@ -10,6 +10,8 @@
 #include "functional"
 
 #include "data/debuglog.h"
+#include "data/benchmark.h"
+
 #include "light_renderer.h"
 #include "pixel_plane.h"
 #include "../datatypes/Object/lights.h"
@@ -19,7 +21,6 @@
 #include "rsm_computation_plane.h"
 #include "deferred_light_block.h"
 #include "gbuffer_block.h"
-#include "benchmark.h"
 
 #include "deferred_renderer.h"
 
@@ -32,20 +33,20 @@ DeferredRenderer::DeferredRenderer(CameraPtr camera, Widget3DManager *widgetMana
     RenderConfigurator(camera)
 {
     auto manager = getTree();
-    auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
-    manager->setBenchmark(benchmark);
-    benchmark->setCallback([this](Benchmark* benchmark) {
-                               if(benchmark->getNumCalls() >= 500) {
-                                   int vcnt = this->getVertexCount();
-                                   int pcnt = this->getPolygonCount();
-                                   std::cout << "======START======\n";
-                                   std::cout << "Vertexcount: " << vcnt;
-                                   std::cout << " Polygoncount: " << pcnt << "\n";
-                                   std::cout << (*benchmark) << "\n";
-                                   std::cout << "======END======" << std::endl;
-                                   benchmark->reset();
-                               }
-                           });
+    //auto benchmark = std::make_shared<Benchmark>("Render Benchmark(Overall)");
+    //manager->setBenchmark(benchmark);
+    //benchmark->setCallback([this](Benchmark* benchmark) {
+    //                           if(benchmark->getNumCalls() >= 500) {
+    //                               int vcnt = this->getVertexCount();
+    //                               int pcnt = this->getPolygonCount();
+    //                               std::cout << "======START======\n";
+    //                               std::cout << "Vertexcount: " << vcnt;
+    //                               std::cout << " Polygoncount: " << pcnt << "\n";
+    //                               std::cout << (*benchmark) << "\n";
+    //                               std::cout << "======END======" << std::endl;
+    //                               benchmark->reset();
+    //                           }
+    //                       });
 
     auto rsm_generation_block = std::make_unique<RSMGenerationBlock>();
     auto gbuffer_block = std::make_unique<GBufferRenderBlock>(_geometryPass);
@@ -93,7 +94,7 @@ DeferredRenderer::DeferredRenderer(CameraPtr camera, Widget3DManager *widgetMana
     _finalPass = finalPass.get();
     finalPass->setCamera(camera);
     manager->addPass(std::move(finalPass));
-    _finalPass->setCustomTextureNameMapping("final_out", "output");
+    _finalPass->setCustomTextureNameMapping("final_out", "outputtx");
     _finalPass->addRenderer(new PixelPlane("../plugins/render/defaultShaders/finalout.frag"));
 
     setCamera(camera);
@@ -137,12 +138,12 @@ void DeferredRenderer::setProperty(const std::string &name, Property prop)
 void DeferredRenderer::setOverrideOutput(std::string output)
 {
     _finalPass->clearCustomTextureNameMapping();
-    _finalPass->setCustomTextureNameMapping(output, "output");
+    _finalPass->setCustomTextureNameMapping(output, "outputtx");
     dbout("outputting: " << output);
 }
 
 void DeferredRenderer::clearOverrideOutput()
 {
     _finalPass->clearCustomTextureNameMapping();
-    _finalPass->setCustomTextureNameMapping("final_out", "output");
+    _finalPass->setCustomTextureNameMapping("final_out", "outputtx");
 }

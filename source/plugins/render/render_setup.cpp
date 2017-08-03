@@ -14,7 +14,7 @@
 #include "empty_renderer.h"
 #include "shader_render_node.h"
 #include "render_block.h"
-#include "benchmark.h"
+#include "data/benchmark.h"
 
 #include "render_setup.h"
 

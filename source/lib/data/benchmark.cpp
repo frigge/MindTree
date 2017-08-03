@@ -8,19 +8,32 @@ using namespace MindTree;
 BenchmarkHandler::BenchmarkHandler(std::weak_ptr<Benchmark> benchmark) :
     _benchmark(benchmark)
 {
-    if(_benchmark.expired()) return;
-    _benchmark.lock()->start();
+    if(!_benchmark.expired()) _benchmark.lock()->start();
 }
 
 BenchmarkHandler::~BenchmarkHandler()
 {
-    if(_benchmark.expired()) return;
-    _benchmark.lock()->end();
+    if(!_benchmark.expired()) _benchmark.lock()->end();
 }
 
 Benchmark::Benchmark(std::string name) :
     _name(name), _time(0), _num_calls(0), _parent(nullptr), _running(false), _children_called(0)
 {
+}
+
+const Benchmark *Benchmark::parent() const
+{
+	return _parent;
+}
+
+std::vector<std::shared_ptr<Benchmark>> Benchmark::benchmarks() const
+{
+	return _benchmarks;
+}
+
+void Benchmark::callback()
+{
+	_callback(this);
 }
 
 std::string Benchmark::getName() const
@@ -29,20 +42,19 @@ std::string Benchmark::getName() const
     return _name;
 }
 
-void Benchmark::addBenchmark(std::weak_ptr<Benchmark> benchmark)
+void Benchmark::addBenchmark(std::shared_ptr<Benchmark> benchmark)
 {
+	if (!benchmark) return;
     std::lock_guard<std::recursive_mutex> lock(_benchmarkLock);
-    if(benchmark.expired())
-        return;
 
-    benchmark.lock()->_parent = this;
+    benchmark->_parent = this;
     _benchmarks.push_back(benchmark);
 }
 
 double Benchmark::getTime() const
 {
     std::lock_guard<std::recursive_mutex> lock(_benchmarkLock);
-    double t = _time.count() / 1'000.0;
+    double t = _time.count() / 1000.0;
     return t / _num_calls;
 }
 
@@ -71,19 +83,9 @@ void Benchmark::reset()
     _running = false;
     _children_called = 0;
 
-    std::cout << "Reset Benchmark: " << getName() << std::endl;
-
     for(auto bench : _benchmarks) {
-        if(!bench.expired())
-            bench.lock()->reset();
-    }
-
-    auto e = std::end(_benchmarks);
-    _benchmarks.erase(std::remove_if(begin(_benchmarks),
-                                     e,
-                                     [] (auto bench) {
-                                         return bench.expired();
-                                     }), e);
+		bench->reset();
+	}
 }
 
 int Benchmark::getNumCalls() const
@@ -105,12 +107,12 @@ void Benchmark::end()
     _time += duration;
     _running = false;
 
-    if(_parent) {
-        std::lock_guard<std::recursive_mutex> lock(_parent->_benchmarkLock);
-        _parent->_children_called += 1;
-        if(_parent->_children_called == _parent->_benchmarks.size())
-            _parent->end();
-    }
+    //if(_parent) {
+    //    std::lock_guard<std::recursive_mutex> lock(_parent->_benchmarkLock);
+    //    _parent->_children_called += 1;
+    //    if(_parent->_children_called == _parent->_benchmarks.size())
+    //        _parent->end();
+    //}
     if(_callback) _callback(this);
 }
 
@@ -126,10 +128,9 @@ std::ostream& MindTree::operator<<(std::ostream &stream, const MindTree::Benchma
 
     if(benchmark._benchmarks.size() > 1) {
         for(auto bench : benchmark._benchmarks) {
-            if(!bench.expired())
-                stream << *(bench.lock());
-        }
-    }
+			stream << *(bench);
+		}
+	}
 
     return stream;
 }

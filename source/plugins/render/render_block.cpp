@@ -10,7 +10,7 @@
 
 #include "render_setup.h"
 #include "rendertree.h"
-#include "benchmark.h"
+#include "data/benchmark.h"
 #include "string"
 
 #include "render_block.h"

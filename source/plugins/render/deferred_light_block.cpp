@@ -3,7 +3,7 @@
 #include "render_setup.h"
 #include "light_accumulation_plane.h"
 #include "shadow_mapping.h"
-#include "benchmark.h"
+#include "data/benchmark.h"
 
 #include "deferred_light_block.h"
 

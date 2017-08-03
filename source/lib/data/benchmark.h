@@ -19,14 +19,18 @@ class Benchmark
 {
 public:
     Benchmark(std::string name);
-    void addBenchmark(std::weak_ptr<Benchmark> benchmark);
+    void addBenchmark(std::shared_ptr<Benchmark> benchmark);
     std::string getName() const;
+	const Benchmark* parent() const;
+	std::vector<std::shared_ptr<Benchmark>> benchmarks() const;
+
     void reset();
     void setCallback(std::function<void(Benchmark *)> cb);
     int getNumCalls() const;
+    double getTime() const;
+	void callback();
 
 private:
-    double getTime() const;
     friend class BenchmarkHandler;
     friend std::ostream& operator<<(std::ostream &stream, const Benchmark &benchmark);
 
@@ -43,7 +47,7 @@ private:
     int _children_called;
     mutable std::recursive_mutex _benchmarkLock;
 
-    std::vector<std::weak_ptr<Benchmark>> _benchmarks;
+    std::vector<std::shared_ptr<Benchmark>> _benchmarks;
     bool _running;
     std::chrono::time_point<std::chrono::steady_clock> _start;
     std::chrono::time_point<std::chrono::steady_clock> _end;

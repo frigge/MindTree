@@ -433,6 +433,7 @@ class NodeItem(QGraphicsSvgItem):
             self.out.append(vis)
 
         self.addsocketcb = MT.attachToBoundSignal(data, "outSocketAdded", self.newOutSocket)
+        self.updateToolTipCB = MT.attachToSignal("CACHE_FINISHED", self.updateToolTip)
 
         if options:
             self.nodeOptions = NodeOptionsButton(self)
@@ -440,6 +441,11 @@ class NodeItem(QGraphicsSvgItem):
 
     def __del__(self):
         print("deleting node vis")
+
+    def updateToolTip(self):
+        print("update tooltip")
+        self.setToolTip("Computed in: {}ms".format(self.data.property("computation_time")))
+    
 
     def newOutSocket(self):
         altcolor = bool(len(self.out) % 2)
