@@ -28,9 +28,6 @@ void MindTree::initApp(int argc, char *argv[])
 void MindTree::initGui()
 {
     MindTree::Python::loadSettings();
-
-    if(loadFile != "")
-        Project::load(loadFile);
 }
 
 void MindTree::finalizeApp()
@@ -66,7 +63,10 @@ void MindTree::parseArguments(int argc, char* argv[])
                 std::cout << std::endl;
                 loadFile = *(it + 1);
                 std::cout<<"open project: " << loadFile << std::endl;
-                return;
+
+				if(loadFile != "")
+					Project::load(loadFile);
+				return;
             }
 
         }
