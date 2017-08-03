@@ -33,52 +33,19 @@ Ray::~Ray()
 
 bool Ray::intersect(const Plane &plane, glm::vec3 *hitpoint) const
 {
-    glm::vec3 v1(1, 0, 0);
-    glm::vec3 v2(0, 1, 0);
+	glm::vec3 p = plane.point();
+	glm::vec3 n = plane.normal();
+	float dirn = glm::dot(dir, n);
 
-    glm::vec3 rotvec;
+	//avoid rays that are almost perpendicular (precision errors)
+	if(dirn < 0.00001f)
+		return false;
 
-    float angle1 = glm::dot(v1, glm::normalize(plane.normal()));
-    float angle2 = glm::dot(v2, glm::normalize(plane.normal()));
+	float t = (glm::dot(p, n) - glm::dot(start, n)) / dirn;
 
-    float angle;
-    if(angle1 > angle2) {
-        rotvec = glm::cross(v1, plane.normal());
-        angle = angle1;
-    }
-    else {
-        rotvec = glm::cross(v2, plane.normal());
-        angle = angle2;
-    }
+    if(hitpoint)
+        *hitpoint = start + dir * t;
 
-    glm::mat4 rotmat = glm::rotate(glm::mat4(), angle, rotvec);
-
-    v1 = (rotmat * glm::vec4(v1, 1)).xyz();
-    v2 = (rotmat * glm::vec4(v2, 1)).xyz();
-
-    glm::vec3 diru = v1 - plane.point();
-    glm::vec3 dirv = v2 - plane.point();
-
-    glm::vec3 startorig = start - plane.point();
-    glm::vec3 negdir = -dir;
-    glm::vec3 v2crossnegdir = glm::cross(dirv, negdir);
-
-    float det = glm::dot(diru, v2crossnegdir);
-    float det1 = glm::dot(startorig, v2crossnegdir);
-    float det2 = glm::dot(diru, glm::cross(startorig, negdir));
-    float det3 = glm::dot(diru, glm::cross(dirv, startorig));
-    float tmpu, tmpv, tmpdist;
-    tmpdist = det3/det;
-
-    tmpu = det1/det;
-    tmpv = det2/det;
-
-    if(hitpoint) {
-        glm::vec3 tmp1 = diru * tmpu;
-        glm::vec3 tmp2 = dirv * tmpv;
-        *hitpoint = tmp1 + tmp2;
-        *hitpoint = *hitpoint + plane.point();
-    }
     return true;
 }
 
