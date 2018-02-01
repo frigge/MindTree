@@ -205,29 +205,8 @@ void MainWindow::registerWindow(WindowFactory *factory)
     menus.value("&Window")->addAction(factory->action());
 }
 
-#ifdef QT_DEBUG
-void MainWindow::lookupStyle()    
-{
-    if(style_age == -1){
-        setupStyle();
-        style_age = QFileInfo(PyWrapper::getStylePath()).lastModified().toMSecsSinceEpoch();
-        return;
-    }
-    qint64 age = QFileInfo(PyWrapper::getStylePath()).lastModified().toMSecsSinceEpoch();
-    if(age > style_age) {
-        std::cout<<"Style changed, reloading ..." << std::endl;
-        style_age = age;
-        setupStyle();
-    }
-}
-#endif
-
 void MainWindow::setupStyle()    
 {
-#ifdef QT_DEBUG
-    QResource::unregisterResource(PyWrapper::getStylePath());
-    QResource::registerResource(PyWrapper::getStylePath());
-#endif
     QFile css(":/style.css");
     css.open(QIODevice::ReadOnly);
     QTextStream str(&css);

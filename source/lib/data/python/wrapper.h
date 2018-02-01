@@ -27,7 +27,7 @@
 #include "glm/glm.hpp"
 #include "memory"
 #include "data/nodes/node_db.h"
-#include "data/windowfactory.h"
+//#include "data/windowfactory.h"
 
 namespace BPy = boost::python;
 namespace MindTree

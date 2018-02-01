@@ -110,11 +110,6 @@ NodePtr  PythonNodeDecorator::createNode(bool raw)
     return node;
 }
 
-
-#ifdef QT_DEBUG
-QString MindTree::PyWrapper::stylePath = "../styles.rcc";
-#endif
-
 PyWrapper::PyWrapper(PyExposable *exp)
     : element(exp)
 {
@@ -156,18 +151,6 @@ bool PyWrapper::notequal(PyWrapper *other)
     if (!alive() || !other || !other->alive()) return false;
     return !equal(other);
 }
-
-#ifdef QT_DEBUG
-void PyWrapper::setStylePath(QString path)
-{
-    stylePath = path;
-}
-
-QString PyWrapper::getStylePath()
-{
-    return stylePath;
-}
-#endif
 
 void PyWrapper::elementDestroyed()
 {
