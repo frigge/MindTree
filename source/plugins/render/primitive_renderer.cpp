@@ -400,27 +400,32 @@ void CircleRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &con
 ConeRenderer::ConeRenderer(ShapeRendererGroup *parent)
     : ShapeRenderer(parent), _segments(8)
 {
-    new DiscRenderer(this);
 }
 
 void ConeRenderer::init(ShaderProgram* prog)
 {
-    if(_vbo) {
-        _vbo->bind();
-        _vbo->setPointer();
-        return;
-    }
-    _vbo = make_resource<VBO>(getResourceManager(),
-                              "P");
-    _vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
-    _vbo->bind();
-    prog->bindAttributeLocation(_vbo.get());
+	if(_vbo) {
+	    _vbo->bind();
+	    _vbo->setPointer();
+	    return;
+	}
+	_vbo = make_resource<VBO>(getResourceManager(),
+	                          "P");
+	_vbo->overrideIndex(getResourceManager()->geometryCache()->getIndexForAttribute("P"));
+	_vbo->bind();
+	prog->bindAttributeLocation(_vbo.get());
 
-    VertexList verts;
+	VertexList verts;
 
     //cone
     verts.push_back(glm::vec3(0, 1, 0));
     for(int i=0; i <= _segments; i++) {
+        float pni = 2 * PI * float(i) / _segments;
+        verts.push_back(glm::vec3(sin(pni), 0, cos(pni)));
+    }
+    //disc
+    verts.push_back(glm::vec3());
+    for(int i=_segments; i >= 0; i--) {
         float pni = 2 * PI * float(i) / _segments;
         verts.push_back(glm::vec3(sin(pni), 0, cos(pni)));
     }
@@ -432,6 +437,7 @@ void ConeRenderer::init(ShaderProgram* prog)
 void ConeRenderer::drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
 {
     glDrawArrays(GL_TRIANGLE_FAN, 0, _segments + 2);
+    glDrawArrays(GL_TRIANGLE_FAN, _segments + 2, _segments + 2);
 }
 
 void ConeRenderer::drawBorder(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
@@ -564,7 +570,7 @@ ArrowRenderer::ArrowRenderer(ShapeRendererGroup *parent)
 
     cone->staticTransform(glm::translate(glm::mat4(), glm::vec3(0, 2, 0))
                                   * glm::scale(glm::mat4(), glm::vec3(.2)));
-    setBorderWidth(3);
+	setBorderWidth(3);
 };
 
 void ArrowRenderer::setFillColor(glm::vec4 color)
