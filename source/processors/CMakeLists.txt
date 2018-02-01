@@ -1,9 +1,6 @@
-find_package(ASSIMP)
-
 include_directories(
             ${PROJECT_SOURCE_DIR}
             ${MINDTREE_SRC_LIB_DIR}
-            ${ASSIMP_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -42,9 +39,9 @@ add_library(filter MODULE filterpolygons.cpp)
 target_link_libraries(filter mindtree_core objectlib)
 
 add_library(import3d MODULE import3d.cpp)
-target_link_libraries(import3d mindtree_core objectlib assimp)
+target_link_libraries(import3d mindtree_core objectlib assimpio)
 add_library(export3d MODULE export3d.cpp)
-target_link_libraries(export3d mindtree_core objectlib assimp)
+target_link_libraries(export3d mindtree_core objectlib)
 
 install(TARGETS pointcloud LIBRARY DESTINATION ${PROJECT_ROOT}/processors)
 install(TARGETS icosphere LIBRARY DESTINATION ${PROJECT_ROOT}/processors)

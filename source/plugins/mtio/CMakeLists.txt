@@ -1,4 +1,6 @@
 project(objio)
+find_package(ASSIMP)
+
 include_directories(
             ${PROJECT_SOURCE_DIR}
             ${MINDTREE_SRC_LIB_DIR}
@@ -27,6 +29,7 @@ project(textio)
 include_directories(
             ${PROJECT_SOURCE_DIR}
             ${MINDTREE_SRC_LIB_DIR}
+            ${ASSIMP_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -45,4 +48,11 @@ target_link_libraries(textio
                     ${MINDTREE_CORE_LIB}
 )
 
+add_library(assimpio SHARED assimp.cpp)
+target_link_libraries(textio
+                    mindtree_core
+					assimp
+                    ${MINDTREE_CORE_LIB}
+)
 install(TARGETS textio LIBRARY DESTINATION ${PROJECT_ROOT}/plugins/mtio)
+install(TARGETS assimpio LIBRARY DESTINATION ${PROJECT_ROOT}/plugins/mtio)
