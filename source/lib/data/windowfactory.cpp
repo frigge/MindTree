@@ -111,8 +111,8 @@ void ViewerFactory::setWindowFunc(std::function<Viewer*(DoutSocket*)> fn)
 MindTree::ViewerDockBase* ViewerFactory::createViewer(DoutSocket *socket)
 {
     auto *viewer = windowFunc(socket);
-    viewer->initBase();
     if(!viewer) std::cout<<"could not create the viewer"<<std::endl;
+    viewer->initBase();
     _dock = new MindTree::ViewerDockBase(getName(), this);
     _dock->setViewer(viewer);
     return _dock;
