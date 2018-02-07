@@ -528,9 +528,10 @@ void DataCache::cacheInputs()
 			return;
 		}
 		(*datacache)(this);
-		status = "done caching " + node->getNodeName();
-		MT_CUSTOM_SIGNAL_EMITTER("STATUSUPDATE", status);
-		dbout(status);
 	}
 	const_cast<DNode*>(node)->setProperty("computation_time", _benchmark->getTime());
+	std::stringstream ss;
+	ss << "done caching " << node->getNodeName() << " in " << _benchmark->getTime() << "ms";
+	MT_CUSTOM_SIGNAL_EMITTER("STATUSUPDATE", ss.str());
+	MT_CUSTOM_SIGNAL_EMITTER("CACHEUPDATED");
 }
