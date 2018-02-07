@@ -5,6 +5,7 @@
 #include "data/project.h"
 #include "data/properties.h"
 #include "data/reloadable.h"
+#include "graphics/viewer.h"
 
 #include "init.h"
 
@@ -33,6 +34,8 @@ void MindTree::initGui()
 void MindTree::finalizeApp()
 {
     MindTree::Python::finalize();
+    MindTree::HotProcessorManager::stop();
+    MindTree::WorkerThread::stop();
 }
 
 void MindTree::parseArguments(int argc, char* argv[])

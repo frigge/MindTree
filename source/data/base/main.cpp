@@ -44,5 +44,7 @@ int main(int argc, char *argv[])
 
     w->show();
     MindTree::initGui();
-    return a.exec();
+    int ret = a.exec();
+    MindTree::finalizeApp();
+    return ret;
 }

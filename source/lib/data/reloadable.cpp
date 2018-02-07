@@ -183,4 +183,6 @@ void HotProcessorManager::stop()
 {
     std::cout << "stop watching libs" << std::endl;
     m_watching = false;
+    if (m_watchThread.joinable()) m_watchThread.join();
+    std::cout << "watch thread stoped" << std::endl;
 }
