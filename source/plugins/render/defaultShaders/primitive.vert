@@ -19,7 +19,7 @@ void main(){
 
     vec4 staticTransformedP = staticTransformation * vec4(P, 1);
     if (screen_oriented) {
-	    finalTransform[3] = -translate;
+	    finalTransform[3] = -translation;
     }
     else
         finalTransform = model;
