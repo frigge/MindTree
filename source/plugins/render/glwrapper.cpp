@@ -1,6 +1,7 @@
 //#include "GL/glew.h"
 
 #include "glm/gtc/type_ptr.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
 #include "iostream"
 #include "fstream"

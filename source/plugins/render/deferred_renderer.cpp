@@ -1,4 +1,5 @@
 #define GLM_FORCE_SWIZZLE
+#define GLM_ENABLE_EXPERIMENTAL
 #include "render.h"
 #include "renderpass.h"
 #include "rendertree.h"
