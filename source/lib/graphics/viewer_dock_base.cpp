@@ -140,6 +140,7 @@ ViewerDockBase::~ViewerDockBase()
     }
 
     openViewers.erase(viewerID);
+    std::cout << "closing viewer dock ..." << std::endl;
 }
 
 void ViewerDockBase::focusInEvent(QFocusEvent *event)

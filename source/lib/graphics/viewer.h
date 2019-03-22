@@ -20,22 +20,15 @@ namespace Signal {
 }
 
 class Viewer;
+struct UpdateInfo;
 
 class WorkerThread
 {
 public:
-
-struct UpdateInfo {
-    UpdateInfo(Viewer* viewer) : _viewer(viewer), _node(nullptr), _update(false) {}
-    Viewer* _viewer;
-    std::atomic<DNode*> _node;
-    std::atomic<bool> _update;
-};
-
     static bool needToUpdate();
-    static void notifyUpdate(std::weak_ptr<UpdateInfo> info);
+    static void notifyUpdate();
     static void removeViewer(Viewer *viewer);
-    static void update();
+    static void update(UpdateInfo info);
 
     static void start();
     static void stop();
@@ -47,7 +40,8 @@ private:
     static std::mutex _updateMutex;
     static std::condition_variable _needToUpdateCondition;
 
-    static std::vector<std::weak_ptr<UpdateInfo>> _updateQueue;
+    static std::vector<UpdateInfo> _updateQueue;
+    static std::atomic<uint32_t> _updateQueueSize;
     static std::atomic<bool> _running;
 };
 
@@ -80,7 +74,6 @@ private:
     DoutSocket *start;
     Signal::LiveTimeTracker *_signalLiveTime;
     std::vector<Signal::CallbackHandler> cbhandlers;
-    std::shared_ptr<WorkerThread::UpdateInfo> _updateInfo;
 
     friend class WorkerThread;
 };

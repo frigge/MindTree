@@ -108,30 +108,25 @@ bool testRaycasting()
 
     Ray r(start, dir);
 
-    glm::vec3 hitpoint, uvdist;
+    glm::vec2 uv;
 
     glm::vec3 p1(-1, -1, 0);
     glm::vec3 p2(2, -1, 0);
     glm::vec3 p3(-1, 2, 0);
 
-    bool hit = r.intersect(p1, p2, p3, &uvdist, &hitpoint);
+    float depth{0};
+    bool hit = r.intersect(p1, p2, p3, &depth, &uv);
+    glm::vec3 hitpoint = r.start + depth * r.dir;
 
-    std::cout << "uvcoords are: " << uvdist.x << ", " << uvdist.y << std::endl;
-    std::cout << "distance is: " << uvdist.z << std::endl;
+    std::cout << "uvcoords are: " << uv.x << ", " << uv.y << std::endl;
+    std::cout << "distance is: " << depth << std::endl;
     std::cout << "the hitpoint is: ("
         << hitpoint.x
         << ", "
         << hitpoint.y
         << ", "
         << hitpoint.z << ")" << std::endl;
-	auto nhit = start + dir * uvdist.z;
-    std::cout << "the hitpoint should be: ("
-        << hitpoint.x
-        << ", "
-        << hitpoint.y
-        << ", "
-        << hitpoint.z << ")" << std::endl;
-    return hit && nhit == hitpoint;
+    return hit;
 }
 
 bool testSaveLoadProperties()

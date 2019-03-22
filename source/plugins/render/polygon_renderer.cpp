@@ -9,10 +9,9 @@
 
 using namespace MindTree::GL;
 
-PolygonRenderer::PolygonRenderer(std::shared_ptr<GeoObject> o)
-
-    : GeoObjectRenderer(o),
-      _triangleCount(0)
+PolygonRenderer::PolygonRenderer(std::shared_ptr<GeoObject> o) :
+	GeoObjectRenderer(o),
+	_triangleCount(0)
 {
 }
 

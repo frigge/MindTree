@@ -30,19 +30,19 @@ class Camera;
 class Ray
 {
 public:
+    glm::vec3 start, dir;
+
     Ray(glm::vec3 start, glm::vec3 dir);
     virtual ~Ray();
 
-    bool intersect(const Plane &plane, glm::vec3 *hitpoint=nullptr) const;
-    bool intersect(const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3, glm::vec3 *uvdist=nullptr, glm::vec3 *hitpoint=nullptr) const;
-    bool intersect(const Rectangle &rect, glm::vec3 *hitpoint=nullptr) const;
-    bool intersect(const Box &box, glm::vec3 *hitpoint=nullptr) const;
-    bool intersect(const Sphere &sphere, glm::vec3 *hitpoint=nullptr) const;
+    bool intersect(const Ray &r, float *depth) const;
+    bool intersect(const Plane &plane, float *depth) const;
+    bool intersect(const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3, float *depth, glm::vec2 *uv=nullptr) const;
+    bool intersect(const Rectangle &rect, float *depth) const;
+    bool intersect(const Box &box, float *depth) const;
+    bool intersect(const Sphere &sphere, float *depth) const;
 
-    static Ray primaryRay(glm::mat4 mvp, glm::vec3 camPos, glm::ivec2 pixel, glm::ivec2 viewportSize);
-
-private:
-    glm::vec3 start, dir;
+	static Ray primaryRay(glm::ivec2 pixel, glm::ivec2 size, float fov);
 };
 
 #endif /* end of include guard: RAY*/

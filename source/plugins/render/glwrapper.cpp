@@ -254,7 +254,7 @@ UBO::~UBO()
 {
 }
 
-#define DEBUG_FBO
+//#define DEBUG_FBO
 
 FBO::FBO()
     : color_attachments(0)
@@ -343,7 +343,7 @@ int FBO::getAttachmentPos(std::string name) const
                                            end(_attachments),
                                            [&name] (const auto &n) {return n == name;}));
 
-    std::cout << "attachment: " << name << " is at pos: " << index << std::endl;
+    //std::cout << "attachment: " << name << " is at pos: " << index << std::endl;
     return index;
 }
 

@@ -54,7 +54,6 @@ private:
 
     std::atomic<bool> _fixedScreenSize, _screenOriented;
     std::atomic<float> _borderWidth;
-
 };
 
 class ShapeRenderer : public ShapeRendererGroup
@@ -98,6 +97,7 @@ public:
 
 protected:
     void init(ShaderProgram* prog);
+    void drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program);
 
 private:
     float _width, _height;

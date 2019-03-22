@@ -17,9 +17,11 @@
 */
 
 
+#include "data/debuglog.h"
 #define GLM_FORCE_SWIZZLE
 #include "iostream"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/string_cast.hpp"
 #include "ray.h"
 
 Ray::Ray(glm::vec3 start, glm::vec3 d)
@@ -31,29 +33,60 @@ Ray::~Ray()
 {
 }
 
-bool Ray::intersect(const Plane &plane, glm::vec3 *hitpoint) const
+bool Ray::intersect(const Plane &plane, float *depth) const
 {
 	glm::vec3 p = plane.point();
 	glm::vec3 n = plane.normal();
 	float dirn = glm::dot(dir, n);
 
 	//avoid rays that are almost perpendicular (precision errors)
-	if(dirn < 0.00001f)
+	if(abs(dirn) < 0.00001f)
 		return false;
 
 	float t = (glm::dot(p, n) - glm::dot(start, n)) / dirn;
 
-    if(hitpoint)
-        *hitpoint = start + dir * t;
+	*depth = t;
 
     return true;
+}
+
+bool Ray::intersect(const Ray &r, float *depth) const
+{
+	//find plane perpendicular to both rays
+	glm::vec3 n = glm::cross(r.dir, dir);
+	Plane p{r.start, n};
+
+	float closest{std::numeric_limits<float>::max()};
+	Ray(start, n).intersect(p, &closest);
+
+	//project both rays into plane and find 2d intersection
+
+	glm::vec3 x = glm::normalize(dir);
+	glm::vec3 y = glm::normalize(glm::cross(x, n));
+
+	glm::mat3 m(x, y, n);
+	glm::mat3 invm = glm::inverse(m);
+
+	//homogeneous representation of 2D lines in plane
+	glm::vec3 line = glm::cross(glm::vec3((invm * start).xy(), 1),
+	                            glm::vec3((invm * (start + dir)).xy(), 1));
+	glm::vec3 rline = glm::cross(glm::vec3((invm * r.start).xy(), 1),
+	                             glm::vec3((invm * (r.start + r.dir)).xy(), 1));
+
+	glm::vec3 intersection = m * glm::cross(line, rline);
+	*depth = glm::distance(start, intersection);
+
+	if (abs(closest) > .2)
+		return false;
+
+	return true;
 }
 
 bool Ray::intersect(const glm::vec3 &p1,
                     const glm::vec3 &p2,
                     const glm::vec3 &p3,
-                    glm::vec3 *uvdist,
-                    glm::vec3 *hitpoint) const
+                    float *depth,
+                    glm::vec2 *uv) const
 {
     glm::vec3 diru = p2 - p1;
     glm::vec3 dirv = p3 - p1;
@@ -69,62 +102,67 @@ bool Ray::intersect(const glm::vec3 &p1,
     float tmpv = det2/det;
     float tmpdist = det3/det;
 
-    if(uvdist) {
-        uvdist->x = tmpu;
-        uvdist->y = tmpv;
-        uvdist->z = tmpdist;
-    }
-    if(hitpoint) {
-        *hitpoint = p1 + diru * tmpu + dirv * tmpv;
-    }
-
-    if((tmpu + tmpv) < 1 && tmpu > 0 && tmpv > 0)
-        return true;
-
+	if((tmpu + tmpv) < 1 && tmpu > 0 && tmpv > 0) {
+		*depth = tmpdist;
+		if(uv) {
+			uv->x = tmpu;
+			uv->y = tmpv;
+		}
+		return true;
+	}
+	
     return false;
 }
 
 
-bool Ray::intersect(const Rectangle &rect, glm::vec3 *hitpoint) const
+bool Ray::intersect(const Rectangle &rect, float *depth) const
 {
-    glm::vec3 _hitpoint, uvdist;
+	glm::vec2 uv;
 
-    auto bl = rect.bottomLeft();
+	auto bl = rect.bottomLeft();
     auto u = rect.uvector();
     auto v = rect.vvector();
 
-    intersect(bl, bl + u, bl + v, &uvdist, &_hitpoint);
+    auto n = rect.normal();
+    if (glm::dot(dir, n) < 0.f) n *= -1.f;
 
-    auto hit = start + dir * uvdist.z;
-    if (hitpoint)
-        *hitpoint = _hitpoint;
-    if(uvdist.x > 0 && uvdist.x < 1 && uvdist.y > 0 && uvdist.y < 1) {
-        return true;
+    if (!intersect(Plane(bl, n), depth))
+		return false;
+
+    glm::vec3 p =  start + *depth * dir;
+
+    auto pbl = p - bl;
+	uv.x = glm::dot(pbl, u) / glm::dot(u, u);
+	uv.y = glm::dot(pbl, v) / glm::dot(v, v);
+
+	if(uv.x > 0 && uv.x < 1 && uv.y > 0 && uv.y < 1) {
+		return true;
     }
-    return false;
+	return false;
 }
 
-bool Ray::intersect(const Box &box, glm::vec3 *hitpoint) const
+bool Ray::intersect(const Box &box, float *depth) const
 {
     return false;
 }
 
-bool Ray::intersect(const Sphere &sphere, glm::vec3 *hitpoint) const
+bool Ray::intersect(const Sphere &sphere, float *depth) const
 {
     return false;
 }
 
-Ray Ray::primaryRay(glm::mat4 mvp, glm::vec3 camPos, glm::ivec2 pixel, glm::ivec2 viewportSize)
+Ray Ray::primaryRay(glm::ivec2 pixel, glm::ivec2 size, float fov)
 {
-    glm::vec2 pos = (glm::vec2(pixel) + glm::vec2(0.5)) / glm::vec2(viewportSize);
+    glm::vec2 pos = (glm::vec2(pixel) + glm::vec2(0.5)) / glm::vec2(size);
     pos *= 2;
     pos -= glm::vec2(1);
 
-    auto invmvp = glm::inverse(mvp);
+    float aspect = (float)size.x / size.y;
 
-    auto farPos = (invmvp * glm::vec4(pos, 1., 1.));
-    farPos /= farPos.w;
-    auto dir = glm::normalize(farPos.xyz() - camPos);
+	glm::vec4 dir;
+	dir.x = tan(fov * 0.5f * aspect) * pos.x;
+	dir.y = tan(fov * 0.5f) * pos.y;
+	dir.z = -1;
 
-     return Ray(camPos, dir);
+	return Ray(glm::vec3(0), glm::normalize(dir.xyz()));
 }

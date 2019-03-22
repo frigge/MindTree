@@ -542,6 +542,11 @@ void Camera::setFov(double fov)
     _fov = fov;
 }
 
+float Camera::fov() const
+{
+	return _fov;
+}
+
 void Camera::setAspect(double aspect)
 {
     _aspect = aspect;

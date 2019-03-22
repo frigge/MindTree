@@ -16,40 +16,58 @@ std::mutex WorkerThread::_updateMutex;
 std::condition_variable WorkerThread::_needToUpdateCondition;
 std::atomic<bool> WorkerThread::_running(false);
 
-std::vector<std::weak_ptr<WorkerThread::UpdateInfo>> WorkerThread::_updateQueue;
+std::vector<UpdateInfo> WorkerThread::_updateQueue;
+std::atomic<uint32_t> WorkerThread::_updateQueueSize{0};
+
+struct MindTree::UpdateInfo {
+	UpdateInfo(Viewer* viewer, DNode *node) : _viewer(viewer), _node(node) {}
+    Viewer* _viewer;
+    DNode* _node;
+};
 
 bool WorkerThread::needToUpdate()
 {
-    std::lock_guard<std::mutex> lock(_updateMutex);
-    return !_updateQueue.empty();
+    // std::lock_guard<std::mutex> lock(_updateMutex);
+    // return !_updateQueue.empty();
+	return _updateQueueSize > 0;
 }
 
-void WorkerThread::notifyUpdate(std::weak_ptr<WorkerThread::UpdateInfo> info)
+void WorkerThread::notifyUpdate()
+{
+    {
+        // std::lock_guard<std::mutex> lock(_updateMutex);
+        ++_updateQueueSize;
+        // _updateQueue.push_back(info);
+    }
+    if(!_running) start();
+}
+
+void WorkerThread::update(UpdateInfo info)
 {
     {
         std::lock_guard<std::mutex> lock(_updateMutex);
         _updateQueue.push_back(info);
     }
-    if(!_running) start();
-}
 
-void WorkerThread::update()
-{
     _needToUpdateCondition.notify_all();
 }
 
 void WorkerThread::removeViewer(Viewer *viewer)
 {
+    std::cout << "remove viewer ..." << std::endl;
     {
-        std::lock_guard<std::mutex> lock(_updateMutex);
-        auto it = std::find_if(begin(_updateQueue),
-                               end(_updateQueue),
-                               [viewer] (std::weak_ptr<UpdateInfo> i) {
-                               return i.lock()->_viewer == viewer;
-                               });
-        if(it != end(_updateQueue))
-            _updateQueue.erase(it);
+        // std::lock_guard<std::mutex> lock(_updateMutex);
+        // auto it = std::find_if(begin(_updateQueue),
+        //                        end(_updateQueue),
+        //                        [viewer] (std::weak_ptr<UpdateInfo> i) {
+        //                        return i.lock()->_viewer == viewer;
+        //                        });
+        // if(it != end(_updateQueue))
+        //     _updateQueue.erase(it);
+	    if (_updateQueueSize > 0) --_updateQueueSize;
     }
+
+    std::cout << "removed viewer" << std::endl;
 
     if(!needToUpdate()) stop();
 }
@@ -65,15 +83,15 @@ void WorkerThread::start()
             std::unique_lock<std::mutex> lock(_updateMutex);
             _needToUpdateCondition.wait(lock);
 
-            for(auto &info : _updateQueue) {
-                if(!info.expired()) {
-                    auto ptr = info.lock();
-                    if(!ptr->_update) continue;
-
-                    if(ptr->_node) DataCache::invalidate(ptr->_node);
-                    ptr->_viewer->cacheAndUpdate();
-                    ptr->_update = false;
-                }
+            // for(auto &info : _updateQueue) {
+            while (!_updateQueue.empty()) {
+	            auto info = _updateQueue.back();
+	            _updateQueue.pop_back();
+                // if(!info.expired()) {
+                //     auto ptr = info.lock();
+				if(info._node) DataCache::invalidate(info._node);
+				info._viewer->cacheAndUpdate();
+                // }
             }
         }
         WorkerThread::_running = false;
@@ -90,16 +108,17 @@ void WorkerThread::stop()
         std::lock_guard<std::mutex> lock(_updateMutex);
         _updateQueue.clear();
     }
-    _needToUpdateCondition.notify_all();
+	_updateQueueSize = 0;
+	_needToUpdateCondition.notify_all();
 
     if (_updateThread.joinable()) _updateThread.join();
+	std::cout << "Stoped Update Thread" << std::endl;
 }
 
 Viewer::Viewer(DoutSocket *start)
     : widget(0),
     start(start),
-    _signalLiveTime(new Signal::LiveTimeTracker(this)),
-    _updateInfo(std::make_shared<WorkerThread::UpdateInfo>(this))
+    _signalLiveTime(new Signal::LiveTimeTracker(this))
 {
     auto cbhandler = Signal::getHandler<DinSocket*>()
         .connect("createLink",
@@ -132,7 +151,7 @@ Viewer::~Viewer()
 void Viewer::initBase()
 {
     init();
-    WorkerThread::notifyUpdate(_updateInfo);
+    WorkerThread::notifyUpdate();
     update_viewer(static_cast<DinSocket*>(nullptr));
 }
 
@@ -154,9 +173,7 @@ void Viewer::update_viewer(DNode *node)
     }
 
     if(connected) {
-        _updateInfo->_node = node;
-        _updateInfo->_update = true;
-        WorkerThread::update();
+	    WorkerThread::update(UpdateInfo(this, node));
     }
 }
 
@@ -196,9 +213,7 @@ void Viewer::update_viewer(DinSocket *socket)
     }
 
     if(connected) {
-        _updateInfo->_node = node;
-        _updateInfo->_update = true;
-        WorkerThread::update();
+        WorkerThread::update(UpdateInfo(this, node));
     }
 }
 

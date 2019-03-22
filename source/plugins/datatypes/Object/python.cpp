@@ -168,7 +168,8 @@ void createTranslateWidget()
     auto translater4 = [] () { return std::make_unique<TranslateXYPlaneWidget>(); };
     auto translater5 = [] () { return std::make_unique<TranslateXZPlaneWidget>(); };
     auto translater6 = [] () { return std::make_unique<TranslateYZPlaneWidget>(); };
-    auto screenPlaneTranslater = [] () { return std::make_unique<TranslateScreenPlaneWidget>(); };
+    // auto screenPlaneTranslater = [] () { return std::make_unique<TranslateScreenPlaneWidget>(); };
+    // auto switchTransform = [] () { return std::make_unique<SwitchWidget>(); };
 
     Widget3D::registerWidget(translater1);
     Widget3D::registerWidget(translater2);
@@ -176,7 +177,8 @@ void createTranslateWidget()
     Widget3D::registerWidget(translater4);
     Widget3D::registerWidget(translater5);
     Widget3D::registerWidget(translater6);
-    Widget3D::registerWidget(screenPlaneTranslater);
+    // Widget3D::registerWidget(screenPlaneTranslater);
+    // Widget3D::registerWidget(switchTransform);
 }
 
 void regLightProcs()

@@ -138,6 +138,7 @@ void Renderer::render(const CameraPtr camera, const RenderConfig &config, Shader
             uniformStates.addState("modelView", view * model);
             uniformStates.addState("projection", projection);
             uniformStates.addState("mvp", projection * view * model);
+            uniformStates.setFromPropertyMap(getProperties());
         }
 
         draw(camera, config, program);

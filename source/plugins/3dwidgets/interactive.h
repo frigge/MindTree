@@ -13,75 +13,39 @@ class Camera;
 namespace MindTree {
 namespace Interactive {
 
-class ShapeGroup
+class Shape
 {
 public:
-    ShapeGroup();
-
-    virtual bool intersect(const std::shared_ptr<Camera> &cam,
-                           glm::ivec2 pixel,
-                           glm::ivec2 viewportSize,
-                           glm::vec3 *hitpoint=nullptr) const;
-
-    virtual GL::ShapeRendererGroup* createRenderer()
-    {
-        renderer_ = new GL::ShapeRendererGroup();
-        return renderer_;
-    }
-
-    glm::mat4 computeTransformation(const std::shared_ptr<Camera> &cam,
-                                    glm::ivec2 pixel,
-                                    glm::ivec2 viewportSize) const;
-
-    inline void setScreenOriented(bool orient)
-    {
-        screenOriented_ = orient;
-    }
-
-    inline void setScreenSize(bool screen)
-    {
-        screenSize_ = screen;
-    }
-
-protected:
-    bool screenOriented_, screenSize_;
-
-    GL::ShapeRendererGroup *renderer_;
-    std::vector<std::unique_ptr<ShapeGroup>> children_;
-};
-
-template<typename T> struct ShapeRendererTrait {
-    GL::ShapeRendererGroup *createRenderer()
-    {
-        return nullptr;
-    }
+	virtual bool intersect(const Ray &ray, float *depth) const = 0;
 };
 
 template<typename T>
-class Shape : public ShapeGroup
+	class ShapeT : public Shape
 {
-    bool intersect(const std::shared_ptr<Camera> &cam,
-                   glm::ivec2 pixel,
-                   glm::ivec2 viewportSize,
-                   glm::vec3 *hitpoint=nullptr) const override
-    {
-        auto camPos = cam->getPosition();
-        auto view = cam->getViewMatrix();
-        auto projection = cam->getProjection();
-        auto viewProj = projection * view;
-        Ray r = Ray::primaryRay(viewProj, camPos, pixel, viewportSize);
-        auto finalTransform = computeTransformation(cam, pixel, viewportSize);
+public:
+	ShapeT(const T shape) : shape_(shape) {}
 
-        return r.intersect(finalTransform * shape_, hitpoint);
-    }
-
-    GL::ShapeRendererGroup *createRenderer() override
-    {
-        return ShapeRendererTrait<T>::createRenderer();
-    }
+	bool intersect(const Ray &ray, float *depth) const
+	{
+		return ray.intersect(shape_, depth);
+	}
 
 private:
-    T shape_;
+	T shape_;
+};
+
+struct ShapeGroup
+{
+	ShapeGroup();
+	bool intersect(const Ray &ray, float *depth) const;
+
+	template<typename T, typename ... A>
+	void addShape(A ... args)
+	{
+		shapes.push_back(std::make_unique<Interactive::ShapeT<T>>(T(args ...)));
+	}
+
+    std::vector<std::unique_ptr<Shape>> shapes;
 };
 }
 }

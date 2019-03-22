@@ -20,22 +20,23 @@ public:
     Widget3D(MindTree::SocketType type);
     Widget3D(const Widget3D &other) = delete;
 
-    bool checkMousePressed(const std::shared_ptr<Camera> &cam,
-                           glm::ivec2 pixel,
-                           glm::ivec2 viewportSize,
-                           float *depth=nullptr);
-    bool checkMouseMoved(const std::shared_ptr<Camera> &cam,
+	bool checkMousePressed(const std::shared_ptr<Camera> &cam,
+						   glm::ivec2 pixel,
+						   glm::vec3 *hitpoint,
+	                       float *depth);
+
+	bool checkMouseMoved(const std::shared_ptr<Camera> &cam,
                          glm::ivec2 pixel,
-                         glm::ivec2 viewportSize,
-                         float *depth=nullptr);
-    bool checkMouseReleased(const std::shared_ptr<Camera> &cam,
-                            glm::ivec2 pixel,
-                            glm::ivec2 viewportSize);
+						 glm::vec3 *hitpoint,
+                         float *depth);
 
     void toggleVisible();
     MindTree::GL::ShapeRendererGroup* renderer();
 
-    void forceHoverLeft();
+    void pressMouse(glm::vec3 point);
+    void moveMouse(glm::vec3 point);
+    void enterHover(glm::vec3 point);
+    void leaveHover();
     void forceMouseReleased();
 
     static void registerWidget(Factory_t factory);
@@ -49,7 +50,7 @@ protected:
     virtual void mouseReleased(glm::vec3 point);
     virtual void mouseDraged(glm::vec3 point);
 
-    virtual void hoverEntered(glm::vec3 point);
+    virtual bool hoverEntered(glm::vec3 point);
     virtual void hoverLeft();
 
     MindTree::DNode *_node;
@@ -58,23 +59,21 @@ protected:
 
     glm::vec3 startPoint;
     glm::vec4 _hoverBorderColor, _hoverFillColor, _outBorderColor, _outFillColor;
-    Interactive::ShapeGroup shape_;
+	Interactive::ShapeGroup shapegroup_;
+    bool _visible, _hover, _pressed, _screenOriented, _screenSize;
 
 private:
-    glm::mat4 computeTransformation(const std::shared_ptr<Camera> &cam,
-                                    glm::ivec2 pixel,
-                                    glm::ivec2 viewportSize) const;
+	glm::mat4 computeTransformation(const std::shared_ptr<Camera> &cam) const;
 
     virtual void update();
     void updateTransformation();
     void setNode(MindTree::DNode *node);
-    bool intersectShapes(const std::shared_ptr<Camera> &cam,
-                         glm::ivec2 pixel,
-                         glm::ivec2 viewportSize,
-                         glm::vec3 *hitpoint);
+	bool intersectShapes(const std::shared_ptr<Camera> &cam,
+						 glm::ivec2 pixel,
+						 float *depth,
+	                     glm::vec3 *hitpoint);
 
-    MindTree::SocketType _type;
-    bool _visible, _hover, _pressed;
+	MindTree::SocketType _type;
 
     float _size;
 
@@ -88,12 +87,13 @@ public:
     Widget3DManager();
 
     void insertWidgetsIntoRenderPass(MindTree::GL::RenderPass *pass);
-    bool mousePressEvent(const CameraPtr &cam, glm::ivec2 pos, glm::ivec2 viewportSize);
-    bool mouseMoveEvent(const CameraPtr &cam, glm::ivec2 pos, glm::ivec2 viewportSize);
+    bool mousePressEvent(const CameraPtr &cam, glm::ivec2 pos);
+    bool mouseMoveEvent(const CameraPtr &cam, glm::ivec2 pos);
     void mouseReleaseEvent();
 
 private:
     std::vector<std::unique_ptr<Widget3D>> _widgets;
+    Widget3D *_clicked_widget{nullptr};
 
 };
 }

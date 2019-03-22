@@ -1,3 +1,4 @@
+#include "data/debuglog.h"
 #include "resource_handling.h"
 
 using namespace MindTree;
@@ -84,6 +85,7 @@ VBO* GeometryCache::createVBO(ObjectData *data, std::string name)
 VBO* GeometryCache::getVBO(ObjectData *data, std::string name)
 {
     auto &vbos = _vboMap[data];
+    dbout(_vboMap.size());
     for(auto &vbo : vbos)
         if(vbo->getName() == name)
             return vbo.get();
@@ -96,18 +98,19 @@ void GeometryCache::uploadData(ObjectData *data, std::string name)
 {
     auto &vbos = _vboMap[data];
 
-    for(auto &vbo : vbos)
+    VBO *data_vbo{nullptr};
+    for(auto &vbo : vbos) {
         if(vbo->getName() == name) {
-            vbo->bind();
-            vbo->setPointer();
-            return;
+	        data_vbo = vbo.get();
         }
+    }
+    if (!data_vbo) {
+		data_vbo = createVBO(data, name);
+    }
 
-    auto vbo = createVBO(data, name);
-
-    vbo->bind();
-    vbo->data(data->getProperty(name).getData<std::shared_ptr<VertexList>>());
-    vbo->setPointer();
+    data_vbo->bind();
+    data_vbo->data(data->getProperty(name).getData<std::shared_ptr<VertexList>>());
+    data_vbo->setPointer();
 }
 
 IBO* GeometryCache::createIBO(ObjectData *data)

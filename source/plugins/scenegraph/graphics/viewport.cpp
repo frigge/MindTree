@@ -79,7 +79,7 @@ Viewport::~Viewport()
 
 void Viewport::exitFullscreen()
 {
-    dbout("exit");
+    //dbout("exit");
     setWindowState(windowState() & ~Qt::WindowFullScreen);
     _viewportWidget->resetViewport();
 	update();
@@ -179,8 +179,6 @@ void Viewport::changeCamera(std::string cam)
 void Viewport::resizeEvent(QResizeEvent *event)
 {
 	QOpenGLWidget::resizeEvent(event);
-	//activeCamera->setAspect((GLdouble)width()/(GLdouble)height());
-	//activeCamera->setResolution(width(), height());
 	//_renderConfigurator->setCamera(activeCamera);
 
 	//_renderThread.addTree(_renderConfigurator->getTree(), context());
@@ -260,19 +258,17 @@ void Viewport::resizeGL(int w, int h)
 
 void Viewport::paintGL()
 {
-	std::cout << "painting to fbo: " << defaultFramebufferObject() << std::endl;
 	_renderConfigurator->getTree()->draw();
 }
 
 void Viewport::mousePressEvent(QMouseEvent *event)
 {
-    //_renderThread.update();
     glm::ivec2 pos;
     pos.x = event->pos().x();
     pos.y = height() - event->pos().y();
 
-    auto viewportSize = glm::ivec2(width(), height());
-    if (_widgetManager->mousePressEvent(activeCamera, pos, viewportSize))
+	update();
+    if (_widgetManager->mousePressEvent(activeCamera, pos))
         return;
 
     _renderConfigurator->setProperty("GL:camera:showcenter", true);
@@ -284,7 +280,6 @@ void Viewport::mousePressEvent(QMouseEvent *event)
 		GL::ContextBinder binder(ctx);
 		center = _renderConfigurator->getPosition(pos);
 	}
-    dbout(glm::to_string(center));
     if(center.a > 0) {
         activeCamera->setCenter(center.xyz());
         _renderConfigurator->setProperty("GL:camera:center", center.xyz());
@@ -296,7 +291,6 @@ void Viewport::mousePressEvent(QMouseEvent *event)
         pan = true;
     else
         rotate = true;
-	update();
 }
 
 void Viewport::mouseReleaseEvent(QMouseEvent *event)
@@ -310,7 +304,6 @@ void Viewport::mouseReleaseEvent(QMouseEvent *event)
     _widgetManager->mouseReleaseEvent();
     _renderConfigurator->setProperty("GL:camera:showcenter", false);
 	update();
-    //_renderThread.pause();
 }
 
 PropertyMap Viewport::getSettings() const
@@ -331,7 +324,7 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 
     _renderConfigurator->setProperty("mousePos", pos);
 
-    auto viewportSize = glm::ivec2(width(), height());
+	update();
 
     float xdist = lastpos.x()  - event->screenPos().x();
     float ydist = event->screenPos().y() - lastpos.y();
@@ -348,20 +341,16 @@ void Viewport::mouseMoveEvent(QMouseEvent *event)
 			GL::ContextBinder binder(ctx);
 			center = _renderConfigurator->getPosition(pos);
 		}
-		dbout(glm::to_string(center));
+		//dbout(glm::to_string(center));
 		if(center.a > 0) {
 			activeCamera->setCenter(center.xyz());
 			_renderConfigurator->setProperty("GL:camera:center", center.xyz());
 		}
 		_renderConfigurator->setProperty("GL:camera:showcenter", false);
+		_widgetManager->mouseMoveEvent(activeCamera, pos);
 	}
+
 	lastpos = event->screenPos();
-
-	update();
-    if(rotate || pan || zoom)
-        return;
-
-    _widgetManager->mouseMoveEvent(activeCamera, pos, viewportSize);
 }
 
 void Viewport::wheelEvent(QWheelEvent *event)

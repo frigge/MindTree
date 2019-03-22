@@ -250,6 +250,7 @@ public:
     void setNear(double near);
     void setFar(double far);
     void setFov(double fov);
+    float fov() const;
 
     void setResolution(int width, int height);
     int getWidth() const;

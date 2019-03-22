@@ -20,7 +20,7 @@ class RenderConfig;
 
 class RenderTree;
 class ResourceManager;
-class Renderer
+class Renderer : public Object
 {
 public:
     Renderer();

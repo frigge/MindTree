@@ -233,16 +233,29 @@ void QuadRenderer::init(ShaderProgram* prog)
     prog->bindAttributeLocation(_vbo.get());
 
     VertexList verts;
-    verts.insert(begin(verts), {
-                    glm::vec3(0, 0, 0),
-                    glm::vec3(_width, 0, 0),
-                    glm::vec3(_width, _height, 0),
-                    glm::vec3(0, _height, 0)
-                 });
+    verts.insert(end(verts), {
+			glm::vec3(0, 0, 0),
+			glm::vec3(_width, 0, 0),
+			glm::vec3(_width, _height, 0),
+			glm::vec3(0, _height, 0)
+		});
+	verts.insert(end(verts), {
+			glm::vec3(0, _height, 0),
+			glm::vec3(_width, _height, 0),
+			glm::vec3(_width, 0, 0),
+			glm::vec3(0, 0, 0)
+		});
 
-    _vbo->data(verts);
-    _vbo->setPointer();
+	_vbo->data(verts);
+	_vbo->setPointer();
 }
+
+void QuadRenderer::drawFill(const CameraPtr &camera, const RenderConfig &config, ShaderProgram* program)
+{
+    glDrawArrays(GL_QUADS, 0, 4);
+    glDrawArrays(GL_QUADS, 4, 4);
+}
+
 
 GridRenderer::GridRenderer(int width, int height, int xres, int yres, ShapeRendererGroup *parent) : 
     ShapeRenderer(parent),

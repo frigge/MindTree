@@ -1,5 +1,6 @@
 #define GLM_FORCE_SWIZZLE
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/string_cast.hpp"
 #include "data/nodes/data_node.h"
 #include "data/cache_main.h"
 #include "data/raytracing/ray.h"
@@ -19,7 +20,9 @@ Widget3D::Widget3D(SocketType type) :
     _visible(false),
     _hover(false),
     _pressed(false),
-    _size(.1)
+    _size(.1),
+	_screenOriented(false),
+	_screenSize(false)
 {
     auto cb = Signal
         ::getHandler<DNode*>()
@@ -27,12 +30,12 @@ Widget3D::Widget3D(SocketType type) :
                          this->setNode(node);
                      });
 
-    auto cb2 = Signal::getHandler<DinSocket*>()
-        .connect("socketChanged", [this](DinSocket *socket){
-                    this->update();
-                 });
+    // auto cb2 = Signal::getHandler<>()
+    //     .connect("CACHEUPDATED", [this](){
+    //                 this->update();
+    //              });
     _callbacks.push_back(cb);
-    _callbacks.push_back(cb2);
+    // _callbacks.push_back(cb2);
 }
 
 void Widget3D::update()
@@ -42,78 +45,43 @@ void Widget3D::update()
 
 bool Widget3D::intersectShapes(const std::shared_ptr<Camera> &cam,
                                glm::ivec2 pixel,
-                               glm::ivec2 viewportSize,
+                               float *depth,
                                glm::vec3 *hitpoint)
 {
     if(!_visible) return false;
-    return shape_.intersect(cam, pixel, viewportSize, hitpoint);
+
+	auto trans = computeTransformation(cam);
+	glm::ivec2 res(cam->getWidth(), cam->getHeight());
+	auto ray = Ray::primaryRay(pixel, res, cam->fov());
+	ray.start = (trans * glm::vec4(ray.start, 1)).xyz();
+	ray.dir = (trans * glm::vec4(ray.dir, 0)).xyz();
+
+	bool hit = shapegroup_.intersect(ray, depth);
+	*hitpoint = glm::vec4(ray.start + *depth * ray.dir, 1);
+	
+	return hit;
 }
 
 bool Widget3D::checkMousePressed(const std::shared_ptr<Camera> &cam,
                                  glm::ivec2 pixel,
-                                 glm::ivec2 viewportSize,
+                                 glm::vec3 *hitpoint,
                                  float *depth)
 {
-    glm::vec3 hitpoint;
-    bool hit = intersectShapes(cam, pixel, viewportSize, &hitpoint);
-
-    if(hit) {
-        _pressed = true;
-        startPoint = hitpoint;
-        mousePressed(hitpoint);
-    }
-    if (depth) *depth = glm::length(hitpoint - cam->getPosition());
-    return hit;
+    return intersectShapes(cam, pixel, depth, hitpoint);
 }
 
 bool Widget3D::checkMouseMoved(const std::shared_ptr<Camera> &cam,
                                glm::ivec2 pixel,
-                               glm::ivec2 viewportSize,
-                               float *depth)
+							   glm::vec3 *hitpoint,
+							   float *depth)
 {
-    glm::vec3 hitpoint;
-    bool hit = intersectShapes(cam, pixel, viewportSize, &hitpoint);
-
-    if(hit) {
-        if(!_hover) {
-
-            if(_renderer) {
-                _renderer->setBorderColor(_hoverBorderColor);
-                _renderer->setFillColor(_hoverFillColor);
-            }
-            hoverEntered(hitpoint);
-        }
-        _hover = true;
-        mouseMoved(hitpoint);
-    }
-    else {
-        if(_hover) {
-            if(_renderer) {
-                _renderer->setBorderColor(_outBorderColor);
-                _renderer->setFillColor(_outFillColor);
-            }
-            hoverLeft();
-        }
-        _hover = false;
-    }
-    if(_pressed) mouseDraged(hitpoint);
-
-    if (depth) *depth = glm::length(hitpoint - cam->getPosition());
-    return hit;
+    return intersectShapes(cam, pixel, depth, hitpoint);
 }
 
-bool Widget3D::checkMouseReleased(const std::shared_ptr<Camera> &cam,
-                                  glm::ivec2 pixel,
-                                  glm::ivec2 viewportSize)
+void Widget3D::moveMouse(glm::vec3 point)
 {
-    glm::vec3 hitpoint;
-    bool hit = intersectShapes(cam, pixel, viewportSize, &hitpoint);
-
-    if(hit) {
-        _pressed = false;
-        mouseReleased(hitpoint);
-    }
-    return hit;
+	if (_pressed) mouseDraged(point);
+	else mouseMoved(point);
 }
 
 void Widget3D::mousePressed(glm::vec3 point)
@@ -133,8 +101,9 @@ void Widget3D::mouseDraged(glm::vec3 point)
 
 }
 
-void Widget3D::hoverEntered(glm::vec3 point)
+bool Widget3D::hoverEntered(glm::vec3 point)
 {
+	return true;
 }
 
 void Widget3D::hoverLeft()
@@ -156,7 +125,7 @@ void Widget3D::setVisible(bool visible)
 GL::ShapeRendererGroup* Widget3D::renderer()
 {
     if(!_renderer)
-        _renderer = shape_.createRenderer();
+        _renderer = createRenderer();
 
     if(_renderer) {
         _renderer->setVisible(_visible);
@@ -192,24 +161,82 @@ void Widget3D::updateTransformation()
     auto obj = DataCache::getCachedData(_node);
     if(obj) {
         auto trans = obj.getData<GeoObjectPtr>()->getTransformation();
+        trans[0] = glm::normalize(trans[0]);
+        trans[1] = glm::normalize(trans[1]);
+        trans[2] = glm::normalize(trans[2]);
         _renderer->setTransformation(trans);
     }
 }
 
-void Widget3D::forceHoverLeft()
+void Widget3D::pressMouse(glm::vec3 point)
 {
-    _hover = false;
+	mousePressed(point);
+	_pressed = true;
+	startPoint = point;
+}
+
+void Widget3D::enterHover(glm::vec3 hitpoint)
+{
+	if (_hover) return;
+
+	if(_renderer && hoverEntered(hitpoint)) {
+		_renderer->setBorderColor(_hoverBorderColor);
+		_renderer->setFillColor(_hoverFillColor);
+		_hover = true;
+	}
+}
+
+void Widget3D::leaveHover()
+{
+	if (!_hover) return;
+
+	if(_renderer) {
+		_renderer->setBorderColor(_outBorderColor);
+		_renderer->setFillColor(_outFillColor);
+	}
+	_hover = false;
     hoverLeft();
 }
 
 void Widget3D::forceMouseReleased()
 {
     _pressed = false;
+    leaveHover();
+    update();
 }
 
 void Widget3D::registerWidget(Factory_t factory)
 {
     _widget_factories.push_back(factory);
+}
+
+//camera Space to (scaled and oriented) widget space
+glm::mat4 Widget3D::computeTransformation(const std::shared_ptr<Camera> &cam) const
+{
+    auto model = _renderer->getGlobalTransformation();
+    glm::vec4 translate = model[3];
+
+    glm::mat4 finalTransform(1);
+
+    auto view = cam->getViewMatrix();
+    if(_screenOriented) {
+		finalTransform[3] = -translate;
+	}
+    else {
+        finalTransform = glm::inverse(model);
+    }
+
+	auto p = cam->getProjection();
+	auto mvp = p * view * model;
+    if (_screenSize) {
+		float scale = abs(mvp[3].z) * .1;
+		finalTransform[0] *= scale;
+		finalTransform[1] *= scale;
+		finalTransform[2] *= scale;
+    }
+
+	auto camModel = cam->getWorldTransformation();
+    return finalTransform * camModel;
 }
 
 Widget3DManager::Widget3DManager()
@@ -225,51 +252,72 @@ void Widget3DManager::insertWidgetsIntoRenderPass(MindTree::GL::RenderPass *pass
     }
 }
 
-bool Widget3DManager::mousePressEvent(const CameraPtr &cam, glm::ivec2 pos, glm::ivec2 viewportSize)
+bool Widget3DManager::mousePressEvent(const CameraPtr &cam, glm::ivec2 pos)
 {
-    float lastDepth = -1;
-    for(auto &widget : _widgets) {
-        float depth = 0;
-        if (widget->checkMousePressed(cam, pos, viewportSize, &depth)) {
-            if(lastDepth < 0 || lastDepth > depth) {
+	float lastDepth = std::numeric_limits<float>::max();
+	Widget3D *pressed = nullptr;
+	glm::vec3 hitpoint;
+	for(auto &widget : _widgets) {
+		glm::vec3 p;
+		float depth = lastDepth;
+		if (widget->checkMousePressed(cam, pos, &p, &depth)) {
+            if(lastDepth > depth) {
                 lastDepth = depth;
+                pressed = widget.get();
+                hitpoint = p;
             }
         }
     }
-    return lastDepth > 0;
+	if (pressed && pressed->_hover) {
+		_clicked_widget = pressed;
+		pressed->pressMouse(hitpoint);
+		return true;
+	}
+	return false;
 }
 
-bool Widget3DManager::mouseMoveEvent(const CameraPtr &cam, glm::ivec2 pos, glm::ivec2 viewportSize)
+bool Widget3DManager::mouseMoveEvent(const CameraPtr &cam, glm::ivec2 pos)
 {
-    Widget3D *clicked_widget;
-    float lastDepth = -1;
-    for(auto &widget : _widgets) {
-        float depth = 0;
-        if (widget->checkMouseMoved(cam, pos, viewportSize, &depth)) {
-            if(lastDepth < 0 || lastDepth > depth) {
-                lastDepth = depth;
-                clicked_widget = widget.get();
-            }
-        }
+    glm::vec3 hitpoint;
+	Widget3D *hovered = _clicked_widget;
+    if (hovered) {
+		float depth = std::numeric_limits<float>::max();
+		_clicked_widget->checkMouseMoved(cam, pos, &hitpoint, &depth);
+	}
+	else {
+	    float lastDepth = std::numeric_limits<float>::max();
+	    for(auto &widget : _widgets) {
+		    float depth = lastDepth;
+		    glm::vec3 p;
+		    if (widget->checkMouseMoved(cam, pos, &p, &depth) && lastDepth > depth) {
+				lastDepth = depth;
+				hovered = widget.get();
+				hitpoint = p;
+			}
+	    }
     }
-
-    if (clicked_widget) {
-		DataCache::tryUpdate();
+    
+    if (hovered) {
         for (auto &widget : _widgets) {
-            if (widget.get() != clicked_widget) {
-                widget->forceHoverLeft();
+            if (widget.get() != hovered) {
+                widget->leaveHover();
             }
         }
+		hovered->enterHover(hitpoint);
+        hovered->moveMouse(hitpoint);
         return true;
     }
-    //else {
-    //    MindTree::GL::RenderThread::pause();
-    //}
+    else {
+        for (auto &widget : _widgets) {
+			widget->leaveHover();
+		}
+    }
     return false;
 }
 
 void Widget3DManager::mouseReleaseEvent()
 {
+	_clicked_widget = nullptr;
     for(auto &widget : _widgets) {
         widget->forceMouseReleased();
     }
