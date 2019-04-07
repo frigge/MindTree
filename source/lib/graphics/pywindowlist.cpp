@@ -47,7 +47,7 @@ MindTree::ViewerDockBase* PythonViewerFactory::createViewer(DoutSocket *socket)
     {
         GILLocker locker;
         BPy::object obj = cls(new DoutSocketPyWrapper(socket));
-        std::auto_ptr<PyViewerBase> b = BPy::extract<std::auto_ptr<PyViewerBase>>(obj);
+        auto b = BPy::extract<std::shared_ptr<PyViewerBase>>(obj);
         base = b.get();
         b.release();
     }
@@ -79,7 +79,7 @@ void PyViewerBase::init()
 
 void PyViewerBase::wrap()
 {
-    BPy::class_<PyViewerBase, std::auto_ptr<PyViewerBase>, boost::noncopyable>("Viewer", BPy::init<DoutSocketPyWrapper*>())
+    BPy::class_<PyViewerBase, std::shared_ptr<PyViewerBase>, boost::noncopyable>("Viewer", BPy::init<DoutSocketPyWrapper*>())
         .def("setWidget", &PyViewerBase::setWidget)
         .add_property("cache", &PyViewerBase::getCache)
         .add_property("socket", 
@@ -103,8 +103,12 @@ void PyViewerBase::update()
 {
     GILLocker locker;
     std::cout<<"updating python viewer ... " << std::endl;
-    if(auto f = get_override("update"))
-        f();
+    try {
+		if(auto f = get_override("update"))
+			f();
+	} catch (const BPy::error_already_set &e) {
+		PyErr_Print();
+	}
 }
 
 void PyViewerBase::setWidget(BPy::object pywidget)
@@ -114,7 +118,8 @@ void PyViewerBase::setWidget(BPy::object pywidget)
     static std::vector<BPy::object> fuck_you_container;
     fuck_you_container.push_back(pywidget);
 
-    WId id = BPy::extract<WId>(pywidget.attr("winId")());
+    // WId id = BPy::extract<WId>(pywidget.attr("winId")());
+    int id = BPy::extract<int>(pywidget.attr("winId")().attr("__int__")());
     auto *w = QWidget::find(id);
     if(w) Viewer::setWidget(w);
     else std::cout<<"Python Viewer not valid"<<std::endl;

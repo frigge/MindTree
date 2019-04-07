@@ -19,8 +19,10 @@ class FloatViewer(MT.pytypes.Viewer):
         self.viewer = FloatViewerGUI(self)
         self.setWidget(self.viewer)
 
-    def update(self, s):
-        data = self.cache.getOutput(self.socket)
+    def update(self):
+        print(dir(self.cache))
+        # cache = self.cache
+        data = self.cache.getOutput()
         self.viewer.setText(str(data))
 
 MT.gui.registerViewer("FloatViewer", "FLOAT", FloatViewer)
